@@ -1,0 +1,171 @@
+Start testing: Sep 30 18:22 CEST
+----------------------------------------------------------
+1/2 Testing: UnitTests
+1/2 Test: UnitTests
+Command: "/mnt/hgfs/vm-exchange/SQLiteCpp/build/SQLiteCpp_tests"
+Directory: /mnt/hgfs/vm-exchange/SQLiteCpp/build
+"UnitTests" start time: Sep 30 18:22 CEST
+Output:
+----------------------------------------------------------
+Running main() from gtest_main.cc
+[==========] Running 25 tests from 6 test cases.
+[----------] Global test environment set-up.
+[----------] 2 tests from Column
+[ RUN      ] Column.basis
+[       OK ] Column.basis (36 ms)
+[ RUN      ] Column.getName
+[       OK ] Column.getName (1 ms)
+[----------] 2 tests from Column (37 ms total)
+
+[----------] 1 test from SQLiteCpp
+[ RUN      ] SQLiteCpp.version
+[       OK ] SQLiteCpp.version (0 ms)
+[----------] 1 test from SQLiteCpp (0 ms total)
+
+[----------] 7 tests from Database
+[ RUN      ] Database.ctorExecCreateDropExist
+[       OK ] Database.ctorExecCreateDropExist (61 ms)
+[ RUN      ] Database.createCloseReopen
+[       OK ] Database.createCloseReopen (9 ms)
+[ RUN      ] Database.inMemory
+[       OK ] Database.inMemory (1 ms)
+[ RUN      ] Database.busyTimeout
+[       OK ] Database.busyTimeout (0 ms)
+[ RUN      ] Database.exec
+[       OK ] Database.exec (1 ms)
+[ RUN      ] Database.execAndGet
+[       OK ] Database.execAndGet (0 ms)
+[ RUN      ] Database.execException
+[       OK ] Database.execException (1 ms)
+[----------] 7 tests from Database (73 ms total)
+
+[----------] 10 tests from Statement
+[ RUN      ] Statement.invalid
+[       OK ] Statement.invalid (0 ms)
+[ RUN      ] Statement.executeStep
+[       OK ] Statement.executeStep (1 ms)
+[ RUN      ] Statement.bindings
+[       OK ] Statement.bindings (0 ms)
+[ RUN      ] Statement.bindNoCopy
+[       OK ] Statement.bindNoCopy (1 ms)
+[ RUN      ] Statement.bindByName
+[       OK ] Statement.bindByName (0 ms)
+[ RUN      ] Statement.bindNoCopyByName
+[       OK ] Statement.bindNoCopyByName (0 ms)
+[ RUN      ] Statement.isColumnNull
+[       OK ] Statement.isColumnNull (1 ms)
+[ RUN      ] Statement.isColumnNullByName
+[       OK ] Statement.isColumnNullByName (0 ms)
+[ RUN      ] Statement.getColumnByName
+[       OK ] Statement.getColumnByName (6 ms)
+[ RUN      ] Statement.getName
+[       OK ] Statement.getName (1 ms)
+[----------] 10 tests from Statement (10 ms total)
+
+[----------] 4 tests from Backup
+[ RUN      ] Backup.initException
+[       OK ] Backup.initException (30 ms)
+[ RUN      ] Backup.executeStepOne
+[       OK ] Backup.executeStepOne (23 ms)
+[ RUN      ] Backup.executeStepAll
+[       OK ] Backup.executeStepAll (64 ms)
+[ RUN      ] Backup.executeStepException
+[       OK ] Backup.executeStepException (52 ms)
+[----------] 4 tests from Backup (169 ms total)
+
+[----------] 1 test from Transaction
+[ RUN      ] Transaction.commitRollback
+SQLite exception: near "DesiredSyntaxError": syntax error
+[       OK ] Transaction.commitRollback (1 ms)
+[----------] 1 test from Transaction (1 ms total)
+
+[----------] Global test environment tear-down
+[==========] 25 tests from 6 test cases ran. (290 ms total)
+[  PASSED  ] 25 tests.
+<end of output>
+Test time =   0.48 sec
+----------------------------------------------------------
+Test Passed.
+"UnitTests" end time: Sep 30 18:22 CEST
+"UnitTests" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/2 Testing: Example1Run
+2/2 Test: Example1Run
+Command: "/mnt/hgfs/vm-exchange/SQLiteCpp/build/SQLiteCpp_example1"
+Directory: /mnt/hgfs/vm-exchange/SQLiteCpp/build
+"Example1Run" start time: Sep 30 18:22 CEST
+Output:
+----------------------------------------------------------
+SQlite3 version 3.13.0 (3.13.0)
+SQliteC++ version 2.00.00
+SQLite database file '/mnt/hgfs/vm-exchange/SQLiteCpp/examples/example1//example.db3' opened successfully
+SQLite table 'test' exists=1
+execAndGet=second line
+SQLite database file '/mnt/hgfs/vm-exchange/SQLiteCpp/examples/example1//example.db3' opened successfully
+SQLite statement 'SELECT id as test_id, value as test_val, weight as test_weight FROM test WHERE weight > ?' compiled (3 columns in the result)
+binded with integer value '2' :
+row (1, "first word"(10) 2.3)
+row (2, "second line"(11) 6.7)
+row (3, "and a last one"(14) 9.5)
+row (4, ""(0) 18)
+SQLite statement 'SELECT id as test_id, value as test_val, weight as test_weight FROM test WHERE weight > ?' reseted (3 columns in the result)
+aliased result ["test_id", "test_val", "test_weight"]
+origin table 'test' ["id", "value", "weight"]
+row (1, "first word", 2.3)
+row (2, "second line", 6.7)
+row (3, "and a last one", 9.5)
+row (4, "", 18,1)
+SQLite statement 'SELECT id as test_id, value as test_val, weight as test_weight FROM test WHERE weight > ?' reseted (3 columns in the result)
+row (1, "first word" 2.3)
+row (2, "second line" 6.7)
+row (3, "and a last one" 9.5)
+row (4, "" 18)
+SQLite statement 'SELECT id as test_id, value as test_val, weight as test_weight FROM test WHERE weight > ?' reseted (3 columns in the result)
+binded with string value "6" :
+row (2, "second line", 6)
+row (3, "and a last one", 9)
+row (4, "", 18)
+ListGreaterThan (8)
+row (3, "and a last one", 9.5)
+row (4, "", 18,1)
+ListGreaterThan (6)
+row (2, "second line", 6.7)
+row (3, "and a last one", 9.5)
+row (4, "", 18,1)
+ListGreaterThan (2)
+row (1, "first word", 2.3)
+row (2, "second line", 6.7)
+row (3, "and a last one", 9.5)
+row (4, "", 18,1)
+SQLite database file '/mnt/hgfs/vm-exchange/SQLiteCpp/examples/example1//example.db3' opened successfully
+execAndGet=second line
+SQLite database file 'test.db3' opened successfully
+INSERT INTO test VALUES (NULL, "test")", returned 1
+INSERT INTO test VALUES (NULL, "second")", returned 1
+UPDATE test SET value="second-updated" WHERE id='2', returned 1
+SELECT * FROM test :
+row (1, "test")
+row (2, "second-updated")
+SQLite database file 'transaction.db3' opened successfully
+INSERT INTO test VALUES (NULL, "test")", returned 1
+INSERT INTO test VALUES (NULL, "second")", returned 1
+SQLite exception: near "ObviousError": syntax error
+SELECT * FROM test :
+row (1, "test")
+SQLite database file ':memory:' opened successfully
+blob size=12581 :
+blob binded successfully
+INSERT INTO test VALUES (NULL, ?)", returned 1
+SELECT * FROM test :
+row (1, size=12581)
+everything ok, quitting
+<end of output>
+Test time =   0.16 sec
+----------------------------------------------------------
+Test Passed.
+"Example1Run" end time: Sep 30 18:22 CEST
+"Example1Run" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Sep 30 18:22 CEST

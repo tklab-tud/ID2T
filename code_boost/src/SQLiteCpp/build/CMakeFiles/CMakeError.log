@@ -1,0 +1,57 @@
+Determining if the pthread_create exist failed with the following output:
+Change Dir: /mnt/hgfs/vm-exchange/SQLiteCpp/build/CMakeFiles/CMakeTmp
+
+Run Build Command:/usr/bin/make "cmTryCompileExec3067163014/fast"
+make: Warning: File `Makefile' has modification time 73 s in the future
+/usr/bin/make -f CMakeFiles/cmTryCompileExec3067163014.dir/build.make CMakeFiles/cmTryCompileExec3067163014.dir/build
+make[1]: Entering directory `/mnt/hgfs/vm-exchange/SQLiteCpp/build/CMakeFiles/CMakeTmp'
+make[1]: Warning: File `CMakeFiles/cmTryCompileExec3067163014.dir/flags.make' has modification time 73 s in the future
+/usr/bin/cmake -E cmake_progress_report /mnt/hgfs/vm-exchange/SQLiteCpp/build/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec3067163014.dir/CheckSymbolExists.c.o
+/usr/bin/cc    -o CMakeFiles/cmTryCompileExec3067163014.dir/CheckSymbolExists.c.o   -c /mnt/hgfs/vm-exchange/SQLiteCpp/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+Linking C executable cmTryCompileExec3067163014
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec3067163014.dir/link.txt --verbose=1
+/usr/bin/cc       CMakeFiles/cmTryCompileExec3067163014.dir/CheckSymbolExists.c.o  -o cmTryCompileExec3067163014 -rdynamic 
+CMakeFiles/cmTryCompileExec3067163014.dir/CheckSymbolExists.c.o: In function `main':
+CheckSymbolExists.c:(.text+0x16): undefined reference to `pthread_create'
+collect2: error: ld returned 1 exit status
+make[1]: Leaving directory `/mnt/hgfs/vm-exchange/SQLiteCpp/build/CMakeFiles/CMakeTmp'
+make[1]: *** [cmTryCompileExec3067163014] Error 1
+make: *** [cmTryCompileExec3067163014/fast] Error 2
+
+File /mnt/hgfs/vm-exchange/SQLiteCpp/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <pthread.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef pthread_create
+  return ((int*)(&pthread_create))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+
+Determining if the function pthread_create exists in the pthreads failed with the following output:
+Change Dir: /mnt/hgfs/vm-exchange/SQLiteCpp/build/CMakeFiles/CMakeTmp
+
+Run Build Command:/usr/bin/make "cmTryCompileExec366352226/fast"
+make: /usr/bin/make -f CMakeFiles/cmTryCompileExec366352226.dir/build.make CMakeFiles/cmTryCompileExec366352226.dir/build
+Warning: File `Makefile' has modification time 73 s in the future
+make[1]: Entering directory `/mnt/hgfs/vm-exchange/SQLiteCpp/build/CMakeFiles/CMakeTmp'
+make[1]: Warning: File `CMakeFiles/cmTryCompileExec366352226.dir/flags.make' has modification time 73 s in the future
+/usr/bin/cmake -E cmake_progress_report /mnt/hgfs/vm-exchange/SQLiteCpp/build/CMakeFiles/CMakeTmp/CMakeFiles 1
+Building C object CMakeFiles/cmTryCompileExec366352226.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTryCompileExec366352226.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-2.8/Modules/CheckFunctionExists.c
+Linking C executable cmTryCompileExec366352226
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTryCompileExec366352226.dir/link.txt --verbose=1
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=pthread_create    CMakeFiles/cmTryCompileExec366352226.dir/CheckFunctionExists.c.o  -o cmTryCompileExec366352226 -rdynamic -lpthreads 
+/usr/bin/ld: cannot find -lpthreads
+collect2: error: ld returned 1 exit status
+make[1]: *** [cmTryCompileExec366352226] Error 1
+make[1]: Leaving directory `/mnt/hgfs/vm-exchange/SQLiteCpp/build/CMakeFiles/CMakeTmp'
+make: *** [cmTryCompileExec366352226/fast] Error 2
+
+

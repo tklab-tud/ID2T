@@ -1,0 +1,20 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/pjattke/DE/src/cxx/main.cpp
+tins/tins.h
+-
+cassert
+-
+iostream
+-
+time.h
+-
+stdio.h
+-
+
