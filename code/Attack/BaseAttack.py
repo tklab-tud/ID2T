@@ -27,9 +27,9 @@ class BaseAttack(metaclass=ABCMeta):
         self.statistics = statistics
 
         # Class fields
-        self.attackName = name
-        self.attackDescription = description
-        self.attackType = attack_type
+        self.attack_name = name
+        self.attack_description = description
+        self.attack_type = attack_type
         self.params = {}
         self.supported_params = {}
         self.attack_start_utime = 0
@@ -76,7 +76,11 @@ class BaseAttack(metaclass=ABCMeta):
                 ip_address_output.append(ip)
             except ValueError:
                 return False, ip_address_output
-        return True, ip_address_output
+
+        if len(ip_address_output) == 1:
+            return True, ip_address_output[0]
+        else:
+            return True, ip_address_output
 
     @staticmethod
     def _is_port(ports_input: str):

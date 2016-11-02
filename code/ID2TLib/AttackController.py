@@ -21,7 +21,6 @@ class AttackController:
         self.pcap_file = pcap_file
         self.label_mgr = label_manager
 
-        self.available_attacks = Attack.__all__
         self.current_attack = None
         self.added_attacks = []
         self.written_pcaps = []
@@ -65,10 +64,12 @@ class AttackController:
 
     def process_attack(self, attack: str, params: str):
         """
-
-        :param attack:
-        :param params:
-        :return:
+        Takes as input the name of an attack (classname) and the attack parameters as string. Parses the string of
+        attack parameters, creates the attack by writing the attack packets, merges these packets into the existing
+        dataset and stores the label file of the injected attacks.
+        :param attack: The classname of the attack to injecect.
+        :param params: The parameters for attack customization, see attack class for supported params.
+        :return: The file path to the created pcap file.
         """
         self.create_attack(attack)
 

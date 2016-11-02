@@ -28,10 +28,10 @@ class LabelManager:
         self.labels = list()
 
         if filepath_pcap is not None:
-            self.labelFilePath = filepath_pcap.strip('.pcap') + '_labels.xml'
+            self.label_file_path = filepath_pcap.strip('.pcap') + '_labels.xml'
             # only load labels if label file is existing
-            if os.path.exists(self.labelFilePath):
-                self._load_labels()
+            if os.path.exists(self.label_file_path):
+                self.load_labels()
 
     def add_labels(self, labels):
         """
@@ -53,12 +53,12 @@ class LabelManager:
     def write_label_file(self, filepath=None):
         """
         Writes previously added/loaded labels to a XML file. Uses the given filepath as destination path, if no path is
-        given, uses the path in labelFilePath.
+        given, uses the path in label_file_path.
 
         :param filepath: The path where the label file should be written to.
         """
 
-        def get_subtree_timestamp(xml_tag_root, timestamp_entry) -> Element:
+        def get_subtree_timestamp(xml_tag_root, timestamp_entry):
             """
             Creates the subtree for a given timestamp, consisting of the unix time format (seconds) and a human-readable
             output.
@@ -83,7 +83,7 @@ class LabelManager:
             return timestamp_root
 
         if filepath is not None:
-            self.labelFilePath = filepath.strip('.pcap') + '_labels.xml'
+            self.label_file_path = filepath.strip('.pcap') + '_labels.xml'
 
         # Generate XML
         doc = Document()
@@ -111,23 +111,23 @@ class LabelManager:
         doc.appendChild(node)
 
         # Write XML to file
-        file = open(self.labelFilePath, 'w')
+        file = open(self.label_file_path, 'w')
         file.write(doc.toprettyxml())
         file.close()
 
-    def _load_labels(self):
+    def load_labels(self):
         """
-        Loads the labels from an already existing label XML file located at labelFilePath (set by constructor).
+        Loads the labels from an already existing label XML file located at label_file_path (set by constructor).
 
         """
         print("Label file found. Loading labels...")
-        dom = parse(self.labelFilePath)
+        dom = parse(self.label_file_path)
 
         # Check if version of parser and version of file match
         version = dom.getElementsByTagName(self.TAG_ROOT)[0].getAttribute(self.ATTR_VERSION)
         if not version == self.ATTR_VERSION_VALUE:
             raise ValueError(
-                "The file " + self.labelFilePath + " was created by another version of ID2TLib.LabelManager")
+                "The file " + self.label_file_path + " was created by another version of ID2TLib.LabelManager")
 
         # Parse attacks from XML file
         attacks = dom.getElementsByTagName(self.TAG_ATTACK)

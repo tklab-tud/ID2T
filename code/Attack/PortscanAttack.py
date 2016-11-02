@@ -66,6 +66,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
             """
             nonlocal timestamp_next_pkt, pps, maxdelay
             timestamp_current_packet = timestamp_next_pkt  # current timestamp
+            #TODO Derive timestamps based on pps rate given
             timestamp_next_pkt = timestamp_next_pkt + uniform(0.1 / pps, maxdelay)  # timestamp for next pkt
             return timestamp_current_packet
 

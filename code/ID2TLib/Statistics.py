@@ -16,8 +16,7 @@ class Statistics:
         """
         # Fields
         self.pcap_filepath = pcap_file.pcap_file_path
-        self.pcap_processor = None
-        pcap_file_hash = pcap_file.get_file_hash()
+        self.pcap_proc = None
 
         # Create folder for statistics database if required
         self.path_db = pcap_file.get_db_path()
@@ -48,9 +47,9 @@ class Statistics:
 
         # Recalculate statistics if database not exists OR param -r/--recalculate was provided
         if (not self.stats_db.get_db_exists()) or flag_recalculate_stats:
-            self.pcap_processor = pr.pcap_processor(self.pcap_filepath)
-            self.pcap_processor.collect_statistics()
-            self.pcap_processor.write_to_database(self.path_db)
+            self.pcap_proc = pr.pcap_processor(self.pcap_filepath)
+            self.pcap_proc.collect_statistics()
+            self.pcap_proc.write_to_database(self.path_db)
             outstring_datasource = "by PCAP file processor."
         else:
             outstring_datasource = "from statistics database."
@@ -94,7 +93,7 @@ class Statistics:
                 ("Avg. bandwidth out", self.file_info['avgBandwidthOut'], "kbit/s")]
 
     @staticmethod
-    def _write_list(desc_val_unit_list, func, line_ending="\n"):
+    def write_list(desc_val_unit_list, func, line_ending="\n"):
         """
         Takes a list of tuples (statistic name, statistic value, unit) as input, generates a string of these three values
         and applies the function func on this string.
@@ -129,9 +128,9 @@ class Statistics:
         Prints the basic file statistics to the terminal.
         """
         print("\nPCAP FILE INFORMATION ------------------------------")
-        Statistics._write_list(self.get_file_information(), print, "")
+        Statistics.write_list(self.get_file_information(), print, "")
         print("\nGENERAL FILE STATISTICS ----------------------------")
-        Statistics._write_list(self.get_general_file_statistics(), print, "")
+        Statistics.write_list(self.get_general_file_statistics(), print, "")
         print("\n")
 
     def write_statistics_to_file(self):
@@ -153,10 +152,10 @@ class Statistics:
         target.truncate()
 
         _write_header("PCAP file information")
-        Statistics._write_list(self.get_file_information(), target.write)
+        Statistics.write_list(self.get_file_information(), target.write)
 
         _write_header("General statistics")
-        Statistics._write_list(self.get_general_file_statistics(), target.write)
+        Statistics.write_list(self.get_general_file_statistics(), target.write)
 
         target.close()
 

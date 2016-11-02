@@ -14,7 +14,7 @@ class PcapFile(object):
         """
         self.pcap_file_path = pcap_file_path
 
-    def merge_attack(self, attack_pcap_path: str) -> str:
+    def merge_attack(self, attack_pcap_path: str):
         """
         Merges the loaded PCAP with the PCAP at attack_pcap_path.
 
@@ -30,7 +30,7 @@ class PcapFile(object):
 
         return file_out_path
 
-    def get_file_hash(self) -> str:
+    def get_file_hash(self):
         """
         Returns the hash for the loaded PCAP file. The hash is calculated bsaed on:
 

@@ -36,7 +36,7 @@ class Controller:
         """
         self.statistics.load_pcap_statistics(flag_write_file, flag_recalculate_stats, flag_print_statistics)
 
-    def process_attacks(self, attacks_config):
+    def process_attacks(self, attacks_config: list):
         """
         Creates the attack based on the attack name and the attack parameters given in the attacks_config. The
         attacks_config is a list of attacks, e.g.

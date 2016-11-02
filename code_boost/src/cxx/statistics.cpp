@@ -57,7 +57,7 @@ statistics::statistics(void) {
  * @param ipAddress The IP address belonging to the given MAC address.
  * @param macAddress The MAC address belonging to the given IP address.
  */
-void statistics::assign_mac_address(std::string ipAddress, std::string macAddress) {
+void statistics::assignMacAddress(std::string ipAddress, std::string macAddress) {
     ip_mac_mapping[ipAddress] = macAddress;
 }
 

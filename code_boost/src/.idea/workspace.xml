@@ -27,13 +27,19 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d9c49765-9fd1-4a96-9963-862040c74354" name="Default" comment="- Cleaned up the code&#10;- Added code comments">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/SQLiteCpp/src/Backup.cpp" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/SQLiteCpp/src/Column.cpp" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/SQLiteCpp/src/Database.cpp" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/SQLiteCpp/src/Exception.cpp" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/SQLiteCpp/src/Statement.cpp" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/SQLiteCpp/src/Transaction.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/release_test/libpcapreader.so" afterPath="$PROJECT_DIR$/release_test/libpcapreader.so" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../code/.idea/workspace.xml" afterPath="$PROJECT_DIR$/../../code/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../code/Attack/BaseAttack.py" afterPath="$PROJECT_DIR$/../../code/Attack/BaseAttack.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../code/Attack/PortscanAttack.py" afterPath="$PROJECT_DIR$/../../code/Attack/PortscanAttack.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../code/ID2TLib/AttackController.py" afterPath="$PROJECT_DIR$/../../code/ID2TLib/AttackController.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../code/ID2TLib/Controller.py" afterPath="$PROJECT_DIR$/../../code/ID2TLib/Controller.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../code/ID2TLib/LabelManager.py" afterPath="$PROJECT_DIR$/../../code/ID2TLib/LabelManager.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../code/ID2TLib/PcapFile.py" afterPath="$PROJECT_DIR$/../../code/ID2TLib/PcapFile.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../../code/ID2TLib/Statistics.py" afterPath="$PROJECT_DIR$/../../code/ID2TLib/Statistics.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cxx/pcap_processor.cpp" afterPath="$PROJECT_DIR$/cxx/pcap_processor.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cxx/statistics.cpp" afterPath="$PROJECT_DIR$/cxx/statistics.cpp" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/cxx/statistics.h" afterPath="$PROJECT_DIR$/cxx/statistics.h" />
     </list>
     <ignored path="src.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -54,7 +60,18 @@
     <favorites_list name="src" />
   </component>
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300" />
+    <leaf>
+      <file leaf-file-name="statistics.h" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/cxx/statistics.h">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="389">
+              <caret line="177" column="0" selection-start-line="177" selection-start-column="0" selection-end-line="177" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -97,7 +114,6 @@
         <option value="$PROJECT_DIR$/cxx/pcapprocessor.h" />
         <option value="$PROJECT_DIR$/cxx/Statistics.h" />
         <option value="$PROJECT_DIR$/cxx/Statistics.cpp" />
-        <option value="$PROJECT_DIR$/cxx/statistics.h" />
         <option value="$PROJECT_DIR$/cxx/statistics.cpp" />
         <option value="$PROJECT_DIR$/cxx/StatisticsDB.h" />
         <option value="$PROJECT_DIR$/cxx/StatisticsDB.cpp" />
@@ -109,6 +125,7 @@
         <option value="$PROJECT_DIR$/cxx/pcap_processor.h" />
         <option value="$PROJECT_DIR$/cxx/pcap_processor.cpp" />
         <option value="$PROJECT_DIR$/release_test/pcapreader.py" />
+        <option value="$PROJECT_DIR$/cxx/statistics.h" />
       </list>
     </option>
   </component>
@@ -118,7 +135,7 @@
   <component name="OCFindUsagesOptions" text="true" ivars="false" properties="true" derivedClasses="false" />
   <component name="ProjectFrameBounds">
     <option name="width" value="1674" />
-    <option name="height" value="1022" />
+    <option name="height" value="882" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -226,32 +243,50 @@
               <option name="myItemId" value="build" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="Debug" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.jetbrains.cidr.projectView.CidrFilesViewHelper$MyProjectTreeStructure$1" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="src" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="build" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
           </PATH>
         </subPane>
       </pane>
     </panes>
   </component>
   <component name="PropertiesComponent">
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/SQLiteCpp/src" />
+    <property name="last_opened_file_path" value="$USER_HOME$/PcapPlusPlus/Examples/PcapSplitter" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="settings.editor.selected.configurable" value="vcs.Git" />
     <property name="settings.editor.splitter.proportion" value="0.2" />
     <property name="full.screen.before.presentation.mode" value="false" />
   </component>
   <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/release_test/dir" />
-      <recent name="$PROJECT_DIR$/release_test" />
-      <recent name="$PROJECT_DIR$/r0.3" />
-      <recent name="$PROJECT_DIR$/cxx_boost" />
-      <recent name="$PROJECT_DIR$/SQLiteCpp/src" />
-    </key>
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/r0.2" />
       <recent name="$USER_HOME$/DE/src/cxx" />
     </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/release_test" />
+      <recent name="$PROJECT_DIR$/release_test/dir" />
+      <recent name="$PROJECT_DIR$/r0.3" />
+      <recent name="$PROJECT_DIR$/cxx_boost" />
+      <recent name="$PROJECT_DIR$/SQLiteCpp/src" />
+    </key>
   </component>
-  <component name="RunManager" selected="Python.release_test">
+  <component name="RunManager" selected="Application.Build libpcapreader">
     <configuration default="false" name="release_test" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -452,6 +487,9 @@
       <workItem from="1475421160575" duration="212000" />
       <workItem from="1475421616329" duration="244000" />
       <workItem from="1475422144846" duration="6415000" />
+      <workItem from="1477944449858" duration="91000" />
+      <workItem from="1478004715882" duration="253000" />
+      <workItem from="1478020631285" duration="152000" />
     </task>
     <task id="LOCAL-00001" summary="- Initial commit for PcapProcessing library, based on C++ and Boost">
       <created>1468938336718</created>
@@ -506,7 +544,7 @@
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="28364000" />
+    <option name="totallyTimeSpent" value="28860000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -518,17 +556,17 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="0" width="1674" height="1022" extended-state="0" />
-    <editor active="false" />
+    <frame x="0" y="0" width="1674" height="882" extended-state="0" />
+    <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.15342632" sideWeight="0.4586331" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.15342632" sideWeight="0.43617022" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32890365" sideWeight="0.45899633" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.38222224" sideWeight="0.41479686" order="10" side_tool="false" content_ui="tabs" />
-      <window_info id="CMake" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.27555555" sideWeight="0.42995754" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.38157895" sideWeight="0.41479686" order="10" side_tool="false" content_ui="tabs" />
+      <window_info id="CMake" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.275" sideWeight="0.42995754" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3298292" sideWeight="0.50211734" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32890365" sideWeight="0.49788263" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.38222224" sideWeight="0.5852032" order="6" side_tool="true" content_ui="tabs" x="0" y="327" width="1676" height="187" />
-      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.15342632" sideWeight="0.54136693" order="1" side_tool="true" content_ui="tabs" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.15342632" sideWeight="0.5638298" order="1" side_tool="true" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32890365" sideWeight="0.497552" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.19358742" sideWeight="0.5045992" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.28539824" sideWeight="0.49547374" order="1" side_tool="false" content_ui="tabs" />
@@ -878,52 +916,19 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/cxx/statistics.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="345">
-          <caret line="209" column="6" selection-start-line="209" selection-start-column="6" selection-end-line="209" selection-end-column="6" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/.CLion2016.2/clion64.vmoptions">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="240">
           <caret line="16" column="0" selection-start-line="16" selection-start-column="0" selection-end-line="16" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/cxx_boost/pcapreader.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="121">
-          <caret line="13" column="15" selection-start-line="13" selection-start-column="0" selection-end-line="14" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/cxx_boost/pcapreader.cxx">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="283">
-          <caret line="247" column="55" selection-start-line="247" selection-start-column="55" selection-end-line="247" selection-end-column="55" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/cxx_boost/pcapreader.h" />
+    <entry file="file://$PROJECT_DIR$/cxx_boost/pcapreader.cxx" />
     <entry file="file://$PROJECT_DIR$/cxx/pcap_processor.h">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="362">
           <caret line="44" column="0" selection-start-line="44" selection-start-column="0" selection-end-line="44" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/release_test/pcapreader.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="195">
-          <caret line="13" column="25" selection-start-line="13" selection-start-column="25" selection-end-line="13" selection-end-column="25" />
-          <folding>
-            <element signature="e#29#68#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -931,16 +936,29 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1622">
           <caret line="226" column="0" selection-start-line="226" selection-start-column="0" selection-end-line="241" selection-end-column="3" />
-          <folding>
-            <marker date="1475431165897" expanded="true" signature="8313:8839" ph="//..." />
-          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/CMakeLists.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="436">
-          <caret line="47" column="32" selection-start-line="47" selection-start-column="32" selection-end-line="47" selection-end-column="32" />
+        <state relative-caret-position="-63">
+          <caret line="27" column="24" selection-start-line="27" selection-start-column="24" selection-end-line="27" selection-end-column="24" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/release_test/pcapreader.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="180">
+          <caret line="13" column="25" selection-start-line="13" selection-start-column="25" selection-end-line="13" selection-end-column="25" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/cxx/statistics.h">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="389">
+          <caret line="177" column="0" selection-start-line="177" selection-start-column="0" selection-end-line="177" selection-end-column="0" />
           <folding />
         </state>
       </provider>

@@ -151,7 +151,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
         stats.incrementProtocolCount(ipAddressSender, "IPv4");
 
         // Assign IP Address to MAC Address
-        stats.assign_mac_address(ipAddressSender, mac_address);
+        stats.assignMacAddress(ipAddressSender, mac_address);
 
     } // PDU is IPv6
     else if (pdu_l3_type == PDU::PDUType::IPv6) {
@@ -169,7 +169,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
         stats.incrementProtocolCount(ipAddressSender, "IPv6");
 
         // Assign IP Address to MAC Address
-        stats.assign_mac_address(ipAddressSender, mac_address);
+        stats.assignMacAddress(ipAddressSender, mac_address);
     } else {
         std::cout << "Unknown PDU Type on L3: " << pdu_l3_type << std::endl;
     }

@@ -174,7 +174,7 @@ public:
 
     void setTimestampLastPacket(Tins::Timestamp ts);
 
-    void assign_mac_address(std::string ipAddress, std::string macAddress);
+    void assignMacAddress(std::string ipAddress, std::string macAddress);
 
     void addIpStat_packetSent(std::string ipAddressSender, std::string ipAddressReceiver, long bytesSent);
 
