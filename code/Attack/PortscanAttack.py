@@ -54,7 +54,9 @@ class PortscanAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.PORT_ORDER_DESC, 'False')
         self.add_param_value(Param.MAC_SOURCE, 'macAddress(ipAddress=' + most_used_ipAddress + ')')
         self.add_param_value(Param.MAC_DESTINATION, 'A0:1A:28:0B:62:F4')
-        self.add_param_value(Param.PACKETS_PER_SECOND, self.statistics.get_pps_sent(most_used_ipAddress))
+        self.add_param_value(Param.PACKETS_PER_SECOND,
+                             (self.statistics.get_pps_sent(most_used_ipAddress) +
+                              self.statistics.get_pps_received(most_used_ipAddress)) / 2)
         self.add_param_value(Param.INJECT_AT_TIMESTAMP, '1410733342')  # Sun, 14 Sep 2014 22:22:22 GMT
 
     def get_packets(self):
