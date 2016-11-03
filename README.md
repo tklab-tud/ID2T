@@ -28,8 +28,8 @@ Simply clone the repository to get started:
 ``git clone https://git.tk.informatik.tu-darmstadt.de/SPIN/ID2T-toolkit ``
 
 After cloning the repository, initialize its submodules with
-    git submodules init
-    git submodules update
+    git submodule init
+    git submodule update
 
 Compile the C++ modules (description pending).
 
@@ -214,13 +214,13 @@ The [SemVer](http://semver.org/spec/v2.0.0.html) is used for versioning. For cur
 
 ## Authors
 
-- __Emmanouil Vasilomanolakis__ - _contact person, idea of ID2T, guidance and suggestions during development_
+- __Emmanouil Vasilomanolakis__ - _ID2T idea, guidance and suggestions during development_
 
-- __Carlos Garcia__ - _idea of ID2T, guidance and suggestions during development_
+- __Carlos Garcia__ - _ID2T idea, guidance and suggestions during development_
 
 - __Nikolay Milanov__ - _development of first prototype within his Master Thesis_
 
-- __Patrick Jattke__ - _development of first public release within his Bachelor Thesis_
+- __Patrick Jattke__ - _development of first public release as part of his Bachelor Thesis_
 
 ## License
 
