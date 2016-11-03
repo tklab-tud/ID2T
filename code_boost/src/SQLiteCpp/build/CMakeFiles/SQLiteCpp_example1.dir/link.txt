@@ -1,1 +1,0 @@
-/usr/bin/c++   -g    CMakeFiles/SQLiteCpp_example1.dir/examples/example1/main.cpp.o  -o SQLiteCpp_example1 -rdynamic libSQLiteCpp.a sqlite3/libsqlite3.a -lpthread -ldl 

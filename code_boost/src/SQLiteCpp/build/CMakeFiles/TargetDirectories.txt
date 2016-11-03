@@ -1,9 +1,0 @@
-/mnt/hgfs/vm-exchange/SQLiteCpp/build/CMakeFiles/SQLiteCpp.dir
-/mnt/hgfs/vm-exchange/SQLiteCpp/build/CMakeFiles/SQLiteCpp_cpplint.dir
-/mnt/hgfs/vm-exchange/SQLiteCpp/build/CMakeFiles/SQLiteCpp_example1.dir
-/mnt/hgfs/vm-exchange/SQLiteCpp/build/CMakeFiles/SQLiteCpp_tests.dir
-/mnt/hgfs/vm-exchange/SQLiteCpp/build/googletest/googlemock/CMakeFiles/gmock.dir
-/mnt/hgfs/vm-exchange/SQLiteCpp/build/googletest/googlemock/CMakeFiles/gmock_main.dir
-/mnt/hgfs/vm-exchange/SQLiteCpp/build/googletest/googlemock/gtest/CMakeFiles/gtest.dir
-/mnt/hgfs/vm-exchange/SQLiteCpp/build/googletest/googlemock/gtest/CMakeFiles/gtest_main.dir
-/mnt/hgfs/vm-exchange/SQLiteCpp/build/sqlite3/CMakeFiles/sqlite3.dir

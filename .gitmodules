@@ -1,0 +1,3 @@
+[submodule "code_boost/src/SQLiteCpp"]
+	path = code_boost/src/SQLiteCpp
+	url = https://github.com/SRombauts/SQLiteCpp.git
