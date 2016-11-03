@@ -2,7 +2,7 @@
 A toolkit for synthetic injection of attacks into network datasets.
 
 ## Synopsis
-As Intrusion Detection Systems encounter growing importance in the area of network security, the need of high quality network datasets for evaluation against real-world attacks rises. 
+As Intrusion Detection Systems encounter growing importance in the area of network security, the need of high quality network datasets for evaluation against real-world attacks rises.
 
 Comparability of the results must be ensured by use of publicly available datasets. Existing datasets, however, suffer from several disadvantages. Often they do not provide ground trouth, consist of outdated traffic and do not contain any payload because of privacy reasons. Moreover, frequently datasets do not contain latest attacks and missing attack labels make it difficult to identify existing attacks and enable a transparent comparison of Intrusion Detection Systems.
 
@@ -25,11 +25,15 @@ The following non-standard packages are required to run ID2T. Missing packages c
 ### Installation
 There is no installation required. Simply clone the repository to get started:
 
-`` git clone https://git.tk.informatik.tu-darmstadt.de/SPIN/ID2T-toolkit ``
+``git clone https://git.tk.informatik.tu-darmstadt.de/SPIN/ID2T-toolkit ``
 
-After making the main file executable `` sudo chmod +x CLI.py ``, the application can be started by `` .\CLI.py ``
+After cloning the repository, initialize its submodules with
+    git submodules init
+    git submodules update
 
-## Usage examples 
+Run ID2T with the command ``python ./code/CLI.py`` .
+
+## Usage examples
 In this section we provide some examples on how to use ID2T.
 
 ### Injecting an attack into an existing dataset
@@ -43,11 +47,11 @@ An attack can be injected by providing ``-a/--attack`` followed by the attack na
 
 ### Querying the statistics database
 The statistics database supports queries of two different types:
-- standard SQL queries, called _user-defined query_, which are passed directly to the SQLite database,  
+- standard SQL queries, called _user-defined query_, which are passed directly to the SQLite database,
 e.g. `` SELECT ipAddress from ip_statistics WHERE pktsSent>1000 ``
-- pre-defined queries, called _named query_, which are like shortcuts for SQL queries,  
-e.g. ``most_used(ipAddress)``, ``random(all(ipAddress))``  
-The named queries can further be divided into two classes: 
+- pre-defined queries, called _named query_, which are like shortcuts for SQL queries,
+e.g. ``most_used(ipAddress)``, ``random(all(ipAddress))``
+The named queries can further be divided into two classes:
 	- _selectors_ gather information from the database; the result can be a list of values, like ``all(ipAddress)``
 	- _extractors_ can be applied on gathered data and always reduce the result set to a single element, e.g. ``random(...)`` returns a randomly chosen element of the list
 
@@ -55,15 +59,15 @@ A complete list of supported named queries can be found in section [Named Querie
 
 These two types of queries can be executed either by providing the query string as an application argument or by going into the query mode. The application argument ``-q/--query`` takes a user-defined query or named query as input and prints the results to the terminal:
 
-Execute query directly: 
-`` .\CLI.py -i /home/user/pcap_capture.pcap -q <query> ``  
+Execute query directly:
+`` .\CLI.py -i /home/user/pcap_capture.pcap -q <query> ``
 
 If  ``-q/--query`` is called without any argument, the application enters into the query mode. This mode is like a read-eval-print-loop (REPL) for SQL queries. In this mode the user can repetively provide a query (must end by ";"), send the query by pressing ENTER and see the response in the terminal:
 
-Go into query mode: `` .\CLI.py -i /home/user/pcap_capture.pcap -q ``  
+Go into query mode: `` .\CLI.py -i /home/user/pcap_capture.pcap -q ``
 
 _Example output_:
-	
+
 	Input file: /home/user/pcap_capture.pcap
 	Located statistics database at: /home/pjattke/ID2T_data/db/99/137/81a0a71b0f36.sqlite3
 	Loaded file statistics in 0.00 sec from statistics database.
@@ -82,7 +86,7 @@ _Example output_:
 By calling ``.\CLI.py -h``, a list of available application arguments with a short description is shown.
 
 
-### Attack Parameters 
+### Attack Parameters
 In this section the allowed attack parameter for all available attacks are presented.
 
 #### Portscan Attack
@@ -165,25 +169,25 @@ Table: __tcp_mss__
 
 #### Named Queries
 
-___Selectors___ are named queries which return a single element or a list of elements, depending on the values in the database and the query. 
+___Selectors___ are named queries which return a single element or a list of elements, depending on the values in the database and the query.
 
 For example, the named query `` most_used(ipAddress) `` may return a single IP address if the most used IP address, based on the sum of packets sent and received, is unique. If there are multiple IP addresses with the same number of packets sent plus packets received, a list of IP addresses is returned. As the user cannot know how many values are returned, the extractors are ignored if the result is a single element.
 
-	most_used(ipAddress | macAddress | portNumber | protocolName | ttlValue) 
-	
-	least_used(ipAddress | macAddress | portNumber | protocolName | ttlValue) 
-	
-	avg(pktsReceived | pktsSent | kbytesSent | kbytesReceived | ttlValue | mss) 
-	
-	all(ipAddress | ttlValue | mss | macAddress | portNumber | protocolName) 
-	
+	most_used(ipAddress | macAddress | portNumber | protocolName | ttlValue)
+
+	least_used(ipAddress | macAddress | portNumber | protocolName | ttlValue)
+
+	avg(pktsReceived | pktsSent | kbytesSent | kbytesReceived | ttlValue | mss)
+
+	all(ipAddress | ttlValue | mss | macAddress | portNumber | protocolName)
+
 There are also parameterizable selectors which take conditions as input. Following two examples to show the syntax by example:
 
-	ipAddress(macAddress=AA:BB:CC:DD:EE:FF, pktsSent > 1000, kbytesReceived < 1000) 
+	ipAddress(macAddress=AA:BB:CC:DD:EE:FF, pktsSent > 1000, kbytesReceived < 1000)
 	-> returns one or multiple IP addresses matching the given criterias
-	Supports the fields: macAddress, ttlValue, ttlCount, portName, portNumber, portDirection, kbytesSent, kbytesReceived, pktsSent, pktsReceived, 
-	
-	macAddress(ipAddress=192.168.178.2) 
+	Supports the fields: macAddress, ttlValue, ttlCount, portName, portNumber, portDirection, kbytesSent, kbytesReceived, pktsSent, pktsReceived,
+
+	macAddress(ipAddress=192.168.178.2)
 	-> returns the MAC address matching the given criteria
 	Supports the field: ipAddress
 
@@ -193,7 +197,7 @@ random(...)  -> returns a random element from a list
 first(...)   -> returns the first element from a list
 last(...)    -> returns the last element from a list
 ```
-Attention: Named queries are designed to be combined with extractors, like ``random(all(ipAddress))``. But it is currently NOT possible to encapsulate multiple named queries, like `` macAddress(ipAddress=most_used(ipAddress))``. This can be circumvented by first querying ``most_used(ipAddress)`` and then inserting the result as argument in ``macAddress(…)``. 
+Attention: Named queries are designed to be combined with extractors, like ``random(all(ipAddress))``. But it is currently NOT possible to encapsulate multiple named queries, like `` macAddress(ipAddress=most_used(ipAddress))``. This can be circumvented by first querying ``most_used(ipAddress)`` and then inserting the result as argument in ``macAddress(…)``.
 
 ## Versioning
 The [SemVer](http://semver.org/spec/v2.0.0.html) is used for versioning. For currently available versions of ID2T, see page [releases](https://git.tk.informatik.tu-darmstadt.de/emmanouil.vasilomano/ID2T-toolkit/releases).
