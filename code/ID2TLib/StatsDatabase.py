@@ -273,7 +273,7 @@ class StatsDatabase:
             return
 
         # If result is tuple/list with single element, extract value from list
-        requires_extraction = (isinstance(result, list) or isinstance(result, tuple)) and len(result) == 1
+        requires_extraction = (isinstance(result, list) or isinstance(result, tuple)) and len(result) == 1 and len(result[0]) == 1
         while requires_extraction:
             if isinstance(result, list) or isinstance(result, tuple):
                 result = result[0]

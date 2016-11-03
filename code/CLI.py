@@ -109,22 +109,24 @@ def main(args):
 
 
 # Uncomment to enable calling by terminal
-#if __name__ == '__main__':
-#    main(sys.argv[1:])
-
 if __name__ == '__main__':
-    FILE = ['-i', '/mnt/hgfs/datasets/95M.pcap']
+    main(sys.argv[1:])
 
-    ATTACK = ['-a', 'PortscanAttack', 'ip.src=10.2.2.4', 'mac.dst=05:AB:47:B5:19:11',
-              'inject.at-timestamp=1449038705.316721', 'attack.note=First portscan Attack']
-    ATTACK2 = ['-a', 'PortscanAttack', 'ip.dst=193.133.122.23, ip.src=192.124.34.12', 'inject.after-pkt=34']
-
-    STATS_RECALC = ['-r']
-    STATS_PRINT = ['-s']
-
-    QUERY_MODE_LOOP = ['-q']
-    QUERY_DB = ['-q', 'most_used(ttlValue)']
-
-    main(FILE + ATTACK)
+# if __name__ == '__main__':
+#     FILE = ['-i', '/mnt/hgfs/datasets/95M.pcap']
+#     FILE2 = ['-i', '/mnt/hgfs/datasets/95M_20161103-185151.pcap']
+#
+#
+#     ATTACK = ['-a', 'PortscanAttack', 'ip.src=10.2.2.4', 'mac.dst=05:AB:47:B5:19:11',
+#               'inject.at-timestamp=1449038705.316721', 'attack.note=Portscan2']
+#     ATTACK2 = ['-a', 'PortscanAttack', 'ip.dst=193.133.122.23, ip.src=192.124.34.12', 'inject.after-pkt=34']
+#
+#     STATS_RECALC = ['-r']
+#     STATS_PRINT = ['-s']
+#
+#     QUERY_MODE_LOOP = ['-q']
+#     QUERY_DB = ['-q', 'most_used(ttlValue)']
+#
+#     main(FILE2 + ATTACK)
 
     # main(['-c', '/home/pjattke/Thesis/development/code/config'])
