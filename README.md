@@ -6,7 +6,7 @@ As Intrusion Detection Systems encounter growing importance in the area of netwo
 
 Comparability of the results must be ensured by use of publicly available datasets. Existing datasets, however, suffer from several disadvantages. Often they do not provide ground trouth, consist of outdated traffic and do not contain any payload because of privacy reasons. Moreover, frequently datasets do not contain latest attacks and missing attack labels make it difficult to identify existing attacks and enable a transparent comparison of Intrusion Detection Systems.
 
-The ID2T application was first proposed in [[1]](#references) and targets the injection of attacks into existing network datasets. At first, it analyzes a given dataset and collects statistics from it. These statistics are stored into a local database. Next, these statistics can be used to define attack parameters for the injection of one or multiple attacks. Finally, the application creates the required attack packets and injects them into the existing file. Resulting in a new PCAP with the injected attacks and a label file indicating the position (timestamps) of the first and last attack packet.
+The ID2T application was first proposed in [[1]](#references) and targets the injection of attacks into existing network datasets. At first, it analyzes a given dataset and collects statistics from it. These statistics are stored into a local database. Next, these statistics can be used to define attack parameters for the injection of one or multiple attacks. Finally, the application creates the required attack packets and injects them into the existing file. Resulting in a new PCAP with the injected attacks and a label file indicating the position of the attack in the dataset.
 
 ### References
 [1] [Cordero, Vasilomanolakis, Milanov et al.: ID2T: a DIY Dataset Creation Toolkit for Intrusion Detection System](https://www.tk.informatik.tu-darmstadt.de/fileadmin/user_upload/Group_TK/filesDownload/Published_Papers/id2t.pdf)
@@ -39,7 +39,10 @@ In the following we inject the _PortscanAttack_ into the dataset *pcap_capture.p
 
 __Explanation__: The parameter ``-i/--input`` takes the path to the PCAP file. This triggers the statistics calculation of the file. After the calculation, the statistics are stored into a SQLite database. If the statistics were already computed in an earlier run, the data is retrieved from the generated database. This saves time as the calculation of the statistics may take long time - depending on the PCAP file size.
 
-An attack can be injected by providing ``-a/--attack`` followed by the attack name and the attack parameters. The available attacks and the allowed attack parameters vary, see section [Attack Parameters](#attack-parameters) for details. The parameter  ``-a/--attack`` can be provided multiple times for injection of multiple attacks. In this case the attacks are injected sequentially.
+An attack can be injected by providing ``-a/--attack`` followed by the attack name and the attack parameters. The available attacks and the allowed attack parameters vary, see the attack-specific wiki articles for a reference of supported attack parameters. The parameter  ``-a/--attack`` can be provided multiple times for injection of multiple attacks. In this case the attacks are injected sequentially.
+
+After injecting the attack, the application generates a XML label file containing the timestamps of the first and last attack packet. The file name is equal to the output file, except with ``_labels.xml`` as suffix. 
+The toolkit recognizes if the input dataset has an associated label file. This requires a file naming according to the aforementioned scheme, e.g., mydataset.pcap and mydataset_labels.xml. In this case ID2T parses the label file and the resulting output label file contains the labels from the input label file plus the labels from the recently added attack(s).
 
 ### Querying the statistics database
 The statistics database supports queries of two different types:
@@ -51,7 +54,7 @@ The named queries can further be divided into two classes:
 	- _selectors_ gather information from the database; the result can be a list of values, like ``all(ipAddress)``
 	- _extractors_ can be applied on gathered data and always reduce the result set to a single element, e.g. ``random(...)`` returns a randomly chosen element of the list
 
-A complete list of supported named queries can be found in section [Named Queries](#named-queries).
+A complete list of supported named queries can be found in section [Named Queries](#named-queries). The database scheme, required for building SQL queries, is documented in the wiki article [DB Tables and Fields](/wiki/Statistics-DB%3A-Tables)
 
 These two types of queries can be executed either by providing the query string as an application argument or by going into the query mode. The application argument ``-q/--query`` takes a user-defined query or named query as input and prints the results to the terminal:
 
@@ -79,89 +82,9 @@ _Example output_:
 ## Command reference
 
 ### Application Arguments
-By calling ``.\CLI.py -h``, a list of available application arguments with a short description is shown.
-
-
-### Attack Parameters 
-In this section the allowed attack parameter for all available attacks are presented.
-
-#### Portscan Attack
-The _PortscanAttack_ currently supports the following attack parameters:
-
-| Field name          | Description                                                                    | Notes                                                                       |
-|---------------------|--------------------------------------------------------------------------------|-----------------------------------------------------------------------------|
-| mac.src             | MAC address of the attacker                                                    |                                                                             |
-| mac.dst             | MAC address of the victim                                                      |                                                                             |
-| ip.src              | IP address of the attacker                                                     |                                                                             |
-| ip.src.shuffle      | Randomizes the source IP address if port.src is a list of ports                |                                                                             |
-| ip.dst              | IP address of the attacker                                                     |                                                                             |
-| port.src            | Ports used by the attacker                                                     | Can be specified in different ways, e.g.: "22, 23, 24, 8080", "22-24, 8080" |
-| port.src.shuffle    | Randomizes the source ports if port.src is a list of ports                     |                                                                             |
-| port.dst            | Ports to be scanned                                                            | Can be specified in different ways, e.g.: "22, 23, 24, 8080", "22-24, 8080" |
-| port.dst.shuffle    | Randomizes the destination ports if port.dst is a list of ports                |                                                                             |
-| port.open           | Open ports at the victim's side                                                | Can be specified in different ways, e.g.: "22, 23, 24, 8080", "22-24, 8080" |
-| port.dst.order-desc | Changes the destination port order from ascending (False) to descending (True) |                                                                             |
-| inject.at-timestamp | Starts injecting the attack at the given unix timestamp                        |                                                                             |
-| inject.after-pkt    | Starts injecting the attack after the given packet number                      |                                                                             |
-| packets.per-second  | Number of packets sent per second by the attacker                              |                                                                             |
-
+By calling ``.\CLI.py -h``, a list of available application arguments with a short description is printed on screen. The arguments are described more detailed in the wiki article [Program Arguments](/wiki/Program-Arguments).
 
 ### Statistics DB Queries
-
-#### SQL Queries
-Querying the SQLite database by standard SQL queries requires knowledge about the database scheme. Therefore we provide a short overview about the tables and fields:
-
-Table: __ip_statistics__
-
-
-| Field name     | Description                                       |
-|----------------|---------------------------------------------------|
-| ipAddress      | IP Address of the host these statistics belong to |
-| kybtesSent     | KBytes of data sent                               |
-| kybtesReceived | KBytes of data received                           |
-| pktsSent       | Number of packets sent                            |
-| pktsReceived   | Number of packets received                        |
-
-Table: __ip_ttl__
-
-| Field name | Description                            |
-|------------|----------------------------------------|
-| ipAddress  | IP Address of the host                 |
-| ttlValue   | TTL value                              |
-| ttlCount   | Number of packets using this TTL value |
-
-
-Table: __ip_mac__
-
-| Field name | Description             |
-|------------|-------------------------|
-| ipAddress  | IP Address of the host  |
-| macAddress | MAC Address of the host |
-
-Table: __ip_ports__
-
-| Field name    | Description                                                                   |
-|---------------|-------------------------------------------------------------------------------|
-| ipAddress     | IP Address of the host                                                        |
-| portDirection | If data was received on this port "in", if data was sent from this port "out" |
-| portNumber    | Port number                                                                   |
-| portCount     | Number of packets using this port                                             |
-
-Table: __ip_protocols__
-
-| Field name    | Description                               |
-|---------------|-------------------------------------------|
-| ipAddress     | IP Address of the host                    |
-| protocolName  | Name of the protocol, e.g. TCP, UDP, IPv4 |
-| protocolCount | Number of packets using this protocol     |
-
-Table: __tcp_mss__
-
-| Field name | Description                                        |
-|------------|----------------------------------------------------|
-| ipAddress  | IP Address of the host                             |
-| mss        | Maximum Segment Size (TCP option) used by the host |
-
 
 #### Named Queries
 
@@ -202,7 +125,6 @@ The [SemVer](http://semver.org/spec/v2.0.0.html) is used for versioning. For cur
 
 * 0.1.0: Initial release
 	* Added attack: Portscan Attack
-
 
 ## Authors
 
