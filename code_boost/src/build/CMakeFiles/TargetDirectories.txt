@@ -1,2 +1,0 @@
-/home/pjattke/DE/src/build/CMakeFiles/cpp-pcapreader.dir
-/home/pjattke/DE/src/build/CMakeFiles/pcapreader.dir
