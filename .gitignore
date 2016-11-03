@@ -1,8 +1,12 @@
-# ---> Python
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
 *.pyc
 *.o
+
+# Build files
 code_boost/src/build/*
+
+# Pycharm IDE configuration
+.idea/
