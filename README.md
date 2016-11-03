@@ -14,16 +14,16 @@ The ID2T application was first proposed in [[1]](#references) and targets the in
 ## Getting Started
 
 ### Prerequisities
-ID2T is written for Python 3.4 and C++ 11. The main modules were developed in Python whereas the statistics collection and PCAP merging is performed, due to performance reasons, by a C++ module which uses the library [Libtins](https://github.com/mfontanini/libtins/). These modules are invoked in python by using [Boost.Python](http://www.boost.org/doc/libs/1_62_0/libs/python/doc/html/index.html).
+ID2T is written using Python 3.4 and C++ 11. The main logic is programmed in Python whereas performance critical components are programmed in C++11. The C++11 module uses the library [Libtins](https://github.com/mfontanini/libtins/). The python and c++ modules interact with each other through the library [Boost.Python](http://www.boost.org/doc/libs/1_62_0/libs/python/doc/html/index.html).
 
 #### Required Python Packages
-The following non-standard packages are required to run ID2T. Missing packages can be installed from terminal via  `` sudo pip install <packagename> ``.
+The following packages are required to run ID2T. Missing packages can be installed from terminal via  `` sudo pip install <packagename> ``.
 
-* ``scapy-python3``: used for packet creation
+* ``scapy``: used for packet creation (make sure its the python3 version)
 * ``lea``: used for calculation of parameters derived by the gathered statistics
 
 ### Installation
-There is no installation required. Simply clone the repository to get started:
+Simply clone the repository to get started:
 
 ``git clone https://git.tk.informatik.tu-darmstadt.de/SPIN/ID2T-toolkit ``
 
@@ -31,40 +31,44 @@ After cloning the repository, initialize its submodules with
     git submodules init
     git submodules update
 
+Compile the C++ modules (description pending).
+
 Run ID2T with the command ``python ./code/CLI.py`` .
 
 ## Usage examples
-In this section we provide some examples on how to use ID2T.
+In this section, we provide some examples on using ID2T.
 
 ### Injecting an attack into an existing dataset
 In the following we inject the _PortscanAttack_ into the dataset *pcap_capture.pcap*:
 
-`` .\CLI.py -i /home/user/pcap_capture.pcap -a PortscanAttack ip.src=10.192.168.178.2 mac.src=32-08-24-DC-8D-27 inject.at-timestamp=1476301843 ``
+`` ./CLI.py -i /home/user/pcap_capture.pcap -a PortscanAttack ip.src=10.192.168.178.2 mac.src=32-08-24-DC-8D-27 inject.at-timestamp=1476301843 ``
 
 __Explanation__: The parameter ``-i/--input`` takes the path to the PCAP file. This triggers the statistics calculation of the file. After the calculation, the statistics are stored into a SQLite database. If the statistics were already computed in an earlier run, the data is retrieved from the generated database. This saves time as the calculation of the statistics may take long time - depending on the PCAP file size.
 
 An attack can be injected by providing ``-a/--attack`` followed by the attack name and the attack parameters. The available attacks and the allowed attack parameters vary, see section [Attack Parameters](#attack-parameters) for details. The parameter  ``-a/--attack`` can be provided multiple times for injection of multiple attacks. In this case the attacks are injected sequentially.
 
-### Querying the statistics database
-The statistics database supports queries of two different types:
-- standard SQL queries, called _user-defined query_, which are passed directly to the SQLite database,
-e.g. `` SELECT ipAddress from ip_statistics WHERE pktsSent>1000 ``
-- pre-defined queries, called _named query_, which are like shortcuts for SQL queries,
-e.g. ``most_used(ipAddress)``, ``random(all(ipAddress))``
-The named queries can further be divided into two classes:
-	- _selectors_ gather information from the database; the result can be a list of values, like ``all(ipAddress)``
-	- _extractors_ can be applied on gathered data and always reduce the result set to a single element, e.g. ``random(...)`` returns a randomly chosen element of the list
+### The Statistics database
+Whenever ID2T processes a pcap file, it creates a database detailing many things related to the network traffic it has processed. These details can be seen using the _query mode_ of ID2T. To specify a query against a pcap file, use the option ``-q/--query`. For example, if we want to know the IP address with the most activity in the pcap file 'test.pcap' we can issue the command:
+    ./CLI.py -i test.pcap -q most_used(ipAddress)
+
+The _query mode_ serves as a place where standard SQL queries (known as _user-defined queries_) can be issued against the database created for a pcap file. Furthermore, the most commonly used queries are provided with special keywords known as _named queries_.
+
+- A _user-defined query_ looks like this:
+  - e.g. `` SELECT ipAddress FROM ip_statistics WHERE pktsSent > 1000 ``
+- A pre-defined query, known as _named query_, looks like this:
+  - e.g. ``most_used(ipAddress)``, ``random(all(ipAddress))``
+
+The _named queries_ can be further divided into two classes:
+- _selectors_ - gather information from the database; the result can be a list of values
+  - e.g. ``all(ipAddress)``
+  - _extractors_ - can be applied on gathered data and always reduce the result set to a single element
+    - e.g. ``random(...)`` returns a randomly chosen element of the list
 
 A complete list of supported named queries can be found in section [Named Queries](#named-queries).
 
-These two types of queries can be executed either by providing the query string as an application argument or by going into the query mode. The application argument ``-q/--query`` takes a user-defined query or named query as input and prints the results to the terminal:
+If  ``-q/--query`` is called without an argument, the application enters into REPL query mode. This mode is like a standard read-eval-print-loop (REPL) for SQL queries. In this mode, the user can repeatedly input queries (each query must finish with a ";" (semicolon)); send the query by pressing ENTER and see the response in the terminal:
 
-Execute query directly:
-`` .\CLI.py -i /home/user/pcap_capture.pcap -q <query> ``
-
-If  ``-q/--query`` is called without any argument, the application enters into the query mode. This mode is like a read-eval-print-loop (REPL) for SQL queries. In this mode the user can repetively provide a query (must end by ";"), send the query by pressing ENTER and see the response in the terminal:
-
-Go into query mode: `` .\CLI.py -i /home/user/pcap_capture.pcap -q ``
+Example query mode usage: ``./CLI.py -i test.pcap -q``
 
 _Example output_:
 
@@ -83,7 +87,7 @@ _Example output_:
 ## Command reference
 
 ### Application Arguments
-By calling ``.\CLI.py -h``, a list of available application arguments with a short description is shown.
+By calling ``./CLI.py -h``, a list of available application arguments with a short description is shown.
 
 
 ### Attack Parameters
