@@ -61,8 +61,8 @@ The _query mode_ serves as a place where standard SQL queries (known as _user-de
 The _named queries_ can be further divided into two classes:
 - _selectors_ - gather information from the database; the result can be a list of values
   - e.g. ``all(ipAddress)``
-  - _extractors_ - can be applied on gathered data and always reduce the result set to a single element
-    - e.g. ``random(...)`` returns a randomly chosen element of the list
+- _extractors_ - can be applied on gathered data and always reduce the result set to a single element
+  - e.g. ``random(...)`` returns a randomly chosen element of the list
 
 A complete list of supported named queries can be found in section [Named Queries](#named-queries).
 
