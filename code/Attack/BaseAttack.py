@@ -95,7 +95,7 @@ class BaseAttack(metaclass=ABCMeta):
             :param num: The port number as int.
             :return: True if the port number is invalid, otherwise False.
             """
-            return num < 0 or num > 65535
+            return num < 1 or num > 65535
 
         ports_input = ports_input.replace(' ', '').split(',')
         ports_output = []
@@ -114,7 +114,7 @@ class BaseAttack(metaclass=ABCMeta):
             elif '-' in port_entry or '..' in port_entry:
                 # port_entry describes a port range
                 # allowed format: '12-123', '12..123', '12...123'
-                match = re.match('^([0-9]{1,4})(?:-|\.{2,3})([0-9]{1,4})$', port_entry)
+                match = re.match('^([0-9]{1,5})(?:-|\.{2,3})([0-9]{1,5})$', port_entry)
                 # check validity of port range
                 # and create list of ports derived from given start and end port
                 (port_start, port_end) = int(match.group(1)), int(match.group(2))

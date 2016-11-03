@@ -46,7 +46,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.IP_SOURCE, most_used_ipAddress)
         self.add_param_value(Param.IP_SOURCE_RANDOMIZE, 'False')
         self.add_param_value(Param.IP_DESTINATION, '192.168.178.13')
-        self.add_param_value(Param.PORT_DESTINATION, '0-1023,1720,1900,8080')
+        self.add_param_value(Param.PORT_DESTINATION, '1-1023,1720,1900,8080')
         self.add_param_value(Param.PORT_SOURCE, '8542')
         self.add_param_value(Param.PORT_OPEN, '8080,9232,9233')
         self.add_param_value(Param.PORT_SOURCE_RANDOM, 'False')
