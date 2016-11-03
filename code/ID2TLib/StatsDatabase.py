@@ -237,6 +237,7 @@ class StatsDatabase:
         query_string = query_string_in.lower().lstrip()
 
         # query_string is a user-defined SQL query
+        result = None
         if sql_query_parameters is not None or query_string.startswith("select") or query_string.startswith("insert"):
             result = self._process_user_defined_query(query_string, sql_query_parameters)
         # query string is a named query -> parse it and pass it to statisticsDB
