@@ -122,7 +122,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
             reply_ether = Ether(src=mac_destination, dst=mac_source)
             reply_ip = IP(src=ip_destination, dst=ip_source, flags='DF')
 
-            if str(dport) in self.get_param_value(Param.PORT_OPEN):  # destination port is OPEN
+            if dport in self.get_param_value(Param.PORT_OPEN):  # destination port is OPEN
                 # target answers
                 reply_tcp = TCP(sport=dport, dport=sport, seq=0, ack=1, flags='SA', window=29200,
                                 options=[mss])
