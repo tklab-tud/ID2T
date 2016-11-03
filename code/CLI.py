@@ -56,12 +56,10 @@ class CLI(object):
         parser = argparse.ArgumentParser(description="Intrusion Detection Dataset Toolkit (ID2T) - A toolkit for "
                                                      "injection of synthetically created attacks into PCAP datasets.")
         # Define required arguments
-        # requiredNamed = parser.add_argument_group('required named arguments')
-        # requiredNamed.add_argument('-i', '--input', metavar="FILEPATH", help='path to the input pcap file',
-        # required=True)
+        requiredNamed = parser.add_argument_group('required named arguments')
+        requiredNamed.add_argument('-i', '--input', metavar="FILEPATH", help='path to the input pcap file', required=True)
 
         # Define optional arguments
-        parser.add_argument('-i', '--input', metavar="FILEPATH", help='path to the input pcap file', required=False)
         parser.add_argument('-c', '--config', metavar='FILEPATH', help='file containing parameters used as input.',
                             action=LoadFromFile, type=open)
         parser.add_argument('-e', '--export',
@@ -69,8 +67,6 @@ class CLI(object):
                             action='store_true', default=False)
         parser.add_argument('-a', '--attack', metavar="ATTACKNAME", action='append',
                             help='injects a new attack into the given dataset.', nargs='+')
-        parser.add_argument('-g', '--gui', help='enables the Graphical User Interface (GUI) mode.', action='store_true',
-                            default=False)
         parser.add_argument('-r', '--recalculate',
                             help='forces to recalculate the statistics in case of an already existing statistics database.',
                             action='store_true', default=False)
@@ -83,18 +79,7 @@ class CLI(object):
         # Parse arguments
         self.args = parser.parse_args(args)
 
-        # Either PCAP filepath or GUI mode must be enabled
-        if not self.args.input and not self.args.gui:
-            parser.error("Parameter -i/--input or -g/--gui required.")
-
-        # GUI mode enabled
-        if self.args.gui:
-            raise NotImplementedError("Feature not implemented yet.")
-            # gui = GUI.GUI()
-            pass
-        # CLI mode enabled
-        else:
-            self.process_arguments()
+        self.process_arguments()
 
 
 def main(args):
