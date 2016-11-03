@@ -120,21 +120,50 @@ class LabelManager:
         Loads the labels from an already existing label XML file located at label_file_path (set by constructor).
 
         """
+
+        def get_value_from_node(node, tag_name, *child_number):
+            """
+            Returns the value located in the tag specified by tag_name from a given node. Walks therefor the
+            node's children along as indicated by child_number, e.g., childNumber = (1,2,) first goes to the 1st child, and
+            then to the 2nd child of the first child -> elem.childNodes[1].childNodes[2].
+            """
+            elem = node.getElementsByTagName(tag_name)
+            if len(elem) == 1:
+                elem = elem[0]
+                for c in child_number:
+                    if len(elem.childNodes) > 0:
+                        elem = elem.childNodes[c]
+                    else:
+                        return ""
+                return elem.data
+            else:
+                return ""
+
         print("Label file found. Loading labels...")
-        dom = parse(self.label_file_path)
+        try:
+            dom = parse(self.label_file_path)
+        except Exception:
+            print('ERROR: Provided label file could not be parsed. Ignoring label file')
+            return
 
         # Check if version of parser and version of file match
-        version = dom.getElementsByTagName(self.TAG_ROOT)[0].getAttribute(self.ATTR_VERSION)
-        if not version == self.ATTR_VERSION_VALUE:
-            raise ValueError(
-                "The file " + self.label_file_path + " was created by another version of ID2TLib.LabelManager")
+        version = dom.getElementsByTagName(self.TAG_ROOT)
+        if len(version) > 0:
+            version = version[0].getAttribute(self.ATTR_VERSION)
+            if version == [] or not version == self.ATTR_VERSION_VALUE:
+                print(
+                    "The file " + self.label_file_path + " was created by another version of ID2TLib.LabelManager. Ignoring label file.")
 
         # Parse attacks from XML file
         attacks = dom.getElementsByTagName(self.TAG_ATTACK)
+        count_labels = 0
         for a in attacks:
-            attack_name = a.childNodes[1].firstChild.data
-            attack_note = a.childNodes[3].firstChild.data
-            timestamp_start = a.childNodes[5].childNodes[1].firstChild.data
-            timestamp_end = a.childNodes[7].childNodes[1].firstChild.data
+            attack_name = get_value_from_node(a, self.TAG_ATTACK_NAME, 0)
+            attack_note = get_value_from_node(a, self.TAG_ATTACK_NOTE, 0)
+            timestamp_start = get_value_from_node(a, self.TAG_TIMESTAMP_START, 1, 0)
+            timestamp_end = get_value_from_node(a, self.TAG_TIMESTAMP_END, 1, 0)
             label = Label.Label(attack_name, float(timestamp_start), float(timestamp_end), attack_note)
             self.labels.append(label)
+            count_labels += 1
+
+        print("Read " + str(count_labels) + " label(s) successfully.")
