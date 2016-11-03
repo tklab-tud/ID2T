@@ -1,5 +1,5 @@
 # ID2T - Intrusion Detection Dataset Toolkit
-A toolkit for synthetic injection of attacks into network datasets.
+A toolkit for injecting synthetic attacks into PCAP files.
 
 ## Synopsis
 As Intrusion Detection Systems encounter growing importance in the area of network security, the need of high quality network datasets for evaluation against real-world attacks rises.
