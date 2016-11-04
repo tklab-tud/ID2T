@@ -80,7 +80,7 @@ class Controller:
         print("Enter statement ending by ';' and press ENTER to send query. Exit by sending an empty query..")
         buffer = ""
         while True:
-            line = input()
+            line = input("> ")
             if line == "":
                 break
             buffer += line

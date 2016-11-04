@@ -257,14 +257,18 @@ class StatsDatabase:
                 # if char is no delimiter, add char to current_word
                 if char != delimiter_end and char != delimiter_start:
                     current_word += char
+                # if a start delimiter was found and the current_word so far is a keyword, add it to kplist
+                elif char == delimiter_start:
+                    if current_word in named_query_keywords:
+                        kplist.append((current_word,))
+                        current_word = ""
+                    else:
+                        print("ERROR: Unrecognized keyword '" + current_word + "' found. Ignoring query.")
+                        return
                 # else if characeter is end delimiter and there were no two directly following ending delimiters,
                 # the current_word must be the parameters of an earlier given keyword
                 elif char == delimiter_end and len(current_word) > 0:
                     kplist[-1] += (current_word,)
-                    current_word = ""
-                # if a start delimiter was found and the current_word so far is a keyword, add it to kplist
-                elif char == delimiter_start and current_word in named_query_keywords:
-                    kplist.append((current_word,))
                     current_word = ""
             result = self._process_named_query(kplist[::-1])
         else:
@@ -281,13 +285,19 @@ class StatsDatabase:
                 requires_extraction = False
 
         # If tuple of tuples or list of tuples, each consisting of single element is returned,
-        # then convert it into list of values, because the returned colum is clearly specified by query
+        # then convert it into list of values, because the returned colum is clearly specified by the given query
         if (isinstance(result, tuple) or isinstance(result, list)) and all(len(val) == 1 for val in result):
             result = [c for c in result for c in c]
 
         # Print results if option print_results is True
         if print_results:
-            self._print_query_results(query_string_in, result)
+            if len(result) == 1 and isinstance(result, list):
+                result = result[0]
+                print("Query returned 1 record:\n")
+                for i in range(0, len(result)):
+                    print(str(self.cursor.description[i][0]) + ": " + str(result[i]))
+            else:
+                self._print_query_results(query_string_in, result)
 
         return result
 
@@ -299,7 +309,14 @@ class StatsDatabase:
         :param query_string_in: The query the results belong to
         :param result: The results of the query
         """
-        print("Query '" + query_string_in + "' returned: ")
+        # Print number of results according to type of result
+        if isinstance(result, list):
+            print("Query returned " + str(len(result)) + " records:\n")
+
+        else:
+            print("Query returned 1 record:\n")
+
+        # Print query results
         if query_string_in.lstrip().upper().startswith(
                 "SELECT") and result is not None and self.cursor.description is not None:
             widths = []
