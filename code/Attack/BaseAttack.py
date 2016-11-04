@@ -88,8 +88,9 @@ class BaseAttack(metaclass=ABCMeta):
         Verifies if the given value is a valid port. Accepts port ranges, like 80-90, 80..99, 80...99.
 
         :param ports_input: The port number as int or string.
-        :return: True if the port number is valid, otherwise False. If a port range was given, the range is resolved
-        and a list of ports is additionally returned.
+        :return: True if the port number is valid, otherwise False. If a single port or a comma-separated list of ports
+        was given, a list of int is returned. If a port range was given, the range is resolved
+        and a list of int is returned.
         """
 
         def _is_invalid_port(num):
