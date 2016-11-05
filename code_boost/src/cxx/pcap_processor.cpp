@@ -59,12 +59,12 @@ std::string pcap_processor::merge_pcaps(const std::string pcap_path) {
     SnifferIterator iterator_attack = sniffer_attack.begin();
 
     PacketWriter writer(new_filepath, PacketWriter::ETH2);
-    bool all_attack_pkts_processed = false;
 
+    bool all_attack_pkts_processed = false;
     // Go through base PCAP and merge packets by timestamp
     for (; iterator_base != sniffer_base.end();) {
-        auto tstmp_base = iterator_base->timestamp().seconds();
-        auto tstmp_attack = iterator_attack->timestamp().seconds();
+        auto tstmp_base = (iterator_base->timestamp().seconds()) + (iterator_base->timestamp().microseconds()*1e-6);
+        auto tstmp_attack = (iterator_attack->timestamp().seconds()) + (iterator_attack->timestamp().microseconds()*1e-6);
 
         if (!all_attack_pkts_processed && tstmp_attack <= tstmp_base) {
             writer.write(*iterator_attack);
@@ -81,7 +81,7 @@ std::string pcap_processor::merge_pcaps(const std::string pcap_path) {
     // This may happen if the base PCAP is smaller than the attack PCAP
     // In this case append the remaining packets of the attack PCAP
     for (; iterator_attack != sniffer_attack.end(); iterator_attack++) {
-        writer.write(*iterator_attack->pdu());
+        writer.write(*iterator_attack);
     }
 
     return new_filepath;
@@ -118,12 +118,14 @@ void pcap_processor::collect_statistics() {
  */
 void pcap_processor::process_packets(const Packet &pkt) {
     // Layer 2: Data Link Layer ------------------------
-    std::string mac_address = "";
+    std::string macAddressSender = "";
+    std::string macAddressReceiver = "";
     const PDU *pdu_l2 = pkt.pdu();
     uint32_t sizeCurrentPacket = pdu_l2->size();
     if (pdu_l2->pdu_type() == PDU::ETHERNET_II) {
         EthernetII eth = (const EthernetII &) *pdu_l2;
-        mac_address = eth.src_addr().to_string();
+        macAddressSender = eth.src_addr().to_string();
+        macAddressReceiver = eth.dst_addr().to_string();
         sizeCurrentPacket = eth.size();
     }
 
@@ -151,7 +153,8 @@ void pcap_processor::process_packets(const Packet &pkt) {
         stats.incrementProtocolCount(ipAddressSender, "IPv4");
 
         // Assign IP Address to MAC Address
-        stats.assignMacAddress(ipAddressSender, mac_address);
+        stats.assignMacAddress(ipAddressSender, macAddressSender);
+        stats.assignMacAddress(ipAddressReceiver, macAddressReceiver);
 
     } // PDU is IPv6
     else if (pdu_l3_type == PDU::PDUType::IPv6) {
@@ -169,7 +172,9 @@ void pcap_processor::process_packets(const Packet &pkt) {
         stats.incrementProtocolCount(ipAddressSender, "IPv6");
 
         // Assign IP Address to MAC Address
-        stats.assignMacAddress(ipAddressSender, mac_address);
+        stats.assignMacAddress(ipAddressSender, macAddressSender);
+        stats.assignMacAddress(ipAddressReceiver, macAddressReceiver);
+
     } else {
         std::cout << "Unknown PDU Type on L3: " << pdu_l3_type << std::endl;
     }
@@ -226,9 +231,10 @@ bool inline pcap_processor::file_exists(const std::string &filePath) {
  */
 //int main() {
 //    std::cout << "Starting application." << std::endl;
-//    pcap_processor pcap = pcap_processor("/mnt/hgfs/datasets/95M.pcap");
-//    long double t = pcap.get_timestamp_mu_sec(87);
-//    std::cout << t << std::endl;
+//    //pcap_processor pcap = pcap_processor("/mnt/hgfs/datasets/95M.pcap");
+//    pcap_processor pcap = pcap_processor("/home/pjattke/temp/test_me_short.pcap");
+////long double t = pcap.get_timestamp_mu_sec(87);
+////    std::cout << t << std::endl;
 //
 ////    time_t start, end;
 ////    time(&start);
@@ -237,6 +243,9 @@ bool inline pcap_processor::file_exists(const std::string &filePath) {
 ////    double dif = difftime(end, start);
 ////    printf("Elapsed time is %.2lf seconds.", dif);
 ////    pcap.stats.writeToDatabase("/home/pjattke/myDB.sqlite3");
+//
+//    pcap.merge_pcaps("/home/pjattke/temp/temp_attack.pcap");
+//
 //
 //    return 0;
 //}
