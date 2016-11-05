@@ -43,6 +43,8 @@ class PortscanAttack(BaseAttack.BaseAttack):
         # PARAMETERS: initialize with default values
         # (values are overwritten if user specifies them)
         most_used_ipAddress = self.statistics.process_db_query("most_used(ipAddress)")
+        if isinstance(most_used_ipAddress, list):
+            most_used_ipAddress = most_used_ipAddress[0]
         self.add_param_value(Param.IP_SOURCE, most_used_ipAddress)
         self.add_param_value(Param.IP_SOURCE_RANDOMIZE, 'False')
         self.add_param_value(Param.IP_DESTINATION, '192.168.178.13')
@@ -52,23 +54,22 @@ class PortscanAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.PORT_SOURCE_RANDOM, 'False')
         self.add_param_value(Param.PORT_DEST_SHUFFLE, 'False')
         self.add_param_value(Param.PORT_ORDER_DESC, 'False')
-        self.add_param_value(Param.MAC_SOURCE, 'macAddress(ipAddress=' + most_used_ipAddress + ')')
+        macAddress = self.statistics.process_db_query('macAddress(ipAddress=' + most_used_ipAddress + ")")
+        self.add_param_value(Param.MAC_SOURCE, macAddress)
         self.add_param_value(Param.MAC_DESTINATION, 'A0:1A:28:0B:62:F4')
-        self.add_param_value(Param.PACKETS_PER_SECOND, self.statistics.get_pps_sent(most_used_ipAddress))
+        self.add_param_value(Param.PACKETS_PER_SECOND,
+                             (self.statistics.get_pps_sent(most_used_ipAddress) +
+                              self.statistics.get_pps_received(most_used_ipAddress)) / 2)
         self.add_param_value(Param.INJECT_AT_TIMESTAMP, '1410733342')  # Sun, 14 Sep 2014 22:22:22 GMT
 
     def get_packets(self):
-        def get_timestamp():
+        def update_timestamp(timestamp, pps, maxdelay):
             """
-            Calculates the next timestamp and returns the timestamp to be used for the current packet.
+            Calculates the next timestamp to be used based on the packet per second rate (pps) and the maximum delay.
 
-            :return: Timestamp to be used for the current packet.
+            :return: Timestamp to be used for the next packet.
             """
-            nonlocal timestamp_next_pkt, pps, maxdelay
-            timestamp_current_packet = timestamp_next_pkt  # current timestamp
-            #TODO Derive timestamps based on pps rate given
-            timestamp_next_pkt = timestamp_next_pkt + uniform(0.1 / pps, maxdelay)  # timestamp for next pkt
-            return timestamp_current_packet
+            return timestamp + uniform(0.1 / pps, maxdelay)
 
         # Determine ports
         dest_ports = self.get_param_value(Param.PORT_DESTINATION)
@@ -114,7 +115,10 @@ class PortscanAttack(BaseAttack.BaseAttack):
             request_ip = IP(src=ip_source, dst=ip_destination, ttl=ttl_value)
             request_tcp = TCP(sport=sport, dport=dport)
             request = (request_ether / request_ip / request_tcp)
-            request.time = get_timestamp()
+            # first packet uses timestamp provided by attack parameter Param.INJECT_AT_TIMESTAMP
+            if len(packets) > 0:
+                timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
+            request.time = timestamp_next_pkt
             packets.append(request)
 
             # 2) Build reply package
@@ -127,7 +131,8 @@ class PortscanAttack(BaseAttack.BaseAttack):
                                 options=[mss])
                 # reply_tcp.time = time_sec_start + random.uniform(0.00005, 0.00013)
                 reply = (reply_ether / reply_ip / reply_tcp)
-                reply.time = get_timestamp()
+                timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
+                reply.time = timestamp_next_pkt
                 packets.append(reply)
 
                 # requester confirms
@@ -135,14 +140,16 @@ class PortscanAttack(BaseAttack.BaseAttack):
                 confirm_ip = request_ip
                 confirm_tcp = TCP(sport=sport, dport=dport, seq=1, window=0, flags='R')
                 reply = (confirm_ether / confirm_ip / confirm_tcp)
-                reply.time = get_timestamp()
+                timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
+                reply.time = timestamp_next_pkt
                 packets.append(reply)
 
             else:  # destination port is NOT OPEN
                 reply_tcp = TCP(sport=dport, dport=sport, flags='RA', seq=1, ack=1, window=0)
                 # reply_tcp.time = time_sec_start + random.uniform(0.00005, 0.00013)
                 reply = (reply_ether / reply_ip / reply_tcp)
-                reply.time = get_timestamp()
+                timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
+                reply.time = timestamp_next_pkt
                 packets.append(reply)
 
         # store end time of attack

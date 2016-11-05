@@ -3,7 +3,6 @@ import tempfile
 
 from scapy.utils import PcapWriter
 
-import Attack
 from Attack.AttackParameters import Parameter
 from ID2TLib import LabelManager
 from ID2TLib import Statistics
@@ -23,7 +22,6 @@ class AttackController:
 
         self.current_attack = None
         self.added_attacks = []
-        self.written_pcaps = []
 
         # The PCAP where the attack should be injected into
         self.base_pcap = self.statistics.pcap_filepath
@@ -106,7 +104,6 @@ class AttackController:
 
         # Merge attack with existing pcap
         pcap_dest_path = self.pcap_file.merge_attack(temp_attack_pcap_path)
-        self.written_pcaps.append(pcap_dest_path)
 
         # Store label into LabelManager
         l = Label(attack, self.get_attack_start_utime(),

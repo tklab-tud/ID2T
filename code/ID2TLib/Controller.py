@@ -46,6 +46,7 @@ class Controller:
         # load attacks sequentially
         for attack in attacks_config:
             self.pcap_dest_path = self.attack_controller.process_attack(attack[0], attack[1:])
+            self.written_pcaps.append(self.pcap_dest_path)
 
         # delete intermediate PCAP files
         for i in range(len(self.written_pcaps) - 1):

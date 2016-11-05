@@ -189,6 +189,18 @@ class Statistics:
         capture_duration = float(self.get_capture_duration())
         return int(float(packets_sent) / capture_duration)
 
+    def get_pps_received(self, ip_address: str):
+        """
+        Calculate the packets per second received for a given IP address.
+        :param ip_address: The IP address used for the calculation
+        :return: The number of packets per second received
+        """
+        packets_received = self.stats_db.process_db_query("SELECT pktsReceived FROM ip_statistics WHERE ipAddress=?",
+                                                          False,
+                                                          (ip_address,))
+        capture_duration = float(self.get_capture_duration())
+        return int(float(packets_received) / capture_duration)
+
     def get_packet_count(self):
         """
         :return: The number of packets in the loaded PCAP file
@@ -219,7 +231,8 @@ class Statistics:
         :param value: The string to be checked
         :return: True if the string is recognized as a query, otherwise False.
         """
-        is_scalar_value = type(value) in (int, float)
-        return not is_scalar_value and (
-            any(x in value.lower().strip() for x in self.stats_db.get_all_named_query_keywords()) or
-            any(x in value.lower().strip() for x in self.stats_db.get_all_sql_query_keywords()))
+        if not isinstance(value, str):
+            return False
+        else:
+            return (any(x in value.lower().strip() for x in self.stats_db.get_all_named_query_keywords()) or
+                    any(x in value.lower().strip() for x in self.stats_db.get_all_sql_query_keywords()))

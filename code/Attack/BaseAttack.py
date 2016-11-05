@@ -1,4 +1,5 @@
 import ipaddress
+import random
 import re
 from abc import abstractmethod, ABCMeta
 
@@ -63,14 +64,19 @@ class BaseAttack(metaclass=ABCMeta):
     @staticmethod
     def _is_ip_address(ip_address: str):
         """
-        Verifies if the given string is a valid IPv4/IPv6 address. Accepts comma-separated lists of IP addresses,
-        like "192.169.178.1, 192.168.178.2"
+        Verifies that the given string or list of IP addresses (strings) is a valid IPv4/IPv6 address.
+        Accepts comma-separated lists of IP addresses, like "192.169.178.1, 192.168.178.2"
 
-        :param ip_address: The IP address as string.
+        :param ip_address: The IP address(es) as list of strings or comma-separated string.
         :return: True if all IP addresses are valid, otherwise False. And a list of IP addresses as string.
         """
         ip_address_output = []
-        for ip in ip_address.split(','):
+
+        # a comma-separated list of IP addresses must be splitted first
+        if isinstance(ip_address, str):
+            ip_address = ip_address.split(',')
+
+        for ip in ip_address:
             try:
                 ipaddress.ip_address(ip)
                 ip_address_output.append(ip)
@@ -233,12 +239,18 @@ class BaseAttack(metaclass=ABCMeta):
             is_valid = value is None or (value.isdigit() and int(value) >= 0)
         elif param_type == ParameterTypes.TYPE_FLOAT:
             is_valid, value = self._is_float(value)
+            # this is required to avoid that the timestamp's microseconds of the first attack packet is '000000'
+            # but microseconds are only chosen randomly if the given parameter does not already specify it
+            # e.g. inject.at-timestamp=123456.987654 -> is not changed
+            # e.g. inject.at-timestamp=123456 -> is changed to: 123456.[random digits]
+            if param_name == Parameter.INJECT_AT_TIMESTAMP and is_valid and ((value - int(value)) == 0):
+                value = value + random.uniform(0, 0.999999)
         elif param_type == ParameterTypes.TYPE_TIMESTAMP:
             is_valid = self._is_timestamp(value)
         elif param_type == ParameterTypes.TYPE_BOOLEAN:
             is_valid, value = self._is_boolean(value)
         elif param_type == ParameterTypes.TYPE_PACKET_POSITION:
-            ts = pr.pcap_processor(self.pcap_filepath).get_timestamp_mu_sec(int(value))
+            ts = pr.pcap_processor(self.statistics.pcap_filepath).get_timestamp_mu_sec(int(value))
             if 0 <= int(value) <= self.statistics.get_packet_count() and ts >= 0:
                 is_valid = True
                 param_name = Parameter.INJECT_AT_TIMESTAMP
