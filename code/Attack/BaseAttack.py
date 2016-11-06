@@ -124,8 +124,8 @@ class BaseAttack(metaclass=ABCMeta):
                 ports_output.append(port_entry)
             elif '-' in port_entry or '..' in port_entry:
                 # port_entry describes a port range
-                # allowed format: '12-123', '12..123', '12...123'
-                match = re.match('^([0-9]{1,4})(?:-|\.{2,3})([0-9]{1,4})$', port_entry)
+                # allowed format: '1-49151', '1..49151', '1...49151'
+                match = re.match('^([0-9]{1,5})(?:-|\.{2,3})([0-9]{1,5})$', port_entry)
                 # check validity of port range
                 # and create list of ports derived from given start and end port
                 (port_start, port_end) = int(match.group(1)), int(match.group(2))
@@ -135,7 +135,11 @@ class BaseAttack(metaclass=ABCMeta):
                     ports_list = [i for i in range(port_start, port_end + 1)]
                 # append ports at ports_output list
                 ports_output += ports_list
-        return True, ports_output
+
+        if len(ports_output) == 1:
+            return True, ports_output[0]
+        else:
+            return True, ports_output
 
     @staticmethod
     def _is_timestamp(timestamp: str):

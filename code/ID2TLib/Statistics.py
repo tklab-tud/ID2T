@@ -207,6 +207,45 @@ class Statistics:
         """
         return self.file_info['packetCount']
 
+    def get_most_used_ip_address(self):
+        """
+        :return: The IP address/addresses with the highest sum of packets sent and received
+        """
+        return self.process_db_query("most_used(ipAddress)")
+
+    def get_random_ip_address(self, count: int = 1):
+        """
+        :param count: The number of IP addreses to return
+        :return: A randomly chosen IP address from the dataset or iff param count is greater than one, a list of randomly
+         chosen IP addresses
+        """
+        if count == 1:
+            return self.process_db_query("random(all(ipAddress))")
+        else:
+            ip_address_list = []
+            for i in range(0, count):
+                ip_address_list.append(self.process_db_query("random(all(ipAddress))"))
+            return ip_address_list
+
+    def get_mac_address(self, ipAddress: str):
+        """
+        :return: The MAC address used in the dataset for the given IP address.
+        """
+        return self.process_db_query('macAddress(ipAddress=' + ipAddress + ")")
+
+    def get_mss(self, ipAddress: str):
+        """
+
+        :param ipAddress: The IP address whose used MSS should be determined
+        :return: The TCP MSS value used by the IP address, or if the IP addresses never specified a MSS,
+        then None is returned
+        """
+        mss_value = self.process_db_query('SELECT mss from tcp_mss WHERE ipAddress="' + ipAddress + '"')
+        if isinstance(mss_value, int):
+            return mss_value
+        else:
+            return None
+
     def get_statistics_database(self):
         """
         :return: A reference to the statistics database object

@@ -116,7 +116,7 @@ class StatsDatabase:
 
     def get_field_types(self, *table_names):
         """
-        Creates a dictionary whose keys are the fields of the given table(s) and whose values are the appropriates field
+        Creates a dictionary whose keys are the fields of the given table(s) and whose values are the appropriate field
         types, like TEXT for strings and REAL for float numbers.
 
         :param table_names: The name of table(s)
@@ -213,7 +213,7 @@ class StatsDatabase:
                         isinstance(last_result, list) or isinstance(last_result, tuple)):
                 extractor = q[0]
                 if extractor == 'random':
-                    index = randint(a=0, b=len(last_result))
+                    index = randint(a=0, b=len(last_result) - 1)
                     last_result = last_result[index]
                 elif extractor == 'first':
                     last_result = last_result[0]
@@ -277,7 +277,9 @@ class StatsDatabase:
             return
 
         # If result is tuple/list with single element, extract value from list
-        requires_extraction = (isinstance(result, list) or isinstance(result, tuple)) and len(result) == 1 and len(result[0]) == 1
+        requires_extraction = (isinstance(result, list) or isinstance(result, tuple)) and len(result) == 1 and \
+                              (not isinstance(result[0], tuple) or len(result[0]) == 1)
+
         while requires_extraction:
             if isinstance(result, list) or isinstance(result, tuple):
                 result = result[0]
@@ -312,7 +314,6 @@ class StatsDatabase:
         # Print number of results according to type of result
         if isinstance(result, list):
             print("Query returned " + str(len(result)) + " records:\n")
-
         else:
             print("Query returned 1 record:\n")
 

@@ -1,4 +1,5 @@
 import importlib
+import os
 import tempfile
 
 from scapy.utils import PcapWriter
@@ -104,6 +105,9 @@ class AttackController:
 
         # Merge attack with existing pcap
         pcap_dest_path = self.pcap_file.merge_attack(temp_attack_pcap_path)
+
+        # Delete temporary attack pcap
+        os.remove(temp_attack_pcap_path)
 
         # Store label into LabelManager
         l = Label(attack, self.get_attack_start_utime(),

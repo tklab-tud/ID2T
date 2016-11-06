@@ -42,25 +42,30 @@ class PortscanAttack(BaseAttack.BaseAttack):
 
         # PARAMETERS: initialize with default values
         # (values are overwritten if user specifies them)
-        most_used_ipAddress = self.statistics.process_db_query("most_used(ipAddress)")
-        if isinstance(most_used_ipAddress, list):
-            most_used_ipAddress = most_used_ipAddress[0]
-        self.add_param_value(Param.IP_SOURCE, most_used_ipAddress)
+        most_used_ip_address = self.statistics.get_most_used_ip_address()
+        if isinstance(most_used_ip_address, list):
+            most_used_ip_address = most_used_ip_address[0]
+
+        self.add_param_value(Param.IP_SOURCE, most_used_ip_address)
         self.add_param_value(Param.IP_SOURCE_RANDOMIZE, 'False')
-        self.add_param_value(Param.IP_DESTINATION, '192.168.178.13')
+        self.add_param_value(Param.MAC_SOURCE, self.statistics.get_mac_address(most_used_ip_address))
+
+        random_ip_address = self.statistics.get_random_ip_address()
+        self.add_param_value(Param.IP_DESTINATION, random_ip_address)
+        self.add_param_value(Param.MAC_DESTINATION, self.statistics.get_mac_address(random_ip_address))
+
         self.add_param_value(Param.PORT_DESTINATION, '0-1023,1720,1900,8080')
-        self.add_param_value(Param.PORT_SOURCE, '8542')
         self.add_param_value(Param.PORT_OPEN, '8080,9232,9233')
-        self.add_param_value(Param.PORT_SOURCE_RANDOM, 'False')
         self.add_param_value(Param.PORT_DEST_SHUFFLE, 'False')
         self.add_param_value(Param.PORT_ORDER_DESC, 'False')
-        macAddress = self.statistics.process_db_query('macAddress(ipAddress=' + most_used_ipAddress + ")")
-        self.add_param_value(Param.MAC_SOURCE, macAddress)
-        self.add_param_value(Param.MAC_DESTINATION, 'A0:1A:28:0B:62:F4')
+
+        self.add_param_value(Param.PORT_SOURCE, '8542')
+        self.add_param_value(Param.PORT_SOURCE_RANDOM, 'False')
+
         self.add_param_value(Param.PACKETS_PER_SECOND,
-                             (self.statistics.get_pps_sent(most_used_ipAddress) +
-                              self.statistics.get_pps_received(most_used_ipAddress)) / 2)
-        self.add_param_value(Param.INJECT_AT_TIMESTAMP, '1410733342')  # Sun, 14 Sep 2014 22:22:22 GMT
+                             (self.statistics.get_pps_sent(most_used_ip_address) +
+                              self.statistics.get_pps_received(most_used_ip_address)) / 2)
+        self.add_param_value(Param.INJECT_AFTER_PACKET, randint(0, self.statistics.get_packet_count()))
 
     def get_packets(self):
         def update_timestamp(timestamp, pps, maxdelay):
@@ -88,9 +93,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
         # TTL_samples = numpy.random.choice(keys, size=len(dest_ports), replace=True, dport=values)
         ttl_value = self.statistics.process_db_query("most_used(ttlValue)")
 
-        # MSS (Maximum Segment Size) for Ethernet. Allowed values [536,1500]
-        mss = ('MSS', int(self.statistics.process_db_query('avg(mss)')))
-
         # Timestamp
         timestamp_next_pkt = self.get_param_value(Param.INJECT_AT_TIMESTAMP)
         self.attack_start_utime = timestamp_next_pkt  # store start time of attack
@@ -104,6 +106,9 @@ class PortscanAttack(BaseAttack.BaseAttack):
         ip_destination = self.get_param_value(Param.IP_DESTINATION)
         mac_source = self.get_param_value(Param.MAC_SOURCE)
         mac_destination = self.get_param_value(Param.MAC_DESTINATION)
+
+        # MSS (Maximum Segment Size) for Ethernet. Allowed values [536,1500]
+        mss = self.statistics.get_mss(ip_destination)
 
         for dport in dest_ports:
             # Parameters changing each iteration
@@ -125,10 +130,13 @@ class PortscanAttack(BaseAttack.BaseAttack):
             reply_ether = Ether(src=mac_destination, dst=mac_source)
             reply_ip = IP(src=ip_destination, dst=ip_source, flags='DF')
 
-            if str(dport) in self.get_param_value(Param.PORT_OPEN):  # destination port is OPEN
+            if dport in self.get_param_value(Param.PORT_OPEN):  # destination port is OPEN
                 # target answers
-                reply_tcp = TCP(sport=dport, dport=sport, seq=0, ack=1, flags='SA', window=29200,
-                                options=[mss])
+                if mss is None:
+                    reply_tcp = TCP(sport=dport, dport=sport, seq=0, ack=1, flags='SA', window=29200)
+                else:
+                    reply_tcp = TCP(sport=dport, dport=sport, seq=0, ack=1, flags='SA', window=29200,
+                                    options=[('MSS', mss)])
                 # reply_tcp.time = time_sec_start + random.uniform(0.00005, 0.00013)
                 reply = (reply_ether / reply_ip / reply_tcp)
                 timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
@@ -144,13 +152,13 @@ class PortscanAttack(BaseAttack.BaseAttack):
                 reply.time = timestamp_next_pkt
                 packets.append(reply)
 
-            else:  # destination port is NOT OPEN
-                reply_tcp = TCP(sport=dport, dport=sport, flags='RA', seq=1, ack=1, window=0)
-                # reply_tcp.time = time_sec_start + random.uniform(0.00005, 0.00013)
-                reply = (reply_ether / reply_ip / reply_tcp)
-                timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
-                reply.time = timestamp_next_pkt
-                packets.append(reply)
+                # else:  # destination port is NOT OPEN -> no reply is sent by target
+                #     reply_tcp = TCP(sport=dport, dport=sport, flags='RA', seq=1, ack=1, window=0)
+                #     # reply_tcp.time = time_sec_start + random.uniform(0.00005, 0.00013)
+                #     reply = (reply_ether / reply_ip / reply_tcp)
+                #     timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
+                #     reply.time = timestamp_next_pkt
+                #     packets.append(reply)
 
         # store end time of attack
         self.attack_end_utime = reply.time
