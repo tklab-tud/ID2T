@@ -4,7 +4,7 @@
 project(cpp-pcapreader)
 
 # Define CMake settings
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.2)
 
 IF(NOT CMAKE_BUILD_TYPE)
    SET(CMAKE_BUILD_TYPE "Release")
