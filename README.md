@@ -20,15 +20,15 @@ ID2T is written using Python 3 and C++ 11. The main logic is programmed in Pytho
 
 #### Required C++ Libraries/Programs
 The following packages/libraries are required to compile the ID2T C++ modules
-* ``cmake`` (minimum version 3.5)
+* ``cmake`` (minimum version 2.8)
     - ubuntu: apt install build-essential cmake
     - arch: pacman -S cmake
 * ``boost`` with the ``python`` component (minimum version 1.54)
-    - ubuntu: apt install libboost-dev libboost-python.61-dev
+    - ubuntu: apt install libboost-dev libboost-python-dev
     - arch: pacman -S boost boost-libs
 * ``libtins`` (minimum version 3.4)
-    - ubuntu: apt install libtins-dev
-    - arch: (install from AUR, i.e. pacaur -S libtins)
+    - ubuntu: apt install libtins-dev (if you cannot find it in the official repository, install it manually from [here](https://github.com/mfontanini/libtins))
+    - arch: (install from AUR, i.e. pacaur -S libtins, or manually from [here](https://github.com/mfontanini/libtins)).
 * ``python`` development libraries
     - ubuntu: apt install python3-dev
     - arch: pacman -S python
@@ -37,7 +37,7 @@ The following packages/libraries are required to compile the ID2T C++ modules
     - arch: pacman -S sqlite
 
 #### Required Python Packages
-The following packages are required to run ID2T. Install the packages with your preferred package manager. For example, use ``sudo pip install <packagename>``.
+The following python packages are required to run ID2T. Install the packages with your preferred package manager. For example, you can use pip3 (pip for python 3). Install pip3 in ubuntu with ``apt install python3-pip`` and install the packages with ``sudo pip3 install <packagename>``.
 * ``scapy`` (make sure its the python3 version)
 * ``lea``
 
@@ -46,7 +46,7 @@ The minimum version stated in the previous requirements are the versions we have
 
 
 ### Compilation and Installation
-Clone the repository to get started:
+Once you satisfy all dependencies, clone the repository to get started with the installation:
 ``git clone https://git.tk.informatik.tu-darmstadt.de/SPIN/ID2T-toolkit``
 
 After cloning the repository, initialize its submodules with
