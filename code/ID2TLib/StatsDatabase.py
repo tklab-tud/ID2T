@@ -130,12 +130,12 @@ class StatsDatabase:
                 dic[field[1].lower()] = field[2]
         return dic
 
-    def named_query_parameterized(self, keyword: str, dict_param_value: dict):
+    def named_query_parameterized(self, keyword: str, param_op_val: list):
         """
         Executes a parameterizable named query.
 
         :param keyword: The query to be executed, like ipaddress or macadress
-        :param dict_param_value: The param values for the query as a dictionary {param: value}
+        :param param_op_val: A list consisting of triples with (parameter, operator, value)
         :return: the results of the executed query
         """
         named_queries = {
@@ -144,7 +144,7 @@ class StatsDatabase:
         query = named_queries.get(keyword)
         field_types = self.get_field_types('ip_mac', 'ip_ttl', 'ip_ports', 'ip_protocols', 'ip_statistics', 'ip_mac')
         conditions = []
-        for key, value in dict_param_value.items():
+        for key, op, value in param_op_val:
             # this makes sure that TEXT fields are queried by strings,
             # e.g. ipAddress=192.168.178.1 --is-converted-to--> ipAddress='192.168.178.1'
             if field_types.get(key) == 'TEXT':
@@ -153,7 +153,7 @@ class StatsDatabase:
             # this replacement is required to remove ambiguity in SQL query
             if key == 'ipAddress':
                 key = 'ip_mac.ipAddress'
-            conditions.append(key + "=" + str(value))
+            conditions.append(key + op + str(value))
 
         where_clause = " AND ".join(conditions)
         query += where_clause
@@ -205,9 +205,10 @@ class StatsDatabase:
             elif any(e in q[0] for e in self._get_parametrized_selector_keywords()) and any(
                             o in q[1] for o in ["<", "=", ">", "<=", ">="]):
                 (keyword, param) = q
-                # convert string 'paramName1=paramValue1,paramName2=paramValue2,...' into dictionary
-                param_dict = {key: value for (key, value) in [re.split("<=|>=|>|<|=", x) for x in param.split(",")]}
-                last_result = self.named_query_parameterized(keyword, param_dict)
+                # convert string 'paramName1<operator1>paramValue1,paramName2<operator2>paramValue2,...' into list of triples
+                param_op_val = [(key, op, value) for (key, op, value) in
+                                [re.split("(<=|>=|>|<|=)", x) for x in param.split(",")]]
+                last_result = self.named_query_parameterized(keyword, param_op_val)
             # if extractor, like random, first, last, is given
             elif any(e in q[0] for e in self._get_extractor_keywords()) and (
                         isinstance(last_result, list) or isinstance(last_result, tuple)):
