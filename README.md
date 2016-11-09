@@ -13,30 +13,51 @@ The ID2T application was first proposed in [[1]](#references) and targets the in
 
 ## Getting Started
 
-### Prerequisities
-ID2T is written using Python 3.4 and C++ 11. The main logic is programmed in Python whereas performance critical components are programmed in C++11. The C++11 module uses the library [Libtins](https://github.com/mfontanini/libtins/). The python and c++ modules interact with each other through the library [Boost.Python](http://www.boost.org/doc/libs/1_62_0/libs/python/doc/html/index.html).
+### Dependencies
+ID2T is written using Python 3 and C++ 11. The main logic is programmed in Python whereas performance critical components are programmed in C++11. The C++11 module uses the [Libtins](https://github.com/mfontanini/libtins/) library. The python and c++ modules interact with each other through the [Boost.Python](http://www.boost.org/doc/libs/1_62_0/libs/python/doc/html/index.html) library .
+
+#### Required C++ Libraries
+The following packages/libraries are required to compile the ID2T C++ modules
+* ``cmake`` (minimum version 3.5)
+    - ubuntu: apt install build-essential cmake
+    - arch: pacman -S cmake
+* ``boost`` with the ``python`` component (minimum version 1.54)
+    - ubuntu: apt install libboost-dev libboost-python.61-dev
+    - arch: pacman -S boost boost-libs
+* ``libtins`` (minimum version 3.4)
+    - ubuntu: apt install libtins-dev
+    - arch: (install from AUR, i.e. pacaur -S libtins)
+* ``python`` development libraries
+    - ubuntu: apt install python3-dev
+    - arch: pacman -S python
+* ``sqlite`` (minimum version 3.0)
+    - ubuntu: apt install sqlite3
+    - arch: pacman -S sqlite
 
 #### Required Python Packages
-The following packages are required to run ID2T. Missing packages can be installed from terminal via  `` sudo pip install <packagename> ``.
+The following packages are required to run ID2T. Install the packages with your preferred package manager. For example, use ``sudo pip install <packagename>``.
+* ``scapy`` (make sure its the python3 version)
+* ``lea``
 
-* ``scapy``: used for packet creation (make sure its the python3 version)
-* ``lea``: used for calculation of parameters derived by the gathered statistics
+#### Notes on the Minimum Package Versions
+The minimum version stated in the previous requirements are the versions we have used in the development of ID2T. Other (older) versions might also work; however, we cannot guarantee nor support them. Furthermore, some compilation scripts would need to be manually modified to accommodate these older versions.
 
-### Installation
-Simply clone the repository to get started:
 
-``git clone https://git.tk.informatik.tu-darmstadt.de/SPIN/ID2T-toolkit ``
+### Compilation and Installation
+Clone the repository to get started:
+``git clone https://git.tk.informatik.tu-darmstadt.de/SPIN/ID2T-toolkit``
 
 After cloning the repository, initialize its submodules with
     git submodule init
     git submodule update
 
-Compile the C++ modules (description pending).
+Build the C++ modules and create the ID2T executable:
+``./build.sh``
 
-Run ID2T with the command ``python ./code/CLI.py`` .
+Run ID2T with the command ``./id2t``.
 
 ## Usage examples
-In this section, we provide some examples on using ID2T.
+In this section, we provide examples on how ID2T is used.
 
 ### Injecting an attack into an existing dataset
 In the following we inject the _PortscanAttack_ into the dataset *pcap_capture.pcap*:
