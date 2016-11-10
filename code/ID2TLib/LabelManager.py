@@ -76,7 +76,7 @@ class LabelManager:
 
             # add timestamp in human-readable format
             timestamp_hr = doc.createElement(self.TAG_TIMESTAMP_HR)
-            timestamp_hr_text = datetime.fromtimestamp(int(timestamp_entry)).strftime('%Y-%m-%d %H:%M:%S')
+            timestamp_hr_text = datetime.fromtimestamp(timestamp_entry).strftime('%Y-%m-%d %H:%M:%S.%f')
             timestamp_hr.appendChild(doc.createTextNode(timestamp_hr_text))
             timestamp_root.appendChild(timestamp_hr)
 
