@@ -38,7 +38,8 @@ class PortscanAttack(BaseAttack.BaseAttack):
             Param.PORT_ORDER_DESC: ParameterTypes.TYPE_BOOLEAN,
             Param.IP_SOURCE_RANDOMIZE: ParameterTypes.TYPE_BOOLEAN,
             Param.PACKETS_PER_SECOND: ParameterTypes.TYPE_FLOAT,
-            Param.PORT_SOURCE_RANDOM: ParameterTypes.TYPE_BOOLEAN}
+            Param.PORT_SOURCE_RANDOM: ParameterTypes.TYPE_BOOLEAN
+        }
 
         # PARAMETERS: initialize with default values
         # (values are overwritten if user specifies them)
@@ -87,18 +88,10 @@ class PortscanAttack(BaseAttack.BaseAttack):
         else:
             sport = self.get_param_value(Param.PORT_SOURCE)
 
-        # Get TTL distribution
-        # keys = list(self.statistics.get_ttl_distribution().vals()
-        # values = list(self.statistics.get_ttl_distribution().pmf())
-        # TTL_samples = numpy.random.choice(keys, size=len(dest_ports), replace=True, dport=values)
-        ttl_value = self.statistics.process_db_query("most_used(ttlValue)")
-
         # Timestamp
         timestamp_next_pkt = self.get_param_value(Param.INJECT_AT_TIMESTAMP)
-        self.attack_start_utime = timestamp_next_pkt  # store start time of attack
-        pps = self.get_param_value(Param.PACKETS_PER_SECOND)
-        randomdelay = Lea.fromValFreqsDict({1 / pps: 70, 2 / pps: 30, 5 / pps: 15, 10 / pps: 3})
-        maxdelay = randomdelay.random()
+        # store start time of attack
+        self.attack_start_utime = timestamp_next_pkt
 
         # Initialize parameters
         packets = []
@@ -106,9 +99,20 @@ class PortscanAttack(BaseAttack.BaseAttack):
         ip_destination = self.get_param_value(Param.IP_DESTINATION)
         mac_source = self.get_param_value(Param.MAC_SOURCE)
         mac_destination = self.get_param_value(Param.MAC_DESTINATION)
+        pps = self.get_param_value(Param.PACKETS_PER_SECOND)
+        randomdelay = Lea.fromValFreqsDict({1 / pps: 70, 2 / pps: 30, 5 / pps: 15, 10 / pps: 3})
+        maxdelay = randomdelay.random()
 
         # MSS (Maximum Segment Size) for Ethernet. Allowed values [536,1500]
         mss = self.statistics.get_mss(ip_destination)
+
+        # Set TTL based on TTL distribution of IP address
+        ttl_dist = self.statistics.get_ttl_distribution(ip_source)
+        if len(ttl_dist) > 0:
+            ttl_prob_dict = Lea.fromValFreqsDict(ttl_dist)
+            ttl_value = ttl_prob_dict.random()
+        else:
+            ttl_value = self.statistics.process_db_query("most_used(ttlValue)")
 
         for dport in dest_ports:
             # Parameters changing each iteration
@@ -118,7 +122,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
             # 1) Build request package
             request_ether = Ether(src=mac_source, dst=mac_destination)
             request_ip = IP(src=ip_source, dst=ip_destination, ttl=ttl_value)
-            request_tcp = TCP(sport=sport, dport=dport)
+            request_tcp = TCP(sport=sport, dport=dport, flags='S')
             request = (request_ether / request_ip / request_tcp)
             # first packet uses timestamp provided by attack parameter Param.INJECT_AT_TIMESTAMP
             if len(packets) > 0:
@@ -127,17 +131,15 @@ class PortscanAttack(BaseAttack.BaseAttack):
             packets.append(request)
 
             # 2) Build reply package
-            reply_ether = Ether(src=mac_destination, dst=mac_source)
-            reply_ip = IP(src=ip_destination, dst=ip_source, flags='DF')
-
             if dport in self.get_param_value(Param.PORT_OPEN):  # destination port is OPEN
+                reply_ether = Ether(src=mac_destination, dst=mac_source)
+                reply_ip = IP(src=ip_destination, dst=ip_source, flags='DF')
                 # target answers
                 if mss is None:
                     reply_tcp = TCP(sport=dport, dport=sport, seq=0, ack=1, flags='SA', window=29200)
                 else:
                     reply_tcp = TCP(sport=dport, dport=sport, seq=0, ack=1, flags='SA', window=29200,
                                     options=[('MSS', mss)])
-                # reply_tcp.time = time_sec_start + random.uniform(0.00005, 0.00013)
                 reply = (reply_ether / reply_ip / reply_tcp)
                 timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
                 reply.time = timestamp_next_pkt
@@ -152,13 +154,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
                 reply.time = timestamp_next_pkt
                 packets.append(reply)
 
-                # else:  # destination port is NOT OPEN -> no reply is sent by target
-                #     reply_tcp = TCP(sport=dport, dport=sport, flags='RA', seq=1, ack=1, window=0)
-                #     # reply_tcp.time = time_sec_start + random.uniform(0.00005, 0.00013)
-                #     reply = (reply_ether / reply_ip / reply_tcp)
-                #     timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
-                #     reply.time = timestamp_next_pkt
-                #     packets.append(reply)
+                # else: destination port is NOT OPEN -> no reply is sent by target
 
         # store end time of attack
         self.attack_end_utime = reply.time
