@@ -108,7 +108,9 @@ class BaseAttack(metaclass=ABCMeta):
             """
             return num < 0 or num > 65535
 
-        ports_input = ports_input.replace(' ', '').split(',')
+        if isinstance(ports_input, str):
+            ports_input = ports_input.replace(' ', '').split(',')
+
         ports_output = []
 
         for port_entry in ports_input:
@@ -240,7 +242,11 @@ class BaseAttack(metaclass=ABCMeta):
         elif param_type == ParameterTypes.TYPE_MAC_ADDRESS:
             is_valid = self._is_mac_address(value)
         elif param_type == ParameterTypes.TYPE_INTEGER_POSITIVE:
-            is_valid = value is None or (value.isdigit() and int(value) >= 0)
+            if isinstance(value, int) and int(value) >= 0:
+                is_valid = True
+            elif isinstance(value, str) and value.isdigit() and int(value) >= 0:
+                is_valid = True
+                value = int(value)
         elif param_type == ParameterTypes.TYPE_FLOAT:
             is_valid, value = self._is_float(value)
             # this is required to avoid that the timestamp's microseconds of the first attack packet is '000000'
@@ -275,3 +281,70 @@ class BaseAttack(metaclass=ABCMeta):
         :return: The parameter's value.
         """
         return self.params[param]
+
+    def check_parameters(self):
+        """
+        Checks whether all parameter values are defined. If a value is not defined, the application is terminated.
+        However, this should not happen as all attack should define default parameter values.
+        """
+        for param, type in self.supported_params.items():
+            # checks whether all params have assigned values, INJECT_AFTER_PACKET must not be considered because the
+            # timestamp derived from it is set to Parameter.INJECT_AT_TIMESTAMP
+            if param not in self.params.keys() and param is not Parameter.INJECT_AFTER_PACKET:
+                print("\033[91mCRITICAL ERROR: Attack '" + self.attack_name + "' does not define the parameter '" +
+                      str(param) + "'.\n The attack must define default values for all parameters."
+                      + "\n Cannot continue attack generation.\033[0m")
+                import sys
+                sys.exit(0)
+
+    def generate_random_ipv4_address(self, n: int = 1):
+        """
+        Generates n random IPv4 addresses.
+        :param n: The number of IP addresses to be generated
+        :return: A single IP address, or if n>1, a list of IP addresses
+        """
+
+        def is_invalid(ipAddress: ipaddress.IPv4Address):
+            return ipAddress.is_multicast or ipAddress.is_unspecified or ipAddress.is_loopback or \
+                   ipAddress.is_link_local or ipAddress.is_reserved
+
+        def generate_address():
+            return ipaddress.IPv4Address(random.randint(0, 2 ** 32 - 1))
+
+        ip_addresses = []
+        for i in range(0, n):
+            address = generate_address()
+            while (is_invalid(address)):
+                address = generate_address()
+            ip_addresses.append(str(address))
+
+        if n == 1:
+            return ip_addresses[0]
+        else:
+            return ip_addresses
+
+    def generate_random_ipv6_address(self, n: int = 1):
+        """
+        Generates n random IPv6 addresses.
+        :param n: The number of IP addresses to be generated
+        :return: A single IP address, or if n>1, a list of IP addresses
+        """
+
+        def is_invalid(ipAddress: ipaddress.IPv6Address):
+            return ipAddress.is_multicast or ipAddress.is_unspecified or ipAddress.is_loopback or \
+                   ipAddress.is_link_local or ipAddress.is_reserved
+
+        def generate_address():
+            return str(ipaddress.IPv6Address(random.randint(0, 2 ** 128 - 1)))
+
+        ip_addresses = []
+        for i in range(0, n):
+            address = generate_address()
+            while (is_invalid(address)):
+                address = generate_address()
+            ip_addresses.append(str(address))
+
+        if n == 1:
+            return ip_addresses[0]
+        else:
+            return ip_addresses

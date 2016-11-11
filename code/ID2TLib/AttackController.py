@@ -1,9 +1,8 @@
 import importlib
 import os
 import tempfile
-
+import sys
 from scapy.utils import PcapWriter
-
 from Attack.AttackParameters import Parameter
 from ID2TLib import LabelManager
 from ID2TLib import Statistics
@@ -32,7 +31,14 @@ class AttackController:
         Writes the attack's packets into a PCAP file with a temporary filename.
         :return: The path of the written PCAP file.
         """
+        # Check if all req. parameters are set
+        self.current_attack.check_parameters()
+
+        # Create attack packets
+        print("Generating attack packets...", end=" ")
+        sys.stdout.flush()  # force python to print text immediately
         packets = self.current_attack.get_packets()
+        print("done.")
 
         # Write packets into pcap file
         temp_pcap = tempfile.NamedTemporaryFile(delete=False)

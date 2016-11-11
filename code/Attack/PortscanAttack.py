@@ -35,10 +35,10 @@ class PortscanAttack(BaseAttack.BaseAttack):
             Param.INJECT_AT_TIMESTAMP: ParameterTypes.TYPE_FLOAT,
             Param.INJECT_AFTER_PACKET: ParameterTypes.TYPE_PACKET_POSITION,
             Param.PORT_DEST_SHUFFLE: ParameterTypes.TYPE_BOOLEAN,
-            Param.PORT_ORDER_DESC: ParameterTypes.TYPE_BOOLEAN,
+            Param.PORT_DEST_ORDER_DESC: ParameterTypes.TYPE_BOOLEAN,
             Param.IP_SOURCE_RANDOMIZE: ParameterTypes.TYPE_BOOLEAN,
             Param.PACKETS_PER_SECOND: ParameterTypes.TYPE_FLOAT,
-            Param.PORT_SOURCE_RANDOM: ParameterTypes.TYPE_BOOLEAN
+            Param.PORT_SOURCE_RANDOMIZE: ParameterTypes.TYPE_BOOLEAN
         }
 
         # PARAMETERS: initialize with default values
@@ -58,10 +58,10 @@ class PortscanAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.PORT_DESTINATION, '0-1023,1720,1900,8080')
         self.add_param_value(Param.PORT_OPEN, '8080,9232,9233')
         self.add_param_value(Param.PORT_DEST_SHUFFLE, 'False')
-        self.add_param_value(Param.PORT_ORDER_DESC, 'False')
+        self.add_param_value(Param.PORT_DEST_ORDER_DESC, 'False')
 
         self.add_param_value(Param.PORT_SOURCE, '8542')
-        self.add_param_value(Param.PORT_SOURCE_RANDOM, 'False')
+        self.add_param_value(Param.PORT_SOURCE_RANDOMIZE, 'False')
 
         self.add_param_value(Param.PACKETS_PER_SECOND,
                              (self.statistics.get_pps_sent(most_used_ip_address) +
@@ -79,11 +79,11 @@ class PortscanAttack(BaseAttack.BaseAttack):
 
         # Determine ports
         dest_ports = self.get_param_value(Param.PORT_DESTINATION)
-        if self.get_param_value(Param.PORT_ORDER_DESC):
+        if self.get_param_value(Param.PORT_DEST_ORDER_DESC):
             dest_ports.reverse()
         elif self.get_param_value(Param.PORT_DEST_SHUFFLE):
             shuffle(dest_ports)
-        if self.get_param_value(Param.PORT_SOURCE_RANDOM):
+        if self.get_param_value(Param.PORT_SOURCE_RANDOMIZE):
             sport = randint(0, 65535)
         else:
             sport = self.get_param_value(Param.PORT_SOURCE)

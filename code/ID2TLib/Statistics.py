@@ -213,6 +213,11 @@ class Statistics:
         """
         return self.process_db_query("most_used(ipAddress)")
 
+    def get_ttl_distribution(self, ipAddress: str):
+        result = self.process_db_query('SELECT ttlValue, ttlCount from ip_ttl WHERE ipAddress="' + ipAddress + '"')
+        result_dict = {key: value for (key, value) in result}
+        return result_dict
+
     def get_random_ip_address(self, count: int = 1):
         """
         :param count: The number of IP addreses to return

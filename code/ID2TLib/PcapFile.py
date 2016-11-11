@@ -21,7 +21,7 @@ class PcapFile(object):
         :param attack_pcap_path: The path to the PCAP file to merge with the PCAP at pcap_file_path
         :return: The file path of the resulting PCAP file
         """
-        print("Merging base PCAP with attack PCAP...", end=" ")
+        print("Merging base pcap with attack pcap...", end=" ")
         sys.stdout.flush()  # force python to print text immediately
 
         pcap = pr.pcap_processor(self.pcap_file_path)

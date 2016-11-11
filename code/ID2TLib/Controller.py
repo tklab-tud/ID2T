@@ -1,5 +1,7 @@
 import os
 
+import sys
+
 from ID2TLib.AttackController import AttackController
 from ID2TLib.LabelManager import LabelManager
 from ID2TLib.PcapFile import PcapFile
@@ -49,8 +51,11 @@ class Controller:
             self.written_pcaps.append(self.pcap_dest_path)
 
         # delete intermediate PCAP files
+        print('Deleting intermediate attack pcaps...', end="")
+        sys.stdout.flush()  # force python to print text immediately
         for i in range(len(self.written_pcaps) - 1):
             os.remove(self.written_pcaps[i])
+        print("done.")
 
         # print status message
         print('\nOutput file created: ', self.pcap_dest_path)
