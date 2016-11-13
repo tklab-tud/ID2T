@@ -34,6 +34,10 @@ class CLI(object):
         # Load PCAP statistics
         controller.load_pcap_statistics(self.args.export, self.args.recalculate, self.args.statistics)
 
+        # Create statistics plots
+        if self.args.plot is not None:
+            controller.create_statistics_plot(self.args.plot)
+
         # Process attack(s) with given attack params
         if self.args.attack is not None:
             # If attack is present, load attack with params
@@ -72,6 +76,8 @@ class CLI(object):
                             action='store_true', default=False)
         parser.add_argument('-s', '--statistics', help='print general file statistics to stdout.', action='store_true',
                             default=False)
+        parser.add_argument('-p', '--plot', help='creates a plot of common dataset statistics', action='append',
+                            nargs='?')
         parser.add_argument('-q', '--query', metavar="QUERY",
                             action='append', nargs='?',
                             help='queries the statistics database. If no query is provided, the application enters into query mode.')
@@ -93,25 +99,27 @@ def main(args):
     cli.parse_arguments(args)
 
 
-# Uncomment to enable calling by terminal
+# # Uncomment to enable calling by terminal
 if __name__ == '__main__':
     main(sys.argv[1:])
 
 # if __name__ == '__main__':
 #     FILE = ['-i', '/mnt/hgfs/datasets/95M.pcap']
 #     FILE2 = ['-i', '/mnt/hgfs/datasets/95M_20161103-185151.pcap']
-#
+#     FILE3 = ['-i', '/home/pjattke/temp/test_me_short.pcap']
+#     ATTACK_NO_PARAM = ['-a', 'DDoSAttack', 'attackers.count=10']
 #
 #     ATTACK = ['-a', 'PortscanAttack', 'ip.src=10.2.2.4', 'mac.dst=05:AB:47:B5:19:11',
 #               'inject.at-timestamp=1449038705.316721', 'attack.note=Portscan2']
-#     ATTACK2 = ['-a', 'PortscanAttack', 'ip.dst=193.133.122.23, ip.src=192.124.34.12', 'inject.after-pkt=34']
+#     ATTACK2 = ['-a', 'PortscanAttack', 'ip.dst=193.133.122.23', 'ip.src=192.124.34.12', 'inject.after-pkt=34']
 #
 #     STATS_RECALC = ['-r']
 #     STATS_PRINT = ['-s']
+#     STATS_PLOT = ['-p', 'format=pdf']
 #
 #     QUERY_MODE_LOOP = ['-q']
-#     QUERY_DB = ['-q', 'most_used(ttlValue)']
+#     QUERY_DB = ['-q', 'ipAddress(pktsSent > 1000, kbytesSent >= 20)']
 #
-#     main(FILE2 + ATTACK)
+#     main(FILE + STATS_PLOT)
 
     # main(['-c', '/home/pjattke/Thesis/development/code/config'])

@@ -1,8 +1,7 @@
 import os
 import time
-
 import ID2TLib.libpcapreader as pr
-
+import matplotlib.pyplot as plt
 from ID2TLib.PcapFile import PcapFile
 from ID2TLib.StatsDatabase import StatsDatabase
 
@@ -280,3 +279,31 @@ class Statistics:
         else:
             return (any(x in value.lower().strip() for x in self.stats_db.get_all_named_query_keywords()) or
                     any(x in value.lower().strip() for x in self.stats_db.get_all_sql_query_keywords()))
+
+    def plot_statistics(self, format: str = 'png'):
+        """
+        Plots the statistics associated with the dataset prior attack injection.
+        :param format: The format to be used to save the statistics diagrams.
+        """
+
+        def plot_ttl(file_ending: str):
+            result = self.stats_db._process_user_defined_query(
+                "SELECT ttlValue, SUM(ttlCount) FROM ip_ttl GROUP BY ttlValue")
+            graphx, graphy = [], []
+            for row in result:
+                graphx.append(row[0])
+                graphy.append(row[1])
+            plt.autoscale(enable=True, axis='both')
+            plt.title("TTL Distribution")
+            plt.xlabel('TTL Value')
+            plt.ylabel('Number of Packets')
+            width = 0.5
+            plt.xlim([0, max(graphx)])
+            plt.grid(True)
+            plt.bar(graphx, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+            out = self.pcap_filepath.replace('.pcap', '_plot-ttl' + file_ending)
+            plt.savefig(out)
+            return out
+
+        out_path = plot_ttl('.' + format)
+        print("Saved TTL distribution plot at: ", out_path)

@@ -98,3 +98,13 @@ class Controller:
                 except sqlite3.Error as e:
                     print("An error occurred:", e.args[0])
                 buffer = ""
+
+    def create_statistics_plot(self, params: str):
+        """
+        Plots the statistics to a file by using the given customization parameters.
+        """
+        if params is not None and params[0] is not None:
+            params_dict = dict([z.split("=") for z in params])
+            self.statistics.plot_statistics(format=params_dict['format'])
+        else:
+            self.statistics.plot_statistics()
