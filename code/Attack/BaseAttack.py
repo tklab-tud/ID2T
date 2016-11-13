@@ -58,8 +58,16 @@ class BaseAttack(metaclass=ABCMeta):
         :param mac_address: The MAC address as string.
         :return: True if the MAC address is valid, otherwise False.
         """
-        result = re.match('^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$', mac_address, re.MULTILINE)
-        return result is not None
+        pattern = re.compile('^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$', re.MULTILINE)
+        if isinstance(mac_address, list):
+            for mac in mac_address:
+                if re.match(pattern, mac) is None:
+                    return False
+        else:
+            if re.match(pattern, mac_address) is None:
+                return False
+
+        return True
 
     @staticmethod
     def _is_ip_address(ip_address: str):
@@ -110,6 +118,8 @@ class BaseAttack(metaclass=ABCMeta):
 
         if isinstance(ports_input, str):
             ports_input = ports_input.replace(' ', '').split(',')
+        elif isinstance(ports_input, int):
+            ports_input = [ports_input]
 
         ports_output = []
 
@@ -198,7 +208,7 @@ class BaseAttack(metaclass=ABCMeta):
     # HELPER METHODS
     #########################################
 
-    def add_param_value(self, param, value: str):
+    def add_param_value(self, param, value):
         """
         Adds the pair param : value to the dictionary of attack parameters. Prints and error message and skips the
         parameter if the validation fails.
@@ -280,24 +290,27 @@ class BaseAttack(metaclass=ABCMeta):
         :param param: The parameter whose value is wanted.
         :return: The parameter's value.
         """
-        return self.params[param]
+        return self.params.get(param)
 
     def check_parameters(self):
         """
         Checks whether all parameter values are defined. If a value is not defined, the application is terminated.
         However, this should not happen as all attack should define default parameter values.
         """
+        # parameters which do not require default values
+        non_obligatory_params = [Parameter.INJECT_AFTER_PACKET, Parameter.NUMBER_ATTACKERS]
         for param, type in self.supported_params.items():
             # checks whether all params have assigned values, INJECT_AFTER_PACKET must not be considered because the
             # timestamp derived from it is set to Parameter.INJECT_AT_TIMESTAMP
-            if param not in self.params.keys() and param is not Parameter.INJECT_AFTER_PACKET:
+            if param not in self.params.keys() and param not in non_obligatory_params:
                 print("\033[91mCRITICAL ERROR: Attack '" + self.attack_name + "' does not define the parameter '" +
                       str(param) + "'.\n The attack must define default values for all parameters."
                       + "\n Cannot continue attack generation.\033[0m")
                 import sys
                 sys.exit(0)
 
-    def generate_random_ipv4_address(self, n: int = 1):
+    @staticmethod
+    def generate_random_ipv4_address(n: int = 1):
         """
         Generates n random IPv4 addresses.
         :param n: The number of IP addresses to be generated
@@ -306,7 +319,7 @@ class BaseAttack(metaclass=ABCMeta):
 
         def is_invalid(ipAddress: ipaddress.IPv4Address):
             return ipAddress.is_multicast or ipAddress.is_unspecified or ipAddress.is_loopback or \
-                   ipAddress.is_link_local or ipAddress.is_reserved
+                   ipAddress.is_link_local or ipAddress.is_private or ipAddress.is_reserved
 
         def generate_address():
             return ipaddress.IPv4Address(random.randint(0, 2 ** 32 - 1))
@@ -314,7 +327,7 @@ class BaseAttack(metaclass=ABCMeta):
         ip_addresses = []
         for i in range(0, n):
             address = generate_address()
-            while (is_invalid(address)):
+            while is_invalid(address):
                 address = generate_address()
             ip_addresses.append(str(address))
 
@@ -323,7 +336,8 @@ class BaseAttack(metaclass=ABCMeta):
         else:
             return ip_addresses
 
-    def generate_random_ipv6_address(self, n: int = 1):
+    @staticmethod
+    def generate_random_ipv6_address(n: int = 1):
         """
         Generates n random IPv6 addresses.
         :param n: The number of IP addresses to be generated
@@ -332,15 +346,15 @@ class BaseAttack(metaclass=ABCMeta):
 
         def is_invalid(ipAddress: ipaddress.IPv6Address):
             return ipAddress.is_multicast or ipAddress.is_unspecified or ipAddress.is_loopback or \
-                   ipAddress.is_link_local or ipAddress.is_reserved
+                   ipAddress.is_link_local or ipAddress.is_private or ipAddress.is_reserved
 
         def generate_address():
-            return str(ipaddress.IPv6Address(random.randint(0, 2 ** 128 - 1)))
+            return ipaddress.IPv6Address(random.randint(0, 2 ** 128 - 1))
 
         ip_addresses = []
         for i in range(0, n):
             address = generate_address()
-            while (is_invalid(address)):
+            while is_invalid(address):
                 address = generate_address()
             ip_addresses.append(str(address))
 
@@ -348,3 +362,33 @@ class BaseAttack(metaclass=ABCMeta):
             return ip_addresses[0]
         else:
             return ip_addresses
+
+    @staticmethod
+    def generate_random_mac_address(n: int = 1):
+        """
+        Generates n random MAC addresses.
+        :param n: The number of MAC addresses to be generated.
+        :return: A single MAC addres, or if n>1, a list of MAC addresses
+        """
+
+        def is_invalid(address: str):
+            first_octet = int(address[0:2], 16)
+            is_multicast_address = bool(first_octet & 0b01)
+            is_locally_administered = bool(first_octet & 0b10)
+            return is_multicast_address or is_locally_administered
+
+        def generate_address():
+            mac = [random.randint(0x00, 0xff) for i in range(0, 6)]
+            return ':'.join(map(lambda x: "%02x" % x, mac))
+
+        mac_addresses = []
+        for i in range(0, n):
+            address = generate_address()
+            while is_invalid(address):
+                address = generate_address()
+            mac_addresses.append(address)
+
+        if n == 1:
+            return mac_addresses[0]
+        else:
+            return mac_addresses

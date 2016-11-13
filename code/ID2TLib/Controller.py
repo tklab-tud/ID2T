@@ -57,11 +57,11 @@ class Controller:
             os.remove(self.written_pcaps[i])
         print("done.")
 
-        # print status message
-        print('\nOutput file created: ', self.pcap_dest_path)
-
         # write label file with attacks
         self.label_manager.write_label_file(self.pcap_dest_path)
+
+        # print status message
+        print('\nOutput files created: \n', self.pcap_dest_path, '\n', self.label_manager.label_file_path)
 
     def process_db_queries(self, query, print_results=False):
         """

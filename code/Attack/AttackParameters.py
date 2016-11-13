@@ -18,7 +18,8 @@ class Parameter(Enum):
     PORT_DESTINATION = 'port.dst'  # destination ports
     PORT_SOURCE = 'port.src'  # source ports
     # recommended type: Integer positive -------------------------
-    PACKETS_LIMIT = 'packets.limit'  # the
+    PACKETS_LIMIT = 'packets.limit'
+    NUMBER_ATTACKERS = 'attackers.count'
     # recommended type: Float ------------------------------------
     PACKETS_PER_SECOND = 'packets.per-second'  # packets per second
     INJECT_AT_TIMESTAMP = 'inject.at-timestamp'  # unix epoch time (seconds.millis) where attack should be injected
