@@ -1,4 +1,4 @@
-#! /usr/bin/python3
+#! /usr/bin/env python3
 import argparse
 import sys
 
@@ -58,7 +58,8 @@ class CLI(object):
         """
         # Create parser for arguments
         parser = argparse.ArgumentParser(description="Intrusion Detection Dataset Toolkit (ID2T) - A toolkit for "
-                                                     "injection of synthetically created attacks into PCAP datasets.")
+                                         "injection of synthetically created attacks into PCAP datasets.",
+                                         prog="id2t")
         # Define required arguments
         requiredNamed = parser.add_argument_group('required named arguments')
         requiredNamed.add_argument('-i', '--input', metavar="FILEPATH", help='path to the input pcap file', required=True)
@@ -85,6 +86,10 @@ class CLI(object):
         # Parse arguments
         self.args = parser.parse_args(args)
 
+        # Either PCAP filepath or GUI mode must be enabled
+        if not self.args.input:
+            parser.error("Parameter -i/--input required. See available options with -h/--help ")
+
         self.process_arguments()
 
 
@@ -99,7 +104,7 @@ def main(args):
     cli.parse_arguments(args)
 
 
-# # Uncomment to enable calling by terminal
+# Uncomment to enable calling by terminal
 if __name__ == '__main__':
     main(sys.argv[1:])
 

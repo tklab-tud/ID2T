@@ -191,6 +191,7 @@ class Statistics:
     def get_pps_received(self, ip_address: str):
         """
         Calculate the packets per second received for a given IP address.
+
         :param ip_address: The IP address used for the calculation
         :return: The number of packets per second received
         """

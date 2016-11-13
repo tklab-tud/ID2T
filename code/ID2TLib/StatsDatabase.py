@@ -169,7 +169,7 @@ class StatsDatabase:
         """
         # Definition of SQL queries associated to named queries
         named_queries = {
-            "most_used.ipaddress": "SELECT ipAddress FROM ip_statistics WHERE (pktsSent+pktsReceived) == (SELECT MAX(pktsSent+pktsReceived) from ip_statistics)",
+            "most_used.ipaddress": "SELECT ipAddress FROM ip_statistics WHERE (pktsSent+pktsReceived) == (SELECT MAX(pktsSent+pktsReceived) from ip_statistics) LIMIT 1",
             "most_used.macaddress": "SELECT * FROM (SELECT macAddress, COUNT(*) as occ from ip_mac GROUP BY macAddress ORDER BY occ DESC) WHERE occ=(SELECT COUNT(*) as occ from ip_mac GROUP BY macAddress ORDER BY occ DESC LIMIT 1)",
             "most_used.portnumber": "SELECT portNumber, COUNT(portNumber) as cntPort FROM ip_ports GROUP BY portNumber HAVING cntPort=(SELECT MAX(cntPort) from (SELECT portNumber, COUNT(portNumber) as cntPort FROM ip_ports GROUP BY portNumber))",
             "most_used.protocolname": "SELECT protocolName, COUNT(protocolCount) as countProtocols FROM ip_protocols GROUP BY protocolName HAVING countProtocols=(SELECT COUNT(protocolCount) as cnt FROM ip_protocols GROUP BY protocolName ORDER BY cnt DESC LIMIT 1)",
@@ -238,6 +238,7 @@ class StatsDatabase:
         query_string = query_string_in.lower().lstrip()
 
         # query_string is a user-defined SQL query
+        result = None
         if sql_query_parameters is not None or query_string.startswith("select") or query_string.startswith("insert"):
             result = self._process_user_defined_query(query_string, sql_query_parameters)
         # query string is a named query -> parse it and pass it to statisticsDB

@@ -49,6 +49,9 @@ class PortscanAttack(BaseAttack.BaseAttack):
 
         self.add_param_value(Param.IP_SOURCE, most_used_ip_address)
         self.add_param_value(Param.IP_SOURCE_RANDOMIZE, 'False')
+        self.add_param_value(Param.IP_DESTINATION, '192.168.178.13')
+        self.add_param_value(Param.PORT_DESTINATION, '1-1023,1720,1900,8080')
+        self.add_param_value(Param.PORT_SOURCE, '8542')
         self.add_param_value(Param.MAC_SOURCE, self.statistics.get_mac_address(most_used_ip_address))
 
         random_ip_address = self.statistics.get_random_ip_address()
@@ -58,6 +61,13 @@ class PortscanAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.PORT_DESTINATION, '0-1023,1720,1900,8080')
         self.add_param_value(Param.PORT_OPEN, '8080,9232,9233')
         self.add_param_value(Param.PORT_DEST_SHUFFLE, 'False')
+        self.add_param_value(Param.PORT_ORDER_DESC, 'False')
+        self.add_param_value(Param.MAC_SOURCE, 'macAddress(ipAddress=' + most_used_ipAddress + ')')
+        self.add_param_value(Param.MAC_DESTINATION, 'A0:1A:28:0B:62:F4')
+        self.add_param_value(Param.PACKETS_PER_SECOND,
+                             (self.statistics.get_pps_sent(most_used_ipAddress) +
+                              self.statistics.get_pps_received(most_used_ipAddress)) / 2)
+        self.add_param_value(Param.INJECT_AT_TIMESTAMP, '1410733342')  # Sun, 14 Sep 2014 22:22:22 GMT
         self.add_param_value(Param.PORT_DEST_ORDER_DESC, 'False')
 
         self.add_param_value(Param.PORT_SOURCE, '8542')
@@ -134,7 +144,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
             if dport in self.get_param_value(Param.PORT_OPEN):  # destination port is OPEN
                 reply_ether = Ether(src=mac_destination, dst=mac_source)
                 reply_ip = IP(src=ip_destination, dst=ip_source, flags='DF')
-                # target answers
                 if mss is None:
                     reply_tcp = TCP(sport=dport, dport=sport, seq=0, ack=1, flags='SA', window=29200)
                 else:

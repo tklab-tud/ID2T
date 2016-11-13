@@ -114,7 +114,7 @@ class BaseAttack(metaclass=ABCMeta):
             :param num: The port number as int.
             :return: True if the port number is invalid, otherwise False.
             """
-            return num < 0 or num > 65535
+            return num < 1 or num > 65535
 
         if isinstance(ports_input, str):
             ports_input = ports_input.replace(' ', '').split(',')

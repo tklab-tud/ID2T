@@ -1,6 +1,5 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
-*$py.class
 *.pyc
 *.o
 
@@ -8,7 +7,8 @@ __pycache__/
 *.so
 
 # Build files
-build/
+code_boost/src/build/*
 
 # Pycharm IDE configuration
 .idea/
+
