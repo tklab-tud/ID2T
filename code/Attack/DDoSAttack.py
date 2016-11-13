@@ -59,7 +59,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.PORT_DESTINATION, port_destination)
         self.add_param_value(Param.PACKETS_LIMIT, randint(1000, 5000))
 
-    def get_packets(self):
+    def generate_attack_pcap(self):
         def update_timestamp(timestamp, pps, maxdelay):
             """
             Calculates the next timestamp to be used based on the packet per second rate (pps) and the maximum delay.
@@ -89,9 +89,10 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         def get_attacker_config(ipAddress: str):
             """
-
-            :param ipAddress:
-            :return:
+            Returns the attacker configuration depending on the IP address, this includes the port for the next
+            attacking packet and the previously used (fixed) TTL value.
+            :param ipAddress: The IP address of the attacker
+            :return: A tuple consisting of (port, ttlValue)
             """
             # Determine port
             port = attacker_port_mapping.get(ipAddress)
@@ -112,10 +113,13 @@ class DDoSAttack(BaseAttack.BaseAttack):
                     ttl = int(round(gd[pos]))
                     if 0 < ttl < 256:  # validity check
                         is_invalid = False
+                    else:
                         pos = index_increment(pos, pos_max)
                 attacker_ttl_mapping[ipAddress] = ttl
             # return port and TTL
             return next_port, ttl
+
+        BUFFER_SIZE = 1000
 
         # Determine source IP and MAC address
         num_attackers = self.get_param_value(Param.NUMBER_ATTACKERS)
@@ -129,15 +133,13 @@ class DDoSAttack(BaseAttack.BaseAttack):
             ip_source_list = self.get_param_value(Param.IP_SOURCE)
             mac_source_list = self.get_param_value(Param.MAC_SOURCE)
 
-        BUFFER_SIZE_PACKETS = self.get_param_value(Param.PACKETS_LIMIT)
-
         # Timestamp
         timestamp_next_pkt = self.get_param_value(Param.INJECT_AT_TIMESTAMP)
         pps = self.get_param_value(Param.PACKETS_PER_SECOND)
         randomdelay = Lea.fromValFreqsDict({1 / pps: 70, 2 / pps: 30, 5 / pps: 15, 10 / pps: 3})
 
         # Initialize parameters
-        packets = deque(maxlen=BUFFER_SIZE_PACKETS)
+        packets = deque(maxlen=BUFFER_SIZE)
         port_source_list = self.get_param_value(Param.PORT_SOURCE)
         mac_destination = self.get_param_value(Param.MAC_DESTINATION)
         ip_destination = self.get_param_value(Param.IP_DESTINATION)
@@ -149,6 +151,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         alpha, loc, beta = (2.3261710235, -0.188306914406, 44.4853123884)
         gd = gamma.rvs(alpha, loc=loc, scale=beta, size=len(ip_source_list))
 
+        path_attack_pcap = None
         for pkt_num in range(self.get_param_value(Param.PACKETS_LIMIT)):
             # Select one IP address and its corresponding MAC address
             (ip_source, mac_source) = get_nth_random_element(ip_source_list, mac_source_list)
@@ -168,9 +171,17 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
             timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
 
-        # Store timestamp of first and last packet
-        self.attack_start_utime = packets[0].time
-        self.attack_end_utime = packets[-1].time
+            # Store timestamp of first packet (for attack label)
+            if pkt_num == 1:
+                self.attack_start_utime = packets[0].time
+            elif pkt_num % BUFFER_SIZE == 0:
+                last_packet = packets[-1]
+                packets = sorted(packets, key=lambda pkt: pkt.time)
+                path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
+                packets = []
+
+        # Store timestamp of last packet
+        self.attack_end_utime = last_packet.time
 
         # return packets sorted by packet time_sec_start
-        return sorted(packets, key=lambda pkt: pkt.time)
+        return path_attack_pcap

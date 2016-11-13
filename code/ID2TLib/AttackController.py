@@ -26,32 +26,6 @@ class AttackController:
         # The PCAP where the attack should be injected into
         self.base_pcap = self.statistics.pcap_filepath
 
-    def write_attack_pcap(self):
-        """
-        Writes the attack's packets into a PCAP file with a temporary filename.
-        :return: The path of the written PCAP file.
-        """
-        # Check if all req. parameters are set
-        self.current_attack.check_parameters()
-
-        # Create attack packets
-        print("Generating attack packets...", end=" ")
-        sys.stdout.flush()  # force python to print text immediately
-        packets = self.current_attack.get_packets()
-        print("done.")
-
-        # Write packets into pcap file
-        temp_pcap = tempfile.NamedTemporaryFile(delete=False)
-        pktdump = PcapWriter(temp_pcap.name)
-        pktdump.write(packets)
-
-        # Store pcap path and close file objects
-        pcap_path = temp_pcap.name
-        pktdump.close()
-        temp_pcap.close()
-
-        return pcap_path
-
     def create_attack(self, attack_name: str):
         """
         Creates dynamically a new class instance based on the given attack_name.
@@ -107,7 +81,10 @@ class AttackController:
             attack_note = ""
 
         # Write attack into pcap file
-        temp_attack_pcap_path = self.write_attack_pcap()
+        print("Generating attack packets...", end=" ")
+        sys.stdout.flush()  # force python to print text immediately
+        temp_attack_pcap_path = self.current_attack.generate_attack_pcap()
+        print("done.")
 
         # Merge attack with existing pcap
         pcap_dest_path = self.pcap_file.merge_attack(temp_attack_pcap_path)

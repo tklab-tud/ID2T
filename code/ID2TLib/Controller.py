@@ -15,7 +15,7 @@ class Controller:
         :param pcap_file_path:
         """
         # Fields
-        self.pcap_src_path = pcap_file_path
+        self.pcap_src_path = pcap_file_path.strip()
         self.pcap_dest_path = ''
         self.written_pcaps = []
 

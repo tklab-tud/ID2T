@@ -1,9 +1,12 @@
 import ipaddress
+import os
 import random
 import re
+import tempfile
 from abc import abstractmethod, ABCMeta
 
 import ID2TLib.libpcapreader as pr
+from scapy.utils import PcapWriter
 
 from Attack import AttackParameters
 from Attack.AttackParameters import Parameter
@@ -37,11 +40,11 @@ class BaseAttack(metaclass=ABCMeta):
         self.attack_end_utime = 0
 
     @abstractmethod
-    def get_packets(self):
+    def generate_attack_pcap(self):
         """
-        Creates the packets containing the attack.
+        Creates a pcap containing the attack packets.
 
-        :return: A list of packets ordered ascending by the packet's timestamp.
+        :return: The location of the generated pcap file.
         """
         pass
 
@@ -308,6 +311,36 @@ class BaseAttack(metaclass=ABCMeta):
                       + "\n Cannot continue attack generation.\033[0m")
                 import sys
                 sys.exit(0)
+
+    def write_attack_pcap(self, packets: list, append_flag: bool = False, destination_path: str = None):
+        """
+        Writes the attack's packets into a PCAP file with a temporary filename.
+        :return: The path of the written PCAP file.
+        """
+        # Only check params initially when attack generation starts
+        if append_flag is False and destination_path is None:
+            # Check if all req. parameters are set
+            self.check_parameters()
+
+        # Determine destination path
+        if destination_path is not None and os.path.exists(destination_path):
+            destination = destination_path
+        else:
+            temp_file = tempfile.NamedTemporaryFile(delete=False)
+            destination = temp_file.name
+
+        # Write packets into pcap file
+        pktdump = PcapWriter(destination, append=append_flag)
+        pktdump.write(packets)
+
+        # Store pcap path and close file objects
+        pktdump.close()
+
+        return destination
+
+    #########################################
+    # RANDOM IP/MAC ADDRESS GENERATORS
+    #########################################
 
     @staticmethod
     def generate_random_ipv4_address(n: int = 1):

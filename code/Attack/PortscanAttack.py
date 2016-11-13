@@ -49,28 +49,18 @@ class PortscanAttack(BaseAttack.BaseAttack):
 
         self.add_param_value(Param.IP_SOURCE, most_used_ip_address)
         self.add_param_value(Param.IP_SOURCE_RANDOMIZE, 'False')
-        self.add_param_value(Param.IP_DESTINATION, '192.168.178.13')
-        self.add_param_value(Param.PORT_DESTINATION, '1-1023,1720,1900,8080')
-        self.add_param_value(Param.PORT_SOURCE, '8542')
         self.add_param_value(Param.MAC_SOURCE, self.statistics.get_mac_address(most_used_ip_address))
 
         random_ip_address = self.statistics.get_random_ip_address()
         self.add_param_value(Param.IP_DESTINATION, random_ip_address)
         self.add_param_value(Param.MAC_DESTINATION, self.statistics.get_mac_address(random_ip_address))
 
-        self.add_param_value(Param.PORT_DESTINATION, '0-1023,1720,1900,8080')
+        self.add_param_value(Param.PORT_DESTINATION, '1-1023,1720,1900,8080')
         self.add_param_value(Param.PORT_OPEN, '8080,9232,9233')
         self.add_param_value(Param.PORT_DEST_SHUFFLE, 'False')
-        self.add_param_value(Param.PORT_ORDER_DESC, 'False')
-        self.add_param_value(Param.MAC_SOURCE, 'macAddress(ipAddress=' + most_used_ipAddress + ')')
-        self.add_param_value(Param.MAC_DESTINATION, 'A0:1A:28:0B:62:F4')
-        self.add_param_value(Param.PACKETS_PER_SECOND,
-                             (self.statistics.get_pps_sent(most_used_ipAddress) +
-                              self.statistics.get_pps_received(most_used_ipAddress)) / 2)
-        self.add_param_value(Param.INJECT_AT_TIMESTAMP, '1410733342')  # Sun, 14 Sep 2014 22:22:22 GMT
         self.add_param_value(Param.PORT_DEST_ORDER_DESC, 'False')
 
-        self.add_param_value(Param.PORT_SOURCE, '8542')
+        self.add_param_value(Param.PORT_SOURCE, randint(1024, 65535))
         self.add_param_value(Param.PORT_SOURCE_RANDOMIZE, 'False')
 
         self.add_param_value(Param.PACKETS_PER_SECOND,
@@ -78,7 +68,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
                               self.statistics.get_pps_received(most_used_ip_address)) / 2)
         self.add_param_value(Param.INJECT_AFTER_PACKET, randint(0, self.statistics.get_packet_count()))
 
-    def get_packets(self):
+    def generate_attack_pcap(self):
         def update_timestamp(timestamp, pps, maxdelay):
             """
             Calculates the next timestamp to be used based on the packet per second rate (pps) and the maximum delay.
