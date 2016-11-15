@@ -51,7 +51,10 @@ class DDoSAttack(BaseAttack.BaseAttack):
         # victim configuration
         random_ip_address = self.statistics.get_random_ip_address()
         self.add_param_value(Param.IP_DESTINATION, random_ip_address)
-        self.add_param_value(Param.MAC_DESTINATION, self.statistics.get_mac_address(random_ip_address))
+        destination_mac = self.statistics.get_mac_address(random_ip_address)
+        if isinstance(destination_mac, list) and len(destination_mac) == 0:
+            destination_mac = self.generate_random_mac_address()
+        self.add_param_value(Param.MAC_DESTINATION, destination_mac)
         port_destination = self.statistics.process_db_query(
             "SELECT portNumber FROM ip_ports WHERE portDirection='in' ORDER BY RANDOM() LIMIT 1;")
         if port_destination is None:
@@ -152,7 +155,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         gd = gamma.rvs(alpha, loc=loc, scale=beta, size=len(ip_source_list))
 
         path_attack_pcap = None
-        for pkt_num in range(self.get_param_value(Param.PACKETS_LIMIT)):
+        for pkt_num in range(self.get_param_value(Param.PACKETS_LIMIT) + 1):
             # Select one IP address and its corresponding MAC address
             (ip_source, mac_source) = get_nth_random_element(ip_source_list, mac_source_list)
 
@@ -184,4 +187,4 @@ class DDoSAttack(BaseAttack.BaseAttack):
         self.attack_end_utime = last_packet.time
 
         # return packets sorted by packet time_sec_start
-        return path_attack_pcap
+        return pkt_num, path_attack_pcap

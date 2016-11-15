@@ -83,8 +83,8 @@ class AttackController:
         # Write attack into pcap file
         print("Generating attack packets...", end=" ")
         sys.stdout.flush()  # force python to print text immediately
-        temp_attack_pcap_path = self.current_attack.generate_attack_pcap()
-        print("done.")
+        total_packets, temp_attack_pcap_path = self.current_attack.generate_attack_pcap()
+        print("done. (total: " + str(total_packets) + " pkts.)")
 
         # Merge attack with existing pcap
         pcap_dest_path = self.pcap_file.merge_attack(temp_attack_pcap_path)

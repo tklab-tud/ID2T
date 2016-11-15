@@ -105,26 +105,32 @@ def main(args):
 
 
 # Uncomment to enable calling by terminal
-if __name__ == '__main__':
-    main(sys.argv[1:])
-
 # if __name__ == '__main__':
-#     FILE = ['-i', '/mnt/hgfs/datasets/95M.pcap']
-#     FILE2 = ['-i', '/mnt/hgfs/datasets/95M_20161103-185151.pcap']
-#     FILE3 = ['-i', '/home/pjattke/temp/test_me_short.pcap']
-#     ATTACK_NO_PARAM = ['-a', 'DDoSAttack', 'attackers.count=10']
-#
-#     ATTACK = ['-a', 'PortscanAttack', 'ip.src=10.2.2.4', 'mac.dst=05:AB:47:B5:19:11',
-#               'inject.at-timestamp=1449038705.316721', 'attack.note=Portscan2']
-#     ATTACK2 = ['-a', 'PortscanAttack', 'ip.dst=193.133.122.23', 'ip.src=192.124.34.12', 'inject.after-pkt=34']
-#
-#     STATS_RECALC = ['-r']
-#     STATS_PRINT = ['-s']
-#     STATS_PLOT = ['-p', 'format=pdf']
-#
-#     QUERY_MODE_LOOP = ['-q']
-#     QUERY_DB = ['-q', 'ipAddress(pktsSent > 1000, kbytesSent >= 20)']
-#
-#     main(FILE + STATS_PLOT)
+#    main(sys.argv[1:])
 
-    # main(['-c', '/home/pjattke/Thesis/development/code/config'])
+if __name__ == '__main__':
+    INPUT = ['-i']
+
+    #    FILES = ['/root/datasets/201506021400_1G.pcap',
+    #             '/root/datasets/201506021400_2G.pcap',
+    #             '/root/datasets/201506021400_5G.pcap']
+
+    FILES = ['/mnt/hgfs/datasets/201506021400_2G.pcap']
+
+    #    FILES = ['/mnt/hgfs/datasets/95M.pcap']
+
+    ATTACK_PS = ['-a', 'PortscanAttack', 'ip.src=10.2.2.4', 'mac.dst=05:AB:47:B5:19:11',
+                 'inject.at-timestamp=1449038705.316721', 'attack.note=Portscan2']
+    ATTACK_PS2 = ['-a', 'PortscanAttack', 'port.dst=1-1024']
+    ATTACK_DD = ['-a', 'DDoSAttack', 'attackers.count=10', 'packets.limit=1000']
+
+    STATS_RECALC = ['-r']
+    STATS_PRINT = ['-s']
+    STATS_PLOT = ['-p']
+
+    QUERY_MODE_LOOP = ['-q']
+    QUERY_DB = ['-q', 'ipAddress(pktsSent > 1000, kbytesSent >= 20)']
+
+    for f in FILES:
+        main(INPUT + [f] + ATTACK_PS2 + ATTACK_DD)  # Statistics Calculation
+        #main(INPUT + ATTACK_DD)  # Attack Packet Generation -> insert exit() | Merging
