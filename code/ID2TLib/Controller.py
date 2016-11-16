@@ -1,5 +1,4 @@
 import os
-
 import sys
 
 from ID2TLib.AttackController import AttackController
@@ -42,19 +41,40 @@ class Controller:
         """
         Creates the attack based on the attack name and the attack parameters given in the attacks_config. The
         attacks_config is a list of attacks, e.g.
-        [['PortscanAttack', 'ip.src="192.168.178.2",'dst.port=80'],['PortscanAttack', 'ip.src="10.10.10.2"]]
+        [['PortscanAttack', 'ip.src="192.168.178.2",'dst.port=80'],['PortscanAttack', 'ip.src="10.10.10.2"]].
+        Merges the individual temporary attack pcaps into one single pcap and merges this single pcap with the
+        input dataset.
         :param attacks_config: A list of attacks with their attack parameters.
         """
         # load attacks sequentially
         for attack in attacks_config:
-            self.pcap_dest_path = self.attack_controller.process_attack(attack[0], attack[1:])
-            self.written_pcaps.append(self.pcap_dest_path)
+            temp_attack_pcap = self.attack_controller.process_attack(attack[0], attack[1:])
+            self.written_pcaps.append(temp_attack_pcap)
+
+        # merge attack pcaps to get single attack pcap
+        if len(self.written_pcaps) > 1:
+            print("\nMerging temporary attack pcaps into single pcap file...", end=" ")
+            sys.stdout.flush()  # force python to print text immediately
+            attack_pcap_file = PcapFile(self.written_pcaps[0])
+            for attack in self.written_pcaps[1:]:
+                all_attacks_pcap = attack_pcap_file.merge_attack(attack)
+                os.remove(attack)  # remove merged pcap
+                # Create new PcapFile object for next iteration
+                attack_pcap_file = PcapFile(all_attacks_pcap)
+            print("done.")
+        else:
+            all_attacks_pcap = self.written_pcaps[0]
+
+        # merge single attack pcap with all attacks into base pcap
+        print("Merging base pcap with single attack pcap...", end=" ")
+        sys.stdout.flush()  # force python to print text immediately
+        self.pcap_dest_path = self.pcap_file.merge_attack(all_attacks_pcap)
+        print("done.")
 
         # delete intermediate PCAP files
-        print('Deleting intermediate attack pcaps...', end="")
+        print('Deleting intermediate attack pcap...', end="")
         sys.stdout.flush()  # force python to print text immediately
-        for i in range(len(self.written_pcaps) - 1):
-            os.remove(self.written_pcaps[i])
+        os.remove(all_attacks_pcap)
         print("done.")
 
         # write label file with attacks

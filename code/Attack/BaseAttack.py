@@ -326,7 +326,7 @@ class BaseAttack(metaclass=ABCMeta):
         if destination_path is not None and os.path.exists(destination_path):
             destination = destination_path
         else:
-            temp_file = tempfile.NamedTemporaryFile(delete=False)
+            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pcap')
             destination = temp_file.name
 
         # Write packets into pcap file

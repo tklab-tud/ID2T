@@ -1,6 +1,5 @@
 import hashlib
 import os.path
-import sys
 
 import ID2TLib.libpcapreader as pr
 
@@ -21,13 +20,8 @@ class PcapFile(object):
         :param attack_pcap_path: The path to the PCAP file to merge with the PCAP at pcap_file_path
         :return: The file path of the resulting PCAP file
         """
-        print("Merging base pcap with attack pcap...", end=" ")
-        sys.stdout.flush()  # force python to print text immediately
-
         pcap = pr.pcap_processor(self.pcap_file_path)
         file_out_path = pcap.merge_pcaps(attack_pcap_path)
-        print("done.")
-
         return file_out_path
 
     def get_file_hash(self):

@@ -1,8 +1,6 @@
 import importlib
-import os
-import tempfile
 import sys
-from scapy.utils import PcapWriter
+
 from Attack.AttackParameters import Parameter
 from ID2TLib import LabelManager
 from ID2TLib import Statistics
@@ -44,8 +42,7 @@ class AttackController:
     def process_attack(self, attack: str, params: str):
         """
         Takes as input the name of an attack (classname) and the attack parameters as string. Parses the string of
-        attack parameters, creates the attack by writing the attack packets, merges these packets into the existing
-        dataset and stores the label file of the injected attacks.
+        attack parameters, creates the attack by writing the attack packets and returns the path of the written pcap.
         :param attack: The classname of the attack to injecect.
         :param params: The parameters for attack customization, see attack class for supported params.
         :return: The file path to the created pcap file.
@@ -86,18 +83,12 @@ class AttackController:
         total_packets, temp_attack_pcap_path = self.current_attack.generate_attack_pcap()
         print("done. (total: " + str(total_packets) + " pkts.)")
 
-        # Merge attack with existing pcap
-        pcap_dest_path = self.pcap_file.merge_attack(temp_attack_pcap_path)
-
-        # Delete temporary attack pcap
-        os.remove(temp_attack_pcap_path)
-
         # Store label into LabelManager
         l = Label(attack, self.get_attack_start_utime(),
                   self.get_attack_end_utime(), attack_note)
         self.label_mgr.add_labels(l)
 
-        return pcap_dest_path
+        return temp_attack_pcap_path
 
     def get_attack_start_utime(self):
         """

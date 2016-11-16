@@ -1,11 +1,13 @@
 import logging
-from random import randint, choice, uniform
+from random import randint, uniform
+
 from lea import Lea
-from scipy.stats import stats, gamma
+from scipy.stats import gamma
 
 from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes
+
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 # noinspection PyPep8
 from scapy.layers.inet import IP, Ether, TCP, RandShort
@@ -155,7 +157,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         gd = gamma.rvs(alpha, loc=loc, scale=beta, size=len(ip_source_list))
 
         path_attack_pcap = None
-        for pkt_num in range(self.get_param_value(Param.PACKETS_LIMIT) + 1):
+        for pkt_num in range(self.get_param_value(Param.PACKETS_LIMIT)):
             # Select one IP address and its corresponding MAC address
             (ip_source, mac_source) = get_nth_random_element(ip_source_list, mac_source_list)
 
@@ -182,6 +184,10 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 packets = sorted(packets, key=lambda pkt: pkt.time)
                 path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
                 packets = []
+
+        if len(packets) > 0:
+            packets = sorted(packets, key=lambda pkt: pkt.time)
+            path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
 
         # Store timestamp of last packet
         self.attack_end_utime = last_packet.time
