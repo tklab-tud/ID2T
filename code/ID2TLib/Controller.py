@@ -55,26 +55,24 @@ class Controller:
         if len(self.written_pcaps) > 1:
             print("\nMerging temporary attack pcaps into single pcap file...", end=" ")
             sys.stdout.flush()  # force python to print text immediately
-            attack_pcap_file = PcapFile(self.written_pcaps[0])
-            for attack in self.written_pcaps[1:]:
-                all_attacks_pcap = attack_pcap_file.merge_attack(attack)
-                os.remove(attack)  # remove merged pcap
-                # Create new PcapFile object for next iteration
-                attack_pcap_file = PcapFile(all_attacks_pcap)
+            for i in range(0, len(self.written_pcaps) - 1):
+                attacks_pcap = PcapFile(self.written_pcaps[i])
+                attacks_pcap_path = attacks_pcap.merge_attack(self.written_pcaps[i + 1])
+                os.remove(self.written_pcaps[i + 1])  # remove merged pcap
             print("done.")
         else:
-            all_attacks_pcap = self.written_pcaps[0]
+            attacks_pcap_path = self.written_pcaps[0]
 
         # merge single attack pcap with all attacks into base pcap
         print("Merging base pcap with single attack pcap...", end=" ")
         sys.stdout.flush()  # force python to print text immediately
-        self.pcap_dest_path = self.pcap_file.merge_attack(all_attacks_pcap)
+        self.pcap_dest_path = self.pcap_file.merge_attack(attacks_pcap_path)
         print("done.")
 
         # delete intermediate PCAP files
         print('Deleting intermediate attack pcap...', end="")
         sys.stdout.flush()  # force python to print text immediately
-        os.remove(all_attacks_pcap)
+        os.remove(attacks_pcap_path)
         print("done.")
 
         # write label file with attacks
