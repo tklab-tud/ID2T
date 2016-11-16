@@ -50,6 +50,8 @@ std::string pcap_processor::merge_pcaps(const std::string pcap_path) {
     std::string::size_type h = new_filepath.rfind('.', new_filepath.length());
     if (h != std::string::npos) {
         new_filepath.replace(h, newExt.length(), newExt);
+    } else {
+        new_filepath.append(newExt);
     }
 
     FileSniffer sniffer_base(filePath);
@@ -65,15 +67,21 @@ std::string pcap_processor::merge_pcaps(const std::string pcap_path) {
     for (; iterator_base != sniffer_base.end();) {
         auto tstmp_base = (iterator_base->timestamp().seconds()) + (iterator_base->timestamp().microseconds()*1e-6);
         auto tstmp_attack = (iterator_attack->timestamp().seconds()) + (iterator_attack->timestamp().microseconds()*1e-6);
-
         if (!all_attack_pkts_processed && tstmp_attack <= tstmp_base) {
-            writer.write(*iterator_attack);
+            try {
+                writer.write(*iterator_attack);
+            } catch (serialization_error) {
+                std::cout << "Could not serialize attack packet with timestamp " << tstmp_attack << std::endl;
+            }
             iterator_attack++;
-
             if (iterator_attack == sniffer_attack.end())
                 all_attack_pkts_processed = true;
         } else {
-            writer.write(*iterator_base);
+            try {
+                writer.write(*iterator_base);
+            } catch (serialization_error) {
+                    std::cout << "Could not serialize base packet with timestamp " << tstmp_attack << std::endl;
+            }
             iterator_base++;
         }
     }
@@ -81,9 +89,13 @@ std::string pcap_processor::merge_pcaps(const std::string pcap_path) {
     // This may happen if the base PCAP is smaller than the attack PCAP
     // In this case append the remaining packets of the attack PCAP
     for (; iterator_attack != sniffer_attack.end(); iterator_attack++) {
-        writer.write(*iterator_attack);
+        try {
+            writer.write(*iterator_attack);
+        } catch (serialization_error) {
+            auto tstmp_attack = (iterator_attack->timestamp().seconds()) + (iterator_attack->timestamp().microseconds()*1e-6);
+            std::cout << "Could not serialize attack packet with timestamp " << tstmp_attack << std::endl;
+        }
     }
-
     return new_filepath;
 }
 
@@ -229,10 +241,11 @@ bool inline pcap_processor::file_exists(const std::string &filePath) {
  * Comment in if executable should be build & run
  * Comment out if library should be build
  */
-//int main() {
+///*int main() {
 //    std::cout << "Starting application." << std::endl;
 //    //pcap_processor pcap = pcap_processor("/mnt/hgfs/datasets/95M.pcap");
-//    pcap_processor pcap = pcap_processor("/home/pjattke/temp/test_me_short.pcap");
+////pcap_processor pcap = pcap_processor("/home/pjattke/temp/test_me_short.pcap");
+//    pcap_processor pcap = pcap_processor("/tmp/tmp0hhz2oia");
 ////long double t = pcap.get_timestamp_mu_sec(87);
 ////    std::cout << t << std::endl;
 //
@@ -244,11 +257,12 @@ bool inline pcap_processor::file_exists(const std::string &filePath) {
 ////    printf("Elapsed time is %.2lf seconds.", dif);
 ////    pcap.stats.writeToDatabase("/home/pjattke/myDB.sqlite3");
 //
-//    pcap.merge_pcaps("/home/pjattke/temp/temp_attack.pcap");
+//    std::string path = pcap.merge_pcaps("/tmp/tmp0okkfdx_");
+//    std::cout << path << std::endl;
 //
 //
 //    return 0;
-//}
+//}*/
 
 /*
  * Comment out if executable should be build & run

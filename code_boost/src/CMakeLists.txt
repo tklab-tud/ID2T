@@ -73,3 +73,7 @@ SET_target_properties(sqlite3 PROPERTIES POSITION_INDEPENDENT_CODE ON)
 ADD_LIBRARY(pcapreader SHARED ${SOURCE_FILES})
 # Libs pthread and dl are prerequisites of SQLiteCpp
 TARGET_LINK_LIBRARIES(pcapreader ${Boost_LIBRARIES} "${TINS_LIBRARY}" SQLiteCpp sqlite3 pthread dl)
+
+# comment this out to build executable (for development)
+#ADD_EXECUTABLE(cpp-pcapreader ${SOURCE_FILES})
+#TARGET_LINK_LIBRARIES(cpp-pcapreader ${Boost_LIBRARIES} "${TINS_LIBRARY}" SQLiteCpp sqlite3 pthread dl)
