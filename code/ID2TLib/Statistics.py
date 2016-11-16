@@ -1,6 +1,8 @@
 import os
 import time
 import ID2TLib.libpcapreader as pr
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from ID2TLib.PcapFile import PcapFile
 from ID2TLib.StatsDatabase import StatsDatabase

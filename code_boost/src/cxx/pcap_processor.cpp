@@ -71,7 +71,7 @@ std::string pcap_processor::merge_pcaps(const std::string pcap_path) {
             try {
                 writer.write(*iterator_attack);
             } catch (serialization_error) {
-                std::cout << "Could not serialize attack packet with timestamp " << tstmp_attack << std::endl;
+                std::cout << std::setprecision(15) << "Could not serialize attack packet with timestamp " << tstmp_attack << std::endl;
             }
             iterator_attack++;
             if (iterator_attack == sniffer_attack.end())
@@ -80,7 +80,7 @@ std::string pcap_processor::merge_pcaps(const std::string pcap_path) {
             try {
                 writer.write(*iterator_base);
             } catch (serialization_error) {
-                    std::cout << "Could not serialize base packet with timestamp " << tstmp_attack << std::endl;
+                    std::cout << "Could not serialize base packet with timestamp " << std::setprecision(15) << tstmp_attack << std::endl;
             }
             iterator_base++;
         }
@@ -93,7 +93,7 @@ std::string pcap_processor::merge_pcaps(const std::string pcap_path) {
             writer.write(*iterator_attack);
         } catch (serialization_error) {
             auto tstmp_attack = (iterator_attack->timestamp().seconds()) + (iterator_attack->timestamp().microseconds()*1e-6);
-            std::cout << "Could not serialize attack packet with timestamp " << tstmp_attack << std::endl;
+            std::cout << "Could not serialize attack packet with timestamp " << std::setprecision(15) << tstmp_attack << std::endl;
         }
     }
     return new_filepath;
