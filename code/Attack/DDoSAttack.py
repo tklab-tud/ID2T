@@ -193,4 +193,5 @@ class DDoSAttack(BaseAttack.BaseAttack):
         self.attack_end_utime = last_packet.time
 
         # return packets sorted by packet time_sec_start
-        return pkt_num, path_attack_pcap
+        # pkt_num+1: because pkt_num starts at 0
+        return pkt_num + 1, path_attack_pcap
