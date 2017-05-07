@@ -69,7 +69,7 @@ In this section, we provide examples on how ID2T is used.
 ### Injecting an attack into an existing dataset
 In the following we inject the _PortscanAttack_ into the dataset *pcap_capture.pcap*:
 
-`` ./id2t -i /home/user/pcap_capture.pcap -a PortscanAttack ip.src=192.168.178.2 mac.src=32-08-24-DC-8D-27 inject.at-timestamp=1476301843 ``
+`` ./id2t -i /home/user/pcap_capture.pcap -a PortscanAttack ip.src=192.168.178.2 mac.src=32:08:24:DC:8D:27 inject.at-timestamp=1476301843 ``
 
 __Explanation__: The parameter ``-i/--input`` takes the path to the PCAP file. This triggers the statistics calculation of the file. After the calculation, the statistics are stored into a SQLite database. If the statistics were already computed in an earlier run, the data is retrieved from the generated database. This saves time as the calculation of the statistics may take long time - depending on the PCAP file size.
 
@@ -80,7 +80,7 @@ The toolkit recognizes if the input dataset has an associated label file. This r
 
 ### The Statistics database
 Whenever ID2T processes a pcap file, it creates a database detailing many things related to the network traffic it has processed. These details can be seen using the _query mode_ of ID2T. To specify a query against a pcap file, use the option ``-q/--query`. For example, if we want to know the IP address with the most activity in the pcap file 'test.pcap' we can issue the command:
-    ./id2t -i test.pcap -q most_used(ipAddress)
+    ./id2t -i test.pcap -q 'most_used(ipAddress);'
 
 The _query mode_ serves as a place where standard SQL queries (known as _user-defined queries_) can be issued against the database created for a pcap file. Furthermore, the most commonly used queries are provided with special keywords known as _named queries_.
 
