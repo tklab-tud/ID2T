@@ -1,0 +1,15 @@
+<?xml version="1.0" ?>
+<LABELS version_parser="0.2">
+	<attack>
+		<attack_name>PortscanAttack</attack_name>
+		<attack_note></attack_note>
+		<timestamp_start>
+			<timestamp>1494665371.881224</timestamp>
+			<timestamp_hr>2017-05-13 10:49:31.881224</timestamp_hr>
+		</timestamp_start>
+		<timestamp_end>
+			<timestamp>1494665408.3418837</timestamp>
+			<timestamp_hr>2017-05-13 10:50:08.341884</timestamp_hr>
+		</timestamp_end>
+	</attack>
+</LABELS>

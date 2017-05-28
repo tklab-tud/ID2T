@@ -12,3 +12,5 @@ code_boost/src/build/*
 # Pycharm IDE configuration
 .idea/
 
+#captures
+captures/*
