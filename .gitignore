@@ -17,3 +17,4 @@ captures/*
 tures/*
 code/*.pcap
 code/*.xml
+code_boost/src/SQLiteCpp/*
