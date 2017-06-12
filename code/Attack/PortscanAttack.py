@@ -1,4 +1,6 @@
 import logging
+import csv
+
 from random import shuffle, randint, choice, uniform
 
 from lea import Lea
@@ -81,6 +83,26 @@ class PortscanAttack(BaseAttack.BaseAttack):
             :return: Timestamp to be used for the next packet.
             """
             return timestamp + uniform(0.1 / pps, maxdelay)
+
+        def get_default_ports_dst():
+            ports_dst=[]
+            ports_dst = []
+            spamreader = csv.reader(open('nmap-services-tcp.csv', 'rt'), delimiter=',')
+            ports_num = 1000
+            for count in range(ports_num):
+                # escape first row (header)
+                next(spamreader)
+                # save ports numbers
+                ports_dst.append(next(spamreader)[0])
+            # shuffle ports numbers
+            temp_array = [[0 for i in range(10)] for i in range(100)]
+            port_dst_shuffled = []
+            for count in range(0, 9):
+                temp_array[count] = ports_dst[count * 100:count * 100 + 99]
+                shuffle(temp_array[count])
+                port_dst_shuffled += temp_array[count]
+            return port_dst_shuffled
+
 
         # Determine ports
         dest_ports = self.get_param_value(Param.PORT_DESTINATION)
