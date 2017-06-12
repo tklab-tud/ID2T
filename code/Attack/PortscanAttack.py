@@ -58,8 +58,10 @@ class PortscanAttack(BaseAttack.BaseAttack):
             destination_mac = self.generate_random_mac_address()
         self.add_param_value(Param.MAC_DESTINATION, destination_mac)
 
-        self.add_param_value(Param.PORT_DESTINATION, '1-1023,1720,1900,8080')
+        self.add_param_value(Param.PORT_DESTINATION, '1-1023,1720,1900,8080,56652')
+
         self.add_param_value(Param.PORT_OPEN, '8080,9232,9233')
+
         self.add_param_value(Param.PORT_DEST_SHUFFLE, 'False')
         self.add_param_value(Param.PORT_DEST_ORDER_DESC, 'False')
 
@@ -87,7 +89,9 @@ class PortscanAttack(BaseAttack.BaseAttack):
         elif self.get_param_value(Param.PORT_DEST_SHUFFLE):
             shuffle(dest_ports)
         if self.get_param_value(Param.PORT_SOURCE_RANDOMIZE):
-            sport = randint(0, 65535)
+            # Aidmar
+            sport = randint(1, 65535)
+            #sport = randint(0, 65535)
         else:
             sport = self.get_param_value(Param.PORT_SOURCE)
 
@@ -106,8 +110,30 @@ class PortscanAttack(BaseAttack.BaseAttack):
         randomdelay = Lea.fromValFreqsDict({1 / pps: 70, 2 / pps: 30, 5 / pps: 15, 10 / pps: 3})
         maxdelay = randomdelay.random()
 
+
+        # open ports
+        # Aidmar - the ports that were already used by ip.dst (direction in) in the background traffic are open ports
+        ports_open = self.get_param_value(Param.PORT_OPEN)
+        if ports_open == [8080,9232,9233]:  # user did not define open ports
+            ports_used_by_ip_dst = self.statistics.process_db_query(
+                "SELECT portNumber FROM ip_ports WHERE portDirection='in' AND ipAddress='" + ip_destination + "';")
+            if ports_used_by_ip_dst:  # if no ports were retrieved from database
+                ports_open = ports_used_by_ip_dst
+            else:
+                ports_open = [80, 443]  # TO-DO: take random ports from nmap-services from the most frequent
+            print("\nPorts used by %s: %s" % (ip_destination, ports_open))
+        # convert ports_open to array
+        if not isinstance(ports_open, list):
+            ports_open = [ports_open]
+        # =========================================================================================================
+
+
         # MSS (Maximum Segment Size) for Ethernet. Allowed values [536,1500]
-        mss = self.statistics.get_mss(ip_destination)
+        # Aidmar
+        # mss = self.statistics.get_mss(ip_destination)
+        mss_dst = self.statistics.get_mss(ip_destination)
+        mss_src = self.statistics.get_mss(ip_source)
+        # =========================================================================================================
 
         # Set TTL based on TTL distribution of IP address
         ttl_dist = self.statistics.get_ttl_distribution(ip_source)
@@ -117,6 +143,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
         else:
             ttl_value = self.statistics.process_db_query("most_used(ttlValue)")
 
+
         for dport in dest_ports:
             # Parameters changing each iteration
             if self.get_param_value(Param.IP_SOURCE_RANDOMIZE) and isinstance(ip_source, list):
@@ -125,7 +152,14 @@ class PortscanAttack(BaseAttack.BaseAttack):
             # 1) Build request package
             request_ether = Ether(src=mac_source, dst=mac_destination)
             request_ip = IP(src=ip_source, dst=ip_destination, ttl=ttl_value)
-            request_tcp = TCP(sport=sport, dport=dport, flags='S')
+            # Aidmar - random src port for each packet
+            sport = randint(1, 65535)
+            if mss_src is None:
+                request_tcp = TCP(sport=sport, dport=dport, flags='S')
+            else:
+                request_tcp = TCP(sport=sport, dport=dport, flags='S', options=[('MSS', mss_src)])
+            # =========================================================================================================
+
             request = (request_ether / request_ip / request_tcp)
             # first packet uses timestamp provided by attack parameter Param.INJECT_AT_TIMESTAMP
             if len(packets) > 0:
@@ -134,14 +168,14 @@ class PortscanAttack(BaseAttack.BaseAttack):
             packets.append(request)
 
             # 2) Build reply package
-            if dport in self.get_param_value(Param.PORT_OPEN):  # destination port is OPEN
+            if dport in ports_open:  # destination port is OPEN
                 reply_ether = Ether(src=mac_destination, dst=mac_source)
                 reply_ip = IP(src=ip_destination, dst=ip_source, flags='DF')
-                if mss is None:
+                if mss_dst is None:
                     reply_tcp = TCP(sport=dport, dport=sport, seq=0, ack=1, flags='SA', window=29200)
                 else:
                     reply_tcp = TCP(sport=dport, dport=sport, seq=0, ack=1, flags='SA', window=29200,
-                                    options=[('MSS', mss)])
+                                    options=[('MSS', mss_dst)])
                 reply = (reply_ether / reply_ip / reply_tcp)
                 timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
                 reply.time = timestamp_next_pkt

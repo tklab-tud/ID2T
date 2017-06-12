@@ -1,5 +1,10 @@
 import logging
+# Aidmar
+import math
+
 from random import randint, uniform
+from scipy.stats._discrete_distns import randint_gen
+from threading import _MainThread
 
 from lea import Lea
 from scipy.stats import gamma
@@ -49,7 +54,26 @@ class DDoSAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.IP_SOURCE, self.generate_random_ipv4_address(num_attackers))
         self.add_param_value(Param.MAC_SOURCE, self.generate_random_mac_address(num_attackers))
         self.add_param_value(Param.PORT_SOURCE, str(RandShort()))
+
+        """
+        # Aidmar - PPS = avg packet rate per host = avgPacketsSentPerHost / captureDuration
+        max_pkts_sent_per_host = self.statistics.process_db_query(
+            "SELECT MAX(pktsSent) FROM ip_statistics;")
+        print("\nmax_pkts_sent_per_host: %f" % (max_pkts_sent_per_host))
+
+        capture_duration = self.statistics.process_db_query(
+            "SELECT captureDuration FROM file_statistics;")
+        max_pkt_rate_per_host = max_pkts_sent_per_host/float(capture_duration)
+        print("\nmax_pkt_rate_per_host: %f" % (max_pkt_rate_per_host))
+        #num_attackers = self.get_param_value(Param.NUMBER_ATTACKERS)
+        # the minumum PPS is the maximum packet rate per host * attackers number
+        min_pps = math.floor(max_pkt_rate_per_host * int(num_attackers))
+        print("\nMIN PPS: %f" % (min_pps))
+
+        self.add_param_value(Param.PACKETS_PER_SECOND, randint(min_pps, 64))
+        """
         self.add_param_value(Param.PACKETS_PER_SECOND, randint(1, 64))
+
         # victim configuration
         random_ip_address = self.statistics.get_random_ip_address()
         self.add_param_value(Param.IP_DESTINATION, random_ip_address)
@@ -57,11 +81,12 @@ class DDoSAttack(BaseAttack.BaseAttack):
         if isinstance(destination_mac, list) and len(destination_mac) == 0:
             destination_mac = self.generate_random_mac_address()
         self.add_param_value(Param.MAC_DESTINATION, destination_mac)
-        port_destination = self.statistics.process_db_query(
+
+        """port_destination = self.statistics.process_db_query(
             "SELECT portNumber FROM ip_ports WHERE portDirection='in' ORDER BY RANDOM() LIMIT 1;")
         if port_destination is None:
             port_destination = str(RandShort())
-        self.add_param_value(Param.PORT_DESTINATION, port_destination)
+        self.add_param_value(Param.PORT_DESTINATION, port_destination)"""
         self.add_param_value(Param.PACKETS_LIMIT, randint(1000, 5000))
 
     def generate_attack_pcap(self):
@@ -148,7 +173,17 @@ class DDoSAttack(BaseAttack.BaseAttack):
         port_source_list = self.get_param_value(Param.PORT_SOURCE)
         mac_destination = self.get_param_value(Param.MAC_DESTINATION)
         ip_destination = self.get_param_value(Param.IP_DESTINATION)
+
+        # Aidmar - attack an open port of ip.dst
+        port_destination = self.statistics.process_db_query(
+            "SELECT portNumber FROM ip_ports WHERE portDirection='in' AND ipAddress='"+ip_destination+"' ORDER BY RANDOM() LIMIT 1;")
+        if not port_destination:
+            port_destination = str(RandShort())
+        self.add_param_value(Param.PORT_DESTINATION, port_destination)
+        # ==============================================================================================================
+
         port_destination = self.get_param_value(Param.PORT_DESTINATION)
+
         attacker_port_mapping = {}
         attacker_ttl_mapping = {}
 
@@ -168,7 +203,13 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
             request_ether = Ether(dst=mac_destination, src=mac_source)
             request_ip = IP(src=ip_source, dst=ip_destination, ttl=ttl_value)
-            request_tcp = TCP(sport=port_source, dport=port_destination, flags='S', ack=0)
+
+            # Aidmar - random win size for each packet
+            #request_tcp = TCP(sport=port_source, dport=port_destination, flags='S', ack=0)
+            # Win size starts usually with 1 MSS, find the most used MSS in the traffic and use it as min, while max is 8192 = default scapy win size
+            # TO-DO: find most mSS used in traffic
+            request_tcp = TCP(sport=port_source, dport=port_destination, flags='S', ack=0,  window=randint(1460,8192))
+            # =========================================================================================================
 
             request = (request_ether / request_ip / request_tcp)
             request.time = timestamp_next_pkt
