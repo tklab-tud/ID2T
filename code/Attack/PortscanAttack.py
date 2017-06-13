@@ -1,5 +1,6 @@
 import logging
 import csv
+import socket
 
 from random import shuffle, randint, choice, uniform
 
@@ -15,6 +16,46 @@ from scapy.layers.inet import IP, Ether, TCP
 
 
 class PortscanAttack(BaseAttack.BaseAttack):
+    # Aidmar
+    def get_ports_from_nmap_service_dst(self, ports_num):
+        """
+        Read the most ports_num frequently open ports from nmap-service-tcp file to be used in Portscan attack.
+
+        :return: Ports numbers to be used as default dest ports or default open ports in Portscan attack.
+        """
+        ports_dst = []
+        spamreader = csv.reader(open('nmap-services-tcp.csv', 'rt'), delimiter=',')
+        for count in range(ports_num):
+            # escape first row (header)
+            next(spamreader)
+            # save ports numbers
+            ports_dst.append(next(spamreader)[0])
+        # shuffle ports numbers
+        if(ports_num==1000): # used for port.dst
+            temp_array = [[0 for i in range(10)] for i in range(100)]
+            port_dst_shuffled = []
+            for count in range(0, 9):
+                temp_array[count] = ports_dst[count * 100:count * 100 + 99]
+                shuffle(temp_array[count])
+                port_dst_shuffled += temp_array[count]
+        else: # used for port.open
+            port_dst_shuffled = shuffle(ports_dst)
+        return port_dst_shuffled
+
+
+    def is_valid_ip_address(self,addr):
+        """
+        Check if the IP address family is suported.
+
+        :param addr: IP address to be checked
+        :return: Boolean
+        """
+        try:
+            socket.inet_aton(addr)
+            return True
+        except socket.error:
+            return False
+
     def __init__(self, statistics, pcap_file_path):
         """
         Creates a new instance of the PortscanAttack.
@@ -54,15 +95,21 @@ class PortscanAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.MAC_SOURCE, self.statistics.get_mac_address(most_used_ip_address))
 
         random_ip_address = self.statistics.get_random_ip_address()
+        # Aidmar
+        while not self.is_valid_ip_address(random_ip_address):
+            random_ip_address = self.statistics.get_random_ip_address()
+
         self.add_param_value(Param.IP_DESTINATION, random_ip_address)
         destination_mac = self.statistics.get_mac_address(random_ip_address)
         if isinstance(destination_mac, list) and len(destination_mac) == 0:
             destination_mac = self.generate_random_mac_address()
         self.add_param_value(Param.MAC_DESTINATION, destination_mac)
 
-        self.add_param_value(Param.PORT_DESTINATION, '1-1023,1720,1900,8080,56652')
+        self.add_param_value(Param.PORT_DESTINATION, self.get_ports_from_nmap_service_dst(1000))
+        #self.add_param_value(Param.PORT_DESTINATION, '1-1023,1720,1900,8080,56652')
 
-        self.add_param_value(Param.PORT_OPEN, '8080,9232,9233')
+        # Not used initial value
+        self.add_param_value(Param.PORT_OPEN, '1,11,111,1111')
 
         self.add_param_value(Param.PORT_DEST_SHUFFLE, 'False')
         self.add_param_value(Param.PORT_DEST_ORDER_DESC, 'False')
@@ -83,25 +130,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
             :return: Timestamp to be used for the next packet.
             """
             return timestamp + uniform(0.1 / pps, maxdelay)
-
-        def get_default_ports_dst():
-            ports_dst=[]
-            ports_dst = []
-            spamreader = csv.reader(open('nmap-services-tcp.csv', 'rt'), delimiter=',')
-            ports_num = 1000
-            for count in range(ports_num):
-                # escape first row (header)
-                next(spamreader)
-                # save ports numbers
-                ports_dst.append(next(spamreader)[0])
-            # shuffle ports numbers
-            temp_array = [[0 for i in range(10)] for i in range(100)]
-            port_dst_shuffled = []
-            for count in range(0, 9):
-                temp_array[count] = ports_dst[count * 100:count * 100 + 99]
-                shuffle(temp_array[count])
-                port_dst_shuffled += temp_array[count]
-            return port_dst_shuffled
 
 
         # Determine ports
@@ -132,19 +160,19 @@ class PortscanAttack(BaseAttack.BaseAttack):
         randomdelay = Lea.fromValFreqsDict({1 / pps: 70, 2 / pps: 30, 5 / pps: 15, 10 / pps: 3})
         maxdelay = randomdelay.random()
 
-
         # open ports
-        # Aidmar - the ports that were already used by ip.dst (direction in) in the background traffic are open ports
+        # Aidmar
         ports_open = self.get_param_value(Param.PORT_OPEN)
-        if ports_open == [8080,9232,9233]:  # user did not define open ports
+        if ports_open == [1,11,111,1111]:  # user did not define open ports
+            # the ports that were already used by ip.dst (direction in) in the background traffic are open ports
             ports_used_by_ip_dst = self.statistics.process_db_query(
                 "SELECT portNumber FROM ip_ports WHERE portDirection='in' AND ipAddress='" + ip_destination + "';")
-            if ports_used_by_ip_dst:  # if no ports were retrieved from database
+            if ports_used_by_ip_dst:
                 ports_open = ports_used_by_ip_dst
-            else:
-                ports_open = [80, 443]  # TO-DO: take random ports from nmap-services from the most frequent
-            print("\nPorts used by %s: %s" % (ip_destination, ports_open))
-        # convert ports_open to array
+            else: # if no ports were retrieved from database
+                ports_open = self.get_ports_from_nmap_service_dst(randint(0,10))
+            #print("\nPorts used by %s: %s" % (ip_destination, ports_open))
+        # in case of one open port, convert ports_open to array
         if not isinstance(ports_open, list):
             ports_open = [ports_open]
         # =========================================================================================================
