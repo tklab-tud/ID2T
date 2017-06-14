@@ -1,7 +1,20 @@
+// Aidmar
+#include <iostream>
+
 #include "statistics.h"
 #include <sstream>
 #include <SQLiteCpp/SQLiteCpp.h>
 #include "statistics_db.h"
+
+// Aidmar
+/**
+ * Increments the packet counter for the given IP address and MSS value.
+ * @param ipAddress The IP address whose MSS packet counter should be incremented.
+ * @param mssValue The MSS value of the packet.
+ */
+void statistics::incrementMSScount(std::string ipAddress, int mssValue) {
+    mss_distribution[{ipAddress, mssValue}]++;
+}
 
 /**
  * Increments the packet counter for the given IP address and TTL value.
@@ -256,6 +269,8 @@ void statistics::writeToDatabase(std::string database_path) {
     db.writeStatisticsMss(ip_sumMss);
     db.writeStatisticsPorts(ip_ports);
     db.writeStatisticsProtocols(protocol_distribution);
+    // Aidmar
+    db.writeStatisticsMss_dist(mss_distribution);
 }
 
 /**

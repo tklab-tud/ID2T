@@ -240,3 +240,34 @@ void statistics_db::writeStatisticsFile(int packetCount, float captureDuration, 
     }
 }
 
+// Aidamr
+/**
+ * Writes the MSS distribution into the database.
+ * @param mssDistribution The MSS distribution from class statistics.
+ */
+void statistics_db::writeStatisticsMss_dist(std::unordered_map<ipAddress_mss, int> mssDistribution) {
+    try {
+        db->exec("DROP TABLE IF EXISTS tcp_mss_dist");
+        SQLite::Transaction transaction(*db);
+        const char *createTable = "CREATE TABLE tcp_mss_dist ("
+                "ipAddress TEXT,"
+                "mssValue INTEGER,"
+                "mssCount INTEGER,"
+                "PRIMARY KEY(ipAddress,mssValue));";
+        db->exec(createTable);
+        SQLite::Statement query(*db, "INSERT INTO tcp_mss_dist VALUES (?, ?, ?)");
+        for (auto it = mssDistribution.begin(); it != mssDistribution.end(); ++it) {
+            ipAddress_mss e = it->first;
+            query.bind(1, e.ipAddress);
+            query.bind(2, e.mssValue);
+            query.bind(3, it->second);
+            query.exec();
+            query.reset();
+        }
+        transaction.commit();
+    }
+    catch (std::exception &e) {
+        std::cout << "Exception in statistics_db: " << e.what() << std::endl;
+    }
+}
+

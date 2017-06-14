@@ -35,6 +35,23 @@ struct ip_stats {
     long AvgMaxSegmentSizeTCP;
 };
 
+// Aidmar
+/*
+ * Struct used to represent:
+ * - IP address (IPv4 or IPv6)
+ * - MSS value
+ */
+struct ipAddress_mss {
+    std::string ipAddress;
+    int mssValue;
+
+    bool operator==(const ipAddress_mss &other) const {
+        return ipAddress == other.ipAddress
+               && mssValue == other.mssValue;
+    }
+};
+
+
 /*
  * Struct used to represent:
  * - IP address (IPv4 or IPv6)
@@ -120,6 +137,18 @@ namespace std {
         }
     };
 
+    // Aidmar
+      template<>
+    struct hash<ipAddress_mss> {
+        std::size_t operator()(const ipAddress_mss &k) const {
+            using std::size_t;
+            using std::hash;
+            using std::string;
+            return ((hash<string>()(k.ipAddress)
+                     ^ (hash<int>()(k.mssValue) << 1)) >> 1);
+        }
+    };
+
     template<>
     struct hash<ipAddress_protocol> {
         std::size_t operator()(const ipAddress_protocol &k) const {
@@ -160,6 +189,9 @@ public:
     * Access methods for containers
     */
     void incrementPacketCount();
+
+    // Adimar
+    void incrementMSScount(std::string ipAddress, int mssValue);
 
     void incrementTTLcount(std::string ipAddress, int ttlValue);
 
@@ -212,6 +244,10 @@ private:
      */
     // {IP Address, TTL value, count}
     std::unordered_map<ipAddress_ttl, int> ttl_distribution;
+
+    // Aidmar
+    // {IP Address, MSS value, count}
+    std::unordered_map<ipAddress_mss, int> mss_distribution;
 
     // {IP Address, Protocol, count}
     std::unordered_map<ipAddress_protocol, int> protocol_distribution;

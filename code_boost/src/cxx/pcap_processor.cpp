@@ -159,7 +159,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
         stats.addIpStat_packetSent(ipAddressSender, ipLayer.dst_addr().to_string(), sizeCurrentPacket);
 
         // TTL distribution
-        stats.incrementTTLcount(ipAddressSender, ipLayer.ttl());
+        stats.incrementTTLcount(ipAddressSender, ipLayer.ttl());      
 
         // Protocol distribution
         stats.incrementProtocolCount(ipAddressSender, "IPv4");
@@ -202,6 +202,11 @@ void pcap_processor::process_packets(const Packet &pkt) {
             try {
                 int val = tcpPkt.mss();
                 stats.addMSS(ipAddressSender, val);
+                
+                // Aidmar
+                // MSS distribution
+                stats.incrementMSScount(ipAddressSender, val);
+
             } catch (Tins::option_not_found) {
                 // Ignore MSS if option not set
             }

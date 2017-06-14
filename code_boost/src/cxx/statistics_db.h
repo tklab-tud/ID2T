@@ -5,6 +5,9 @@
 #ifndef CPP_PCAPREADER_STATISTICSDB_H
 #define CPP_PCAPREADER_STATISTICSDB_H
 
+// Aidmar
+#include <iostream>
+#include <memory> 
 
 #include <string>
 #include "statistics.h"
@@ -35,6 +38,9 @@ public:
     void writeStatisticsFile(int packetCount, float captureDuration, std::string timestampFirstPkt,
                              std::string timestampLastPkt, float avgPacketRate, float avgPacketSize,
                              float avgPacketsSentPerHost, float avgBandwidthIn, float avgBandwidthOut);
+
+    // Aidmar
+    void writeStatisticsMss_dist(std::unordered_map<ipAddress_mss, int> mssDistribution);
 
 private:
     // Pointer to the SQLite database
