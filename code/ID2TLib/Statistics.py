@@ -242,7 +242,6 @@ class Statistics:
 
     def get_mss(self, ipAddress: str):
         """
-
         :param ipAddress: The IP address whose used MSS should be determined
         :return: The TCP MSS value used by the IP address, or if the IP addresses never specified a MSS,
         then None is returned
@@ -252,6 +251,20 @@ class Statistics:
             return mss_value
         else:
             return None
+
+    # Aidmar
+    def get_most_used_mss(self, ipAddress: str):
+        """
+        :param ipAddress: The IP address whose used MSS should be determined
+        :return: The TCP MSS value used by the IP address, or if the IP addresses never specified a MSS,
+        then None is returned
+        """
+        mss_value = self.process_db_query('SELECT mssValue from tcp_mss_dist WHERE ipAddress="' + ipAddress + '" ORDER BY mssCount DESC LIMIT 1')
+        if isinstance(mss_value, int):
+            return mss_value
+        else:
+            return None
+
 
     def get_statistics_database(self):
         """

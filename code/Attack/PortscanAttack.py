@@ -39,7 +39,8 @@ class PortscanAttack(BaseAttack.BaseAttack):
                 shuffle(temp_array[count])
                 port_dst_shuffled += temp_array[count]
         else: # used for port.open
-            port_dst_shuffled = shuffle(ports_dst)
+            shuffle(ports_dst)
+            port_dst_shuffled = ports_dst
         return port_dst_shuffled
 
 
@@ -165,13 +166,19 @@ class PortscanAttack(BaseAttack.BaseAttack):
         ports_open = self.get_param_value(Param.PORT_OPEN)
         if ports_open == [1,11,111,1111]:  # user did not define open ports
             # the ports that were already used by ip.dst (direction in) in the background traffic are open ports
-            ports_used_by_ip_dst = self.statistics.process_db_query(
-                "SELECT portNumber FROM ip_ports WHERE portDirection='in' AND ipAddress='" + ip_destination + "';")
+            ports_used_by_ip_dst = None #self.statistics.process_db_query(
+                #"SELECT portNumber FROM ip_ports WHERE portDirection='in' AND ipAddress='" + ip_destination + "'")
             if ports_used_by_ip_dst:
                 ports_open = ports_used_by_ip_dst
+                print("\nPorts used by %s: %s" % (ip_destination, ports_open))
             else: # if no ports were retrieved from database
-                ports_open = self.get_ports_from_nmap_service_dst(randint(0,10))
-            #print("\nPorts used by %s: %s" % (ip_destination, ports_open))
+            # Take open ports from nmap-service file
+                #ports_temp = self.get_ports_from_nmap_service_dst(100)
+                #ports_open = ports_temp[0:randint(1,10)]
+            # OR take open ports from the most used ports in traffic statistics
+                ports_open = self.statistics.process_db_query(
+                    "SELECT portNumber FROM ip_ports GROUP BY portNumber ORDER BY COUNT(*) DESC LIMIT "+str(randint(1,10)))
+                print("\nPorts retrieved from statistics: %s" % (ports_open))
         # in case of one open port, convert ports_open to array
         if not isinstance(ports_open, list):
             ports_open = [ports_open]
@@ -180,9 +187,13 @@ class PortscanAttack(BaseAttack.BaseAttack):
 
         # MSS (Maximum Segment Size) for Ethernet. Allowed values [536,1500]
         # Aidmar
+        mss_dst = self.statistics.get_most_used_mss(ip_destination)
+        if mss_dst is None:
+            mss_dst = self.statistics.process_db_query("most_used(mssValue)")
+        mss_src = self.statistics.get_most_used_mss(ip_source)
+        if mss_src is None:
+            mss_src = self.statistics.process_db_query("most_used(mssValue)")
         # mss = self.statistics.get_mss(ip_destination)
-        mss_dst = self.statistics.get_mss(ip_destination)
-        mss_src = self.statistics.get_mss(ip_source)
         # =========================================================================================================
 
         # Set TTL based on TTL distribution of IP address
@@ -204,10 +215,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
             request_ip = IP(src=ip_source, dst=ip_destination, ttl=ttl_value)
             # Aidmar - random src port for each packet
             sport = randint(1, 65535)
-            if mss_src is None:
-                request_tcp = TCP(sport=sport, dport=dport, flags='S')
-            else:
-                request_tcp = TCP(sport=sport, dport=dport, flags='S', options=[('MSS', mss_src)])
+            request_tcp = TCP(sport=sport, dport=dport, flags='S', options=[('MSS', mss_src)])
             # =========================================================================================================
 
             request = (request_ether / request_ip / request_tcp)
@@ -221,10 +229,10 @@ class PortscanAttack(BaseAttack.BaseAttack):
             if dport in ports_open:  # destination port is OPEN
                 reply_ether = Ether(src=mac_destination, dst=mac_source)
                 reply_ip = IP(src=ip_destination, dst=ip_source, flags='DF')
-                if mss_dst is None:
-                    reply_tcp = TCP(sport=dport, dport=sport, seq=0, ack=1, flags='SA', window=29200)
-                else:
-                    reply_tcp = TCP(sport=dport, dport=sport, seq=0, ack=1, flags='SA', window=29200,
+                #if mss_dst is None:
+                #   reply_tcp = TCP(sport=dport, dport=sport, seq=0, ack=1, flags='SA', window=29200)
+                #else:
+                reply_tcp = TCP(sport=dport, dport=sport, seq=0, ack=1, flags='SA', window=29200,
                                     options=[('MSS', mss_dst)])
                 reply = (reply_ether / reply_ip / reply_tcp)
                 timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)

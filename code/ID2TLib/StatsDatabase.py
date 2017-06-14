@@ -174,6 +174,8 @@ class StatsDatabase:
             "most_used.portnumber": "SELECT portNumber, COUNT(portNumber) as cntPort FROM ip_ports GROUP BY portNumber HAVING cntPort=(SELECT MAX(cntPort) from (SELECT portNumber, COUNT(portNumber) as cntPort FROM ip_ports GROUP BY portNumber))",
             "most_used.protocolname": "SELECT protocolName, COUNT(protocolCount) as countProtocols FROM ip_protocols GROUP BY protocolName HAVING countProtocols=(SELECT COUNT(protocolCount) as cnt FROM ip_protocols GROUP BY protocolName ORDER BY cnt DESC LIMIT 1)",
             "most_used.ttlvalue": "SELECT ttlValue FROM ip_ttl WHERE ttlCount == (SELECT MAX(ttlCount) FROM ip_ttl)",
+            # Aidmar
+            "most_used.mssvalue": "SELECT mssValue FROM tcp_mss_dist WHERE mssCount == (SELECT MAX(mssCount) FROM tcp_mss_dist)",
             "least_used.ipaddress": "SELECT ipAddress FROM ip_statistics WHERE (pktsSent+pktsReceived) == (SELECT MIN(pktsSent+pktsReceived) from ip_statistics)",
             "least_used.macaddress": "SELECT * FROM (SELECT macAddress, COUNT(*) as occ from ip_mac GROUP BY macAddress ORDER BY occ ASC) WHERE occ=(SELECT COUNT(*) as occ from ip_mac GROUP BY macAddress ORDER BY occ ASC LIMIT 1)",
             "least_used.portnumber": "SELECT portNumber, COUNT(portNumber) as cntPort FROM ip_ports GROUP BY portNumber HAVING cntPort=(SELECT MIN(cntPort) from (SELECT portNumber, COUNT(portNumber) as cntPort FROM ip_ports GROUP BY portNumber))",
