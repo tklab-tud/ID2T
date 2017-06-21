@@ -1,10 +1,5 @@
 import logging
-# Aidmar
-import math
-
 from random import randint, uniform
-from scipy.stats._discrete_distns import randint_gen
-from threading import _MainThread
 
 from lea import Lea
 from scipy.stats import gamma
@@ -54,25 +49,25 @@ class DDoSAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.IP_SOURCE, self.generate_random_ipv4_address(num_attackers))
         self.add_param_value(Param.MAC_SOURCE, self.generate_random_mac_address(num_attackers))
         self.add_param_value(Param.PORT_SOURCE, str(RandShort()))
-
-        """
-        # Aidmar - PPS = avg packet rate per host = avgPacketsSentPerHost / captureDuration
-        max_pkts_sent_per_host = self.statistics.process_db_query(
-            "SELECT MAX(pktsSent) FROM ip_statistics;")
-        print("\nmax_pkts_sent_per_host: %f" % (max_pkts_sent_per_host))
-
-        capture_duration = self.statistics.process_db_query(
-            "SELECT captureDuration FROM file_statistics;")
-        max_pkt_rate_per_host = max_pkts_sent_per_host/float(capture_duration)
-        print("\nmax_pkt_rate_per_host: %f" % (max_pkt_rate_per_host))
-        #num_attackers = self.get_param_value(Param.NUMBER_ATTACKERS)
-        # the minumum PPS is the maximum packet rate per host * attackers number
-        min_pps = math.floor(max_pkt_rate_per_host * int(num_attackers))
-        print("\nMIN PPS: %f" % (min_pps))
-
-        self.add_param_value(Param.PACKETS_PER_SECOND, randint(min_pps, 64))
-        """
         self.add_param_value(Param.PACKETS_PER_SECOND, randint(1, 64))
+
+        """
+         # Aidmar - PPS = avg packet rate per host = avgPacketsSentPerHost / captureDuration
+         max_pkts_sent_per_host = self.statistics.process_db_query(
+             "SELECT MAX(pktsSent) FROM ip_statistics;")
+         print("\nmax_pkts_sent_per_host: %f" % (max_pkts_sent_per_host))
+
+         capture_duration = self.statistics.process_db_query(
+             "SELECT captureDuration FROM file_statistics;")
+         max_pkt_rate_per_host = max_pkts_sent_per_host/float(capture_duration)
+         print("\nmax_pkt_rate_per_host: %f" % (max_pkt_rate_per_host))
+         #num_attackers = self.get_param_value(Param.NUMBER_ATTACKERS)
+         # the minumum PPS is the maximum packet rate per host * attackers number
+         min_pps = math.floor(max_pkt_rate_per_host * int(num_attackers))
+         print("\nMIN PPS: %f" % (min_pps))
+
+         self.add_param_value(Param.PACKETS_PER_SECOND, randint(min_pps, 64))
+         """
 
         # victim configuration
         random_ip_address = self.statistics.get_random_ip_address()
@@ -82,11 +77,15 @@ class DDoSAttack(BaseAttack.BaseAttack):
             destination_mac = self.generate_random_mac_address()
         self.add_param_value(Param.MAC_DESTINATION, destination_mac)
 
-        """port_destination = self.statistics.process_db_query(
+        # Aidmar - comment out
+        """
+        port_destination = self.statistics.process_db_query(
             "SELECT portNumber FROM ip_ports WHERE portDirection='in' ORDER BY RANDOM() LIMIT 1;")
         if port_destination is None:
             port_destination = str(RandShort())
-        self.add_param_value(Param.PORT_DESTINATION, port_destination)"""
+        self.add_param_value(Param.PORT_DESTINATION, port_destination)
+        """
+
         self.add_param_value(Param.PACKETS_LIMIT, randint(1000, 5000))
 
     def generate_attack_pcap(self):
@@ -173,16 +172,17 @@ class DDoSAttack(BaseAttack.BaseAttack):
         port_source_list = self.get_param_value(Param.PORT_SOURCE)
         mac_destination = self.get_param_value(Param.MAC_DESTINATION)
         ip_destination = self.get_param_value(Param.IP_DESTINATION)
-
-        # Aidmar - attack an open port of ip.dst
-        port_destination = self.statistics.process_db_query(
-            "SELECT portNumber FROM ip_ports WHERE portDirection='in' AND ipAddress='"+ip_destination+"' ORDER BY RANDOM() LIMIT 1;")
-        if not port_destination:
-            port_destination = str(RandShort())
-        self.add_param_value(Param.PORT_DESTINATION, port_destination)
-        # ==============================================================================================================
-
         port_destination = self.get_param_value(Param.PORT_DESTINATION)
+
+        # Aidmar
+        if not port_destination:  # user did not define port_dest
+            port_destination = self.statistics.process_db_query(
+                "SELECT portNumber FROM ip_ports WHERE portDirection='in' AND ipAddress='" + ip_destination + "' ORDER BY portCount DESC LIMIT 1;")
+        if not port_destination:  # no port was retrieved
+            port_destination = self.statistics.process_db_query(
+                "SELECT portNumber FROM ip_ports WHERE portDirection='in' GROUP BY portNumber ORDER BY SUM(portCount) DESC LIMIT 1;")
+        if not port_destination:
+            port_destination = max(1, str(RandShort()))
 
         attacker_port_mapping = {}
         attacker_ttl_mapping = {}
@@ -192,27 +192,58 @@ class DDoSAttack(BaseAttack.BaseAttack):
         gd = gamma.rvs(alpha, loc=loc, scale=beta, size=len(ip_source_list))
 
         path_attack_pcap = None
+
+        # Aidmar
+        replies = []
+
         for pkt_num in range(self.get_param_value(Param.PACKETS_LIMIT)):
+            # Build reply package
             # Select one IP address and its corresponding MAC address
             (ip_source, mac_source) = get_nth_random_element(ip_source_list, mac_source_list)
-
             # Determine source port
             (port_source, ttl_value) = get_attacker_config(ip_source)
-
             maxdelay = randomdelay.random()
-
             request_ether = Ether(dst=mac_destination, src=mac_source)
             request_ip = IP(src=ip_source, dst=ip_destination, ttl=ttl_value)
-
             # Aidmar - random win size for each packet
-            #request_tcp = TCP(sport=port_source, dport=port_destination, flags='S', ack=0)
-            # Win size starts usually with 1 MSS, find the most used MSS in the traffic and use it as min, while max is 8192 = default scapy win size
-            # TO-DO: find most mSS used in traffic
-            request_tcp = TCP(sport=port_source, dport=port_destination, flags='S', ack=0,  window=randint(1460,8192))
-            # =========================================================================================================
+            # request_tcp = TCP(sport=port_source, dport=port_destination, flags='S', ack=0)
+            win_size = self.statistics.process_db_query(
+                "SELECT winSize FROM tcp_syn_win ORDER BY RANDOM() LIMIT 1;")
+            request_tcp = TCP(sport=port_source, dport=port_destination, flags='S', ack=0, window=win_size)
 
             request = (request_ether / request_ip / request_tcp)
             request.time = timestamp_next_pkt
+
+            # Build reply package
+            # Aidmar
+            reply = True
+            if reply:
+                reply_ether = Ether(src=mac_destination, dst=mac_source)
+                reply_ip = IP(src=ip_destination, dst=ip_source, flags='DF')
+                reply_tcp = TCP(sport=port_destination, dport=port_source, seq=0, ack=1, flags='SA', window=29200)  # ,
+                # options=[('MSS', mss_dst)])
+                reply = (reply_ether / reply_ip / reply_tcp)
+
+                if len(replies) > 0:
+                    last_reply_timestamp = replies[-1].time
+                    while (timestamp_reply <= last_reply_timestamp):
+                        timestamp_reply = timestamp_next_pkt + 1  # update_timestamp(timestamp_next_pkt, pps, maxdelay)
+                else:
+                    timestamp_reply = update_timestamp(timestamp_next_pkt, pps, maxdelay)
+
+                reply.time = timestamp_reply
+                replies.append(reply)
+
+            # Aidmar
+            # Append reply
+            if replies:
+                while timestamp_next_pkt >= replies[0].time:
+                    packets.append(replies[0])
+                    replies.remove(replies[0])
+                    if len(replies) == 0:
+                        break
+
+            # Append request
             packets.append(request)
 
             timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
@@ -225,6 +256,13 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 packets = sorted(packets, key=lambda pkt: pkt.time)
                 path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
                 packets = []
+
+
+            # Requests are sent all, send all replies
+            if pkt_num == self.get_param_value(Param.PACKETS_LIMIT)-1:
+                for reply in replies:
+                    packets.append(reply)
+
 
         if len(packets) > 0:
             packets = sorted(packets, key=lambda pkt: pkt.time)
