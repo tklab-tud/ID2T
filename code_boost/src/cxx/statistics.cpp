@@ -16,6 +16,16 @@ void statistics::incrementMSScount(std::string ipAddress, int mssValue) {
     mss_distribution[{ipAddress, mssValue}]++;
 }
 
+// Aidmar
+/**
+ * Increments the packet counter for the given IP address and window size.
+ * @param ipAddress The IP address whose window size packet counter should be incremented.
+ * @param winSize The window size of the packet.
+ */
+void statistics::incrementWinCount(std::string ipAddress, int winSize) {
+    win_distribution[{ipAddress, winSize}]++;
+}
+
 /**
  * Increments the packet counter for the given IP address and TTL value.
  * @param ipAddress The IP address whose TTL packet counter should be incremented.
@@ -271,6 +281,7 @@ void statistics::writeToDatabase(std::string database_path) {
     db.writeStatisticsProtocols(protocol_distribution);
     // Aidmar
     db.writeStatisticsMss_dist(mss_distribution);
+    db.writeStatisticsWin(win_distribution);
 }
 
 /**

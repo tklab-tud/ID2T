@@ -206,6 +206,11 @@ void pcap_processor::process_packets(const Packet &pkt) {
                 // Aidmar
                 // MSS distribution
                 stats.incrementMSScount(ipAddressSender, val);
+                // Check window size for SYN noly
+                 if(tcpPkt.get_flag(TCP::SYN)) {
+                    int win = tcpPkt.window();
+                    stats.incrementWinCount(ipAddressSender, win);
+                    }
 
             } catch (Tins::option_not_found) {
                 // Ignore MSS if option not set

@@ -271,3 +271,33 @@ void statistics_db::writeStatisticsMss_dist(std::unordered_map<ipAddress_mss, in
     }
 }
 
+// Aidamr
+/**
+ * Writes the window size distribution into the database.
+ * @param winDistribution The window size distribution from class statistics.
+ */
+void statistics_db::writeStatisticsWin(std::unordered_map<ipAddress_win, int> winDistribution) {
+    try {
+        db->exec("DROP TABLE IF EXISTS tcp_syn_win");
+        SQLite::Transaction transaction(*db);
+        const char *createTable = "CREATE TABLE tcp_syn_win ("
+                "ipAddress TEXT,"
+                "winSize INTEGER,"
+                "winCount INTEGER,"
+                "PRIMARY KEY(ipAddress,winSize));";
+        db->exec(createTable);
+        SQLite::Statement query(*db, "INSERT INTO tcp_syn_win VALUES (?, ?, ?)");
+        for (auto it = winDistribution.begin(); it != winDistribution.end(); ++it) {
+            ipAddress_win e = it->first;
+            query.bind(1, e.ipAddress);
+            query.bind(2, e.winSize);
+            query.bind(3, it->second);
+            query.exec();
+            query.reset();
+        }
+        transaction.commit();
+    }
+    catch (std::exception &e) {
+        std::cout << "Exception in statistics_db: " << e.what() << std::endl;
+    }
+}

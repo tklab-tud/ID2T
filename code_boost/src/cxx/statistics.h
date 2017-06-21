@@ -51,6 +51,22 @@ struct ipAddress_mss {
     }
 };
 
+// Aidmar
+/*
+ * Struct used to represent:
+ * - IP address (IPv4 or IPv6)
+ * - Window size
+ */
+struct ipAddress_win {
+    std::string ipAddress;
+    int winSize;
+
+    bool operator==(const ipAddress_win &other) const {
+        return ipAddress == other.ipAddress
+               && winSize == other.winSize;
+    }
+};
+
 
 /*
  * Struct used to represent:
@@ -149,6 +165,18 @@ namespace std {
         }
     };
 
+    // Aidmar
+      template<>
+    struct hash<ipAddress_win> {
+        std::size_t operator()(const ipAddress_win &k) const {
+            using std::size_t;
+            using std::hash;
+            using std::string;
+            return ((hash<string>()(k.ipAddress)
+                     ^ (hash<int>()(k.winSize) << 1)) >> 1);
+        }
+    };
+
     template<>
     struct hash<ipAddress_protocol> {
         std::size_t operator()(const ipAddress_protocol &k) const {
@@ -192,6 +220,8 @@ public:
 
     // Adimar
     void incrementMSScount(std::string ipAddress, int mssValue);
+    void incrementWinCount(std::string ipAddress, int winSize);
+
 
     void incrementTTLcount(std::string ipAddress, int ttlValue);
 
@@ -248,6 +278,8 @@ private:
     // Aidmar
     // {IP Address, MSS value, count}
     std::unordered_map<ipAddress_mss, int> mss_distribution;
+    // {IP Address, Win size, count}
+    std::unordered_map<ipAddress_win, int> win_distribution;
 
     // {IP Address, Protocol, count}
     std::unordered_map<ipAddress_protocol, int> protocol_distribution;
