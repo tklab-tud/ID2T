@@ -177,7 +177,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
                 #ports_open = ports_temp[0:randint(1,10)]
             # OR take open ports from the most used ports in traffic statistics
                 ports_open = self.statistics.process_db_query(
-                    "SELECT portNumber FROM ip_ports GROUP BY portNumber ORDER BY COUNT(*) DESC LIMIT "+str(randint(1,10)))
+                    "SELECT portNumber FROM ip_ports GROUP BY portNumber ORDER BY SUM(portCount) DESC LIMIT "+str(randint(1,10)))
                 print("\nPorts retrieved from statistics: %s" % (ports_open))
         # in case of one open port, convert ports_open to array
         if not isinstance(ports_open, list):
@@ -213,9 +213,12 @@ class PortscanAttack(BaseAttack.BaseAttack):
             # 1) Build request package
             request_ether = Ether(src=mac_source, dst=mac_destination)
             request_ip = IP(src=ip_source, dst=ip_destination, ttl=ttl_value)
+
             # Aidmar - random src port for each packet
             sport = randint(1, 65535)
-            request_tcp = TCP(sport=sport, dport=dport, flags='S', options=[('MSS', mss_src)])
+            # Aidmar - use most used window size
+            win_size = self.statistics.process_db_query("most_used(winSize)")
+            request_tcp = TCP(sport=sport, dport=dport,  window=win_size, flags='S', options=[('MSS', mss_src)])
             # =========================================================================================================
 
             request = (request_ether / request_ip / request_tcp)

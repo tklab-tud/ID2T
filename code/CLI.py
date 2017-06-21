@@ -102,6 +102,16 @@ def main(args):
     # Check arguments
     cli.parse_arguments(args)
 
+# Test main
+#def main(args):
+
+
+
+
+
 # Uncomment to enable calling by terminal
 if __name__ == '__main__':
     main(sys.argv[1:])
+
+
+
