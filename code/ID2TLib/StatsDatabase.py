@@ -177,7 +177,8 @@ class StatsDatabase:
             #"most_used.ttlvalue": "SELECT ttlValue FROM ip_ttl WHERE ttlCount == (SELECT MAX(ttlCount) FROM ip_ttl)",
             "most_used.ttlvalue": "SELECT ttlValue FROM ip_ttl GROUP BY ttlValue ORDER BY SUM(ttlCount) DESC LIMIT 1",
             "most_used.mssvalue": "SELECT mssValue FROM tcp_mss_dist GROUP BY mssValue ORDER BY SUM(mssCount) DESC LIMIT 1",
-            
+            "most_used.winsize": "SELECT winSize FROM tcp_syn_win GROUP BY winSize ORDER BY SUM(winCount) DESC LIMIT 1",
+
             "least_used.ipaddress": "SELECT ipAddress FROM ip_statistics WHERE (pktsSent+pktsReceived) == (SELECT MIN(pktsSent+pktsReceived) from ip_statistics)",
             "least_used.macaddress": "SELECT * FROM (SELECT macAddress, COUNT(*) as occ from ip_mac GROUP BY macAddress ORDER BY occ ASC) WHERE occ=(SELECT COUNT(*) as occ from ip_mac GROUP BY macAddress ORDER BY occ ASC LIMIT 1)",
             "least_used.portnumber": "SELECT portNumber, COUNT(portNumber) as cntPort FROM ip_ports GROUP BY portNumber HAVING cntPort=(SELECT MIN(cntPort) from (SELECT portNumber, COUNT(portNumber) as cntPort FROM ip_ports GROUP BY portNumber))",
