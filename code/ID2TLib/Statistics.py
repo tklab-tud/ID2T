@@ -1,3 +1,7 @@
+# Aidmar
+from scipy.spatial import distance as dist
+import numpy as np
+
 import os
 import time
 import ID2TLib.libpcapreader as pr
@@ -303,6 +307,7 @@ class Statistics:
         """
 
         def plot_ttl(file_ending: str):
+            plt.gcf().clear()
             result = self.stats_db._process_user_defined_query(
                 "SELECT ttlValue, SUM(ttlCount) FROM ip_ttl GROUP BY ttlValue")
             graphx, graphy = [], []
@@ -318,8 +323,168 @@ class Statistics:
             plt.grid(True)
             plt.bar(graphx, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
             out = self.pcap_filepath.replace('.pcap', '_plot-ttl' + file_ending)
-            plt.savefig(out)
+            plt.savefig(out,dpi=500)
             return out
 
-        out_path = plot_ttl('.' + format)
-        print("Saved TTL distribution plot at: ", out_path)
+        # Aidmar
+        def plot_mss(file_ending: str):
+            plt.gcf().clear()
+            result = self.stats_db._process_user_defined_query(
+                "SELECT mssValue, SUM(mssCount) FROM tcp_mss_dist GROUP BY mssValue")
+            graphx, graphy = [], []
+            for row in result:
+                graphx.append(row[0])
+                graphy.append(row[1])
+            plt.autoscale(enable=True, axis='both')
+            plt.title("MSS Distribution")
+            plt.xlabel('MSS Value')
+            plt.ylabel('Number of Packets')
+            width = 0.5
+            plt.xlim([0, max(graphx)])
+            plt.grid(True)
+            plt.bar(graphx, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+            out = self.pcap_filepath.replace('.pcap', '_plot-mss' + file_ending)
+            plt.savefig(out,dpi=500)
+            return out
+
+        # Aidmar
+        def plot_win(file_ending: str):
+            plt.gcf().clear()
+            result = self.stats_db._process_user_defined_query(
+                "SELECT winSize, SUM(winCount) FROM tcp_syn_win GROUP BY winSize")
+            graphx, graphy = [], []
+            for row in result:
+                graphx.append(row[0])
+                graphy.append(row[1])
+            plt.autoscale(enable=True, axis='both')
+            plt.title("Window Size Distribution")
+            plt.xlabel('Window Size')
+            plt.ylabel('Number of Packets')
+            width = 0.5
+            plt.xlim([0, max(graphx)])
+            plt.grid(True)
+            plt.bar(graphx, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+            out = self.pcap_filepath.replace('.pcap', '_plot-win' + file_ending)
+            plt.savefig(out,dpi=500)
+            return out
+
+        # Aidmar
+        def plot_protocol(file_ending: str):
+            plt.gcf().clear()
+            result = self.stats_db._process_user_defined_query(
+                "SELECT protocolName, SUM(protocolCount) FROM ip_protocols GROUP BY protocolName")
+            graphx, graphy = [], []
+            for row in result:
+                graphx.append(row[0])
+                graphy.append(row[1])
+            plt.autoscale(enable=True, axis='both')
+            plt.title("Protocols Distribution")
+            plt.xlabel('Protocols')
+            plt.ylabel('Number of Packets')
+            width = 0.5
+            plt.xlim([0, len(graphx)])
+            plt.grid(True)
+
+            # Protocols' names on x-axis
+            x = range(0,len(graphx))
+            my_xticks = graphx
+            plt.xticks(x, my_xticks)
+
+            plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+            out = self.pcap_filepath.replace('.pcap', '_plot-protocol' + file_ending)
+            plt.savefig(out,dpi=500)
+            return out
+
+        # Aidmar
+        def plot_port(file_ending: str):
+            plt.gcf().clear()
+            result = self.stats_db._process_user_defined_query(
+                "SELECT portNumber, SUM(portCount) FROM ip_ports GROUP BY portNumber")
+            graphx, graphy = [], []
+            for row in result:
+                graphx.append(row[0])
+                graphy.append(row[1])
+            plt.autoscale(enable=True, axis='both')
+            plt.title("Ports Distribution")
+            plt.xlabel('Ports Numbers')
+            plt.ylabel('Number of Packets')
+            width = 0.5
+            plt.xlim([0, max(graphx)])
+            plt.grid(True)
+            plt.bar(graphx, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+            out = self.pcap_filepath.replace('.pcap', '_plot-port' + file_ending)
+            plt.savefig(out,dpi=500)
+            return out
+
+
+        ttl_out_path = plot_ttl('.' + format)
+        mss_out_path = plot_mss('.' + format)
+        win_out_path = plot_win('.' + format)
+        protocol_out_path = plot_protocol('.' + format)
+        port_out_path = plot_port('.' + format)
+        print("Saved distributions plots at: %s, %s, %s, %s, %s" %(ttl_out_path,mss_out_path, win_out_path,
+                                                                                            protocol_out_path, port_out_path))
+
+
+"""
+ # Aidmar
+            graphx_aftr, graphy_aftr = [], []
+            ttlValue = self.stats_db._process_user_defined_query(
+                "SELECT ttlValue FROM ip_ttl GROUP BY ttlValue ORDER BY SUM(ttlCount) DESC LIMIT 1")
+            for row in result:
+                if(row[0] == 64):
+                    graphy_aftr.append(row[1]+1000)
+                else:
+                    graphy_aftr.append(row[1])
+                graphx_aftr.append(row[0])
+
+            plt.autoscale(enable=False, axis='both')
+            plt.title("TTL Distribution")
+            plt.xlabel('TTL Value')
+            plt.ylabel('Number of Packets')
+            width = 0.5
+            plt.xlim([0, max(graphx_aftr)])
+            # Aidmar
+            plt.ylim([0, 11000])  # temp
+            plt.grid(True)
+            plt.bar(graphx_aftr, graphy_aftr, width, align='center', linewidth=2, color='red', edgecolor='red')
+            out = self.pcap_filepath.replace('.pcap', '_plot-ttl_2' + file_ending)
+            plt.savefig(out)
+
+            print(graphy)
+            print(graphy_aftr)
+            print("\neuclidean distance: "+str(dist.euclidean(graphy, graphy_aftr)))
+            print("\ncityblock distance: " + str(dist.cityblock(graphy, graphy_aftr)))
+            print("\nchebyshev distance: " + str(dist.chebyshev(graphy, graphy_aftr)))
+            print("\nsqeuclidean distance: " + str(dist.sqeuclidean(graphy, graphy_aftr)))
+            print("\nhamming distance: " + str(dist.hamming(graphy, graphy_aftr)))
+
+            # bhattacharyya test
+            import math
+
+            def mean(hist):
+                mean = 0.0;
+                for i in hist:
+                    mean += i;
+                mean /= len(hist);
+                return mean;
+
+            def bhatta(hist1, hist2):
+                # calculate mean of hist1
+                h1_ = mean(hist1);
+
+                # calculate mean of hist2
+                h2_ = mean(hist2);
+
+                # calculate score
+                score = 0;
+                for i in range(len(hist1)):
+                    score += math.sqrt(hist1[i] * hist2[i]);
+                # print h1_,h2_,score;
+                score = math.sqrt(1 - (1 / math.sqrt(h1_ * h2_ * len(hist1) * len(hist1))) * score);
+                return score;
+
+            print("\nbhatta distance: " + str(bhatta(graphy, graphy_aftr)))
+
+
+"""
