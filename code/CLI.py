@@ -103,9 +103,22 @@ def main(args):
     cli.parse_arguments(args)
 
 # Test main
-#def main(args):
+"""def main_0(args):
+    from scapy.utils import RawPcapReader
+    from scapy.layers.inet import IP, Ether, TCP
+
+    pkts = RawPcapReader("Win7_eternalblue_scan_vulnerable.pcap")
+    for pkt in pkts:
+        eth_frame = Ether(pkt[0])
+        ip_pkt = eth_frame.payload
+        tcp_pkt = ip_pkt.payload
+
+        new_pkt = (eth_frame / ip_pkt / tcp_pkt)
+        new_pkt.time = 0
 
 
+        print(tcp_pkt.getfieldval("sport"))
+"""
 
 
 
