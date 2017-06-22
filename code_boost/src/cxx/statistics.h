@@ -221,7 +221,7 @@ public:
     // Adimar
     void incrementMSScount(std::string ipAddress, int mssValue);
     void incrementWinCount(std::string ipAddress, int winSize);
-
+    void addIPEntropy();
 
     void incrementTTLcount(std::string ipAddress, int ttlValue);
 

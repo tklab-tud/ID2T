@@ -112,12 +112,21 @@ void pcap_processor::collect_statistics() {
 
         // Save timestamp of first packet
         stats.setTimestampFirstPacket(i->timestamp());
-
+    
+        int counter=0;
         // Iterate over all packets and collect statistics
         for (; i != sniffer.end(); i++) {
+            
+            // Aidmar
+            if(counter%100==0){
+                stats.addIPEntropy();
+            }
+                        
             stats.incrementPacketCount();
             this->process_packets(*i);
             lastProcessedPacket = i->timestamp();
+            
+            counter++;
         }
         // Save timestamp of last packet into statistics
         stats.setTimestampLastPacket(lastProcessedPacket);

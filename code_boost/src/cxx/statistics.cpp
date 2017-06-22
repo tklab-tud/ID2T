@@ -1,10 +1,38 @@
 // Aidmar
 #include <iostream>
+#include <vector>
+#include <math.h> 
 
 #include "statistics.h"
 #include <sstream>
 #include <SQLiteCpp/SQLiteCpp.h>
 #include "statistics_db.h"
+
+// Aidmar
+void statistics::addIPEntropy(){
+    std::vector <std::string> IPs; 
+    std::vector <float> IPsSrcProb; 
+    std::vector <float> IPsDstProb;
+    for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
+        IPs.push_back(i->first);
+        IPsSrcProb.push_back((float)i->second.pkts_sent/packetCount);
+        IPsDstProb.push_back((float)i->second.pkts_received/packetCount);
+    }
+    
+    float IPsSrcEntropy = 0;
+    for(unsigned i=0; i < IPsSrcProb.size();i++){
+        if (IPsSrcProb[i] > 0)
+            IPsSrcEntropy += - IPsSrcProb[i]*log2(IPsSrcProb[i]);
+    }
+    std::cout << "SrcEnt: " << IPsSrcEntropy << "\n";
+    
+    float IPsDstEntropy = 0;
+    for(unsigned i=0; i < IPsDstProb.size();i++){
+        if (IPsDstProb[i] > 0)
+            IPsDstEntropy += - IPsDstProb[i]*log2(IPsDstProb[i]);
+    }
+    std::cout << "DstEnt: " << IPsDstEntropy << "\n";
+}
 
 // Aidmar
 /**
