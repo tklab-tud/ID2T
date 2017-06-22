@@ -251,7 +251,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
             # Store timestamp of first packet (for attack label)
             if pkt_num == 1:
                 self.attack_start_utime = packets[0].time
-            elif pkt_num % BUFFER_SIZE == 0:
+            elif pkt_num % BUFFER_SIZE == 0: # every 1000 packets write them to the pcap file (append)
                 last_packet = packets[-1]
                 packets = sorted(packets, key=lambda pkt: pkt.time)
                 path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
