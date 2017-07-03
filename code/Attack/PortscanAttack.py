@@ -96,8 +96,8 @@ class PortscanAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.MAC_SOURCE, self.statistics.get_mac_address(most_used_ip_address))
 
         random_ip_address = self.statistics.get_random_ip_address()
-        # Aidmar
-        while not self.is_valid_ip_address(random_ip_address):
+        # Aidmar - ip-dst should be valid and not equal to ip.src
+        while not self.is_valid_ip_address(random_ip_address) or random_ip_address==most_used_ip_address:
             random_ip_address = self.statistics.get_random_ip_address()
 
         self.add_param_value(Param.IP_DESTINATION, random_ip_address)
@@ -155,6 +155,13 @@ class PortscanAttack(BaseAttack.BaseAttack):
         packets = []
         ip_source = self.get_param_value(Param.IP_SOURCE)
         ip_destination = self.get_param_value(Param.IP_DESTINATION)
+
+        # Aidmar - check ip.src == ip.dst
+        if ip_source == ip_destination:
+            print("\nERROR: Invalid IP addresses; source IP is the same as destination IP: " + ip_source + ".")
+            import sys
+            sys.exit(0)
+
         mac_source = self.get_param_value(Param.MAC_SOURCE)
         mac_destination = self.get_param_value(Param.MAC_DESTINATION)
         pps = self.get_param_value(Param.PACKETS_PER_SECOND)

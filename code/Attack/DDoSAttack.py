@@ -204,6 +204,12 @@ class DDoSAttack(BaseAttack.BaseAttack):
             (port_source, ttl_value) = get_attacker_config(ip_source)
             maxdelay = randomdelay.random()
             request_ether = Ether(dst=mac_destination, src=mac_source)
+            # Aidmar - check ip.src == ip.dst
+            if ip_source == ip_destination:
+                print("\nERROR: Invalid IP addresses; source IP is the same as destination IP: " + ip_source + ".")
+                import sys
+                sys.exit(0)
+
             request_ip = IP(src=ip_source, dst=ip_destination, ttl=ttl_value)
             # Aidmar - random win size for each packet
             # request_tcp = TCP(sport=port_source, dport=port_destination, flags='S', ack=0)
