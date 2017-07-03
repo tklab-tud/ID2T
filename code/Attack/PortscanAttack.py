@@ -204,6 +204,8 @@ class PortscanAttack(BaseAttack.BaseAttack):
         else:
             ttl_value = self.statistics.process_db_query("most_used(ttlValue)")
 
+        # Aidmar
+        replies = []
 
         for dport in dest_ports:
             # Parameters changing each iteration
@@ -223,10 +225,13 @@ class PortscanAttack(BaseAttack.BaseAttack):
 
             request = (request_ether / request_ip / request_tcp)
             # first packet uses timestamp provided by attack parameter Param.INJECT_AT_TIMESTAMP
-            if len(packets) > 0:
+            """if len(packets) > 0:
                 timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
             request.time = timestamp_next_pkt
-            packets.append(request)
+            """
+            # Aidmar - mimic DDoS attack style: put update_timestamp at the end of the loop
+            request.time = timestamp_next_pkt
+
 
             # 2) Build reply package
             if dport in ports_open:  # destination port is OPEN
@@ -238,20 +243,53 @@ class PortscanAttack(BaseAttack.BaseAttack):
                 reply_tcp = TCP(sport=dport, dport=sport, seq=0, ack=1, flags='SA', window=29200,
                                     options=[('MSS', mss_dst)])
                 reply = (reply_ether / reply_ip / reply_tcp)
-                timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
-                reply.time = timestamp_next_pkt
-                packets.append(reply)
+                # Aidmar - edit name timestamp_reply
+                timestamp_reply = update_timestamp(timestamp_next_pkt, pps, maxdelay) # TO-DO
+
+
+                if len(replies) > 0:
+                    last_reply_timestamp = replies[-1].time
+                    timestamp_reply = timestamp_next_pkt
+                    while (timestamp_reply <= last_reply_timestamp):
+                        timestamp_reply = update_timestamp(timestamp_reply, pps, maxdelay)
+                else:
+                    timestamp_reply = update_timestamp(timestamp_next_pkt, pps, maxdelay)
+
+                reply.time = timestamp_reply
+                replies.append(reply)
 
                 # requester confirms
+                # TO-DO: confirms should be in Attacker queue not in victim (reply) queue
                 confirm_ether = request_ether
                 confirm_ip = request_ip
                 confirm_tcp = TCP(sport=sport, dport=dport, seq=1, window=0, flags='R')
                 reply = (confirm_ether / confirm_ip / confirm_tcp)
-                timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
-                reply.time = timestamp_next_pkt
-                packets.append(reply)
+                # Aidmar - edit name timestamp_confirm
+                timestamp_confirm = update_timestamp(timestamp_reply, pps, maxdelay) # TO-DO
+                reply.time = timestamp_confirm
+                replies.append(reply)
 
                 # else: destination port is NOT OPEN -> no reply is sent by target
+
+            # Aidmar
+            # Append reply
+            if replies:
+                while timestamp_next_pkt >= replies[0].time:
+                    packets.append(replies[0])
+                    replies.remove(replies[0])
+                    if len(replies) == 0:
+                        break
+
+            # Append request
+            packets.append(request)
+
+            timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
+
+
+        # Requests are sent all, send all replies
+        if len(replies)>0:
+            for reply in replies:
+                packets.append(reply)
 
         # store end time of attack
         self.attack_end_utime = packets[-1].time
