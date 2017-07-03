@@ -301,3 +301,42 @@ void statistics_db::writeStatisticsWin(std::unordered_map<ipAddress_win, int> wi
         std::cout << "Exception in statistics_db: " << e.what() << std::endl;
     }
 }
+
+// Aidamr
+/**
+ * Writes the flow statistics into the database.
+ * @param flowStatistics The flow from class statistics.
+ */
+void statistics_db::writeStatisticsFlow(std::unordered_map<flow, entry_flowStat> flowStatistics){
+    std::cout<<"write to DB"<<"\n";
+    try {
+        db->exec("DROP TABLE IF EXISTS flow_statistics");
+        SQLite::Transaction transaction(*db);
+        const char *createTable = "CREATE TABLE flow_statistics ("
+                "ipAddressA TEXT,"
+                "portA INTEGER,"
+                "ipAddressB TEXT,"              
+                "portB INTEGER,"
+                "pkts_A_B INTEGER,"
+                "pkts_B_A INTEGER,"
+                "PRIMARY KEY(ipAddressA,portA,ipAddressB,portB));";
+        db->exec(createTable);
+        SQLite::Statement query(*db, "INSERT INTO flow_statistics VALUES (?, ?, ?, ?, ?, ?)");
+        for (auto it = flowStatistics.begin(); it != flowStatistics.end(); ++it) {
+            flow f = it->first;
+            entry_flowStat e = it->second;
+            query.bind(1, f.ipAddressA);
+            query.bind(2, f.portA);
+            query.bind(3, f.ipAddressB);
+            query.bind(4, f.portB);
+            query.bind(5, (int) e.pkts_A_B);
+            query.bind(6, (int) e.pkts_B_A);
+            query.exec();
+            query.reset();
+        }
+        transaction.commit();
+    }
+    catch (std::exception &e) {
+        std::cout << "Exception in statistics_db: " << e.what() << std::endl;
+    }
+}

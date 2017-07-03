@@ -21,3 +21,4 @@ code_boost/src/SQLiteCpp
 code_boost/src/SQLiteCpp/*
 test.py
 dbs/
+*.csv

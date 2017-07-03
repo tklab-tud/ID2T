@@ -11,9 +11,11 @@
 #include <tins/timestamp.h>
 #include <tins/ip_address.h>
 
+
 /*
  * Definition of structs used in unordered_map fields
  */
+
 
 /*
  * Struct used as data structure for method get_stats_for_ip, represents:
@@ -34,6 +36,29 @@ struct ip_stats {
     float AvgPacketSizeRecv;
     long AvgMaxSegmentSizeTCP;
 };
+
+// Aidmar
+/*
+ * Struct used to represent a flow by:
+ * - IP address A
+ * - Port A
+ * - IP address B
+ * - Port B
+ */
+struct flow{
+    std::string ipAddressA;
+    int portA;
+    std::string ipAddressB;
+    int portB;
+
+    bool operator==(const flow &other) const {
+        return ipAddressA == other.ipAddressA
+               && portA == other.portA
+               &&ipAddressB == other.ipAddressB
+               && portB == other.portB;
+    }    
+}; 
+
 
 // Aidmar
 /*
@@ -83,6 +108,7 @@ struct ipAddress_ttl {
     }
 };
 
+
 /*
  * Struct used to represent:
  * - IP address (IPv4 or IPv6)
@@ -126,6 +152,22 @@ struct entry_ipStat {
                && firstAppearAsReceiverPktCount == other.firstAppearAsReceiverPktCount
                && sourceAnomalyScore == other.sourceAnomalyScore
                && destinationAnomalyScore == other.destinationAnomalyScore;
+    }
+};
+
+// Aidmar
+/*
+ * Struct used to represent:
+ * - Number of packets from A to B
+ * - Number of packets from B to A
+ */
+struct entry_flowStat {
+    long pkts_A_B;
+    long pkts_B_A;
+
+    bool operator==(const entry_flowStat &other) const {
+        return pkts_A_B == other.pkts_A_B
+               && pkts_B_A == other.pkts_B_A;
     }
 };
 
@@ -186,7 +228,21 @@ namespace std {
                      ^ (hash<int>()(k.winSize) << 1)) >> 1);
         }
     };
-
+    
+    // Aidmar: TO-DO:??
+    template<>
+    struct hash<flow> {
+        std::size_t operator()(const flow &k) const {
+            using std::size_t;
+            using std::hash;
+            using std::string;
+            return ((hash<string>()(k.ipAddressA)
+                    ^ (hash<int>()(k.portA) << 1)) >> 1)
+                    ^ ((hash<string>()(k.ipAddressB)
+                    ^ (hash<int>()(k.portB) << 1)) >> 1);
+        }
+    };
+    
     template<>
     struct hash<ipAddress_protocol> {
         std::size_t operator()(const ipAddress_protocol &k) const {
@@ -232,6 +288,8 @@ public:
     void incrementMSScount(std::string ipAddress, int mssValue);
     void incrementWinCount(std::string ipAddress, int winSize);
     void addIPEntropy();
+    void addFlowStat(std::string ipAddressSender,int sport,std::string ipAddressReceiver,int dport);
+    
 
     void incrementTTLcount(std::string ipAddress, int ttlValue);
 
@@ -290,7 +348,9 @@ private:
     std::unordered_map<ipAddress_mss, int> mss_distribution;
     // {IP Address, Win size, count}
     std::unordered_map<ipAddress_win, int> win_distribution;
-
+    // {IP Address A, Port A, IP Address B, Port B,   #packets_A_B, #packets_B_A}
+    std::unordered_map<flow, entry_flowStat> flow_statistics;
+    
     // {IP Address, Protocol, count}
     std::unordered_map<ipAddress_protocol, int> protocol_distribution;
 

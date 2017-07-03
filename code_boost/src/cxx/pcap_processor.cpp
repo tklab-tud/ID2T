@@ -175,7 +175,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
 
         // Assign IP Address to MAC Address
         stats.assignMacAddress(ipAddressSender, macAddressSender);
-        stats.assignMacAddress(ipAddressReceiver, macAddressReceiver);
+        stats.assignMacAddress(ipAddressReceiver, macAddressReceiver);        
 
     } // PDU is IPv6
     else if (pdu_l3_type == PDU::PDUType::IPv6) {
@@ -219,7 +219,11 @@ void pcap_processor::process_packets(const Packet &pkt) {
                  if(tcpPkt.get_flag(TCP::SYN)) {
                     int win = tcpPkt.window();
                     stats.incrementWinCount(ipAddressSender, win);
-                    }
+                }
+                    
+                // Aidmar
+                // Flow statistics
+                stats.addFlowStat(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport());
 
             } catch (Tins::option_not_found) {
                 // Ignore MSS if option not set

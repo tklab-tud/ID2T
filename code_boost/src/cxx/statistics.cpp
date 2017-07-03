@@ -101,6 +101,26 @@ void statistics::addIPEntropy(){
 }
 
 // Aidmar
+void statistics::addFlowStat(std::string ipAddressSender,int sport,std::string ipAddressReceiver,int dport){
+    std::cout<<ipAddressSender<<":"<<sport<<","<<ipAddressReceiver<<":"<<dport<<"\n";
+    
+    // if already exist A(ipAddressReceiver, dport), B(ipAddressSender, sport)
+    /*if (flow_statistics.count({ipAddressReceiver, dport, ipAddressSender, sport})>0){
+        flow_statistics[{ipAddressReceiver, dport, ipAddressSender, sport}].pkts_B_A++;
+        std::cout<<flow_statistics[{ipAddressReceiver, dport, ipAddressSender, sport}].pkts_A_B<<"\n";
+        std::cout<<flow_statistics[{ipAddressReceiver, dport, ipAddressSender, sport}].pkts_B_A<<"\n";
+    }
+    else{*/
+    std::cout<<flow_statistics[{ipAddressSender, sport, ipAddressReceiver, dport}].pkts_A_B<<"\n";
+        flow_statistics[{ipAddressSender, sport, ipAddressReceiver, dport}].pkts_A_B++;
+        std::cout<<flow_statistics[{ipAddressSender, sport, ipAddressReceiver, dport}].pkts_A_B<<"\n";
+        std::cout<<flow_statistics[{ipAddressSender, sport, ipAddressReceiver, dport}].pkts_B_A<<"\n";
+    //}      
+    
+}
+    
+    
+// Aidmar
 /**
  * Increments the packet counter for the given IP address and MSS value.
  * @param ipAddress The IP address whose MSS packet counter should be incremented.
@@ -257,11 +277,9 @@ void statistics::addIpStat_packetSent(std::string ipAddressSender, std::string i
     file.open ("ip_dst_anomaly_score.csv",std::ios_base::app);
     file << ipAddressReceiver << ","<< s_t << "," << n << "," << s_r << "," << ipDst_Mahoney_score << "\n";
     file.close();
-    
-    
+        
     ip_statistics[ipAddressReceiver].firstAppearAsReceiverPktCount = packetCount;
     ip_statistics[ipAddressReceiver].destinationAnomalyScore = ipDst_Mahoney_score;
-
     }
     
     // Update stats for packet sender
@@ -269,9 +287,7 @@ void statistics::addIpStat_packetSent(std::string ipAddressSender, std::string i
     ip_statistics[ipAddressSender].pkts_sent++;
     // Update stats for packet receiver
     ip_statistics[ipAddressReceiver].kbytes_received += (float(bytesSent) / 1024);
-    ip_statistics[ipAddressReceiver].pkts_received++;
-    
-    
+    ip_statistics[ipAddressReceiver].pkts_received++;        
 }
 
 /**
@@ -456,6 +472,7 @@ void statistics::writeToDatabase(std::string database_path) {
     // Aidmar
     db.writeStatisticsMss_dist(mss_distribution);
     db.writeStatisticsWin(win_distribution);
+    db.writeStatisticsFlow(flow_statistics);
 }
 
 /**

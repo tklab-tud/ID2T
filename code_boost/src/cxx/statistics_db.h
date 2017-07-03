@@ -42,7 +42,7 @@ public:
     // Aidmar
     void writeStatisticsMss_dist(std::unordered_map<ipAddress_mss, int> mssDistribution);
     void writeStatisticsWin(std::unordered_map<ipAddress_win, int> winDistribution);
-    
+    void writeStatisticsFlow(std::unordered_map<flow, entry_flowStat> flowStatistics);
 
 private:
     // Pointer to the SQLite database
