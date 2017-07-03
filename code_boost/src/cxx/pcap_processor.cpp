@@ -118,7 +118,7 @@ void pcap_processor::collect_statistics() {
         for (; i != sniffer.end(); i++) {
             
             // Aidmar
-            if(counter%100==0){
+            if(counter%1000==0){
                 stats.addIPEntropy();
             }
                         

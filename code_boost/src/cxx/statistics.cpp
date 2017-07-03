@@ -1,5 +1,6 @@
 // Aidmar
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <math.h> 
 
@@ -14,24 +15,89 @@ void statistics::addIPEntropy(){
     std::vector <float> IPsSrcProb; 
     std::vector <float> IPsDstProb;
     for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
-        IPs.push_back(i->first);
+        IPs.push_back(i->first);        
         IPsSrcProb.push_back((float)i->second.pkts_sent/packetCount);
         IPsDstProb.push_back((float)i->second.pkts_received/packetCount);
+        
+        /*std::cout << i->first << ":" << i->second.pkts_sent << ":" << i->second.pkts_received << ":" 
+        << i->second.firstAppearAsSenderPktCount << ":" << i->second.firstAppearAsReceiverPktCount << ":" 
+        << packetCount << "\n";*/  
     }
     
+    // Calculate IP source entropy 
     float IPsSrcEntropy = 0;
     for(unsigned i=0; i < IPsSrcProb.size();i++){
         if (IPsSrcProb[i] > 0)
             IPsSrcEntropy += - IPsSrcProb[i]*log2(IPsSrcProb[i]);
     }
-    std::cout << "SrcEnt: " << IPsSrcEntropy << "\n";
+    std::cout << packetCount << ": SrcEnt: " << IPsSrcEntropy << "\n";
     
+    // Calculate IP destination entropy
     float IPsDstEntropy = 0;
     for(unsigned i=0; i < IPsDstProb.size();i++){
         if (IPsDstProb[i] > 0)
             IPsDstEntropy += - IPsDstProb[i]*log2(IPsDstProb[i]);
     }
-    std::cout << "DstEnt: " << IPsDstEntropy << "\n";
+    std::cout << packetCount << ": DstEnt: " << IPsDstEntropy << "\n";
+    
+    /*
+    // Calculate IP source tn/r anomaly score
+     float ipSrc_Mahoney_score = 0;
+    // The number of IP sources (the different values)
+    int s_r = 0;
+    for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
+            if (i->second.pkts_sent > 0)
+                s_r++;
+        }
+    if(s_r > 0){
+        // The number of the total instances
+        int n = packetCount;
+        // The packet count when the last novel IP was added as a sender
+        int pktCntNvlSndr = 0;
+        for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
+            if (pktCntNvlSndr < i->second.firstAppearAsSenderPktCount)
+                pktCntNvlSndr = i->second.firstAppearAsSenderPktCount;
+        }
+        // The "time" since last anomalous (novel) IP was appeared
+        int s_t = packetCount - pktCntNvlSndr + 1;
+        
+        ipSrc_Mahoney_score = (float)s_t*n/s_r;
+        
+        std::cout << s_t << ":" << n << ":" << s_r << "\n";
+        std::cout << packetCount << ": Mahoney score: " << ipSrc_Mahoney_score << "\n";
+    }
+    
+    // Calculate IP destination tn/r anomaly score
+    float ipDst_Mahoney_score = 0;
+    // The number of IP sources (the different values)
+    int d_r = 0;
+    for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
+            if (i->second.pkts_received > 0)
+                d_r++;
+        }
+    if(d_r > 0){
+        // The number of the total instances
+        int n = packetCount;
+        // The packet count when the last novel IP was added as a sender
+        int pktCntNvlRcvr = 0;
+        for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
+            if (pktCntNvlRcvr < i->second.firstAppearAsReceiverPktCount)
+                pktCntNvlRcvr = i->second.firstAppearAsReceiverPktCount;
+        }
+        // The "time" since last anomalous (novel) IP was appeared
+        int d_t = packetCount - pktCntNvlRcvr + 1;
+        
+        ipDst_Mahoney_score = (float)d_t*n/d_r;
+        
+        std::cout << d_t << ":" << n << ":" << d_r << "\n";
+        std::cout << packetCount << ": Anomaly score: " << ipDst_Mahoney_score << "\n";
+    }
+        */    
+    // Write stats to file
+      std::ofstream file;
+      file.open ("ip_entropy.csv",std::ios_base::app);
+      file << packetCount << "," << IPsSrcEntropy << "," << IPsDstEntropy << "\n";
+      file.close();    
 }
 
 // Aidmar
@@ -120,12 +186,92 @@ void statistics::assignMacAddress(std::string ipAddress, std::string macAddress)
  * @param bytesSent The packet's size.
  */
 void statistics::addIpStat_packetSent(std::string ipAddressSender, std::string ipAddressReceiver, long bytesSent) {
+    // Aidmar - Adding IP as a sender for first time
+    if(ip_statistics[ipAddressSender].pkts_sent==0){  
+        // Caculate Mahoney anomaly score for ip.src
+        float ipSrc_Mahoney_score = 0;
+        // s_r: The number of IP sources (the different values)
+        // n: The number of the total instances
+        // s_t: The "time" since last anomalous (novel) IP was appeared
+        int s_t = 0, n = 0, s_r = 0;
+        
+        for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
+                if (i->second.pkts_sent > 0)
+                    s_r++;
+            }
+        if(s_r > 0){
+            // The number of the total instances
+            n = packetCount;
+            // The packet count when the last novel IP was added as a sender
+            int pktCntNvlSndr = 0;
+            for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
+                if (pktCntNvlSndr < i->second.firstAppearAsSenderPktCount)
+                    pktCntNvlSndr = i->second.firstAppearAsSenderPktCount;
+            }
+            // The "time" since last anomalous (novel) IP was appeared
+            s_t = packetCount - pktCntNvlSndr + 1;
+        
+            ipSrc_Mahoney_score = (float)s_t*n/s_r;
+        }
+        
+    // Write stats to file
+    std::ofstream file;
+    file.open ("ip_src_anomaly_score.csv",std::ios_base::app);
+    file << ipAddressSender << ","<< s_t << "," << n << "," << s_r << "," << ipSrc_Mahoney_score << "\n";
+    file.close();
+    
+    ip_statistics[ipAddressSender].firstAppearAsSenderPktCount = packetCount;  
+    ip_statistics[ipAddressSender].sourceAnomalyScore = ipSrc_Mahoney_score;
+    
+    }
+    // Aidmar - Adding IP as a receiver for first time
+    if(ip_statistics[ipAddressReceiver].pkts_received==0){
+        // Caculate Mahoney anomaly score for ip.dst
+        float ipDst_Mahoney_score = 0;
+        // s_r: The number of IP sources (the different values)
+        // n: The number of the total instances
+        // s_t: The "time" since last anomalous (novel) IP was appeared
+        int s_t = 0, n = 0, s_r = 0;
+        
+        for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
+                if (i->second.pkts_received > 0)
+                    s_r++;
+            }
+        if(s_r > 0){
+            // The number of the total instances
+            n = packetCount;
+            // The packet count when the last novel IP was added as a sender
+            int pktCntNvlRcvr = 0;
+            for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
+                if (pktCntNvlRcvr < i->second.firstAppearAsReceiverPktCount)
+                    pktCntNvlRcvr = i->second.firstAppearAsReceiverPktCount;
+            }
+            // The "time" since last anomalous (novel) IP was appeared
+            s_t = packetCount - pktCntNvlRcvr + 1;
+        
+            ipDst_Mahoney_score = (float)s_t*n/s_r;
+        }
+        
+    // Write stats to file
+    std::ofstream file;
+    file.open ("ip_dst_anomaly_score.csv",std::ios_base::app);
+    file << ipAddressReceiver << ","<< s_t << "," << n << "," << s_r << "," << ipDst_Mahoney_score << "\n";
+    file.close();
+    
+    
+    ip_statistics[ipAddressReceiver].firstAppearAsReceiverPktCount = packetCount;
+    ip_statistics[ipAddressReceiver].destinationAnomalyScore = ipDst_Mahoney_score;
+
+    }
+    
     // Update stats for packet sender
     ip_statistics[ipAddressSender].kbytes_sent += (float(bytesSent) / 1024);
     ip_statistics[ipAddressSender].pkts_sent++;
     // Update stats for packet receiver
     ip_statistics[ipAddressReceiver].kbytes_received += (float(bytesSent) / 1024);
     ip_statistics[ipAddressReceiver].pkts_received++;
+    
+    
 }
 
 /**

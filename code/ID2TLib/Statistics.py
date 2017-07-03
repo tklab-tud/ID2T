@@ -300,7 +300,7 @@ class Statistics:
             return (any(x in value.lower().strip() for x in self.stats_db.get_all_named_query_keywords()) or
                     any(x in value.lower().strip() for x in self.stats_db.get_all_sql_query_keywords()))
 
-    def plot_statistics(self, format: str = 'png'):
+    def plot_statistics(self, format: str = 'pdf'): #'png'):
         """
         Plots the statistics associated with the dataset prior attack injection.
         :param format: The format to be used to save the statistics diagrams.
@@ -396,6 +396,62 @@ class Statistics:
             return out
 
         # Aidmar
+        def plot_ip_src(file_ending: str):
+            plt.gcf().clear()
+            result = self.stats_db._process_user_defined_query(
+                "SELECT ipAddress, pktsSent FROM ip_statistics")
+            graphx, graphy = [], []
+            for row in result:
+                graphx.append(row[0])
+                graphy.append(row[1])
+            plt.autoscale(enable=True, axis='both')
+            plt.title("Source IP Distribution")
+            plt.xlabel('Source IP')
+            plt.ylabel('Number of Packets')
+            width = 0.5
+            plt.xlim([0, len(graphx)])
+            plt.grid(True)
+
+            # IPs on x-axis
+            x = range(0, len(graphx))
+            my_xticks = graphx
+            plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
+            plt.tight_layout()
+
+            plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+            out = self.pcap_filepath.replace('.pcap', '_plot-ip-src' + file_ending)
+            plt.savefig(out, dpi=500)
+            return out
+
+        # Aidmar
+        def plot_ip_dst(file_ending: str):
+            plt.gcf().clear()
+            result = self.stats_db._process_user_defined_query(
+                "SELECT ipAddress, pktsReceived FROM ip_statistics")
+            graphx, graphy = [], []
+            for row in result:
+                graphx.append(row[0])
+                graphy.append(row[1])
+            plt.autoscale(enable=True, axis='both')
+            plt.title("Destination IP Distribution")
+            plt.xlabel('Destination IP')
+            plt.ylabel('Number of Packets')
+            width = 0.5
+            plt.xlim([0, len(graphx)])
+            plt.grid(True)
+
+            # IPs on x-axis
+            x = range(0, len(graphx))
+            my_xticks = graphx
+            plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
+            plt.tight_layout()
+
+            plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+            out = self.pcap_filepath.replace('.pcap', '_plot-ip-dst' + file_ending)
+            plt.savefig(out, dpi=500)
+            return out
+
+        # Aidmar
         def plot_port(file_ending: str):
             plt.gcf().clear()
             result = self.stats_db._process_user_defined_query(
@@ -422,8 +478,10 @@ class Statistics:
         win_out_path = plot_win('.' + format)
         protocol_out_path = plot_protocol('.' + format)
         port_out_path = plot_port('.' + format)
-        print("Saved distributions plots at: %s, %s, %s, %s, %s" %(ttl_out_path,mss_out_path, win_out_path,
-                                                                                            protocol_out_path, port_out_path))
+        ip_src_out_path = plot_ip_src('.' + format)
+        ip_dst_out_path = plot_ip_dst('.' + format)
+        print("Saved distributions plots at: %s, %s, %s, %s, %s, %s, %s" %(ttl_out_path,mss_out_path, win_out_path,
+                                                    protocol_out_path, port_out_path,ip_src_out_path,ip_dst_out_path))
 
 
 """

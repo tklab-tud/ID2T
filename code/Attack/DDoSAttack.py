@@ -227,7 +227,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 if len(replies) > 0:
                     last_reply_timestamp = replies[-1].time
                     while (timestamp_reply <= last_reply_timestamp):
-                        timestamp_reply = timestamp_next_pkt + 1  # update_timestamp(timestamp_next_pkt, pps, maxdelay)
+                        timestamp_reply = timestamp_next_pkt + 1  # TO-DO # update_timestamp(timestamp_next_pkt, pps, maxdelay)
                 else:
                     timestamp_reply = update_timestamp(timestamp_next_pkt, pps, maxdelay)
 

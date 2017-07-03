@@ -110,12 +110,22 @@ struct entry_ipStat {
     long pkts_sent;
     float kbytes_received;
     float kbytes_sent;
+    // Aidmar - to calculate tn/r score
+    long firstAppearAsSenderPktCount;
+    long firstAppearAsReceiverPktCount;
+    long sourceAnomalyScore;
+    long destinationAnomalyScore;
 
     bool operator==(const entry_ipStat &other) const {
         return pkts_received == other.pkts_received
                && pkts_sent == other.pkts_sent
                && kbytes_sent == other.kbytes_sent
-               && kbytes_received == other.kbytes_received;
+               && kbytes_received == other.kbytes_received
+               // Aidmar
+               && firstAppearAsSenderPktCount == other.firstAppearAsSenderPktCount
+               && firstAppearAsReceiverPktCount == other.firstAppearAsReceiverPktCount
+               && sourceAnomalyScore == other.sourceAnomalyScore
+               && destinationAnomalyScore == other.destinationAnomalyScore;
     }
 };
 
