@@ -4,6 +4,8 @@
 #ifndef CPP_PCAPREADER_STATISTICS_H
 #define CPP_PCAPREADER_STATISTICS_H
 
+// Aidmar
+#include <vector>
 
 #include <unordered_map>
 #include <list>
@@ -164,10 +166,18 @@ struct entry_ipStat {
 struct entry_flowStat {
     long pkts_A_B;
     long pkts_B_A;
-
+    std::vector<std::chrono::microseconds> pkts_A_B_timestamp;
+    std::vector<std::chrono::microseconds> pkts_B_A_timestamp;
+    std::vector<std::chrono::microseconds> pkts_delay;
+    //std::chrono::duration<double, std::micro> median_delay;
+    std::chrono::microseconds median_delay;
+    
     bool operator==(const entry_flowStat &other) const {
         return pkts_A_B == other.pkts_A_B
-               && pkts_B_A == other.pkts_B_A;
+               && pkts_A_B_timestamp == other.pkts_A_B_timestamp
+               && pkts_B_A_timestamp == other.pkts_B_A_timestamp
+               && pkts_delay == other.pkts_delay
+               && median_delay == other.median_delay;
     }
 };
 
@@ -237,9 +247,9 @@ namespace std {
             using std::hash;
             using std::string;
             return ((hash<string>()(k.ipAddressA)
-                    ^ (hash<int>()(k.portA) << 1)) >> 1)
-                    ^ ((hash<string>()(k.ipAddressB)
-                    ^ (hash<int>()(k.portB) << 1)) >> 1);
+                     ^ (hash<int>()(k.portA) << 1)) >> 1)
+                     ^ ((hash<string>()(k.ipAddressB)
+                     ^ (hash<int>()(k.portB) << 1)) >> 1);
         }
     };
     
@@ -288,7 +298,7 @@ public:
     void incrementMSScount(std::string ipAddress, int mssValue);
     void incrementWinCount(std::string ipAddress, int winSize);
     void addIPEntropy();
-    void addFlowStat(std::string ipAddressSender,int sport,std::string ipAddressReceiver,int dport);
+    void addFlowStat(std::string ipAddressSender,int sport,std::string ipAddressReceiver,int dport, std::chrono::microseconds timestamp);
     
 
     void incrementTTLcount(std::string ipAddress, int ttlValue);

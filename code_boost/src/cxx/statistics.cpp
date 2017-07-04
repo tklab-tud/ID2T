@@ -101,21 +101,41 @@ void statistics::addIPEntropy(){
 }
 
 // Aidmar
-void statistics::addFlowStat(std::string ipAddressSender,int sport,std::string ipAddressReceiver,int dport){
-    std::cout<<ipAddressSender<<":"<<sport<<","<<ipAddressReceiver<<":"<<dport<<"\n";
+/**
+ * Increments the packet counter for the given flow.
+ * @param ipAddressSender The sender IP address.
+ * @param sport The source port.
+ * @param ipAddressReceiver The receiver IP address.
+ * @param dport The destination port.
+ * @param timestamp The timestamp of the packet.
+ */
+void statistics::addFlowStat(std::string ipAddressSender,int sport,std::string ipAddressReceiver,int dport, std::chrono::microseconds timestamp){   
+    
+    flow f1 = {ipAddressReceiver, dport, ipAddressSender, sport};
+    flow f2 = {ipAddressSender, sport, ipAddressReceiver, dport};
     
     // if already exist A(ipAddressReceiver, dport), B(ipAddressSender, sport)
-    /*if (flow_statistics.count({ipAddressReceiver, dport, ipAddressSender, sport})>0){
-        flow_statistics[{ipAddressReceiver, dport, ipAddressSender, sport}].pkts_B_A++;
-        std::cout<<flow_statistics[{ipAddressReceiver, dport, ipAddressSender, sport}].pkts_A_B<<"\n";
-        std::cout<<flow_statistics[{ipAddressReceiver, dport, ipAddressSender, sport}].pkts_B_A<<"\n";
+    if (flow_statistics.count(f1)>0){
+        flow_statistics[f1].pkts_B_A++;
+        flow_statistics[f1].pkts_B_A_timestamp.push_back(timestamp);
+        if(flow_statistics[f1].pkts_A_B_timestamp.size()>0){
+            flow_statistics[f1].pkts_delay.push_back(std::chrono::duration_cast<std::chrono::microseconds> (timestamp - flow_statistics[f1].pkts_A_B_timestamp[flow_statistics[f1].pkts_A_B_timestamp.size()-1]));
+        }
+        
+        std::cout<<timestamp.count()<<"::"<<ipAddressReceiver<<":"<<dport<<","<<ipAddressSender<<":"<<sport<<"\n"; 
+        std::cout<<flow_statistics[f1].pkts_A_B<<"\n";
+        std::cout<<flow_statistics[f1].pkts_B_A<<"\n";
     }
-    else{*/
-    std::cout<<flow_statistics[{ipAddressSender, sport, ipAddressReceiver, dport}].pkts_A_B<<"\n";
-        flow_statistics[{ipAddressSender, sport, ipAddressReceiver, dport}].pkts_A_B++;
-        std::cout<<flow_statistics[{ipAddressSender, sport, ipAddressReceiver, dport}].pkts_A_B<<"\n";
-        std::cout<<flow_statistics[{ipAddressSender, sport, ipAddressReceiver, dport}].pkts_B_A<<"\n";
-    //}      
+    else{
+        flow_statistics[f2].pkts_A_B++;
+        flow_statistics[f2].pkts_A_B_timestamp.push_back(timestamp);
+         if(flow_statistics[f2].pkts_B_A_timestamp.size()>0){
+            flow_statistics[f2].pkts_delay.push_back(std::chrono::duration_cast<std::chrono::microseconds> (timestamp - flow_statistics[f2].pkts_B_A_timestamp[flow_statistics[f2].pkts_B_A_timestamp.size()-1]));
+        }
+        std::cout<<timestamp.count()<<"::"<<ipAddressSender<<":"<<sport<<","<<ipAddressReceiver<<":"<<dport<<"\n"; 
+        std::cout<<flow_statistics[f2].pkts_A_B<<"\n";
+        std::cout<<flow_statistics[f2].pkts_B_A<<"\n";
+    }    
     
 }
     

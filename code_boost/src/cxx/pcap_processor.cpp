@@ -208,23 +208,25 @@ void pcap_processor::process_packets(const Packet &pkt) {
         if (p == PDU::PDUType::TCP) {
             TCP tcpPkt = (const TCP &) *pdu_l4;
             stats.incrementProtocolCount(ipAddressSender, "TCP");
-            try {
+            
+            // Aidmar
+            // Flow statistics
+            stats.addFlowStat(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), pkt.timestamp());  
+            
+            // Aidmar
+            // Check window size for SYN noly
+            if(tcpPkt.get_flag(TCP::SYN)) {
+                int win = tcpPkt.window();
+                stats.incrementWinCount(ipAddressSender, win);
+            }   
+                
+            try {                                                                
                 int val = tcpPkt.mss();
                 stats.addMSS(ipAddressSender, val);
                 
                 // Aidmar
                 // MSS distribution
-                stats.incrementMSScount(ipAddressSender, val);
-                // Check window size for SYN noly
-                 if(tcpPkt.get_flag(TCP::SYN)) {
-                    int win = tcpPkt.window();
-                    stats.incrementWinCount(ipAddressSender, win);
-                }
-                    
-                // Aidmar
-                // Flow statistics
-                stats.addFlowStat(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport());
-
+                stats.incrementMSScount(ipAddressSender, val);                          
             } catch (Tins::option_not_found) {
                 // Ignore MSS if option not set
             }
