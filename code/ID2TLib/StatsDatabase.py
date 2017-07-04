@@ -56,7 +56,7 @@ class StatsDatabase:
             self.cursor.execute('SELECT * FROM file_statistics'))][0]
 
     def get_db_exists(self):
-        """
+        """"
         :return: True if the database was already existent, otherwise False
         """
         # Aidmar - for testing: return false always
