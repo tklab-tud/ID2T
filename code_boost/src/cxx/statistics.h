@@ -138,11 +138,14 @@ struct entry_ipStat {
     long pkts_sent;
     float kbytes_received;
     float kbytes_sent;
-    // Aidmar - to calculate tn/r score
+    // Aidmar - to calculate Mahoney anomaly score
     long firstAppearAsSenderPktCount;
     long firstAppearAsReceiverPktCount;
     long sourceAnomalyScore;
     long destinationAnomalyScore;
+    // Aidmar- To collect statstics over time interval
+    std::vector<std::chrono::microseconds> pktsSentTimestamp;
+    std::vector<std::chrono::microseconds> pktsReceivedTimestamp;
 
     bool operator==(const entry_ipStat &other) const {
         return pkts_received == other.pkts_received
@@ -153,7 +156,9 @@ struct entry_ipStat {
                && firstAppearAsSenderPktCount == other.firstAppearAsSenderPktCount
                && firstAppearAsReceiverPktCount == other.firstAppearAsReceiverPktCount
                && sourceAnomalyScore == other.sourceAnomalyScore
-               && destinationAnomalyScore == other.destinationAnomalyScore;
+               && destinationAnomalyScore == other.destinationAnomalyScore
+               && pktsSentTimestamp == other.pktsSentTimestamp
+               && pktsReceivedTimestamp == other.pktsReceivedTimestamp;
     }
 };
 
@@ -297,9 +302,9 @@ public:
     // Adimar
     void incrementMSScount(std::string ipAddress, int mssValue);
     void incrementWinCount(std::string ipAddress, int winSize);
-    void addIPEntropy();
+    void addIPEntropy(std::string filePath);
     void addFlowStat(std::string ipAddressSender,int sport,std::string ipAddressReceiver,int dport, std::chrono::microseconds timestamp);
-    
+    void calculateLastIntervalIPsEntropy(std::string filePath, std::chrono::microseconds intervalStartTimestamp);
 
     void incrementTTLcount(std::string ipAddress, int ttlValue);
 
@@ -313,10 +318,15 @@ public:
     void setTimestampFirstPacket(Tins::Timestamp ts);
 
     void setTimestampLastPacket(Tins::Timestamp ts);
+    
+    // Aidmar
+    Tins::Timestamp getTimestampFirstPacket();
+    Tins::Timestamp getTimestampLastPacket();
 
     void assignMacAddress(std::string ipAddress, std::string macAddress);
-
-    void addIpStat_packetSent(std::string ipAddressSender, std::string ipAddressReceiver, long bytesSent);
+    
+    // Aidmar
+    void addIpStat_packetSent(std::string filePath, std::string ipAddressSender, std::string ipAddressReceiver, long bytesSent, std::chrono::microseconds timestamp);
 
     void addMSS(std::string ipAddress, int MSSvalue);
 

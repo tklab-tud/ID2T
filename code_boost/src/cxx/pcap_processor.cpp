@@ -113,19 +113,39 @@ void pcap_processor::collect_statistics() {
         // Save timestamp of first packet
         stats.setTimestampFirstPacket(i->timestamp());
     
+        // Aidmar
         int counter=0;
+        int timeIntervalNum = 1;
+        std::chrono::duration<int, std::micro> timeInterval(10000000); // 10 sec
+        std::chrono::microseconds intervalStartTimestamp = stats.getTimestampFirstPacket();
+        std::chrono::microseconds firstTimestamp = stats.getTimestampFirstPacket();
+        int pktsInterval = 1000;
+        
         // Iterate over all packets and collect statistics
         for (; i != sniffer.end(); i++) {
             
             // Aidmar
-            if(counter%1000==0){
-                stats.addIPEntropy();
+            if(counter%pktsInterval==0){
+                stats.addIPEntropy(filePath);
             }
-                        
+            
+            // Aidmar            
+            std::chrono::microseconds lastPktTimestamp = i->timestamp();
+            //Tins::Timestamp tt = i->timestamp();
+            
+            std::chrono::microseconds currentCaptureDuration = lastPktTimestamp - firstTimestamp;
+            std::chrono::microseconds barrier =  timeIntervalNum*timeInterval;
+            if(currentCaptureDuration>barrier){
+                //std::cout<<"LastpkstTimstamp:" << lastPktTimestamp.count() << ", currentCaptureDuration:"<< currentCaptureDuration.count() << ", barrier:" <<barrier.count()<<", interval:" << timeIntervalNum << ", interval time:"<<timeInterval.count()<<"\n";
+                
+                stats.calculateLastIntervalIPsEntropy(filePath, intervalStartTimestamp);
+                timeIntervalNum++;   
+                intervalStartTimestamp = lastPktTimestamp;
+            }
+            
             stats.incrementPacketCount();
             this->process_packets(*i);
-            lastProcessedPacket = i->timestamp();
-            
+            lastProcessedPacket = i->timestamp();            
             counter++;
         }
         // Save timestamp of last packet into statistics
@@ -165,7 +185,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
         ipAddressReceiver = ipLayer.dst_addr().to_string();
 
         // IP distribution
-        stats.addIpStat_packetSent(ipAddressSender, ipLayer.dst_addr().to_string(), sizeCurrentPacket);
+        stats.addIpStat_packetSent(filePath, ipAddressSender, ipLayer.dst_addr().to_string(), sizeCurrentPacket, pkt.timestamp());
 
         // TTL distribution
         stats.incrementTTLcount(ipAddressSender, ipLayer.ttl());      
@@ -184,7 +204,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
         ipAddressReceiver = ipLayer.dst_addr().to_string();
 
         // IP distribution
-        stats.addIpStat_packetSent(ipAddressSender, ipLayer.dst_addr().to_string(), sizeCurrentPacket);
+        stats.addIpStat_packetSent(filePath, ipAddressSender, ipLayer.dst_addr().to_string(), sizeCurrentPacket, pkt.timestamp());
 
         // TTL distribution
         stats.incrementTTLcount(ipAddressSender, ipLayer.hop_limit());

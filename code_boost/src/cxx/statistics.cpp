@@ -3,14 +3,144 @@
 #include <fstream>
 #include <vector>
 #include <math.h> 
+#include <algorithm>
 
 #include "statistics.h"
 #include <sstream>
 #include <SQLiteCpp/SQLiteCpp.h>
 #include "statistics_db.h"
 
+
 // Aidmar
-void statistics::addIPEntropy(){
+/**
+ * Get closest index for element in vector.
+ * @param v vector
+ * @param refElem element that we search for or for closest element
+ */
+int getClosestIndex(std::vector<std::chrono::microseconds> v, std::chrono::microseconds refElem)
+{
+    auto i = min_element(begin(v), end(v), [=] (std::chrono::microseconds x, std::chrono::microseconds y)
+    {
+        return std::abs((x - refElem).count()) < std::abs((y - refElem).count());
+    });
+    return std::distance(begin(v), i);
+}
+
+
+// Aidmar
+/**
+ * Calculate entropy of source and destination IPs for last time interval and write results to a ip_entropy_interval.csv file.
+ * @param intervalStartTimestamp The timstamp where the interval starts.
+ */
+
+void statistics::calculateLastIntervalIPsEntropy(std::string filePath, std::chrono::microseconds intervalStartTimestamp){
+        std::vector <int> IPsSrcPktsCounts; 
+        std::vector <int> IPsDstPktsCounts; 
+        
+        std::vector <float> IPsSrcProb; 
+        std::vector <float> IPsDstProb;
+    
+        int pktsSent = 0, pktsReceived = 0;
+        
+        for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
+            int indexStartSent = getClosestIndex(i->second.pktsSentTimestamp, intervalStartTimestamp);                         
+            int IPsSrcPktsCount = i->second.pktsSentTimestamp.size() - indexStartSent;
+            IPsSrcPktsCounts.push_back(IPsSrcPktsCount);
+            pktsSent += IPsSrcPktsCount;
+            //std::cout<<"IP:"<<i->first<<", indexStartSent:"<<indexStartSent<<", value:"<<i->second.pktsSentTimestamp[indexStartSent].count()<<", IPsSrcPktsCount:"<<IPsSrcPktsCount<<", total_pktsSent:"<<pktsSent<<"\n";
+                        
+            int indexStartReceived = getClosestIndex(i->second.pktsReceivedTimestamp, intervalStartTimestamp);   
+            int IPsDstPktsCount = i->second.pktsReceivedTimestamp.size() - indexStartReceived;       
+            IPsDstPktsCounts.push_back(IPsDstPktsCount);
+            pktsReceived += IPsDstPktsCount;
+        }  
+       
+         for (auto i = IPsSrcPktsCounts.begin(); i != IPsSrcPktsCounts.end(); i++) {
+                IPsSrcProb.push_back((float)*i/pktsSent);
+                //std::cout<<"IpSrcProb:"<<(float)*i/pktsSent<<"\n";
+         }
+         for (auto i = IPsDstPktsCounts.begin(); i != IPsDstPktsCounts.end(); i++) {
+                IPsDstProb.push_back((float)*i/pktsReceived);
+                //std::cout<<"IpDstProb:"<<(float)*i/pktsReceived<<"\n";
+         }
+         
+         // Calculate IP source entropy 
+        float IPsSrcEntropy = 0;
+        for(unsigned i=0; i < IPsSrcProb.size();i++){
+            if (IPsSrcProb[i] > 0)
+                IPsSrcEntropy += - IPsSrcProb[i]*log2(IPsSrcProb[i]);
+        }
+        // Calculate IP destination entropy
+        float IPsDstEntropy = 0;
+        for(unsigned i=0; i < IPsDstProb.size();i++){
+            if (IPsDstProb[i] > 0)
+                IPsDstEntropy += - IPsDstProb[i]*log2(IPsDstProb[i]);
+        }
+        
+        // Replace pcap filename with 'filename_ip_entropy'
+        std::string new_filepath = filePath;
+        const std::string &newExt = "_ip_entropy_interval.csv";
+        std::string::size_type h = new_filepath.rfind('.', new_filepath.length());
+        if (h != std::string::npos) {
+            new_filepath.replace(h, newExt.length(), newExt);
+        } else {
+            new_filepath.append(newExt);
+        }
+    
+        // Write stats to file
+      std::ofstream file;
+      file.open (new_filepath,std::ios_base::app);
+      file << intervalStartTimestamp.count() << "," << IPsSrcEntropy << "," << IPsDstEntropy << "\n";
+      file.close();         
+}
+
+
+// Aidmar - incomplete
+/**
+ * Calculate entropy for time intervals. After finishing statistics collecting, this method goes through
+ * all stored timestamps and calculate entropy of IP source and destination. 
+ * Big time overhead!! better to calculate it on fly, while we are processing packets.
+ * @param 
+ */
+/*
+void statistics::calculateIntervalIPsEntropy(std::chrono::microseconds interval){
+        std::vector <std::string> IPsSrc; 
+        std::vector <std::string> IPsDst; 
+        std::vector <int> pkts_sent;
+        std::vector <int> pkts_received;
+        
+        std::vector <float> IPsSrcProb; 
+        std::vector <float> IPsDstProb;
+        
+    time_t t = (timestamp_lastPacket.seconds() - timestamp_firstPacket.seconds());
+    time_t ms = (timestamp_lastPacket.microseconds() - timestamp_firstPacket.microseconds());
+    
+    intervalNum = t/interval;
+    
+     for(int j=0;j<intervalNum;j++){
+        intStart = j*interval;
+        intEnd = intStart + interval;             
+        for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
+            for(int x = 0; x<i->second.pktsSentTimestamp.size();x++){ // could have a prob loop on pktsSent, and inside we have pktsReceived..
+                if(i->second.pktsSentTimestamp[x]>intStart && i->second.pktsSentTimestamp[x]<intEnd){
+                     IPsSrc.push_back(i->first);   
+                }
+                if(i->second.pktsReceivedTimestamp[x]>intStart && i->second.pktsReceivedTimestamp[x]<intEnd){
+                     IPsDst.push_back(i->first);   
+                }
+            }                           
+        }        
+        //IPsSrcProb.push_back((float)i->second.pkts_sent/packetCount);
+        //IPsDstProb.push_back((float)i->second.pkts_received/packetCount);
+    }      
+}*/
+
+
+// Aidmar
+/**
+ * Calculate cumulative entropy of source and destination IPs; the entropy for packets from the beginning of the pcap file. 
+ */
+void statistics::addIPEntropy(std::string filePath){
     std::vector <std::string> IPs; 
     std::vector <float> IPsSrcProb; 
     std::vector <float> IPsDstProb;
@@ -39,63 +169,22 @@ void statistics::addIPEntropy(){
             IPsDstEntropy += - IPsDstProb[i]*log2(IPsDstProb[i]);
     }
     std::cout << packetCount << ": DstEnt: " << IPsDstEntropy << "\n";
-    
-    /*
-    // Calculate IP source tn/r anomaly score
-     float ipSrc_Mahoney_score = 0;
-    // The number of IP sources (the different values)
-    int s_r = 0;
-    for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
-            if (i->second.pkts_sent > 0)
-                s_r++;
-        }
-    if(s_r > 0){
-        // The number of the total instances
-        int n = packetCount;
-        // The packet count when the last novel IP was added as a sender
-        int pktCntNvlSndr = 0;
-        for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
-            if (pktCntNvlSndr < i->second.firstAppearAsSenderPktCount)
-                pktCntNvlSndr = i->second.firstAppearAsSenderPktCount;
-        }
-        // The "time" since last anomalous (novel) IP was appeared
-        int s_t = packetCount - pktCntNvlSndr + 1;
-        
-        ipSrc_Mahoney_score = (float)s_t*n/s_r;
-        
-        std::cout << s_t << ":" << n << ":" << s_r << "\n";
-        std::cout << packetCount << ": Mahoney score: " << ipSrc_Mahoney_score << "\n";
-    }
-    
-    // Calculate IP destination tn/r anomaly score
-    float ipDst_Mahoney_score = 0;
-    // The number of IP sources (the different values)
-    int d_r = 0;
-    for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
-            if (i->second.pkts_received > 0)
-                d_r++;
-        }
-    if(d_r > 0){
-        // The number of the total instances
-        int n = packetCount;
-        // The packet count when the last novel IP was added as a sender
-        int pktCntNvlRcvr = 0;
-        for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
-            if (pktCntNvlRcvr < i->second.firstAppearAsReceiverPktCount)
-                pktCntNvlRcvr = i->second.firstAppearAsReceiverPktCount;
-        }
-        // The "time" since last anomalous (novel) IP was appeared
-        int d_t = packetCount - pktCntNvlRcvr + 1;
-        
-        ipDst_Mahoney_score = (float)d_t*n/d_r;
-        
-        std::cout << d_t << ":" << n << ":" << d_r << "\n";
-        std::cout << packetCount << ": Anomaly score: " << ipDst_Mahoney_score << "\n";
-    }
-        */    
+       
     // Write stats to file
       std::ofstream file;
-      file.open ("ip_entropy.csv",std::ios_base::app);
+      
+     // Replace pcap filename with 'filename_ip_entropy'
+    std::string new_filepath = filePath;
+    const std::string &newExt = "_ip_entropy.csv";
+    std::string::size_type h = new_filepath.rfind('.', new_filepath.length());
+    if (h != std::string::npos) {
+        new_filepath.replace(h, newExt.length(), newExt);
+    } else {
+        new_filepath.append(newExt);
+    }
+    
+    
+      file.open (new_filepath,std::ios_base::app);
       file << packetCount << "," << IPsSrcEntropy << "," << IPsDstEntropy << "\n";
       file.close();    
 }
@@ -111,6 +200,7 @@ void statistics::addIPEntropy(){
  */
 void statistics::addFlowStat(std::string ipAddressSender,int sport,std::string ipAddressReceiver,int dport, std::chrono::microseconds timestamp){   
     
+    
     flow f1 = {ipAddressReceiver, dport, ipAddressSender, sport};
     flow f2 = {ipAddressSender, sport, ipAddressReceiver, dport};
     
@@ -122,9 +212,9 @@ void statistics::addFlowStat(std::string ipAddressSender,int sport,std::string i
             flow_statistics[f1].pkts_delay.push_back(std::chrono::duration_cast<std::chrono::microseconds> (timestamp - flow_statistics[f1].pkts_A_B_timestamp[flow_statistics[f1].pkts_A_B_timestamp.size()-1]));
         }
         
-        std::cout<<timestamp.count()<<"::"<<ipAddressReceiver<<":"<<dport<<","<<ipAddressSender<<":"<<sport<<"\n"; 
-        std::cout<<flow_statistics[f1].pkts_A_B<<"\n";
-        std::cout<<flow_statistics[f1].pkts_B_A<<"\n";
+        //std::cout<<timestamp.count()<<"::"<<ipAddressReceiver<<":"<<dport<<","<<ipAddressSender<<":"<<sport<<"\n"; 
+        //std::cout<<flow_statistics[f1].pkts_A_B<<"\n";
+        //std::cout<<flow_statistics[f1].pkts_B_A<<"\n";
     }
     else{
         flow_statistics[f2].pkts_A_B++;
@@ -132,11 +222,10 @@ void statistics::addFlowStat(std::string ipAddressSender,int sport,std::string i
          if(flow_statistics[f2].pkts_B_A_timestamp.size()>0){
             flow_statistics[f2].pkts_delay.push_back(std::chrono::duration_cast<std::chrono::microseconds> (timestamp - flow_statistics[f2].pkts_B_A_timestamp[flow_statistics[f2].pkts_B_A_timestamp.size()-1]));
         }
-        std::cout<<timestamp.count()<<"::"<<ipAddressSender<<":"<<sport<<","<<ipAddressReceiver<<":"<<dport<<"\n"; 
-        std::cout<<flow_statistics[f2].pkts_A_B<<"\n";
-        std::cout<<flow_statistics[f2].pkts_B_A<<"\n";
-    }    
-    
+        //std::cout<<timestamp.count()<<"::"<<ipAddressSender<<":"<<sport<<","<<ipAddressReceiver<<":"<<dport<<"\n"; 
+        //std::cout<<flow_statistics[f2].pkts_A_B<<"\n";
+        //std::cout<<flow_statistics[f2].pkts_B_A<<"\n";
+    }        
 }
     
     
@@ -225,7 +314,7 @@ void statistics::assignMacAddress(std::string ipAddress, std::string macAddress)
  * @param ipAddressReceiver The IP address of the packet receiver.
  * @param bytesSent The packet's size.
  */
-void statistics::addIpStat_packetSent(std::string ipAddressSender, std::string ipAddressReceiver, long bytesSent) {
+void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddressSender, std::string ipAddressReceiver, long bytesSent, std::chrono::microseconds timestamp) {
     // Aidmar - Adding IP as a sender for first time
     if(ip_statistics[ipAddressSender].pkts_sent==0){  
         // Caculate Mahoney anomaly score for ip.src
@@ -233,8 +322,7 @@ void statistics::addIpStat_packetSent(std::string ipAddressSender, std::string i
         // s_r: The number of IP sources (the different values)
         // n: The number of the total instances
         // s_t: The "time" since last anomalous (novel) IP was appeared
-        int s_t = 0, n = 0, s_r = 0;
-        
+        int s_t = 0, n = 0, s_r = 0;        
         for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
                 if (i->second.pkts_sent > 0)
                     s_r++;
@@ -254,16 +342,25 @@ void statistics::addIpStat_packetSent(std::string ipAddressSender, std::string i
             ipSrc_Mahoney_score = (float)s_t*n/s_r;
         }
         
+            // Replace pcap filename with 'filename_ip_entropy'
+        std::string new_filepath = filePath;
+        const std::string &newExt = "_ip_src_anomaly_score.csv";
+        std::string::size_type h = new_filepath.rfind('.', new_filepath.length());
+        if (h != std::string::npos) {
+            new_filepath.replace(h, newExt.length(), newExt);
+        } else {
+            new_filepath.append(newExt);
+        }
+        
     // Write stats to file
     std::ofstream file;
-    file.open ("ip_src_anomaly_score.csv",std::ios_base::app);
+    file.open (new_filepath,std::ios_base::app);
     file << ipAddressSender << ","<< s_t << "," << n << "," << s_r << "," << ipSrc_Mahoney_score << "\n";
-    file.close();
-    
+    file.close();    
     ip_statistics[ipAddressSender].firstAppearAsSenderPktCount = packetCount;  
-    ip_statistics[ipAddressSender].sourceAnomalyScore = ipSrc_Mahoney_score;
-    
+    ip_statistics[ipAddressSender].sourceAnomalyScore = ipSrc_Mahoney_score;    
     }
+    
     // Aidmar - Adding IP as a receiver for first time
     if(ip_statistics[ipAddressReceiver].pkts_received==0){
         // Caculate Mahoney anomaly score for ip.dst
@@ -271,8 +368,7 @@ void statistics::addIpStat_packetSent(std::string ipAddressSender, std::string i
         // s_r: The number of IP sources (the different values)
         // n: The number of the total instances
         // s_t: The "time" since last anomalous (novel) IP was appeared
-        int s_t = 0, n = 0, s_r = 0;
-        
+        int s_t = 0, n = 0, s_r = 0;        
         for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
                 if (i->second.pkts_received > 0)
                     s_r++;
@@ -292,12 +388,21 @@ void statistics::addIpStat_packetSent(std::string ipAddressSender, std::string i
             ipDst_Mahoney_score = (float)s_t*n/s_r;
         }
         
+        // Replace pcap filename with 'filename_ip_entropy'
+        std::string new_filepath = filePath;
+        const std::string &newExt = "_ip_dst_anomaly_score.csv";
+        std::string::size_type h = new_filepath.rfind('.', new_filepath.length());
+        if (h != std::string::npos) {
+            new_filepath.replace(h, newExt.length(), newExt);
+        } else {
+            new_filepath.append(newExt);
+        }
+        
     // Write stats to file
     std::ofstream file;
-    file.open ("ip_dst_anomaly_score.csv",std::ios_base::app);
+    file.open (new_filepath,std::ios_base::app);
     file << ipAddressReceiver << ","<< s_t << "," << n << "," << s_r << "," << ipDst_Mahoney_score << "\n";
-    file.close();
-        
+    file.close();        
     ip_statistics[ipAddressReceiver].firstAppearAsReceiverPktCount = packetCount;
     ip_statistics[ipAddressReceiver].destinationAnomalyScore = ipDst_Mahoney_score;
     }
@@ -305,9 +410,14 @@ void statistics::addIpStat_packetSent(std::string ipAddressSender, std::string i
     // Update stats for packet sender
     ip_statistics[ipAddressSender].kbytes_sent += (float(bytesSent) / 1024);
     ip_statistics[ipAddressSender].pkts_sent++;
+    // Aidmar
+    ip_statistics[ipAddressSender].pktsSentTimestamp.push_back(timestamp);
+    
     // Update stats for packet receiver
     ip_statistics[ipAddressReceiver].kbytes_received += (float(bytesSent) / 1024);
-    ip_statistics[ipAddressReceiver].pkts_received++;        
+    ip_statistics[ipAddressReceiver].pkts_received++;  
+     // Aidmar
+    ip_statistics[ipAddressReceiver].pktsReceivedTimestamp.push_back(timestamp);
 }
 
 /**
@@ -334,6 +444,21 @@ void statistics::setTimestampFirstPacket(Tins::Timestamp ts) {
 void statistics::setTimestampLastPacket(Tins::Timestamp ts) {
     timestamp_lastPacket = ts;
 }
+
+// Aidmar
+/**
+ * Getter for the timestamp_firstPacket field.
+ */
+Tins::Timestamp statistics::getTimestampFirstPacket() {
+    return timestamp_firstPacket;
+}
+/**
+ * Getter for the timestamp_lastPacket field.
+ */
+Tins::Timestamp statistics::getTimestampLastPacket() {
+    return timestamp_lastPacket;
+}
+
 
 /**
  * Calculates the capture duration.

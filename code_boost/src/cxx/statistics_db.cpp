@@ -310,7 +310,6 @@ void statistics_db::writeStatisticsWin(std::unordered_map<ipAddress_win, int> wi
  * @param flowStatistics The flow from class statistics.
  */
 void statistics_db::writeStatisticsFlow(std::unordered_map<flow, entry_flowStat> flowStatistics){          
-    std::cout<<"write to DB"<<"\n";
     try {
         db->exec("DROP TABLE IF EXISTS flow_statistics");
         SQLite::Transaction transaction(*db);
