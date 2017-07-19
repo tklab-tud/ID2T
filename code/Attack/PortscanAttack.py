@@ -43,7 +43,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
             port_dst_shuffled = ports_dst
         return port_dst_shuffled
 
-
+ 
     def is_valid_ip_address(self,addr):
         """
         Check if the IP address family is suported.
