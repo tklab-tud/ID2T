@@ -7,7 +7,7 @@ from ID2TLib import Statistics
 from ID2TLib.Label import Label
 from ID2TLib.PcapFile import PcapFile
 
-
+ 
 class AttackController:
     def __init__(self, pcap_file: PcapFile, statistics_class: Statistics, label_manager: LabelManager):
         """
