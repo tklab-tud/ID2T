@@ -10,6 +10,74 @@
 #include <SQLiteCpp/SQLiteCpp.h>
 #include "statistics_db.h"
 
+// Aidmar
+// Aidmar
+/**
+ * Split a string.
+ * @param str string to be splitted 
+ * @param delimiter delimiter to use in splitting
+ * @return vector of substrings
+ */
+std::vector<std::string> split(std::string str, char delimiter) {
+  std::vector<std::string> internal;
+  std::stringstream ss(str); // Turn the string into a stream.
+  std::string tok;  
+  while(getline(ss, tok, delimiter)) {
+    internal.push_back(tok);
+  }  
+  return internal;
+}
+
+// Aidmar
+/**
+ * Get the class (A,B,C,D,E) of IP address.
+ * @param ipAddress IP that we get its class
+ */
+std::string getIPv4Class(std::string ipAddress){
+    std::string ipClass="Unknown";
+    
+    std::vector<std::string> ipBytes = split(ipAddress, '.');
+    
+    std::cout<< ipAddress << "\n";
+    
+    if(ipBytes.size()>1){
+    int b1 = std::stoi(ipBytes[0]);
+    int b2 = std::stoi(ipBytes[1]);
+    
+    if(b1 >= 1 && b1 <= 126){
+        if(b1 == 10)
+            ipClass = "A-private";
+        else
+            ipClass = "A";
+    }
+    else if(b1 == 127){
+        ipClass = "A-unused"; // cannot be used and is reserved for loopback and diagnostic functions.
+    }
+    else if (b1 >= 128 && b1 <= 191){
+        if(b1 == 172 && b2 >= 16 && b2 <= 31) 
+            ipClass = "B-private";
+        else
+            ipClass = "B";
+    }
+    else if (b1 >= 192 && b1 <= 223){
+         if(b1 == 192 && b2 == 168) 
+            ipClass = "C-private";
+         else
+            ipClass = "C";
+    }
+    else if (b1 >= 224 && b1 <= 239)
+        ipClass = "D"; // Reserved for Multicasting
+    else if (b1 >= 240 && b1 <= 254)
+        ipClass = "E"; // Experimental; used for research    
+    }
+    /*
+     // Could be done by using libtin IPv4Address
+    IPv4Range range = IPv4Address("192.168.1.0") / 24;
+    range.contains("192.168.1.250"); // Yey, it belongs to this network
+    range.contains("192.168.0.100"); // NOPE
+    */
+    return ipClass;
+}
 
 // Aidmar
 /**
@@ -139,6 +207,8 @@ void statistics::calculateIntervalIPsEntropy(std::chrono::microseconds interval)
 // Aidmar
 /**
  * Calculate cumulative entropy of source and destination IPs; the entropy for packets from the beginning of the pcap file. 
+ * The function write the results to filePath_ip_entropy.csv file.
+ * @param filePath The PCAP fiel path.
  */
 void statistics::addIPEntropy(std::string filePath){
     std::vector <std::string> IPs; 
@@ -315,8 +385,12 @@ void statistics::assignMacAddress(std::string ipAddress, std::string macAddress)
  * @param bytesSent The packet's size.
  */
 void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddressSender, std::string ipAddressReceiver, long bytesSent, std::chrono::microseconds timestamp) {
+    
     // Aidmar - Adding IP as a sender for first time
     if(ip_statistics[ipAddressSender].pkts_sent==0){  
+        // Add the IP class
+        ip_statistics[ipAddressSender].ip_class = getIPv4Class(ipAddressSender);
+        
         // Caculate Mahoney anomaly score for ip.src
         float ipSrc_Mahoney_score = 0;
         // s_r: The number of IP sources (the different values)
@@ -337,8 +411,7 @@ void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddres
                     pktCntNvlSndr = i->second.firstAppearAsSenderPktCount;
             }
             // The "time" since last anomalous (novel) IP was appeared
-            s_t = packetCount - pktCntNvlSndr + 1;
-        
+            s_t = packetCount - pktCntNvlSndr + 1;        
             ipSrc_Mahoney_score = (float)s_t*n/s_r;
         }
         
@@ -363,6 +436,9 @@ void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddres
     
     // Aidmar - Adding IP as a receiver for first time
     if(ip_statistics[ipAddressReceiver].pkts_received==0){
+        // Add the IP class
+        ip_statistics[ipAddressReceiver].ip_class = getIPv4Class(ipAddressReceiver); 
+        
         // Caculate Mahoney anomaly score for ip.dst
         float ipDst_Mahoney_score = 0;
         // s_r: The number of IP sources (the different values)
@@ -458,7 +534,6 @@ Tins::Timestamp statistics::getTimestampFirstPacket() {
 Tins::Timestamp statistics::getTimestampLastPacket() {
     return timestamp_lastPacket;
 }
-
 
 /**
  * Calculates the capture duration.

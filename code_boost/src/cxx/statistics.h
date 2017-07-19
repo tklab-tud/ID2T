@@ -138,6 +138,8 @@ struct entry_ipStat {
     long pkts_sent;
     float kbytes_received;
     float kbytes_sent;
+    // Aidmar
+    std::string ip_class;
     // Aidmar - to calculate Mahoney anomaly score
     long firstAppearAsSenderPktCount;
     long firstAppearAsReceiverPktCount;
@@ -152,6 +154,7 @@ struct entry_ipStat {
                && pkts_sent == other.pkts_sent
                && kbytes_sent == other.kbytes_sent
                && kbytes_received == other.kbytes_received
+               && ip_class == other.ip_class
                // Aidmar
                && firstAppearAsSenderPktCount == other.firstAppearAsSenderPktCount
                && firstAppearAsReceiverPktCount == other.firstAppearAsReceiverPktCount

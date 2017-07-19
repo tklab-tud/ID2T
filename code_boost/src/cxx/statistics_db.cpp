@@ -30,9 +30,10 @@ void statistics_db::writeStatisticsIP(std::unordered_map<std::string, entry_ipSt
                 "pktsSent INTEGER, "
                 "kbytesReceived REAL, "
                 "kbytesSent REAL, "
+                "class TEXT, "
                 "PRIMARY KEY(ipAddress));";
         db->exec(createTable);
-        SQLite::Statement query(*db, "INSERT INTO ip_statistics VALUES (?, ?, ?, ?, ?)");
+        SQLite::Statement query(*db, "INSERT INTO ip_statistics VALUES (?, ?, ?, ?, ?, ?)");
         for (auto it = ipStatistics.begin(); it != ipStatistics.end(); ++it) {
             entry_ipStat e = it->second;
             query.bind(1, it->first);
@@ -40,6 +41,8 @@ void statistics_db::writeStatisticsIP(std::unordered_map<std::string, entry_ipSt
             query.bind(3, (int) e.pkts_sent);
             query.bind(4, e.kbytes_received);
             query.bind(5, e.kbytes_sent);
+            // Aidmar
+            query.bind(6, e.ip_class);
             query.exec();
             query.reset();
         }

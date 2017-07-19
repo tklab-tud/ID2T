@@ -46,7 +46,11 @@ class DDoSAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.INJECT_AFTER_PACKET, randint(0, self.statistics.get_packet_count()))
         # attacker configuration
         num_attackers = randint(1, 16)
-        self.add_param_value(Param.IP_SOURCE, self.generate_random_ipv4_address(num_attackers))
+        # Aidmar
+        # The most used IP class in background traffic
+        most_used_ip_class = self.statistics.process_db_query("most_used(ipClass)")
+
+        self.add_param_value(Param.IP_SOURCE, self.generate_random_ipv4_address(most_used_ip_class, num_attackers))
         self.add_param_value(Param.MAC_SOURCE, self.generate_random_mac_address(num_attackers))
         self.add_param_value(Param.PORT_SOURCE, str(RandShort()))
         self.add_param_value(Param.PACKETS_PER_SECOND, randint(1, 64))
@@ -154,7 +158,11 @@ class DDoSAttack(BaseAttack.BaseAttack):
         num_attackers = self.get_param_value(Param.NUMBER_ATTACKERS)
         if num_attackers is not None:  # user supplied Param.NUMBER_ATTACKERS
             # Create random attackers based on user input Param.NUMBER_ATTACKERS
-            ip_source_list = self.generate_random_ipv4_address(num_attackers)
+            # Aidmar
+            # The most used IP class in background traffic
+            most_used_ip_class = self.statistics.process_db_query("most_used(ipClass)")
+
+            ip_source_list = self.generate_random_ipv4_address(most_used_ip_class, num_attackers)
             mac_source_list = self.generate_random_mac_address(num_attackers)
         else:  # user did not supply Param.NUMBER_ATTACKS
             # use default values for IP_SOURCE/MAC_SOURCE or overwritten values

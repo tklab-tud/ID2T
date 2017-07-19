@@ -343,7 +343,7 @@ class BaseAttack(metaclass=ABCMeta):
     #########################################
 
     @staticmethod
-    def generate_random_ipv4_address(n: int = 1):
+    def generate_random_ipv4_address(ipClass, n: int = 1):
         """
         Generates n random IPv4 addresses.
         :param n: The number of IP addresses to be generated
@@ -352,16 +352,50 @@ class BaseAttack(metaclass=ABCMeta):
 
         def is_invalid(ipAddress: ipaddress.IPv4Address):
             return ipAddress.is_multicast or ipAddress.is_unspecified or ipAddress.is_loopback or \
-                   ipAddress.is_link_local or ipAddress.is_private or ipAddress.is_reserved
+                   ipAddress.is_link_local or ipAddress.is_reserved or ipAddress.is_private
 
-        def generate_address():
-            return ipaddress.IPv4Address(random.randint(0, 2 ** 32 - 1))
+        # Aidmar - generate a random IP from specific class
+        #def generate_address():
+        #    return ipaddress.IPv4Address(random.randint(0, 2 ** 32 - 1))
+        def generate_address(ipClass):
+            print(ipClass)
+            """if "private" in ipClass:
+                ipClassesByte1 = {"A-private": 10, "B-private": 172, "C-private": 192}
+                b1 = ipClassesByte1[ipClass]
+
+                ipClassesByte2 = {"A-private": {0,255}, "B-private": {16,131}, "C-private": {168,168}}
+                minB2 = ipClassesByte1[ipClass][0]
+                maxB2 = ipClassesByte1[ipClass][1]
+                b2 = random.randint(minB2, maxB2)
+
+                b3b4 = random.randint(0, 2 ** 16 - 1)
+
+                ipAddress = ipaddress.IPv4Address(str(b1)+str(b2)+str(b3b4))
+            else:"""
+            if ipClass == "Unknown":
+                return ipaddress.IPv4Address(random.randint(0, 2 ** 32 - 1))
+            else:
+                if "private" in ipClass:
+                    ipClass = ipClass[0]
+                ipClassesByte1 = {"A": {1,126}, "B": {128,191}, "C":{192, 223}, "D":{224, 239}, "E":{240, 254}}
+                temp = list(ipClassesByte1[ipClass])
+                minB1 = temp[0]
+                maxB1 = temp[1]
+                b1 = random.randint(minB1, maxB1)
+                b2 = random.randint(1, 255)
+                b3 = random.randint(1, 255)
+                b4 = random.randint(1, 255)
+
+                ipAddress = ipaddress.IPv4Address(str(b1) +"."+ str(b2) + "." + str(b3) + "." + str(b4))
+
+            return ipAddress
+
 
         ip_addresses = []
         for i in range(0, n):
-            address = generate_address()
+            address = generate_address(ipClass)
             while is_invalid(address):
-                address = generate_address()
+                address = generate_address(ipClass)
             ip_addresses.append(str(address))
 
         if n == 1:
