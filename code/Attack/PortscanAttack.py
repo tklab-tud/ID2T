@@ -118,9 +118,17 @@ class PortscanAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.PORT_SOURCE, randint(1024, 65535))
         self.add_param_value(Param.PORT_SOURCE_RANDOMIZE, 'False')
 
-        self.add_param_value(Param.PACKETS_PER_SECOND,
-                             (self.statistics.get_pps_sent(most_used_ip_address) +
-                              self.statistics.get_pps_received(most_used_ip_address)) / 2)
+        # Aidamr - we used pps for sent packets, so no need to include received packets rate
+        # most used ip not necessary provide a realsitic packet rate for portscan attack
+        # calculating the pps is not accurate (taking the whole capture duration into account ingnores the intermittent
+        # of packets flow)
+        #self.add_param_value(Param.PACKETS_PER_SECOND,
+        #                     (self.statistics.get_pps_sent(most_used_ip_address) +
+        #                      self.statistics.get_pps_received(most_used_ip_address)) / 2)
+        # Aidmar
+        # using nmap empirically observed packet rate [0,300] packet per second
+        self.add_param_value(Param.PACKETS_PER_SECOND,300)
+
         self.add_param_value(Param.INJECT_AFTER_PACKET, randint(0, self.statistics.get_packet_count()))
 
     def generate_attack_pcap(self):
@@ -130,7 +138,10 @@ class PortscanAttack(BaseAttack.BaseAttack):
 
             :return: Timestamp to be used for the next packet.
             """
-            return timestamp + uniform(0.1 / pps, maxdelay)
+            # Aidmar - why to use 0.1/pps?
+            # return timestamp + uniform(0.1 / pps, maxdelay)
+            # Aidmar
+            return timestamp + uniform(1 / pps, maxdelay)
 
 
         # Determine ports
@@ -165,8 +176,11 @@ class PortscanAttack(BaseAttack.BaseAttack):
         mac_source = self.get_param_value(Param.MAC_SOURCE)
         mac_destination = self.get_param_value(Param.MAC_DESTINATION)
         pps = self.get_param_value(Param.PACKETS_PER_SECOND)
-        randomdelay = Lea.fromValFreqsDict({1 / pps: 70, 2 / pps: 30, 5 / pps: 15, 10 / pps: 3})
-        maxdelay = randomdelay.random()
+        # Aidmar - unjustified distribution
+        #randomdelay = Lea.fromValFreqsDict({1 / pps: 70, 2 / pps: 30, 5 / pps: 15, 10 / pps: 3})
+        # nmap empirically observed distribution
+        randomdelay = Lea.fromValFreqsDict({1 / pps: 50,  10 / pps: 50}) #2 / pps: 10, 5 / pps: 10,
+        #maxdelay = randomdelay.random()
 
         # open ports
         # Aidmar
@@ -215,6 +229,9 @@ class PortscanAttack(BaseAttack.BaseAttack):
         replies = []
 
         for dport in dest_ports:
+            # Aidmar - differnt maxdelay for each packet
+            maxdelay = randomdelay.random()
+
             # Parameters changing each iteration
             if self.get_param_value(Param.IP_SOURCE_RANDOMIZE) and isinstance(ip_source, list):
                 ip_source = choice(ip_source)
