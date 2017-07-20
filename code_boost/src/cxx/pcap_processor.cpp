@@ -116,7 +116,7 @@ void pcap_processor::collect_statistics() {
         // Aidmar
         int counter=0;
         int timeIntervalNum = 1;
-        std::chrono::duration<int, std::micro> timeInterval(10000000); // 10 sec
+        std::chrono::duration<int, std::micro> timeInterval(10000000); // 5 sec
         std::chrono::microseconds intervalStartTimestamp = stats.getTimestampFirstPacket();
         std::chrono::microseconds firstTimestamp = stats.getTimestampFirstPacket();
         int pktsInterval = 1000;
@@ -136,9 +136,9 @@ void pcap_processor::collect_statistics() {
             std::chrono::microseconds currentCaptureDuration = lastPktTimestamp - firstTimestamp;
             std::chrono::microseconds barrier =  timeIntervalNum*timeInterval;
             if(currentCaptureDuration>barrier){
-                //std::cout<<"LastpkstTimstamp:" << lastPktTimestamp.count() << ", currentCaptureDuration:"<< currentCaptureDuration.count() << ", barrier:" <<barrier.count()<<", interval:" << timeIntervalNum << ", interval time:"<<timeInterval.count()<<"\n";
-                
+                //std::cout<<"LastpkstTimstamp:" << lastPktTimestamp.count() << ", currentCaptureDuration:"<< currentCaptureDuration.count() << ", barrier:" <<barrier.count()<<", interval:" << timeIntervalNum << ", interval time:"<<timeInterval.count()<<"\n";                
                 stats.calculateLastIntervalIPsEntropy(filePath, intervalStartTimestamp);
+                stats.calculateLastIntervalPacketRate(timeInterval, intervalStartTimestamp);
                 timeIntervalNum++;   
                 intervalStartTimestamp = lastPktTimestamp;
             }

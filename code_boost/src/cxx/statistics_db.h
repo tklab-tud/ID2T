@@ -39,10 +39,11 @@ public:
                              std::string timestampLastPkt, float avgPacketRate, float avgPacketSize,
                              float avgPacketsSentPerHost, float avgBandwidthIn, float avgBandwidthOut);
 
-    // Aidmar
+    // Aidmar - new tables
     void writeStatisticsMss_dist(std::unordered_map<ipAddress_mss, int> mssDistribution);
     void writeStatisticsWin(std::unordered_map<ipAddress_win, int> winDistribution);
     void writeStatisticsFlow(std::unordered_map<flow, entry_flowStat> flowStatistics);
+    void writeStatisticsInterval(std::unordered_map<std::string, entry_intervalStat> intervalStatistics);
 
 private:
     // Pointer to the SQLite database

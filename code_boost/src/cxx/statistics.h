@@ -39,6 +39,7 @@ struct ip_stats {
     long AvgMaxSegmentSizeTCP;
 };
 
+
 // Aidmar
 /*
  * Struct used to represent a flow by:
@@ -140,6 +141,9 @@ struct entry_ipStat {
     float kbytes_sent;
     // Aidmar
     std::string ip_class;
+    std::vector<float> interval_pkt_rate;
+    float max_pkt_rate;
+    float min_pkt_rate;
     // Aidmar - to calculate Mahoney anomaly score
     long firstAppearAsSenderPktCount;
     long firstAppearAsReceiverPktCount;
@@ -154,14 +158,36 @@ struct entry_ipStat {
                && pkts_sent == other.pkts_sent
                && kbytes_sent == other.kbytes_sent
                && kbytes_received == other.kbytes_received
+                // Aidmar
+               && interval_pkt_rate == other.interval_pkt_rate
+               && max_pkt_rate == other.max_pkt_rate
+               && min_pkt_rate == other.min_pkt_rate
                && ip_class == other.ip_class
-               // Aidmar
                && firstAppearAsSenderPktCount == other.firstAppearAsSenderPktCount
                && firstAppearAsReceiverPktCount == other.firstAppearAsReceiverPktCount
                && sourceAnomalyScore == other.sourceAnomalyScore
                && destinationAnomalyScore == other.destinationAnomalyScore
                && pktsSentTimestamp == other.pktsSentTimestamp
                && pktsReceivedTimestamp == other.pktsReceivedTimestamp;
+    }
+};
+
+// Aidmar
+/*
+ * Struct used to represent interval statistics:
+ * - Number of packets
+ * - IP source entropy
+ * - IP destination entropy
+ */
+struct entry_intervalStat {
+    long pkts_count;
+    float ip_src_entropy;
+    float ip_dst_entropy;
+
+    bool operator==(const entry_intervalStat &other) const {
+        return pkts_count == other.pkts_count
+               && ip_src_entropy == other.ip_src_entropy
+               && ip_dst_entropy == other.ip_dst_entropy;
     }
 };
 
@@ -308,6 +334,7 @@ public:
     void addIPEntropy(std::string filePath);
     void addFlowStat(std::string ipAddressSender,int sport,std::string ipAddressReceiver,int dport, std::chrono::microseconds timestamp);
     void calculateLastIntervalIPsEntropy(std::string filePath, std::chrono::microseconds intervalStartTimestamp);
+    void calculateLastIntervalPacketRate(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp);
 
     void incrementTTLcount(std::string ipAddress, int ttlValue);
 

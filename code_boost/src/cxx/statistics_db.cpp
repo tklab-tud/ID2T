@@ -30,10 +30,12 @@ void statistics_db::writeStatisticsIP(std::unordered_map<std::string, entry_ipSt
                 "pktsSent INTEGER, "
                 "kbytesReceived REAL, "
                 "kbytesSent REAL, "
+                "maxPktRate REAL,"
+                "minPktRate REAL,"
                 "class TEXT, "
                 "PRIMARY KEY(ipAddress));";
         db->exec(createTable);
-        SQLite::Statement query(*db, "INSERT INTO ip_statistics VALUES (?, ?, ?, ?, ?, ?)");
+        SQLite::Statement query(*db, "INSERT INTO ip_statistics VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
         for (auto it = ipStatistics.begin(); it != ipStatistics.end(); ++it) {
             entry_ipStat e = it->second;
             query.bind(1, it->first);
@@ -42,7 +44,9 @@ void statistics_db::writeStatisticsIP(std::unordered_map<std::string, entry_ipSt
             query.bind(4, e.kbytes_received);
             query.bind(5, e.kbytes_sent);
             // Aidmar
-            query.bind(6, e.ip_class);
+            query.bind(6, e.max_pkt_rate);
+            query.bind(7, e.min_pkt_rate);
+            query.bind(8, e.ip_class);
             query.exec();
             query.reset();
         }
@@ -315,6 +319,52 @@ void statistics_db::writeStatisticsWin(std::unordered_map<ipAddress_win, int> wi
 void statistics_db::writeStatisticsFlow(std::unordered_map<flow, entry_flowStat> flowStatistics){          
     try {
         db->exec("DROP TABLE IF EXISTS flow_statistics");
+        SQLite::Transaction transaction(*db);
+        const char *createTable = "CREATE TABLE flow_statistics ("
+                "ipAddressA TEXT,"
+                "portA INTEGER,"
+                "ipAddressB TEXT,"              
+                "portB INTEGER,"
+                "pkts_A_B INTEGER,"
+                "pkts_B_A INTEGER,"
+                "medianDelay INTEGER,"
+                //"medianDelay TEXT,"
+                "PRIMARY KEY(ipAddressA,portA,ipAddressB,portB));";
+        db->exec(createTable);
+        SQLite::Statement query(*db, "INSERT INTO flow_statistics VALUES (?, ?, ?, ?, ?, ?, ?)");
+        for (auto it = flowStatistics.begin(); it != flowStatistics.end(); ++it) {
+            flow f = it->first;
+            entry_flowStat e = it->second;
+            
+            // Compute the median delay
+            e.median_delay = e.pkts_delay[e.pkts_delay.size()/2];
+            
+            query.bind(1, f.ipAddressA);
+            query.bind(2, f.portA);
+            query.bind(3, f.ipAddressB);
+            query.bind(4, f.portB);
+            query.bind(5, (int) e.pkts_A_B);
+            query.bind(6, (int) e.pkts_B_A);
+            query.bind(7, (int) e.median_delay.count());
+            //query.bind(7,  std::to_string(e.median_delay.count()));            
+            query.exec();
+            query.reset();
+        }
+        transaction.commit();
+    }
+    catch (std::exception &e) {
+        std::cout << "Exception in statistics_db: " << e.what() << std::endl;
+    }
+}
+
+// Aidamr
+/**
+ * Writes the interval statistics into the database.
+ * @param intervalStatistics The flow from class statistics.
+ */
+void statistics_db::writeStatisticsInterval(std::unordered_map<std::string, entry_intervalStat> intervalStatistics){          
+    try {
+        db->exec("DROP TABLE IF EXISTS interval_statistics");
         SQLite::Transaction transaction(*db);
         const char *createTable = "CREATE TABLE flow_statistics ("
                 "ipAddressA TEXT,"

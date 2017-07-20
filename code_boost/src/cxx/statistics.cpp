@@ -97,10 +97,11 @@ int getClosestIndex(std::vector<std::chrono::microseconds> v, std::chrono::micro
 
 // Aidmar
 /**
- * Calculate entropy of source and destination IPs for last time interval and write results to a ip_entropy_interval.csv file.
+ * Calculate entropy of source and destination IPs for last time interval.
+ * The results are written to ip_entropy_interval.csv file.
+ * @param filePath The input (background) PCAP file path.
  * @param intervalStartTimestamp The timstamp where the interval starts.
  */
-
 void statistics::calculateLastIntervalIPsEntropy(std::string filePath, std::chrono::microseconds intervalStartTimestamp){
         std::vector <int> IPsSrcPktsCounts; 
         std::vector <int> IPsDstPktsCounts; 
@@ -111,6 +112,7 @@ void statistics::calculateLastIntervalIPsEntropy(std::string filePath, std::chro
         int pktsSent = 0, pktsReceived = 0;
         
         for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
+            // TO-DO: should add this condition to avoid Segmentation Fault    if(i->second.pktsSentTimestamp.size()>0)
             int indexStartSent = getClosestIndex(i->second.pktsSentTimestamp, intervalStartTimestamp);                         
             int IPsSrcPktsCount = i->second.pktsSentTimestamp.size() - indexStartSent;
             IPsSrcPktsCounts.push_back(IPsSrcPktsCount);
@@ -121,7 +123,8 @@ void statistics::calculateLastIntervalIPsEntropy(std::string filePath, std::chro
             int IPsDstPktsCount = i->second.pktsReceivedTimestamp.size() - indexStartReceived;       
             IPsDstPktsCounts.push_back(IPsDstPktsCount);
             pktsReceived += IPsDstPktsCount;
-        }  
+            } 
+        
        
          for (auto i = IPsSrcPktsCounts.begin(); i != IPsSrcPktsCounts.end(); i++) {
                 IPsSrcProb.push_back((float)*i/pktsSent);
@@ -162,6 +165,28 @@ void statistics::calculateLastIntervalIPsEntropy(std::string filePath, std::chro
       file.close();         
 }
 
+// Aidmar
+/**
+ * Calculate sending packet rate for each IP in last time interval.
+ * @param intervalStartTimestamp The timstamp where the interval starts.
+ */
+void statistics::calculateLastIntervalPacketRate(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp){        
+        for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
+                int indexStartSent = getClosestIndex(i->second.pktsSentTimestamp, intervalStartTimestamp);     
+                std::cout<<i->first<<", PktsSent:"<<i->second.pktsSentTimestamp.size()<<",indexStart:"<<indexStartSent<<"\n";            
+                int IPsSrcPktsCount = i->second.pktsSentTimestamp.size() - indexStartSent;                                       
+
+                std::cout<<"IPsSrcPktsCount: "<<IPsSrcPktsCount<<", Interval: "<< interval.count() <<"\n";
+
+                float interval_pkt_rate = (float) IPsSrcPktsCount * 1000000 / interval.count(); // used 10^6 because interval in microseconds
+                std::cout<<"interval_pkt_rate:"<<interval_pkt_rate<<"\n";
+                i->second.interval_pkt_rate.push_back(0);//interval_pkt_rate);  
+                if(interval_pkt_rate > i->second.max_pkt_rate || i->second.max_pkt_rate == 0)
+                    i->second.max_pkt_rate = interval_pkt_rate;
+                if(interval_pkt_rate < i->second.min_pkt_rate || i->second.min_pkt_rate == 0)
+                    i->second.min_pkt_rate = interval_pkt_rate;                    
+        }
+}
 
 // Aidmar - incomplete
 /**
@@ -207,8 +232,8 @@ void statistics::calculateIntervalIPsEntropy(std::chrono::microseconds interval)
 // Aidmar
 /**
  * Calculate cumulative entropy of source and destination IPs; the entropy for packets from the beginning of the pcap file. 
- * The function write the results to filePath_ip_entropy.csv file.
- * @param filePath The PCAP fiel path.
+ * The results are written to filePath_ip_entropy.csv file.
+ * @param filePath The input (background) PCAP file path.
  */
 void statistics::addIPEntropy(std::string filePath){
     std::vector <std::string> IPs; 
@@ -261,7 +286,7 @@ void statistics::addIPEntropy(std::string filePath){
 
 // Aidmar
 /**
- * Increments the packet counter for the given flow.
+ * Increments the packet counter for the given conversation.
  * @param ipAddressSender The sender IP address.
  * @param sport The source port.
  * @param ipAddressReceiver The receiver IP address.
@@ -279,7 +304,7 @@ void statistics::addFlowStat(std::string ipAddressSender,int sport,std::string i
         flow_statistics[f1].pkts_B_A++;
         flow_statistics[f1].pkts_B_A_timestamp.push_back(timestamp);
         if(flow_statistics[f1].pkts_A_B_timestamp.size()>0){
-            flow_statistics[f1].pkts_delay.push_back(std::chrono::duration_cast<std::chrono::microseconds> (timestamp - flow_statistics[f1].pkts_A_B_timestamp[flow_statistics[f1].pkts_A_B_timestamp.size()-1]));
+            flow_statistics[f1].pkts_delay.push_back(std::chrono::duration_cast<std::chrono::microseconds> (timestamp - flow_statistics[f1].pkts_A_B_timestamp[flow_statistics[f1].pkts_A_B_timestamp.size()-1])); // TO-DO: use .back()
         }
         
         //std::cout<<timestamp.count()<<"::"<<ipAddressReceiver<<":"<<dport<<","<<ipAddressSender<<":"<<sport<<"\n"; 
@@ -290,7 +315,7 @@ void statistics::addFlowStat(std::string ipAddressSender,int sport,std::string i
         flow_statistics[f2].pkts_A_B++;
         flow_statistics[f2].pkts_A_B_timestamp.push_back(timestamp);
          if(flow_statistics[f2].pkts_B_A_timestamp.size()>0){
-            flow_statistics[f2].pkts_delay.push_back(std::chrono::duration_cast<std::chrono::microseconds> (timestamp - flow_statistics[f2].pkts_B_A_timestamp[flow_statistics[f2].pkts_B_A_timestamp.size()-1]));
+            flow_statistics[f2].pkts_delay.push_back(std::chrono::duration_cast<std::chrono::microseconds> (timestamp - flow_statistics[f2].pkts_B_A_timestamp[flow_statistics[f2].pkts_B_A_timestamp.size()-1])); // TO-DO: use .back()
         }
         //std::cout<<timestamp.count()<<"::"<<ipAddressSender<<":"<<sport<<","<<ipAddressReceiver<<":"<<dport<<"\n"; 
         //std::cout<<flow_statistics[f2].pkts_A_B<<"\n";
@@ -391,6 +416,10 @@ void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddres
         // Add the IP class
         ip_statistics[ipAddressSender].ip_class = getIPv4Class(ipAddressSender);
         
+        // Initialize packet rates
+        ip_statistics[ipAddressSender].max_pkt_rate = 0;
+        ip_statistics[ipAddressSender].min_pkt_rate = 0;
+        
         // Caculate Mahoney anomaly score for ip.src
         float ipSrc_Mahoney_score = 0;
         // s_r: The number of IP sources (the different values)
@@ -429,7 +458,8 @@ void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddres
     std::ofstream file;
     file.open (new_filepath,std::ios_base::app);
     file << ipAddressSender << ","<< s_t << "," << n << "," << s_r << "," << ipSrc_Mahoney_score << "\n";
-    file.close();    
+    file.close();  
+    
     ip_statistics[ipAddressSender].firstAppearAsSenderPktCount = packetCount;  
     ip_statistics[ipAddressSender].sourceAnomalyScore = ipSrc_Mahoney_score;    
     }
@@ -489,6 +519,17 @@ void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddres
     // Aidmar
     ip_statistics[ipAddressSender].pktsSentTimestamp.push_back(timestamp);
     
+    // Aidmar - calculate packet rate (assumption: max_pkt_rate=1/smallest time between two consecutive pkts)
+    // resulting in very big rates, therefore it could be better to calculate pkt rate on time intervals
+    /*if(ip_statistics[ipAddressSender].pktsSentTimestamp.size() > 0){
+    std::chrono::microseconds temp_pkt_consecutive_time = timestamp - ip_statistics[ipAddressSender].pktsSentTimestamp.back();
+    float temp_pkt_rate = (float) 1000000/temp_pkt_consecutive_time.count(); // pkt per sec = 10**6/micro sec
+    if(temp_pkt_rate > ip_statistics[ipAddressSender].max_pkt_rate || ip_statistics[ipAddressSender].max_pkt_rate == 0)
+        ip_statistics[ipAddressSender].max_pkt_rate = temp_pkt_rate;
+    if(temp_pkt_rate < ip_statistics[ipAddressSender].min_pkt_rate || ip_statistics[ipAddressSender].min_pkt_rate == 0)
+        ip_statistics[ipAddressSender].min_pkt_rate = temp_pkt_rate;
+    }*/
+                
     // Update stats for packet receiver
     ip_statistics[ipAddressReceiver].kbytes_received += (float(bytesSent) / 1024);
     ip_statistics[ipAddressReceiver].pkts_received++;  
