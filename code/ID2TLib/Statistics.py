@@ -473,6 +473,35 @@ class Statistics:
             return out
 
 
+        # Aidmar
+        def plot_interval_pktCount(file_ending: str):
+            plt.gcf().clear()
+            result = self.stats_db._process_user_defined_query(
+                "SELECT timestamp, pktsCount FROM interval_statistics ORDER BY timestamp")
+            graphx, graphy = [], []
+            for row in result:
+                graphx.append(row[0])
+                graphy.append(row[1])
+            plt.autoscale(enable=True, axis='both')
+            plt.title("Packet Rate")
+            plt.xlabel('Timestamp')
+            plt.ylabel('Number of Packets')
+            width = 0.5
+            plt.xlim([0, len(graphx)])
+            plt.grid(True)
+
+            # IPs on x-axis
+            x = range(0, len(graphx))
+            my_xticks = graphx
+            plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
+            plt.tight_layout()
+
+            plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+            out = self.pcap_filepath.replace('.pcap', '_plot-interval-pkt-count' + file_ending)
+            plt.savefig(out, dpi=500)
+            return out
+
+
         ttl_out_path = plot_ttl('.' + format)
         mss_out_path = plot_mss('.' + format)
         win_out_path = plot_win('.' + format)
@@ -480,8 +509,10 @@ class Statistics:
         port_out_path = plot_port('.' + format)
         ip_src_out_path = plot_ip_src('.' + format)
         ip_dst_out_path = plot_ip_dst('.' + format)
-        print("Saved distributions plots at: %s, %s, %s, %s, %s, %s, %s" %(ttl_out_path,mss_out_path, win_out_path,
-                                                    protocol_out_path, port_out_path,ip_src_out_path,ip_dst_out_path))
+        ip_dst_out_path = plot_ip_dst('.' + format)
+        plot_interval_pktCount = plot_interval_pktCount('.' + format)
+        print("Saved distributions plots at: %s, %s, %s, %s, %s, %s, %s, %s" %(ttl_out_path,mss_out_path, win_out_path,
+        protocol_out_path, port_out_path,ip_src_out_path,ip_dst_out_path, plot_interval_pktCount))
 
 
 """
