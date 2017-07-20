@@ -180,7 +180,7 @@ struct entry_ipStat {
  * - IP destination entropy
  */
 struct entry_intervalStat {
-    long pkts_count;
+    int pkts_count;
     float ip_src_entropy;
     float ip_dst_entropy;
 
@@ -335,6 +335,7 @@ public:
     void addFlowStat(std::string ipAddressSender,int sport,std::string ipAddressReceiver,int dport, std::chrono::microseconds timestamp);
     void calculateLastIntervalIPsEntropy(std::string filePath, std::chrono::microseconds intervalStartTimestamp);
     void calculateLastIntervalPacketRate(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp);
+    void addIntervalStat(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp, int previousPacketCount);
 
     void incrementTTLcount(std::string ipAddress, int ttlValue);
 
@@ -357,6 +358,7 @@ public:
     
     // Aidmar
     void addIpStat_packetSent(std::string filePath, std::string ipAddressSender, std::string ipAddressReceiver, long bytesSent, std::chrono::microseconds timestamp);
+    int getPacketCount();
 
     void addMSS(std::string ipAddress, int MSSvalue);
 
@@ -400,6 +402,7 @@ private:
     std::unordered_map<ipAddress_win, int> win_distribution;
     // {IP Address A, Port A, IP Address B, Port B,   #packets_A_B, #packets_B_A}
     std::unordered_map<flow, entry_flowStat> flow_statistics;
+    std::unordered_map<std::string, entry_intervalStat> interval_statistics;
     
     // {IP Address, Protocol, count}
     std::unordered_map<ipAddress_protocol, int> protocol_distribution;

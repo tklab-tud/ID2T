@@ -360,39 +360,29 @@ void statistics_db::writeStatisticsFlow(std::unordered_map<flow, entry_flowStat>
 // Aidamr
 /**
  * Writes the interval statistics into the database.
- * @param intervalStatistics The flow from class statistics.
+ * @param intervalStatistics The interval entries from class statistics.
  */
 void statistics_db::writeStatisticsInterval(std::unordered_map<std::string, entry_intervalStat> intervalStatistics){          
-    try {
+    try {        
         db->exec("DROP TABLE IF EXISTS interval_statistics");
         SQLite::Transaction transaction(*db);
-        const char *createTable = "CREATE TABLE flow_statistics ("
-                "ipAddressA TEXT,"
-                "portA INTEGER,"
-                "ipAddressB TEXT,"              
-                "portB INTEGER,"
-                "pkts_A_B INTEGER,"
-                "pkts_B_A INTEGER,"
-                "medianDelay INTEGER,"
-                //"medianDelay TEXT,"
-                "PRIMARY KEY(ipAddressA,portA,ipAddressB,portB));";
+        const char *createTable = "CREATE TABLE interval_statistics ("
+                "timestamp TEXT,"
+                "pktsCount INTEGER,"
+                "ipSrcEntropy REAL,"      
+                "ipDstEntropy REAL,"  
+                "PRIMARY KEY(timestamp));";
         db->exec(createTable);
-        SQLite::Statement query(*db, "INSERT INTO flow_statistics VALUES (?, ?, ?, ?, ?, ?, ?)");
-        for (auto it = flowStatistics.begin(); it != flowStatistics.end(); ++it) {
-            flow f = it->first;
-            entry_flowStat e = it->second;
+        SQLite::Statement query(*db, "INSERT INTO interval_statistics VALUES (?, ?, ?, ?)");
+        for (auto it = intervalStatistics.begin(); it != intervalStatistics.end(); ++it) {
+            std::string t = it->first;
+            entry_intervalStat e = it->second;        
             
-            // Compute the median delay
-            e.median_delay = e.pkts_delay[e.pkts_delay.size()/2];
-            
-            query.bind(1, f.ipAddressA);
-            query.bind(2, f.portA);
-            query.bind(3, f.ipAddressB);
-            query.bind(4, f.portB);
-            query.bind(5, (int) e.pkts_A_B);
-            query.bind(6, (int) e.pkts_B_A);
-            query.bind(7, (int) e.median_delay.count());
-            //query.bind(7,  std::to_string(e.median_delay.count()));            
+            query.bind(1, t);
+            query.bind(2, (int)e.pkts_count);
+            query.bind(3, e.ip_src_entropy);
+            query.bind(4, e.ip_dst_entropy);
+
             query.exec();
             query.reset();
         }

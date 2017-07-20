@@ -188,6 +188,15 @@ void statistics::calculateLastIntervalPacketRate(std::chrono::duration<int, std:
         }
 }
 
+void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp, int previousPacketCount){
+    //std::string filePath = "";
+    //calculateLastIntervalIPsEntropy(filePath, intervalStartTimestamp);
+    //calculateLastIntervalPacketRate(interval, intervalStartTimestamp);
+    std::string interval_start_str = std::to_string(intervalStartTimestamp.count());
+    interval_statistics[interval_start_str].pkts_count = packetCount - previousPacketCount;        
+}
+    
+    
 // Aidmar - incomplete
 /**
  * Calculate entropy for time intervals. After finishing statistics collecting, this method goes through
@@ -575,6 +584,13 @@ Tins::Timestamp statistics::getTimestampFirstPacket() {
 Tins::Timestamp statistics::getTimestampLastPacket() {
     return timestamp_lastPacket;
 }
+/**
+ * Getter for the packetCount field.
+ */
+int statistics::getPacketCount() {
+    return packetCount;
+}
+
 
 /**
  * Calculates the capture duration.
@@ -734,6 +750,7 @@ void statistics::writeToDatabase(std::string database_path) {
     db.writeStatisticsMss_dist(mss_distribution);
     db.writeStatisticsWin(win_distribution);
     db.writeStatisticsFlow(flow_statistics);
+    db.writeStatisticsInterval(interval_statistics);
 }
 
 /**
