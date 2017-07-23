@@ -1,6 +1,9 @@
 import logging
 from random import randint, uniform
 
+#Aidmar
+import numpy as np
+
 from lea import Lea
 from scipy.stats import gamma
 
@@ -18,6 +21,16 @@ class DDoSAttack(BaseAttack.BaseAttack):
     # Metasploit DoS default PPS
     maxDefaultPPS = 1400
     minDefaultPPS = 400
+
+    def get_reply_delay(self, ip_dst):
+        replyDelay = self.statistics.process_db_query(
+            "SELECT avgDelay FROM conv_statistics WHERE ipAddressB='" + ip_dst + "' LIMIT 1")
+        if not replyDelay:
+            allDelays = self.statistics.process_db_query("SELECT avgDelay FROM conv_statistics")
+            replyDelay = np.median(allDelays)
+        replyDelay = int(replyDelay) * 10 ** -6  # convert from micro to seconds
+        print(replyDelay)
+        return replyDelay
 
     def __init__(self, statistics, pcap_file_path):
         """
@@ -44,7 +57,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
             #Param.PACKETS_LIMIT: ParameterTypes.TYPE_INTEGER_POSITIVE,
             Param.NUMBER_ATTACKERS: ParameterTypes.TYPE_INTEGER_POSITIVE,
             # Aidmar
-            Param.ATTACK_DURATION: ParameterTypes.TYPE_INTEGER_POSITIVE
+            Param.ATTACK_DURATION: ParameterTypes.TYPE_INTEGER_POSITIVE,
+            Param.VICTIM_BUFFER: ParameterTypes.TYPE_INTEGER_POSITIVE
         }
 
         # PARAMETERS: initialize with default values
@@ -73,6 +87,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
             destination_mac = self.generate_random_mac_address()
         self.add_param_value(Param.MAC_DESTINATION, destination_mac)
 
+        # Aidmar
+        self.add_param_value(Param.VICTIM_BUFFER, randint(1000,2000))
         # Aidmar - comment out
         """
         port_destination = self.statistics.process_db_query(
@@ -195,6 +211,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         # Aidmar
         replies = []
+        replayDelay = self.get_reply_delay(ip_destination)
+        victim_buffer = self.get_param_value(Param.VICTIM_BUFFER)
 
         # Aidmar
         #for pkt_num in range(self.get_param_value(Param.PACKETS_LIMIT)):
@@ -226,20 +244,19 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
             # Build reply package
             # Aidmar
-            reply = True
-            if reply:
+            if len(replies) <= victim_buffer:
                 reply_ether = Ether(src=mac_destination, dst=mac_source)
                 reply_ip = IP(src=ip_destination, dst=ip_source, flags='DF')
                 reply_tcp = TCP(sport=port_destination, dport=port_source, seq=0, ack=1, flags='SA', window=29200)  # ,
                 # options=[('MSS', mss_dst)])
                 reply = (reply_ether / reply_ip / reply_tcp)
 
+                timestamp_reply = timestamp_next_pkt + uniform(replayDelay, 2 * replayDelay)
+
                 if len(replies) > 0:
                     last_reply_timestamp = replies[-1].time
-                    while (timestamp_reply <= last_reply_timestamp):
-                        timestamp_reply = timestamp_next_pkt + 1  # TO-DO # update_timestamp(timestamp_next_pkt, pps, maxdelay)
-                else:
-                    timestamp_reply = update_timestamp(timestamp_next_pkt, pps, maxdelay)
+                    while timestamp_reply <= last_reply_timestamp:
+                        timestamp_reply = timestamp_reply + uniform(replayDelay, 2 * replayDelay)
 
                 reply.time = timestamp_reply
                 replies.append(reply)

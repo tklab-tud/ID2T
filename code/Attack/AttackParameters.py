@@ -23,6 +23,7 @@ class Parameter(Enum):
 
     # Aidmar
     ATTACK_DURATION = "attack.duration" # in seconds
+    VICTIM_BUFFER = "victim.buffer" # in packets
 
     # recommended type: Float ------------------------------------
     PACKETS_PER_SECOND = 'packets.per-second'  # packets per second
