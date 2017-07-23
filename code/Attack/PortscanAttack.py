@@ -300,8 +300,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
                                     options=[('MSS', mss_dst)])
                 reply = (reply_ether / reply_ip / reply_tcp)
                 # Aidmar - edit name timestamp_reply
-                timestamp_reply = update_timestamp(timestamp_next_pkt, pps, maxdelay) # TO-DO
-
+                timestamp_reply = timestamp_next_pkt + maxdelay # TO-DO
 
                 if len(replies) > 0:
                     last_reply_timestamp = replies[-1].time
