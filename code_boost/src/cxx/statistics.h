@@ -335,7 +335,7 @@ public:
     void addFlowStat(std::string ipAddressSender,int sport,std::string ipAddressReceiver,int dport, std::chrono::microseconds timestamp);
     void calculateLastIntervalIPsEntropy(std::string filePath, std::chrono::microseconds intervalStartTimestamp);
     void calculateLastIntervalPacketRate(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp);
-    void addIntervalStat(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp, int previousPacketCount);
+    void addIntervalStat(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp, std::chrono::microseconds lastPktTimestamp, int previousPacketCount);
 
     void incrementTTLcount(std::string ipAddress, int ttlValue);
 

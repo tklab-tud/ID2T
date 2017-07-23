@@ -188,12 +188,12 @@ void statistics::calculateLastIntervalPacketRate(std::chrono::duration<int, std:
         }
 }
 
-void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp, int previousPacketCount){
+void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp, std::chrono::microseconds lastPktTimestamp, int previousPacketCount){
     //std::string filePath = "";
     //calculateLastIntervalIPsEntropy(filePath, intervalStartTimestamp);
     //calculateLastIntervalPacketRate(interval, intervalStartTimestamp);
-    std::string interval_start_str = std::to_string(intervalStartTimestamp.count());
-    interval_statistics[interval_start_str].pkts_count = packetCount - previousPacketCount;        
+    std::string lastPktTimestamp_s = std::to_string(lastPktTimestamp.count());
+    interval_statistics[lastPktTimestamp_s].pkts_count = packetCount - previousPacketCount;        
 }
     
     

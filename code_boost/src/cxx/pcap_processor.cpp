@@ -137,7 +137,7 @@ void pcap_processor::collect_statistics() {
             std::chrono::microseconds barrier =  timeIntervalNum*timeInterval;
             if(currentCaptureDuration>barrier){
                 //std::cout<<"LastpkstTimstamp:" << lastPktTimestamp.count() << ", currentCaptureDuration:"<< currentCaptureDuration.count() << ", barrier:" <<barrier.count()<<", interval:" << timeIntervalNum << ", interval time:"<<timeInterval.count()<<"\n";                    
-                stats.addIntervalStat(timeInterval, intervalStartTimestamp, previousPacketCount);
+                stats.addIntervalStat(timeInterval, intervalStartTimestamp, lastPktTimestamp, previousPacketCount);
                 stats.calculateLastIntervalIPsEntropy(filePath, intervalStartTimestamp);
                 stats.calculateLastIntervalPacketRate(timeInterval, intervalStartTimestamp);                                
                 timeIntervalNum++;   
