@@ -2,6 +2,10 @@ import logging
 import csv
 import socket
 
+# Aidmar
+from operator import itemgetter
+import math
+
 from random import shuffle, randint, choice, uniform
 
 from lea import Lea
@@ -16,6 +20,10 @@ from scapy.layers.inet import IP, Ether, TCP
 
 
 class PortscanAttack(BaseAttack.BaseAttack):
+    # Nmap default packet rate
+    maxDefaultPPS = 300
+    minDefaultPPS = 5
+
     # Aidmar
     def get_ports_from_nmap_service_dst(self, ports_num):
         """
@@ -123,11 +131,11 @@ class PortscanAttack(BaseAttack.BaseAttack):
         # calculating the pps is not accurate (taking the whole capture duration into account ingnores the intermittent
         # of packets flow)
         #self.add_param_value(Param.PACKETS_PER_SECOND,
-        #                     (self.statistics.get_pps_sent(most_used_ip_address) +
-        #                      self.statistics.get_pps_received(most_used_ip_address)) / 2)
+                             #(self.statistics.get_pps_sent(most_used_ip_address) +
+                             # self.statistics.get_pps_received(most_used_ip_address)) / 2)
         # Aidmar
-        # using nmap empirically observed packet rate [0,300] packet per second
-        self.add_param_value(Param.PACKETS_PER_SECOND,300)
+        # using nmap empirically observed packet rate [5,300] packet per second
+        self.add_param_value(Param.PACKETS_PER_SECOND,self.maxDefaultPPS)
 
         self.add_param_value(Param.INJECT_AFTER_PACKET, randint(0, self.statistics.get_packet_count()))
 
@@ -139,9 +147,45 @@ class PortscanAttack(BaseAttack.BaseAttack):
             :return: Timestamp to be used for the next packet.
             """
             # Aidmar - why to use 0.1/pps?
-            # return timestamp + uniform(0.1 / pps, maxdelay)
+            #return timestamp + uniform(0.1 / pps, maxdelay)
             # Aidmar
             return timestamp + uniform(1 / pps, maxdelay)
+
+        mac_source = self.get_param_value(Param.MAC_SOURCE)
+        mac_destination = self.get_param_value(Param.MAC_DESTINATION)
+        pps = self.get_param_value(Param.PACKETS_PER_SECOND)
+        # Aidmar - unjustified distribution
+        # randomdelay = Lea.fromValFreqsDict({1 / pps: 70, 2 / pps: 20, 5 / pps: 7, 10 / pps: 3})
+        # maxdelay = randomdelay.random()
+
+        # Aidmar
+        # Calculate the complement packet rates of the background traffic packet rates per interval
+        result = self.statistics.process_db_query(
+            "SELECT timestamp,pktsCount FROM interval_statistics ORDER BY timestamp")
+        print(result)
+        bg_interval_pps = []
+        intervalsSum = 0
+        if result:
+            # Get the interval in seconds
+            for i,row in enumerate(result):
+                if i<len(result)-1:
+                    intervalsSum += math.ceil((int(result[i+1][0]) * 10 ** -6) - (int(row[0]) * 10 ** -6))
+            interval = intervalsSum/(len(result)-1)
+            # Convert timestamp from micro to seconds, convert packet rate "per interval" to "per second"
+            for row in result:
+                bg_interval_pps.append((int(row[0]) * 10 ** -6, int(row[1]/interval)))
+            # Find max PPS
+            maxPPS = max(bg_interval_pps, key=itemgetter(1))[1]
+            complement_interval_pps = []
+            for row in bg_interval_pps:
+                complement_interval_pps.append((row[0], int(pps * (maxPPS - row[1])/maxPPS)))
+            print(complement_interval_pps)
+
+        def getIntervalPPS(timestamp):
+            for row in complement_interval_pps:
+                if timestamp<=row[0]:
+                    return row[1]
+            return complement_interval_pps[-1][1] # in case the timstamp > capture max timestamp
 
 
         # Determine ports
@@ -151,9 +195,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
         elif self.get_param_value(Param.PORT_DEST_SHUFFLE):
             shuffle(dest_ports)
         if self.get_param_value(Param.PORT_SOURCE_RANDOMIZE):
-            # Aidmar
             sport = randint(1, 65535)
-            #sport = randint(0, 65535)
         else:
             sport = self.get_param_value(Param.PORT_SOURCE)
 
@@ -172,15 +214,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
             print("\nERROR: Invalid IP addresses; source IP is the same as destination IP: " + ip_source + ".")
             import sys
             sys.exit(0)
-
-        mac_source = self.get_param_value(Param.MAC_SOURCE)
-        mac_destination = self.get_param_value(Param.MAC_DESTINATION)
-        pps = self.get_param_value(Param.PACKETS_PER_SECOND)
-        # Aidmar - unjustified distribution
-        #randomdelay = Lea.fromValFreqsDict({1 / pps: 70, 2 / pps: 30, 5 / pps: 15, 10 / pps: 3})
-        # nmap empirically observed distribution
-        randomdelay = Lea.fromValFreqsDict({1 / pps: 50,  10 / pps: 50}) #2 / pps: 10, 5 / pps: 10,
-        #maxdelay = randomdelay.random()
 
         # open ports
         # Aidmar
@@ -205,7 +238,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
             ports_open = [ports_open]
         # =========================================================================================================
 
-
         # MSS (Maximum Segment Size) for Ethernet. Allowed values [536,1500]
         # Aidmar
         mss_dst = self.statistics.get_most_used_mss(ip_destination)
@@ -229,7 +261,8 @@ class PortscanAttack(BaseAttack.BaseAttack):
         replies = []
 
         for dport in dest_ports:
-            # Aidmar - differnt maxdelay for each packet
+            # Aidmar - move to here to generate different maxdelay for each packet
+            randomdelay = Lea.fromValFreqsDict({1 / pps: 85, 2 / pps: 10, 5 / pps: 5})
             maxdelay = randomdelay.random()
 
             # Parameters changing each iteration
@@ -253,9 +286,8 @@ class PortscanAttack(BaseAttack.BaseAttack):
                 timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
             request.time = timestamp_next_pkt
             """
-            # Aidmar - mimic DDoS attack style: put update_timestamp at the end of the loop
+            # Aidmar
             request.time = timestamp_next_pkt
-
 
             # 2) Build reply package
             if dport in ports_open:  # destination port is OPEN
@@ -307,8 +339,9 @@ class PortscanAttack(BaseAttack.BaseAttack):
             # Append request
             packets.append(request)
 
+            # Aidmar
+            pps = self.minDefaultPPS if getIntervalPPS(timestamp_next_pkt) is None else max(getIntervalPPS(timestamp_next_pkt),1) # avoid case of pps = 0
             timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
-
 
         # Requests are sent all, send all replies
         if len(replies)>0:
