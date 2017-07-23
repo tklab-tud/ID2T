@@ -358,7 +358,7 @@ class BaseAttack(metaclass=ABCMeta):
         #def generate_address():
         #    return ipaddress.IPv4Address(random.randint(0, 2 ** 32 - 1))
         def generate_address(ipClass):
-            print(ipClass)
+            #print(ipClass)
             """if "private" in ipClass:
                 ipClassesByte1 = {"A-private": 10, "B-private": 172, "C-private": 192}
                 b1 = ipClassesByte1[ipClass]
@@ -375,8 +375,9 @@ class BaseAttack(metaclass=ABCMeta):
             if ipClass == "Unknown":
                 return ipaddress.IPv4Address(random.randint(0, 2 ** 32 - 1))
             else:
+                # For DDoS attack, we do not generate private IPs
                 if "private" in ipClass:
-                    ipClass = ipClass[0]
+                    ipClass = ipClass[0] # convert A-private to A
                 ipClassesByte1 = {"A": {1,126}, "B": {128,191}, "C":{192, 223}, "D":{224, 239}, "E":{240, 254}}
                 temp = list(ipClassesByte1[ipClass])
                 minB1 = temp[0]

@@ -20,6 +20,10 @@ class Parameter(Enum):
     # recommended type: Integer positive -------------------------
     PACKETS_LIMIT = 'packets.limit'
     NUMBER_ATTACKERS = 'attackers.count'
+
+    # Aidmar
+    ATTACK_DURATION = "attack.duration" # in seconds
+
     # recommended type: Float ------------------------------------
     PACKETS_PER_SECOND = 'packets.per-second'  # packets per second
     INJECT_AT_TIMESTAMP = 'inject.at-timestamp'  # unix epoch time (seconds.millis) where attack should be injected

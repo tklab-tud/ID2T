@@ -15,6 +15,10 @@ from collections import deque
 
 
 class DDoSAttack(BaseAttack.BaseAttack):
+    # Metasploit DoS default PPS
+    maxDefaultPPS = 1400
+    minDefaultPPS = 400
+
     def __init__(self, statistics, pcap_file_path):
         """
         Creates a new instance of the DDoS attack.
@@ -36,8 +40,11 @@ class DDoSAttack(BaseAttack.BaseAttack):
             Param.INJECT_AT_TIMESTAMP: ParameterTypes.TYPE_FLOAT,
             Param.INJECT_AFTER_PACKET: ParameterTypes.TYPE_PACKET_POSITION,
             Param.PACKETS_PER_SECOND: ParameterTypes.TYPE_FLOAT,
-            Param.PACKETS_LIMIT: ParameterTypes.TYPE_INTEGER_POSITIVE,
-            Param.NUMBER_ATTACKERS: ParameterTypes.TYPE_INTEGER_POSITIVE
+            # Aidmar - use attack duration instead
+            #Param.PACKETS_LIMIT: ParameterTypes.TYPE_INTEGER_POSITIVE,
+            Param.NUMBER_ATTACKERS: ParameterTypes.TYPE_INTEGER_POSITIVE,
+            # Aidmar
+            Param.ATTACK_DURATION: ParameterTypes.TYPE_INTEGER_POSITIVE
         }
 
         # PARAMETERS: initialize with default values
@@ -53,25 +60,10 @@ class DDoSAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.IP_SOURCE, self.generate_random_ipv4_address(most_used_ip_class, num_attackers))
         self.add_param_value(Param.MAC_SOURCE, self.generate_random_mac_address(num_attackers))
         self.add_param_value(Param.PORT_SOURCE, str(RandShort()))
-        self.add_param_value(Param.PACKETS_PER_SECOND, randint(1, 64))
-
-        """
-         # Aidmar - PPS = avg packet rate per host = avgPacketsSentPerHost / captureDuration
-         max_pkts_sent_per_host = self.statistics.process_db_query(
-             "SELECT MAX(pktsSent) FROM ip_statistics;")
-         print("\nmax_pkts_sent_per_host: %f" % (max_pkts_sent_per_host))
-
-         capture_duration = self.statistics.process_db_query(
-             "SELECT captureDuration FROM file_statistics;")
-         max_pkt_rate_per_host = max_pkts_sent_per_host/float(capture_duration)
-         print("\nmax_pkt_rate_per_host: %f" % (max_pkt_rate_per_host))
-         #num_attackers = self.get_param_value(Param.NUMBER_ATTACKERS)
-         # the minumum PPS is the maximum packet rate per host * attackers number
-         min_pps = math.floor(max_pkt_rate_per_host * int(num_attackers))
-         print("\nMIN PPS: %f" % (min_pps))
-
-         self.add_param_value(Param.PACKETS_PER_SECOND, randint(min_pps, 64))
-         """
+        # Aidmar
+        #self.add_param_value(Param.PACKETS_PER_SECOND, randint(1, 64))
+        self.add_param_value(Param.PACKETS_PER_SECOND, randint(self.minDefaultPPS, self.maxDefaultPPS))
+        self.add_param_value(Param.ATTACK_DURATION, randint(5,30))
 
         # victim configuration
         random_ip_address = self.statistics.get_random_ip_address()
@@ -89,8 +81,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
             port_destination = str(RandShort())
         self.add_param_value(Param.PORT_DESTINATION, port_destination)
         """
-
-        self.add_param_value(Param.PACKETS_LIMIT, randint(1000, 5000))
+        # Aidmar
+        #self.add_param_value(Param.PACKETS_LIMIT, randint(1000, 5000))
 
     def generate_attack_pcap(self):
         def update_timestamp(timestamp, pps, maxdelay):
@@ -204,7 +196,11 @@ class DDoSAttack(BaseAttack.BaseAttack):
         # Aidmar
         replies = []
 
-        for pkt_num in range(self.get_param_value(Param.PACKETS_LIMIT)):
+        # Aidmar
+        #for pkt_num in range(self.get_param_value(Param.PACKETS_LIMIT)):
+        attack_duration = self.get_param_value(Param.ATTACK_DURATION)
+        pkts_num = int(pps * attack_duration)
+        for pkt_num in range(pkts_num):
             # Build reply package
             # Select one IP address and its corresponding MAC address
             (ip_source, mac_source) = get_nth_random_element(ip_source_list, mac_source_list)
@@ -271,12 +267,10 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
                 packets = []
 
-
             # Requests are sent all, send all replies
-            if pkt_num == self.get_param_value(Param.PACKETS_LIMIT)-1:
+            if pkt_num == pkts_num-1:
                 for reply in replies:
                     packets.append(reply)
-
 
         if len(packets) > 0:
             packets = sorted(packets, key=lambda pkt: pkt.time)
