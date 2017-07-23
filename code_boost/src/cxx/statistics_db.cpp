@@ -313,39 +313,44 @@ void statistics_db::writeStatisticsWin(std::unordered_map<ipAddress_win, int> wi
 
 // Aidamr
 /**
- * Writes the flow statistics into the database.
- * @param flowStatistics The flow from class statistics.
+ * Writes the conversation statistics into the database.
+ * @param convStatistics The conversation from class statistics.
  */
-void statistics_db::writeStatisticsFlow(std::unordered_map<flow, entry_flowStat> flowStatistics){          
+void statistics_db::writeStatisticsConv(std::unordered_map<conv, entry_convStat> convStatistics){          
     try {
-        db->exec("DROP TABLE IF EXISTS flow_statistics");
+        db->exec("DROP TABLE IF EXISTS conv_statistics");
         SQLite::Transaction transaction(*db);
-        const char *createTable = "CREATE TABLE flow_statistics ("
+        const char *createTable = "CREATE TABLE conv_statistics ("
                 "ipAddressA TEXT,"
                 "portA INTEGER,"
                 "ipAddressB TEXT,"              
                 "portB INTEGER,"
                 "pkts_A_B INTEGER,"
                 "pkts_B_A INTEGER,"
-                "medianDelay INTEGER,"
+                "avgDelay INTEGER,"
                 //"medianDelay TEXT,"
                 "PRIMARY KEY(ipAddressA,portA,ipAddressB,portB));";
         db->exec(createTable);
-        SQLite::Statement query(*db, "INSERT INTO flow_statistics VALUES (?, ?, ?, ?, ?, ?, ?)");
-        for (auto it = flowStatistics.begin(); it != flowStatistics.end(); ++it) {
-            flow f = it->first;
-            entry_flowStat e = it->second;
+        SQLite::Statement query(*db, "INSERT INTO conv_statistics VALUES (?, ?, ?, ?, ?, ?, ?)");
+        for (auto it = convStatistics.begin(); it != convStatistics.end(); ++it) {
+            conv f = it->first;
+            entry_convStat e = it->second;
             
             // Compute the median delay
-            e.median_delay = e.pkts_delay[e.pkts_delay.size()/2];
-            
+            //e.median_delay = e.pkts_delay[e.pkts_delay.size()/2];
+            int sumDelay = 0;
+            for(int i=0; i<e.pkts_delay.size();i++){
+                sumDelay += e.pkts_delay[i].count();
+            }
+            e.avg_delay = (std::chrono::microseconds)sumDelay/e.pkts_delay.size(); // average
+
             query.bind(1, f.ipAddressA);
             query.bind(2, f.portA);
             query.bind(3, f.ipAddressB);
             query.bind(4, f.portB);
             query.bind(5, (int) e.pkts_A_B);
             query.bind(6, (int) e.pkts_B_A);
-            query.bind(7, (int) e.median_delay.count());
+            query.bind(7, (int) e.avg_delay.count());
             //query.bind(7,  std::to_string(e.median_delay.count()));            
             query.exec();
             query.reset();

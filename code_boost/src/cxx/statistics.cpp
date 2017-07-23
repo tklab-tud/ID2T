@@ -302,33 +302,36 @@ void statistics::addIPEntropy(std::string filePath){
  * @param dport The destination port.
  * @param timestamp The timestamp of the packet.
  */
-void statistics::addFlowStat(std::string ipAddressSender,int sport,std::string ipAddressReceiver,int dport, std::chrono::microseconds timestamp){   
+void statistics::addFlowStat(std::string ipAddressSender,int sport,std::string ipAddressReceiver,int dport, std::chrono::microseconds timestamp){       
     
-    
-    flow f1 = {ipAddressReceiver, dport, ipAddressSender, sport};
-    flow f2 = {ipAddressSender, sport, ipAddressReceiver, dport};
+    conv f1 = {ipAddressReceiver, dport, ipAddressSender, sport};
+    conv f2 = {ipAddressSender, sport, ipAddressReceiver, dport};
     
     // if already exist A(ipAddressReceiver, dport), B(ipAddressSender, sport)
-    if (flow_statistics.count(f1)>0){
-        flow_statistics[f1].pkts_B_A++;
-        flow_statistics[f1].pkts_B_A_timestamp.push_back(timestamp);
-        if(flow_statistics[f1].pkts_A_B_timestamp.size()>0){
-            flow_statistics[f1].pkts_delay.push_back(std::chrono::duration_cast<std::chrono::microseconds> (timestamp - flow_statistics[f1].pkts_A_B_timestamp[flow_statistics[f1].pkts_A_B_timestamp.size()-1])); // TO-DO: use .back()
-        }
-        
+    if (conv_statistics.count(f1)>0){
+        conv_statistics[f1].pkts_B_A++; // increment packets number from B to A
+        conv_statistics[f1].pkts_B_A_timestamp.push_back(timestamp);
+    
+        // Calculate reply delay (consider only delay of first two reply packets - most likely TCP handshake)
+        if(conv_statistics[f1].pkts_A_B_timestamp.size()>0 && conv_statistics[f1].pkts_A_B_timestamp.size()<=2){
+            conv_statistics[f1].pkts_delay.push_back(std::chrono::duration_cast<std::chrono::microseconds> (timestamp - conv_statistics[f1].pkts_A_B_timestamp.back()));
+        }      
         //std::cout<<timestamp.count()<<"::"<<ipAddressReceiver<<":"<<dport<<","<<ipAddressSender<<":"<<sport<<"\n"; 
-        //std::cout<<flow_statistics[f1].pkts_A_B<<"\n";
-        //std::cout<<flow_statistics[f1].pkts_B_A<<"\n";
+        //std::cout<<conv_statistics[f1].pkts_A_B<<"\n";
+        //std::cout<<conv_statistics[f1].pkts_B_A<<"\n";
     }
     else{
-        flow_statistics[f2].pkts_A_B++;
-        flow_statistics[f2].pkts_A_B_timestamp.push_back(timestamp);
-         if(flow_statistics[f2].pkts_B_A_timestamp.size()>0){
-            flow_statistics[f2].pkts_delay.push_back(std::chrono::duration_cast<std::chrono::microseconds> (timestamp - flow_statistics[f2].pkts_B_A_timestamp[flow_statistics[f2].pkts_B_A_timestamp.size()-1])); // TO-DO: use .back()
-        }
+        conv_statistics[f2].pkts_A_B++; // increment packets number from A to B
+        conv_statistics[f2].pkts_A_B_timestamp.push_back(timestamp);
+        
+         /*
+         // Calculate delay
+         if(conv_statistics[f2].pkts_B_A_timestamp.size()>0){
+            conv_statistics[f2].pkts_delay.push_back(std::chrono::duration_cast<std::chrono::microseconds> (timestamp - conv_statistics[f2].pkts_B_A_timestamp.back())); 
+        }  */
         //std::cout<<timestamp.count()<<"::"<<ipAddressSender<<":"<<sport<<","<<ipAddressReceiver<<":"<<dport<<"\n"; 
-        //std::cout<<flow_statistics[f2].pkts_A_B<<"\n";
-        //std::cout<<flow_statistics[f2].pkts_B_A<<"\n";
+        //std::cout<<conv_statistics[f2].pkts_A_B<<"\n";
+        //std::cout<<conv_statistics[f2].pkts_B_A<<"\n";
     }        
 }
     
@@ -749,7 +752,7 @@ void statistics::writeToDatabase(std::string database_path) {
     // Aidmar
     db.writeStatisticsMss_dist(mss_distribution);
     db.writeStatisticsWin(win_distribution);
-    db.writeStatisticsFlow(flow_statistics);
+    db.writeStatisticsConv(conv_statistics);
     db.writeStatisticsInterval(interval_statistics);
 }
 

@@ -42,19 +42,19 @@ struct ip_stats {
 
 // Aidmar
 /*
- * Struct used to represent a flow by:
+ * Struct used to represent a conv by:
  * - IP address A
  * - Port A
  * - IP address B
  * - Port B
  */
-struct flow{
+struct conv{
     std::string ipAddressA;
     int portA;
     std::string ipAddressB;
     int portB;
 
-    bool operator==(const flow &other) const {
+    bool operator==(const conv &other) const {
         return ipAddressA == other.ipAddressA
                && portA == other.portA
                &&ipAddressB == other.ipAddressB
@@ -197,21 +197,21 @@ struct entry_intervalStat {
  * - Number of packets from A to B
  * - Number of packets from B to A
  */
-struct entry_flowStat {
+struct entry_convStat {
     long pkts_A_B;
     long pkts_B_A;
     std::vector<std::chrono::microseconds> pkts_A_B_timestamp;
     std::vector<std::chrono::microseconds> pkts_B_A_timestamp;
     std::vector<std::chrono::microseconds> pkts_delay;
     //std::chrono::duration<double, std::micro> median_delay;
-    std::chrono::microseconds median_delay;
+    std::chrono::microseconds avg_delay;
     
-    bool operator==(const entry_flowStat &other) const {
+    bool operator==(const entry_convStat &other) const {
         return pkts_A_B == other.pkts_A_B
                && pkts_A_B_timestamp == other.pkts_A_B_timestamp
                && pkts_B_A_timestamp == other.pkts_B_A_timestamp
                && pkts_delay == other.pkts_delay
-               && median_delay == other.median_delay;
+               && avg_delay == other.avg_delay;
     }
 };
 
@@ -275,8 +275,8 @@ namespace std {
     
     // Aidmar: TO-DO:??
     template<>
-    struct hash<flow> {
-        std::size_t operator()(const flow &k) const {
+    struct hash<conv> {
+        std::size_t operator()(const conv &k) const {
             using std::size_t;
             using std::hash;
             using std::string;
@@ -401,7 +401,7 @@ private:
     // {IP Address, Win size, count}
     std::unordered_map<ipAddress_win, int> win_distribution;
     // {IP Address A, Port A, IP Address B, Port B,   #packets_A_B, #packets_B_A}
-    std::unordered_map<flow, entry_flowStat> flow_statistics;
+    std::unordered_map<conv, entry_convStat> conv_statistics;
     std::unordered_map<std::string, entry_intervalStat> interval_statistics;
     
     // {IP Address, Protocol, count}
