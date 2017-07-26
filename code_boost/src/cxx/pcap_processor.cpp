@@ -84,8 +84,8 @@ std::string pcap_processor::merge_pcaps(const std::string pcap_path) {
             }
             iterator_base++;
         }
-    }
-
+    }    
+    
     // This may happen if the base PCAP is smaller than the attack PCAP
     // In this case append the remaining packets of the attack PCAP
     for (; iterator_attack != sniffer_attack.end(); iterator_attack++) {
@@ -119,16 +119,14 @@ void pcap_processor::collect_statistics() {
         std::chrono::duration<int, std::micro> timeInterval(10000000); // 10 sec
         std::chrono::microseconds intervalStartTimestamp = stats.getTimestampFirstPacket();
         std::chrono::microseconds firstTimestamp = stats.getTimestampFirstPacket();
-        int pktsInterval = 1000;        
+        //int pktsInterval = 1000;        
         int previousPacketCount = 0;
         
         // Iterate over all packets and collect statistics
         for (; i != sniffer.end(); i++) {
             
-            // Aidmar
-            if(counter%pktsInterval==0){
-                stats.addIPEntropy(filePath);
-            }
+            // Aidmar - packets interval
+            //if(counter%pktsInterval==0){}        
             
             // Aidmar            
             std::chrono::microseconds lastPktTimestamp = i->timestamp();
@@ -138,8 +136,6 @@ void pcap_processor::collect_statistics() {
             if(currentCaptureDuration>barrier){
                 //std::cout<<"LastpkstTimstamp:" << lastPktTimestamp.count() << ", currentCaptureDuration:"<< currentCaptureDuration.count() << ", barrier:" <<barrier.count()<<", interval:" << timeIntervalNum << ", interval time:"<<timeInterval.count()<<"\n";                    
                 stats.addIntervalStat(timeInterval, intervalStartTimestamp, lastPktTimestamp, previousPacketCount);
-                stats.calculateLastIntervalIPsEntropy(filePath, intervalStartTimestamp);
-                stats.calculateLastIntervalPacketRate(timeInterval, intervalStartTimestamp);                                
                 timeIntervalNum++;   
                 intervalStartTimestamp = lastPktTimestamp;
                 previousPacketCount = stats.getPacketCount();
@@ -150,8 +146,13 @@ void pcap_processor::collect_statistics() {
             lastProcessedPacket = i->timestamp();            
             counter++;
         }
+        
         // Save timestamp of last packet into statistics
         stats.setTimestampLastPacket(lastProcessedPacket);
+        
+        // Aidmar
+        tests.get_checksum_incorrect_ratio();
+    
     }
 }
 
@@ -178,8 +179,8 @@ void pcap_processor::process_packets(const Packet &pkt) {
     const PDU *pdu_l3 = pkt.pdu()->inner_pdu();
     const PDU::PDUType pdu_l3_type = pdu_l3->pdu_type();
     std::string ipAddressSender;
-    std::string ipAddressReceiver;
-
+    std::string ipAddressReceiver;    
+    
     // PDU is IPv4
     if (pdu_l3_type == PDU::PDUType::IP) {
         const IP &ipLayer = (const IP &) *pdu_l3;
@@ -226,14 +227,19 @@ void pcap_processor::process_packets(const Packet &pkt) {
     const PDU *pdu_l4 = pdu_l3->inner_pdu();
     if (pdu_l4 != 0) {
         // Protocol distribution - layer 4
-        PDU::PDUType p = pdu_l4->pdu_type();
+        PDU::PDUType p = pdu_l4->pdu_type();        
         if (p == PDU::PDUType::TCP) {
             TCP tcpPkt = (const TCP &) *pdu_l4;
-            stats.incrementProtocolCount(ipAddressSender, "TCP");
+            
+          if (pdu_l3_type == PDU::PDUType::IP) {            
+            tests.check_checksum(ipAddressSender, ipAddressReceiver, tcpPkt);
+          }
+            
+            stats.incrementProtocolCount(ipAddressSender, "TCP");                        
             
             // Aidmar
-            // Flow statistics
-            stats.addFlowStat(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), pkt.timestamp());  
+            // Conversation statistics
+            stats.addConvStat(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), pkt.timestamp());  
             
             // Aidmar
             // Check window size for SYN noly

@@ -13,6 +13,7 @@
 #include <tins/timestamp.h>
 #include <tins/ip_address.h>
 
+#include "utilities.h"
 
 /*
  * Definition of structs used in unordered_map fields
@@ -178,16 +179,26 @@ struct entry_ipStat {
  * - Number of packets
  * - IP source entropy
  * - IP destination entropy
+ * - IP source cumulative entropy
+ * - IP destination cumulative entropy
  */
 struct entry_intervalStat {
     int pkts_count;
-    float ip_src_entropy;
+    float ip_src_entropy; 
     float ip_dst_entropy;
+    float ip_src_cum_entropy; 
+    float ip_dst_cum_entropy;
+    // Predictability score
+    //float ip_src_pred_score;
+    //float ip_dst_pred_score;
+
 
     bool operator==(const entry_intervalStat &other) const {
         return pkts_count == other.pkts_count
                && ip_src_entropy == other.ip_src_entropy
-               && ip_dst_entropy == other.ip_dst_entropy;
+               && ip_dst_entropy == other.ip_dst_entropy
+               && ip_src_cum_entropy == other.ip_src_cum_entropy
+               && ip_dst_cum_entropy == other.ip_dst_cum_entropy;              
     }
 };
 
@@ -329,12 +340,12 @@ public:
     void incrementPacketCount();
 
     // Adimar
+    void calculateIPIntervalPacketRate(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp);
     void incrementMSScount(std::string ipAddress, int mssValue);
-    void incrementWinCount(std::string ipAddress, int winSize);
-    void addIPEntropy(std::string filePath);
-    void addFlowStat(std::string ipAddressSender,int sport,std::string ipAddressReceiver,int dport, std::chrono::microseconds timestamp);
-    void calculateLastIntervalIPsEntropy(std::string filePath, std::chrono::microseconds intervalStartTimestamp);
-    void calculateLastIntervalPacketRate(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp);
+    void incrementWinCount(std::string ipAddress, int winSize);   
+    void addConvStat(std::string ipAddressSender,int sport,std::string ipAddressReceiver,int dport, std::chrono::microseconds timestamp);
+    std::vector<float> calculateIPsCumEntropy();
+    std::vector<float> calculateLastIntervalIPsEntropy(std::chrono::microseconds intervalStartTimestamp);        
     void addIntervalStat(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp, std::chrono::microseconds lastPktTimestamp, int previousPacketCount);
 
     void incrementTTLcount(std::string ipAddress, int ttlValue);

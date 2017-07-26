@@ -339,7 +339,7 @@ void statistics_db::writeStatisticsConv(std::unordered_map<conv, entry_convStat>
             // Compute the median delay
             //e.median_delay = e.pkts_delay[e.pkts_delay.size()/2];
             int sumDelay = 0;
-            for(int i=0; i<e.pkts_delay.size();i++){
+            for(int i=0; (unsigned)i<e.pkts_delay.size();i++){
                 sumDelay += e.pkts_delay[i].count();
             }
             e.avg_delay = (std::chrono::microseconds)sumDelay/e.pkts_delay.size(); // average

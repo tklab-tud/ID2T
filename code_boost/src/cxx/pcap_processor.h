@@ -15,6 +15,7 @@
 #include <sys/stat.h>
 #include <unordered_map>
 #include "statistics.h"
+#include "artifacts_tests.h"
 
 using namespace Tins;
 
@@ -32,6 +33,8 @@ public:
     statistics stats;
     std::string filePath;
 
+    // Aidmar
+    artifacts_tests tests;
     /*
      * Methods
      */
