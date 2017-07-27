@@ -43,7 +43,7 @@ std::string getIPv4Class(std::string ipAddress){
     std::vector<std::string> ipBytes;
     split_str(ipAddress, '.',ipBytes);
     
-    std::cout<< ipAddress << "\n";
+    //std::cout<< ipAddress << "\n";
     
     if(ipBytes.size()>1){
     int b1 = std::stoi(ipBytes[0]);
