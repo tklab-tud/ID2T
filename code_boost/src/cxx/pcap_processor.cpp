@@ -152,6 +152,7 @@ void pcap_processor::collect_statistics() {
         
         // Aidmar
         tests.get_checksum_incorrect_ratio();
+        tests.get_payload_ratio();
     
     }
 }
@@ -200,6 +201,9 @@ void pcap_processor::process_packets(const Packet &pkt) {
         stats.assignMacAddress(ipAddressSender, macAddressSender);
         stats.assignMacAddress(ipAddressReceiver, macAddressReceiver);        
 
+        // Aidmar - Artifacts Tests: contemporary (ToS)
+        tests.check_tos(ipLayer.tos());
+        
     } // PDU is IPv6
     else if (pdu_l3_type == PDU::PDUType::IPv6) {
         const IPv6 &ipLayer = (const IPv6 &) *pdu_l3;
@@ -227,16 +231,23 @@ void pcap_processor::process_packets(const Packet &pkt) {
     const PDU *pdu_l4 = pdu_l3->inner_pdu();
     if (pdu_l4 != 0) {
         // Protocol distribution - layer 4
-        PDU::PDUType p = pdu_l4->pdu_type();        
+        PDU::PDUType p = pdu_l4->pdu_type();  
+        
+        // Aidmar - Artifacts Tests: payload
+        if (pdu_l3_type == PDU::PDUType::IP) {            
+            tests.check_payload(pdu_l4);
+          }
+          
         if (p == PDU::PDUType::TCP) {
             TCP tcpPkt = (const TCP &) *pdu_l4;
             
+          // Aidmar - Artifacts Tests: checksum
           if (pdu_l3_type == PDU::PDUType::IP) {            
             tests.check_checksum(ipAddressSender, ipAddressReceiver, tcpPkt);
           }
             
             stats.incrementProtocolCount(ipAddressSender, "TCP");                        
-            
+                    
             // Aidmar
             // Conversation statistics
             stats.addConvStat(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), pkt.timestamp());  
@@ -259,10 +270,14 @@ void pcap_processor::process_packets(const Packet &pkt) {
                 // Ignore MSS if option not set
             }
             stats.incrementPortCount(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport());
+            
+          // UDP Packet
         } else if (p == PDU::PDUType::UDP) {
+            
             const UDP udpPkt = (const UDP &) *pdu_l4;
-            stats.incrementProtocolCount(ipAddressSender, "UDP");
-            stats.incrementPortCount(ipAddressSender, udpPkt.sport(), ipAddressReceiver, udpPkt.dport());
+            stats.incrementProtocolCount(ipAddressSender, "UDP");            
+            stats.incrementPortCount(ipAddressSender, udpPkt.sport(), ipAddressReceiver, udpPkt.dport());                        
+          
         } else if (p == PDU::PDUType::ICMP) {
             stats.incrementProtocolCount(ipAddressSender, "ICMP");
         } else if (p == PDU::PDUType::ICMPv6) {

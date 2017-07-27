@@ -11,6 +11,12 @@ using namespace Tins;
  * Creates a new artifacts_tests object.
  */
 artifacts_tests::artifacts_tests() {
+     correctChecksum = 0;
+     incorrectChecksum= 0;
+     checksumIncorrectRatio= 0;
+    
+     noPayloadCount= 0;
+     payloadCount= 0;
 }
 
 
@@ -120,7 +126,7 @@ void artifacts_tests::check_checksum(std::string ipAddressSender, std::string ip
 
     //tcp_sum_calc(unsigned short len_tcp, unsigned short src_addr[],unsigned short dest_addr[], bool padding, unsigned short buff[])
     bool padding = false; 
-    int dataSize = bufferArray_8.size() - headerSize; 
+    int dataSize = bufferArray_8.size() - headerSize;  // TO-DO: why don't you use pkt.size()
     if(dataSize != 0)
         if(dataSize % 2 != 0)
             padding = true; // padding if the data size is odd
@@ -149,9 +155,39 @@ float artifacts_tests::get_checksum_incorrect_ratio(){
         ratio = (float)incorrectChecksum/totalPktsNum;
     
     std::cout<<"Incorrect checksums: "<<incorrectChecksum<<"\n";
-    std::cout<<"Total TCP packets: "<<incorrectChecksum+correctChecksum<<"\n";
+    std::cout<<"Total TCP packets: "<<totalPktsNum<<"\n";
     std::cout<<"get_checksum_incorrect_ratio: "<<ratio<<"\n";
     
     return ratio;
 }
 
+void artifacts_tests::check_payload(const PDU *pkt){
+    int pktSize = pkt->size();
+    int headerSize = pkt->header_size();
+    int payloadSize = pktSize - headerSize;
+    if(payloadSize>0)
+        payloadCount++;
+    else
+        noPayloadCount++;
+}
+
+/**
+ * Gets the ratio of packets that have payload to total number of packets.
+ */
+float artifacts_tests::get_payload_ratio(){
+    int totalPktsNum = noPayloadCount+payloadCount;
+    float ratio = 0;
+    if(totalPktsNum!=0)
+        ratio = (float)payloadCount/totalPktsNum;
+    
+    std::cout<<"Payload packets: "<<payloadCount<<"\n";
+    std::cout<<"Total packets: "<<totalPktsNum<<"\n";
+    std::cout<<"get_payload_ratio: "<<ratio<<"\n";
+    
+    return ratio;
+}
+
+void artifacts_tests::check_tos(uint8_t ToS){
+    if((unsigned)ToS != 0)
+        std::cout<<(unsigned)ToS<<"\n";
+}

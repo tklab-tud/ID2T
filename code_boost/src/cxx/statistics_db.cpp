@@ -376,9 +376,11 @@ void statistics_db::writeStatisticsInterval(std::unordered_map<std::string, entr
                 "pktsCount INTEGER,"
                 "ipSrcEntropy REAL,"      
                 "ipDstEntropy REAL,"  
+                "ipSrcCumEntropy REAL,"      
+                "ipDstCumEntropy REAL," 
                 "PRIMARY KEY(timestamp));";
         db->exec(createTable);
-        SQLite::Statement query(*db, "INSERT INTO interval_statistics VALUES (?, ?, ?, ?)");
+        SQLite::Statement query(*db, "INSERT INTO interval_statistics VALUES (?, ?, ?, ?, ?, ?)");
         for (auto it = intervalStatistics.begin(); it != intervalStatistics.end(); ++it) {
             std::string t = it->first;
             entry_intervalStat e = it->second;        
@@ -387,6 +389,8 @@ void statistics_db::writeStatisticsInterval(std::unordered_map<std::string, entr
             query.bind(2, (int)e.pkts_count);
             query.bind(3, e.ip_src_entropy);
             query.bind(4, e.ip_dst_entropy);
+            query.bind(5, e.ip_src_cum_entropy);
+            query.bind(6, e.ip_dst_cum_entropy);
 
             query.exec();
             query.reset();

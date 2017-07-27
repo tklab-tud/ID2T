@@ -35,6 +35,9 @@ public:
     int incorrectChecksum;
     float checksumIncorrectRatio;
     
+    int noPayloadCount;
+    int payloadCount;
+    
     //std::string timstampPrecision;
     
     //statistics stats;
@@ -45,7 +48,9 @@ public:
      */
     void check_checksum(std::string ipAddressSender, std::string ipAddressReceiver, TCP tcpPkt);
     float get_checksum_incorrect_ratio();
-    
+    void check_payload(const PDU *pkt);
+    float get_payload_ratio();
+    void check_tos(uint8_t ToS);
     //bool check_timestamp_precision(const Packet &pkt);
 
     /*

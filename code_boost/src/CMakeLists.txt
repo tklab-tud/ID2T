@@ -23,7 +23,7 @@ SET(CMAKE_CXX_STANDARD 11)
 SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Add the library source files
-SET(SOURCE_FILES cxx/pcap_processor.cpp cxx/pcap_processor.h cxx/statistics.cpp cxx/statistics.h cxx/statistics_db.cpp cxx/statistics_db.h)
+SET(SOURCE_FILES cxx/pcap_processor.cpp cxx/pcap_processor.h cxx/statistics.cpp cxx/statistics.h cxx/statistics_db.cpp cxx/statistics_db.h cxx/artifacts_tests.h cxx/artifacts_tests.cpp cxx/utilities.h cxx/utilities.cpp)
 
 # Include SQLiteCpp library and build it
 option(SQLITECPP_RUN_CPPLINT OFF)
