@@ -4,6 +4,7 @@ import random
 import re
 import tempfile
 from abc import abstractmethod, ABCMeta
+import numpy as np
 
 import ID2TLib.libpcapreader as pr
 from scapy.utils import PcapWriter
@@ -460,3 +461,15 @@ class BaseAttack(metaclass=ABCMeta):
             return mac_addresses[0]
         else:
             return mac_addresses
+
+
+    # Aidmar
+    def get_reply_delay(self, ip_dst):
+        replyDelay = self.statistics.process_db_query(
+         "SELECT avgDelay FROM conv_statistics WHERE ipAddressB='" + ip_dst + "' LIMIT 1")
+        if not replyDelay:
+            allDelays = self.statistics.process_db_query("SELECT avgDelay FROM conv_statistics")
+            replyDelay = np.median(allDelays)
+        replyDelay = int(replyDelay) * 10 ** -6 # convert from micro to seconds
+        #print(replyDelay)
+        return replyDelay

@@ -5,7 +5,6 @@ import socket
 # Aidmar
 from operator import itemgetter
 import math
-import numpy as np
 
 from random import shuffle, randint, choice, uniform
 
@@ -65,16 +64,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
             return True
         except socket.error:
             return False
-
-    def get_reply_delay(self, ip_dst):
-        replyDelay = self.statistics.process_db_query(
-         "SELECT avgDelay FROM conv_statistics WHERE ipAddressB='" + ip_dst + "' LIMIT 1")
-        if not replyDelay:
-            allDelays = self.statistics.process_db_query("SELECT avgDelay FROM conv_statistics")
-            replyDelay = np.median(allDelays)
-        replyDelay = int(replyDelay) * 10 ** -6 # convert from micro to seconds
-        print(replyDelay)
-        return replyDelay
 
 
     def __init__(self, statistics, pcap_file_path):
@@ -276,7 +265,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
 
         for dport in dest_ports:
             # Aidmar - move to here to generate different maxdelay for each packet
-            randomdelay = Lea.fromValFreqsDict({1 / pps: 85, 2 / pps: 10, 5 / pps: 5})
+            randomdelay = Lea.fromValFreqsDict({1 / pps: 85, 2 / pps: 10, 5 / pps: 5}) # TO-DO: is it perfect? here?
             maxdelay = randomdelay.random()
 
             # Parameters changing each iteration
@@ -326,7 +315,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
                 B_A_packets.append(reply)
 
                 # requester confirms
-                # TO-DO: confirms should be in Attacker queue not in victim (reply) queue
                 confirm_ether = request_ether
                 confirm_ip = request_ip
                 confirm_tcp = TCP(sport=sport, dport=dport, seq=1, window=0, flags='R')
@@ -358,7 +346,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
             packets.append(request)
 
             # Aidmar
-            pps = self.minDefaultPPS if getIntervalPPS(timestamp_next_pkt) is None else max(getIntervalPPS(timestamp_next_pkt),1) # avoid case of pps = 0
+            pps = self.minDefaultPPS if getIntervalPPS(timestamp_next_pkt) is None else max(getIntervalPPS(timestamp_next_pkt),self.minDefaultPPS) # avoid case of pps = 0
             timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
 
         # In case all requests are already sent, send all replies and confirms

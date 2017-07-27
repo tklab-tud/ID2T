@@ -501,6 +501,117 @@ class Statistics:
             plt.savefig(out, dpi=500)
             return out
 
+        # Aidmar
+        def plot_interval_ip_src_ent(file_ending: str):
+            plt.gcf().clear()
+            result = self.stats_db._process_user_defined_query(
+                "SELECT timestamp, ipSrcEntropy FROM interval_statistics ORDER BY timestamp")
+            graphx, graphy = [], []
+            for row in result:
+                graphx.append(row[0])
+                graphy.append(row[1])
+            plt.autoscale(enable=True, axis='both')
+            plt.title("Source IP Entropy")
+            plt.xlabel('Timestamp')
+            plt.ylabel('Entropy')
+            width = 0.5
+            plt.xlim([0, len(graphx)])
+            plt.grid(True)
+
+            # IPs on x-axis
+            x = range(0, len(graphx))
+            my_xticks = graphx
+            plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
+            plt.tight_layout()
+
+            plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+            out = self.pcap_filepath.replace('.pcap', '_plot-interval-ip-src-ent' + file_ending)
+            plt.savefig(out, dpi=500)
+            return out
+
+        # Aidmar
+        def plot_interval_ip_dst_ent(file_ending: str):
+            plt.gcf().clear()
+            result = self.stats_db._process_user_defined_query(
+                "SELECT timestamp, ipDstEntropy FROM interval_statistics ORDER BY timestamp")
+            graphx, graphy = [], []
+            for row in result:
+                graphx.append(row[0])
+                graphy.append(row[1])
+            plt.autoscale(enable=True, axis='both')
+            plt.title("Destination IP Entropy")
+            plt.xlabel('Timestamp')
+            plt.ylabel('Entropy')
+            width = 0.5
+            plt.xlim([0, len(graphx)])
+            plt.grid(True)
+
+            # IPs on x-axis
+            x = range(0, len(graphx))
+            my_xticks = graphx
+            plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
+            plt.tight_layout()
+
+            plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+            out = self.pcap_filepath.replace('.pcap', '_plot-interval-ip-dst-ent' + file_ending)
+            plt.savefig(out, dpi=500)
+            return out
+
+        # Aidmar
+        def plot_interval_ip_dst_cum_ent(file_ending: str):
+            plt.gcf().clear()
+            result = self.stats_db._process_user_defined_query(
+                "SELECT timestamp, ipDstCumEntropy FROM interval_statistics ORDER BY timestamp")
+            graphx, graphy = [], []
+            for row in result:
+                graphx.append(row[0])
+                graphy.append(row[1])
+            plt.autoscale(enable=True, axis='both')
+            plt.title("Destination IP Cumulative Entropy")
+            plt.xlabel('Timestamp')
+            plt.ylabel('Entropy')
+            width = 0.5
+            plt.xlim([0, len(graphx)])
+            plt.grid(True)
+
+            # IPs on x-axis
+            x = range(0, len(graphx))
+            my_xticks = graphx
+            plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
+            plt.tight_layout()
+
+            plt.plot(x, graphy, 'r')
+            out = self.pcap_filepath.replace('.pcap', '_plot-interval-ip-dst-cum-ent' + file_ending)
+            plt.savefig(out, dpi=500)
+            return out
+
+        # Aidmar
+        def plot_interval_ip_src_cum_ent(file_ending: str):
+            plt.gcf().clear()
+            result = self.stats_db._process_user_defined_query(
+                "SELECT timestamp, ipSrcCumEntropy FROM interval_statistics ORDER BY timestamp")
+            graphx, graphy = [], []
+            for row in result:
+                graphx.append(row[0])
+                graphy.append(row[1])
+            plt.autoscale(enable=True, axis='both')
+            plt.title("Source IP Cumulative Entropy")
+            plt.xlabel('Timestamp')
+            plt.ylabel('Entropy')
+            width = 0.5
+            plt.xlim([0, len(graphx)])
+            plt.grid(True)
+
+            # IPs on x-axis
+            x = range(0, len(graphx))
+            my_xticks = graphx
+            plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
+            plt.tight_layout()
+
+            plt.plot(x, graphy, 'r')
+            out = self.pcap_filepath.replace('.pcap', '_plot-interval-ip-src-cum-ent' + file_ending)
+            plt.savefig(out, dpi=500)
+            return out
 
         ttl_out_path = plot_ttl('.' + format)
         mss_out_path = plot_mss('.' + format)
@@ -511,42 +622,18 @@ class Statistics:
         ip_dst_out_path = plot_ip_dst('.' + format)
         ip_dst_out_path = plot_ip_dst('.' + format)
         plot_interval_pktCount = plot_interval_pktCount('.' + format)
-        print("Saved distributions plots at: %s, %s, %s, %s, %s, %s, %s, %s" %(ttl_out_path,mss_out_path, win_out_path,
-        protocol_out_path, port_out_path,ip_src_out_path,ip_dst_out_path, plot_interval_pktCount))
+        plot_interval_ip_src_ent = plot_interval_ip_src_ent('.' + format)
+        plot_interval_ip_dst_ent = plot_interval_ip_dst_ent('.' + format)
+        plot_interval_ip_src_cum_ent = plot_interval_ip_src_cum_ent('.' + format)
+        plot_interval_ip_dst_cum_ent = plot_interval_ip_dst_cum_ent('.' + format)
+
+
+        #print("Saved distributions plots at: %s, %s, %s, %s, %s, %s, %s, %s %s" %(ttl_out_path,mss_out_path, win_out_path,
+        #protocol_out_path, port_out_path,ip_src_out_path,ip_dst_out_path, plot_interval_pktCount))
 
 
 """
- # Aidmar
-            graphx_aftr, graphy_aftr = [], []
-            ttlValue = self.stats_db._process_user_defined_query(
-                "SELECT ttlValue FROM ip_ttl GROUP BY ttlValue ORDER BY SUM(ttlCount) DESC LIMIT 1")
-            for row in result:
-                if(row[0] == 64):
-                    graphy_aftr.append(row[1]+1000)
-                else:
-                    graphy_aftr.append(row[1])
-                graphx_aftr.append(row[0])
-
-            plt.autoscale(enable=False, axis='both')
-            plt.title("TTL Distribution")
-            plt.xlabel('TTL Value')
-            plt.ylabel('Number of Packets')
-            width = 0.5
-            plt.xlim([0, max(graphx_aftr)])
-            # Aidmar
-            plt.ylim([0, 11000])  # temp
-            plt.grid(True)
-            plt.bar(graphx_aftr, graphy_aftr, width, align='center', linewidth=2, color='red', edgecolor='red')
-            out = self.pcap_filepath.replace('.pcap', '_plot-ttl_2' + file_ending)
-            plt.savefig(out)
-
-            print(graphy)
-            print(graphy_aftr)
-            print("\neuclidean distance: "+str(dist.euclidean(graphy, graphy_aftr)))
-            print("\ncityblock distance: " + str(dist.cityblock(graphy, graphy_aftr)))
-            print("\nchebyshev distance: " + str(dist.chebyshev(graphy, graphy_aftr)))
-            print("\nsqeuclidean distance: " + str(dist.sqeuclidean(graphy, graphy_aftr)))
-            print("\nhamming distance: " + str(dist.hamming(graphy, graphy_aftr)))
+ # Aidmar      
 
             # bhattacharyya test
             import math
