@@ -5,6 +5,8 @@
 #ifndef CPP_PCAPREADER_MAIN_H
 #define CPP_PCAPREADER_MAIN_H
 
+// Aidmar
+#include <iomanip>
 
 #include <tins/tins.h>
 #include <iostream>

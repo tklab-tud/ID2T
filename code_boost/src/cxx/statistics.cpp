@@ -1,3 +1,6 @@
+// Aidmar
+#include <iostream>
+
 #include "statistics.h"
 #include <sstream>
 #include <SQLiteCpp/SQLiteCpp.h>
