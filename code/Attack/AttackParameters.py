@@ -22,8 +22,12 @@ class Parameter(Enum):
     NUMBER_ATTACKERS = 'attackers.count'
 
     # Aidmar
+    # For DDoS
     ATTACK_DURATION = "attack.duration" # in seconds
     VICTIM_BUFFER = "victim.buffer" # in packets
+    # For JoomlaRedPrivExploit
+    TARGET_URI = "target.uri"
+    TARGET_HOST = "target.host"
 
     # recommended type: Float ------------------------------------
     PACKETS_PER_SECOND = 'packets.per-second'  # packets per second
@@ -50,3 +54,6 @@ class ParameterTypes(Enum):
     TYPE_BOOLEAN = 5
     TYPE_FLOAT = 6
     TYPE_PACKET_POSITION = 7  # used to derive timestamp from parameter INJECT_AFTER_PACKET
+
+    # Aidmar
+    TYPE_URI = 8

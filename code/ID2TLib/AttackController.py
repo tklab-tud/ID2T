@@ -80,7 +80,7 @@ class AttackController:
         # Write attack into pcap file
         print("Generating attack packets...", end=" ")
         sys.stdout.flush()  # force python to print text immediately
-        total_packets, temp_attack_pcap_path = self.current_attack.generate_attack_pcap()
+        total_packets, temp_attack_pcap_path = self.current_attack.generate_attack_pcap
         print("done. (total: " + str(total_packets) + " pkts.)")
 
         # Store label into LabelManager

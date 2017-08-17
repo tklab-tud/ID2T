@@ -1,10 +1,13 @@
+# Aidmar
+import validators # TO-DO: it needs to be added to required packages
+
 import ipaddress
 import os
 import random
 import re
 import tempfile
 from abc import abstractmethod, ABCMeta
-import numpy as np
+import numpy as np # TO-DO: it needs to be added to required packages
 
 import ID2TLib.libpcapreader as pr
 from scapy.utils import PcapWriter
@@ -208,6 +211,18 @@ class BaseAttack(metaclass=ABCMeta):
         except ValueError:
             return False, value
 
+    # Aidmar
+    @staticmethod
+    def _is_uri(uri: str):
+        """
+        Verifies that the given string is a valid URI.
+
+        :param uri: The URI as string.
+        :return: True if URI is valid, otherwise False.
+        """
+        return validators.url(uri)
+
+
     #########################################
     # HELPER METHODS
     #########################################
@@ -279,6 +294,9 @@ class BaseAttack(metaclass=ABCMeta):
                 is_valid = True
                 param_name = Parameter.INJECT_AT_TIMESTAMP
                 value = (ts / 1000000)  # convert microseconds from getTimestampMuSec into seconds
+        # Aidmar - TO-DO
+        elif param_type == ParameterTypes.TYPE_URI:
+            is_valid = True#self._is_uri(value)
 
         # add value iff validation was successful
         if is_valid:
