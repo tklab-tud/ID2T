@@ -1,6 +1,8 @@
 # Aidmar
 from scipy.spatial import distance as dist
 import numpy as np
+from operator import itemgetter
+import math
 
 import os
 import time
@@ -631,6 +633,37 @@ class Statistics:
         #print("Saved distributions plots at: %s, %s, %s, %s, %s, %s, %s, %s %s" %(ttl_out_path,mss_out_path, win_out_path,
         #protocol_out_path, port_out_path,ip_src_out_path,ip_dst_out_path, plot_interval_pktCount))
 
+
+     # Aidmar
+    def calculate_complement_packet_rates(self, pps):
+        """
+        Calculates the complement packet rates of the background traffic packet rates per interval.
+        Then normalize it to maximum boundary, which is the input parameter pps
+
+        :return: normalized packet rates for each time interval.
+        """
+        result = self.process_db_query(
+            "SELECT timestamp,pktsCount FROM interval_statistics ORDER BY timestamp")
+        # print(result)
+        bg_interval_pps = []
+        complement_interval_pps = []
+        intervalsSum = 0
+        if result:
+            # Get the interval in seconds
+            for i, row in enumerate(result):
+                if i < len(result) - 1:
+                    intervalsSum += math.ceil((int(result[i + 1][0]) * 10 ** -6) - (int(row[0]) * 10 ** -6))
+            interval = intervalsSum / (len(result) - 1)
+            # Convert timestamp from micro to seconds, convert packet rate "per interval" to "per second"
+            for row in result:
+                bg_interval_pps.append((int(row[0]) * 10 ** -6, int(row[1] / interval)))
+            # Find max PPS
+            maxPPS = max(bg_interval_pps, key=itemgetter(1))[1]
+
+            for row in bg_interval_pps:
+                complement_interval_pps.append((row[0], int(pps * (maxPPS - row[1]) / maxPPS)))
+
+        return complement_interval_pps
 
 """
  # Aidmar      

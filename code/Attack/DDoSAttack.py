@@ -18,7 +18,7 @@ from collections import deque
 
 
 class DDoSAttack(BaseAttack.BaseAttack):
-    # Metasploit DoS default PPS
+    # Aidmar - Metasploit DoS default PPS
     maxDefaultPPS = 1400
     minDefaultPPS = 400
 

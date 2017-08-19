@@ -2,9 +2,6 @@ import logging
 import csv
 import socket
 
-# Aidmar
-from operator import itemgetter
-import math
 
 from random import shuffle, randint, choice, uniform
 
@@ -20,7 +17,7 @@ from scapy.layers.inet import IP, Ether, TCP
 
 
 class PortscanAttack(BaseAttack.BaseAttack):
-    # Nmap default packet rate
+    # Aidmar - Nmap default packet rate
     maxDefaultPPS = 300
     minDefaultPPS = 5
 
@@ -51,7 +48,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
             port_dst_shuffled = ports_dst
         return port_dst_shuffled
 
- 
     def is_valid_ip_address(self,addr):
         """
         Check if the IP address family is suported.
@@ -152,42 +148,30 @@ class PortscanAttack(BaseAttack.BaseAttack):
             # Aidmar
             return timestamp + uniform(1 / pps, maxdelay)
 
-        mac_source = self.get_param_value(Param.MAC_SOURCE)
-        mac_destination = self.get_param_value(Param.MAC_DESTINATION)
-        pps = self.get_param_value(Param.PACKETS_PER_SECOND)
-        # Aidmar - unjustified distribution
-        # randomdelay = Lea.fromValFreqsDict({1 / pps: 70, 2 / pps: 20, 5 / pps: 7, 10 / pps: 3})
-        # maxdelay = randomdelay.random()
-
         # Aidmar
-        # Calculate the complement packet rates of the background traffic packet rates per interval
-        result = self.statistics.process_db_query(
-            "SELECT timestamp,pktsCount FROM interval_statistics ORDER BY timestamp")
-        print(result)
-        bg_interval_pps = []
-        intervalsSum = 0
-        if result:
-            # Get the interval in seconds
-            for i,row in enumerate(result):
-                if i<len(result)-1:
-                    intervalsSum += math.ceil((int(result[i+1][0]) * 10 ** -6) - (int(row[0]) * 10 ** -6))
-            interval = intervalsSum/(len(result)-1)
-            # Convert timestamp from micro to seconds, convert packet rate "per interval" to "per second"
-            for row in result:
-                bg_interval_pps.append((int(row[0]) * 10 ** -6, int(row[1]/interval)))
-            # Find max PPS
-            maxPPS = max(bg_interval_pps, key=itemgetter(1))[1]
-            complement_interval_pps = []
-            for row in bg_interval_pps:
-                complement_interval_pps.append((row[0], int(pps * (maxPPS - row[1])/maxPPS)))
-            print(complement_interval_pps)
+        def getIntervalPPS(complement_interval_pps, timestamp):
+            """
+            Gets the packet rate (pps) in specific time interval.
 
-        def getIntervalPPS(timestamp):
+            :return: the corresponding packet rate for packet rate (pps) .
+            """
             for row in complement_interval_pps:
                 if timestamp<=row[0]:
                     return row[1]
             return complement_interval_pps[-1][1] # in case the timstamp > capture max timestamp
 
+        mac_source = self.get_param_value(Param.MAC_SOURCE)
+        mac_destination = self.get_param_value(Param.MAC_DESTINATION)
+        pps = self.get_param_value(Param.PACKETS_PER_SECOND)
+        # Aidmar - unjustified distribution
+        #randomdelay = Lea.fromValFreqsDict({1 / pps: 70, 2 / pps: 20, 5 / pps: 7, 10 / pps: 3})
+        #maxdelay = randomdelay.random()
+
+        # Aidmar- TO-DO: maxdelay should be taken from BG traffic
+        maxdelay = 2 / pps
+
+        # Aidmar - calculate complement packet rates of BG traffic per interval
+        complement_interval_pps = self.statistics.calculate_complement_packet_rates(pps)
 
         # Determine ports
         dest_ports = self.get_param_value(Param.PORT_DESTINATION)
@@ -237,7 +221,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
         # in case of one open port, convert ports_open to array
         if not isinstance(ports_open, list):
             ports_open = [ports_open]
-        # =========================================================================================================
 
         # MSS (Maximum Segment Size) for Ethernet. Allowed values [536,1500]
         # Aidmar
@@ -248,7 +231,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
         if mss_src is None:
             mss_src = self.statistics.process_db_query("most_used(mssValue)")
         # mss = self.statistics.get_mss(ip_destination)
-        # =========================================================================================================
 
         # Set TTL based on TTL distribution of IP address
         ttl_dist = self.statistics.get_ttl_distribution(ip_source)
@@ -264,10 +246,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
         replayDelay = self.get_reply_delay(ip_destination)
 
         for dport in dest_ports:
-            # Aidmar - move to here to generate different maxdelay for each packet
-            randomdelay = Lea.fromValFreqsDict({1 / pps: 85, 2 / pps: 10, 5 / pps: 5}) # TO-DO: is it perfect? here?
-            maxdelay = randomdelay.random()
-
             # Parameters changing each iteration
             if self.get_param_value(Param.IP_SOURCE_RANDOMIZE) and isinstance(ip_source, list):
                 ip_source = choice(ip_source)
@@ -281,7 +259,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
             # Aidmar - use most used window size
             win_size = self.statistics.process_db_query("most_used(winSize)")
             request_tcp = TCP(sport=sport, dport=dport,  window=win_size, flags='S', options=[('MSS', mss_src)])
-            # =========================================================================================================
 
             request = (request_ether / request_ip / request_tcp)
             # first packet uses timestamp provided by attack parameter Param.INJECT_AT_TIMESTAMP
@@ -304,7 +281,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
                 reply = (reply_ether / reply_ip / reply_tcp)
                 # Aidmar - edit name timestamp_reply
                 #print(uniform(replayDelay, 2 * replayDelay))
-                timestamp_reply = timestamp_next_pkt + uniform(replayDelay, 2 * replayDelay)
+                timestamp_reply = timestamp_next_pkt + uniform(replayDelay, 2 * replayDelay) # TO-DO: justify these boundaries
 
                 if len(B_A_packets) > 0:
                     last_reply_timestamp = B_A_packets[-1].time
@@ -346,10 +323,10 @@ class PortscanAttack(BaseAttack.BaseAttack):
             packets.append(request)
 
             # Aidmar
-            pps = self.minDefaultPPS if getIntervalPPS(timestamp_next_pkt) is None else max(getIntervalPPS(timestamp_next_pkt),self.minDefaultPPS) # avoid case of pps = 0
+            pps = self.minDefaultPPS if getIntervalPPS(complement_interval_pps, timestamp_next_pkt) is None else max(getIntervalPPS(complement_interval_pps, timestamp_next_pkt),self.minDefaultPPS) # avoid case of pps = 0
             timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
 
-        # In case all requests are already sent, send all replies and confirms
+        # Aidmar - In case all requests are already sent, send all replies and confirms
         temp = A_B_packets + B_A_packets
         temp.sort(key=lambda x: x.time)
         for pkt in temp:
