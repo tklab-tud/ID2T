@@ -420,6 +420,9 @@ class Statistics:
             plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
             plt.tight_layout()
 
+            # limit the number of xticks
+            plt.locator_params(axis='x', nbins=20)
+
             plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
             out = self.pcap_filepath.replace('.pcap', '_plot-ip-src' + file_ending)
             plt.savefig(out, dpi=500)
@@ -447,6 +450,9 @@ class Statistics:
             my_xticks = graphx
             plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
             plt.tight_layout()
+
+            # limit the number of xticks
+            plt.locator_params(axis='x', nbins=20)
 
             plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
             out = self.pcap_filepath.replace('.pcap', '_plot-ip-dst' + file_ending)
@@ -492,11 +498,14 @@ class Statistics:
             plt.xlim([0, len(graphx)])
             plt.grid(True)
 
-            # IPs on x-axis
+            # timestamp on x-axis
             x = range(0, len(graphx))
             my_xticks = graphx
             plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
             plt.tight_layout()
+
+            # limit the number of xticks
+            plt.locator_params(axis='x', nbins=20)
 
             plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
             out = self.pcap_filepath.replace('.pcap', '_plot-interval-pkt-count' + file_ending)
@@ -520,11 +529,14 @@ class Statistics:
             plt.xlim([0, len(graphx)])
             plt.grid(True)
 
-            # IPs on x-axis
+            # timestamp on x-axis
             x = range(0, len(graphx))
             my_xticks = graphx
             plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
             plt.tight_layout()
+
+            # limit the number of xticks
+            plt.locator_params(axis='x', nbins=20)
 
             plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
             out = self.pcap_filepath.replace('.pcap', '_plot-interval-ip-src-ent' + file_ending)
@@ -548,11 +560,14 @@ class Statistics:
             plt.xlim([0, len(graphx)])
             plt.grid(True)
 
-            # IPs on x-axis
+            # timestamp on x-axis
             x = range(0, len(graphx))
             my_xticks = graphx
             plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
             plt.tight_layout()
+
+            # limit the number of xticks
+            plt.locator_params(axis='x', nbins=20)
 
             plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
             out = self.pcap_filepath.replace('.pcap', '_plot-interval-ip-dst-ent' + file_ending)
@@ -572,15 +587,17 @@ class Statistics:
             plt.title("Destination IP Cumulative Entropy")
             plt.xlabel('Timestamp')
             plt.ylabel('Entropy')
-            width = 0.5
             plt.xlim([0, len(graphx)])
             plt.grid(True)
 
-            # IPs on x-axis
+            # timestamp on x-axis
             x = range(0, len(graphx))
             my_xticks = graphx
             plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
             plt.tight_layout()
+
+            # limit the number of xticks
+            plt.locator_params(axis='x', nbins=20)
 
             plt.plot(x, graphy, 'r')
             out = self.pcap_filepath.replace('.pcap', '_plot-interval-ip-dst-cum-ent' + file_ending)
@@ -590,25 +607,29 @@ class Statistics:
         # Aidmar
         def plot_interval_ip_src_cum_ent(file_ending: str):
             plt.gcf().clear()
+
             result = self.stats_db._process_user_defined_query(
                 "SELECT timestamp, ipSrcCumEntropy FROM interval_statistics ORDER BY timestamp")
             graphx, graphy = [], []
             for row in result:
                 graphx.append(row[0])
                 graphy.append(row[1])
+
             plt.autoscale(enable=True, axis='both')
             plt.title("Source IP Cumulative Entropy")
             plt.xlabel('Timestamp')
             plt.ylabel('Entropy')
-            width = 0.5
             plt.xlim([0, len(graphx)])
             plt.grid(True)
 
-            # IPs on x-axis
+            # timestamp on x-axis
             x = range(0, len(graphx))
             my_xticks = graphx
             plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
             plt.tight_layout()
+
+            # limit the number of xticks
+            plt.locator_params(axis='x',nbins=20)
 
             plt.plot(x, graphy, 'r')
             out = self.pcap_filepath.replace('.pcap', '_plot-interval-ip-src-cum-ent' + file_ending)
