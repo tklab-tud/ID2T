@@ -107,7 +107,10 @@ void pcap_processor::collect_statistics() {
     if (file_exists(filePath)) {
         std::cout << "Loading pcap..." << std::endl;
         FileSniffer sniffer(filePath);
-        SnifferIterator i = sniffer.begin();
+        // Aidmar - used to know the capture duration, thus choose a suitable interval
+        FileSniffer snifferOverview(filePath);
+        
+        SnifferIterator i = sniffer.begin();                
         Tins::Timestamp lastProcessedPacket;
 
         // Save timestamp of first packet
@@ -115,10 +118,20 @@ void pcap_processor::collect_statistics() {
     
         // Aidmar
         int counter=0;
-        int timeIntervalNum = 1;
-        std::chrono::duration<int, std::micro> timeInterval(10000000); // 10 sec
+        int timeIntervalCounter = 1;   
+        int timeIntervalsNum = 100;
         std::chrono::microseconds intervalStartTimestamp = stats.getTimestampFirstPacket();
-        std::chrono::microseconds firstTimestamp = stats.getTimestampFirstPacket();
+        std::chrono::microseconds firstTimestamp = stats.getTimestampFirstPacket();        
+        SnifferIterator lastpkt;
+        for (SnifferIterator j = snifferOverview.begin(); j != snifferOverview.end(); j++) {lastpkt = j;}        
+        std::chrono::microseconds lastTimestamp = lastpkt->timestamp();                  
+        std::chrono::microseconds captureDuration = lastTimestamp - firstTimestamp;
+        long timeInterval_microsec = captureDuration.count() / timeIntervalsNum;
+        std::chrono::duration<int, std::micro> timeInterval(timeInterval_microsec); // 10,000,000 = 10 sec
+        std::cout << "Aidmar: First:" << firstTimestamp.count() << std::endl;
+        std::cout << "Aidmar: Last:" << lastTimestamp.count() << std::endl;
+        std::cout << "Aidmar: Capture duration:" << captureDuration.count() << std::endl;
+        std::cout << "Aidmar: Interval duration:" << timeInterval_microsec << std::endl;        
         //int pktsInterval = 1000;        
         int previousPacketCount = 0;
         
@@ -132,11 +145,11 @@ void pcap_processor::collect_statistics() {
             std::chrono::microseconds lastPktTimestamp = i->timestamp();
             //Tins::Timestamp tt = i->timestamp();                        
             std::chrono::microseconds currentCaptureDuration = lastPktTimestamp - firstTimestamp;
-            std::chrono::microseconds barrier =  timeIntervalNum*timeInterval;
+            std::chrono::microseconds barrier =  timeIntervalCounter*timeInterval;
             if(currentCaptureDuration>barrier){
-                //std::cout<<"LastpkstTimstamp:" << lastPktTimestamp.count() << ", currentCaptureDuration:"<< currentCaptureDuration.count() << ", barrier:" <<barrier.count()<<", interval:" << timeIntervalNum << ", interval time:"<<timeInterval.count()<<"\n";                    
+                //std::cout<<"LastpkstTimstamp:" << lastPktTimestamp.count() << ", currentCaptureDuration:"<< currentCaptureDuration.count() << ", barrier:" <<barrier.count()<<", interval:" << timeIntervalCounter << ", interval time:"<<timeInterval.count()<<"\n";                    
                 stats.addIntervalStat(timeInterval, intervalStartTimestamp, lastPktTimestamp, previousPacketCount);
-                timeIntervalNum++;   
+                timeIntervalCounter++;   
                 intervalStartTimestamp = lastPktTimestamp;
                 previousPacketCount = stats.getPacketCount();
             }
