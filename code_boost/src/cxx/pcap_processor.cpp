@@ -126,6 +126,10 @@ void pcap_processor::collect_statistics() {
         for (SnifferIterator j = snifferOverview.begin(); j != snifferOverview.end(); j++) {lastpkt = j;}        
         std::chrono::microseconds lastTimestamp = lastpkt->timestamp();                  
         std::chrono::microseconds captureDuration = lastTimestamp - firstTimestamp;
+        if(captureDuration.count()<=0){
+            std::cout<<"ERROR: PCAP file is empty!"<<"\n";
+            return;
+        }
         long timeInterval_microsec = captureDuration.count() / timeIntervalsNum;
         std::chrono::duration<int, std::micro> timeInterval(timeInterval_microsec); // 10,000,000 = 10 sec
         std::cout << "Aidmar: First:" << firstTimestamp.count() << std::endl;

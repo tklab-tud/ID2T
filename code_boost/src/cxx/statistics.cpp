@@ -633,14 +633,10 @@ void statistics::writeToDatabase(std::string database_path) {
     db.writeStatisticsMss(ip_sumMss);
     db.writeStatisticsPorts(ip_ports);
     db.writeStatisticsProtocols(protocol_distribution);
-    std::cout<<"1"<<"\n";
     // Aidmar
     db.writeStatisticsMss_dist(mss_distribution);
-    std::cout<<"2"<<"\n";
     db.writeStatisticsWin(win_distribution);
-    std::cout<<"3"<<"\n";
     db.writeStatisticsConv(conv_statistics);
-    std::cout<<"4"<<"\n";
     db.writeStatisticsInterval(interval_statistics);
     
     

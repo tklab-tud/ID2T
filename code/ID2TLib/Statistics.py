@@ -643,7 +643,6 @@ class Statistics:
         port_out_path = plot_port('.' + format)
         ip_src_out_path = plot_ip_src('.' + format)
         ip_dst_out_path = plot_ip_dst('.' + format)
-        ip_dst_out_path = plot_ip_dst('.' + format)
         plot_interval_pktCount = plot_interval_pktCount('.' + format)
         plot_interval_ip_src_ent = plot_interval_ip_src_ent('.' + format)
         plot_interval_ip_dst_ent = plot_interval_ip_dst_ent('.' + format)
