@@ -188,6 +188,6 @@ float artifacts_tests::get_payload_ratio(){
 }
 
 void artifacts_tests::check_tos(uint8_t ToS){
-    if((unsigned)ToS != 0)
-        std::cout<<(unsigned)ToS<<"\n";
+    //if((unsigned)ToS != 0)
+      //  std::cout<<"ToS: "<<(unsigned)ToS<<"\n";
 }

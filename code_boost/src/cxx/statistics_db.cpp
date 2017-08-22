@@ -342,7 +342,9 @@ void statistics_db::writeStatisticsConv(std::unordered_map<conv, entry_convStat>
             for(int i=0; (unsigned)i<e.pkts_delay.size();i++){
                 sumDelay += e.pkts_delay[i].count();
             }
-            e.avg_delay = (std::chrono::microseconds)sumDelay/e.pkts_delay.size(); // average
+            if(e.pkts_delay.size()>0)
+                e.avg_delay = (std::chrono::microseconds)sumDelay/e.pkts_delay.size(); // average
+            else e.avg_delay = (std::chrono::microseconds)0;
 
             query.bind(1, f.ipAddressA);
             query.bind(2, f.portA);
