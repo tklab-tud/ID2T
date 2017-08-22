@@ -150,20 +150,25 @@ void pcap_processor::collect_statistics() {
             //Tins::Timestamp tt = i->timestamp();                        
             std::chrono::microseconds currentCaptureDuration = lastPktTimestamp - firstTimestamp;
             std::chrono::microseconds barrier =  timeIntervalCounter*timeInterval;
-            if(currentCaptureDuration>barrier){
-                //std::cout<<"LastpkstTimstamp:" << lastPktTimestamp.count() << ", currentCaptureDuration:"<< currentCaptureDuration.count() << ", barrier:" <<barrier.count()<<", interval:" << timeIntervalCounter << ", interval time:"<<timeInterval.count()<<"\n";                    
+            if(currentCaptureDuration>barrier){                    
                 stats.addIntervalStat(timeInterval, intervalStartTimestamp, lastPktTimestamp, previousPacketCount);
                 timeIntervalCounter++;   
                 intervalStartTimestamp = lastPktTimestamp;
                 previousPacketCount = stats.getPacketCount();
             }
             
+            std::cout << "Aidmar: addIntervalStat + getPacketCount" << std::endl;
+            
             stats.incrementPacketCount();
             this->process_packets(*i);
+            
+             std::cout << "Aidmar: process_packets + incrementPacketCount" << std::endl;
+             
             lastProcessedPacket = i->timestamp();            
             counter++;
         }
         
+         std::cout << "Aidmar: Done with packets" << std::endl;
         // Save timestamp of last packet into statistics
         stats.setTimestampLastPacket(lastProcessedPacket);
         
