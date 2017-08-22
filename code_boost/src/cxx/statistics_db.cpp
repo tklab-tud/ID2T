@@ -33,9 +33,11 @@ void statistics_db::writeStatisticsIP(std::unordered_map<std::string, entry_ipSt
                 "maxPktRate REAL,"
                 "minPktRate REAL,"
                 "class TEXT, "
+                "srcAnomalyScore REAL, "
+                "dstAnomalyScore REAL, "
                 "PRIMARY KEY(ipAddress));";
         db->exec(createTable);
-        SQLite::Statement query(*db, "INSERT INTO ip_statistics VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        SQLite::Statement query(*db, "INSERT INTO ip_statistics VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         for (auto it = ipStatistics.begin(); it != ipStatistics.end(); ++it) {
             entry_ipStat e = it->second;
             query.bind(1, it->first);
@@ -47,6 +49,8 @@ void statistics_db::writeStatisticsIP(std::unordered_map<std::string, entry_ipSt
             query.bind(6, e.max_pkt_rate);
             query.bind(7, e.min_pkt_rate);
             query.bind(8, e.ip_class);
+            query.bind(9, e.sourceAnomalyScore);
+            query.bind(10, e.destinationAnomalyScore);
             query.exec();
             query.reset();
         }

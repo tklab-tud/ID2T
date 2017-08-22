@@ -340,21 +340,22 @@ void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddres
             ipSrc_Mahoney_score = (float)s_t*n/s_r;
         }
         
-            // Replace pcap filename with 'filename_ip_entropy'
-        std::string new_filepath = filePath;
-        const std::string &newExt = "_ip_src_anomaly_score.csv";
-        std::string::size_type h = new_filepath.rfind('.', new_filepath.length());
-        if (h != std::string::npos) {
-            new_filepath.replace(h, newExt.length(), newExt);
-        } else {
-            new_filepath.append(newExt);
-        }
+    // Replace pcap filename with 'filename_ip_entropy'
+    /*std::string new_filepath = filePath;
+    const std::string &newExt = "_ip_src_anomaly_score.csv";
+    std::string::size_type h = new_filepath.rfind('.', new_filepath.length());
+    if (h != std::string::npos) {
+        new_filepath.replace(h, newExt.length(), newExt);
+    } else {
+        new_filepath.append(newExt);
+    }
         
     // Write stats to file
     std::ofstream file;
     file.open (new_filepath,std::ios_base::app);
     file << ipAddressSender << ","<< s_t << "," << n << "," << s_r << "," << ipSrc_Mahoney_score << "\n";
     file.close();  
+    */
     
     ip_statistics[ipAddressSender].firstAppearAsSenderPktCount = packetCount;  
     ip_statistics[ipAddressSender].sourceAnomalyScore = ipSrc_Mahoney_score;    
@@ -390,21 +391,22 @@ void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddres
             ipDst_Mahoney_score = (float)s_t*n/s_r;
         }
         
-        // Replace pcap filename with 'filename_ip_entropy'
-        std::string new_filepath = filePath;
-        const std::string &newExt = "_ip_dst_anomaly_score.csv";
-        std::string::size_type h = new_filepath.rfind('.', new_filepath.length());
-        if (h != std::string::npos) {
-            new_filepath.replace(h, newExt.length(), newExt);
-        } else {
-            new_filepath.append(newExt);
-        }
-        
+    // Replace pcap filename with 'filename_ip_entropy'
+    /*std::string new_filepath = filePath;
+    const std::string &newExt = "_ip_dst_anomaly_score.csv";
+    std::string::size_type h = new_filepath.rfind('.', new_filepath.length());
+    if (h != std::string::npos) {
+        new_filepath.replace(h, newExt.length(), newExt);
+    } else {
+        new_filepath.append(newExt);
+    }        
     // Write stats to file
     std::ofstream file;
     file.open (new_filepath,std::ios_base::app);
     file << ipAddressReceiver << ","<< s_t << "," << n << "," << s_r << "," << ipDst_Mahoney_score << "\n";
-    file.close();        
+    file.close();  
+    */
+    
     ip_statistics[ipAddressReceiver].firstAppearAsReceiverPktCount = packetCount;
     ip_statistics[ipAddressReceiver].destinationAnomalyScore = ipDst_Mahoney_score;
     }

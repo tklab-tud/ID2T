@@ -148,8 +148,8 @@ struct entry_ipStat {
     // Aidmar - to calculate Mahoney anomaly score
     long firstAppearAsSenderPktCount;
     long firstAppearAsReceiverPktCount;
-    long sourceAnomalyScore;
-    long destinationAnomalyScore;
+    float sourceAnomalyScore;
+    float destinationAnomalyScore;
     // Aidmar- To collect statstics over time interval
     std::vector<std::chrono::microseconds> pktsSentTimestamp;
     std::vector<std::chrono::microseconds> pktsReceivedTimestamp;
