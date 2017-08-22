@@ -1,11 +1,12 @@
 # Created by Aidmar
 """
-Joomla Account Creation and Privilege Escalation
+ATutor 2.2.1 SQL Injection / Remote Code Execution
 
-This attack creates an arbitrary account with administrative privileges in Joomla versions 3.4.4 through 3.6.3.
+This module exploits a SQL Injection vulnerability and an authentication weakness vulnerability in ATutor. This essentially
+means an attacker can bypass authentication and reach the administrator's interface where they can upload malicious code.
 
 more info:
-https://www.rapid7.com/db/modules/auxiliary/admin/http/joomla_registration_privesc
+https://www.rapid7.com/db/modules/exploit/multi/http/atutor_sqli
 
 """
 
@@ -29,7 +30,7 @@ from scapy.layers.inet import IP, Ether, TCP, RandShort
 #from scapy.all import *
 
 
-class JoomlaRegPrivExploit(BaseAttack.BaseAttack):
+class SQLiAttack(BaseAttack.BaseAttack):
     # Metasploit default packet rate
     maxDefaultPPS = 55
     minDefaultPPS = 5
@@ -41,12 +42,12 @@ class JoomlaRegPrivExploit(BaseAttack.BaseAttack):
 
     def __init__(self, statistics, pcap_file_path):
         """
-        Creates a new instance of the Joomla Registeration Privileges Escalation Exploit.
+        Creates a new instance of the SQLi Attack.
 
         :param statistics: A reference to the statistics class.
         """
         # Initialize attack
-        super(JoomlaRegPrivExploit, self).__init__(statistics, "JoomlaRegPrivesc Exploit", "Injects an JoomlaRegPrivesc exploit'",
+        super(SQLiAttack, self).__init__(statistics, "SQLi Attack", "Injects a SQLi attack'",
                                         "Resource Exhaustion")
 
         # Define allowed parameters and their type
@@ -132,10 +133,10 @@ class JoomlaRegPrivExploit(BaseAttack.BaseAttack):
         path_attack_pcap = None
         replayDelay = self.get_reply_delay(ip_destination)
 
-        # Inject Joomla_registration_privesc
-        # Read joomla_registration_privesc pcap file
+        # Inject SQLi Attack
+        # Read SQLi Attack pcap file
         orig_ip_dst = None
-        exploit_raw_packets = RawPcapReader("joomla_registration_privesc.pcap")
+        exploit_raw_packets = RawPcapReader("ATutorSQLi.pcap")
 
         port_source = randint(self.minDefaultPort,self.maxDefaultPort) # experiments show this range of ports
 
@@ -153,7 +154,7 @@ class JoomlaRegPrivExploit(BaseAttack.BaseAttack):
             # Request
             if ip_pkt.getfieldval("dst") == orig_ip_dst: # victim IP
 
-                # There are 7 TCP connections with different source ports, for each of them we generate random port
+                # There are 363 TCP connections with different source ports, for each of them we generate random port
                 if tcp_pkt.getfieldval("sport") != prev_orig_port_source:
                     port_source = randint(self.minDefaultPort, self.maxDefaultPort)
                     prev_orig_port_source = tcp_pkt.getfieldval("sport")
@@ -167,7 +168,6 @@ class JoomlaRegPrivExploit(BaseAttack.BaseAttack):
                 # TCP
                 tcp_pkt.setfieldval("sport",port_source)
 
-
                 eth_frame.payload = b''
                 ip_pkt.payload = b''
                 tcp_pkt.payload = b''
@@ -177,7 +177,7 @@ class JoomlaRegPrivExploit(BaseAttack.BaseAttack):
                 if len(str_http_pkt) > 0:
                     # convert payload bytes to str => str = "b'..\\r\\n..'"
                     str_http_pkt = str_http_pkt[2:-1]
-                    str_http_pkt = str_http_pkt.replace('/joomla360', target_uri)
+                    str_http_pkt = str_http_pkt.replace('/ATutor', target_uri)
                     str_http_pkt = str_http_pkt.replace(orig_ip_dst, target_host)
                     str_http_pkt = str_http_pkt.replace("\\n", "\n")
                     str_http_pkt = str_http_pkt.replace("\\r", "\r")
@@ -207,7 +207,7 @@ class JoomlaRegPrivExploit(BaseAttack.BaseAttack):
                 if len(str_http_pkt) > 0:
                     # convert payload bytes to str => str = "b'..\\r\\n..'"
                     str_http_pkt = str_http_pkt[2:-1]
-                    str_http_pkt = str_http_pkt.replace('/joomla360', target_uri)
+                    str_http_pkt = str_http_pkt.replace('/ATutor', target_uri)
                     str_http_pkt = str_http_pkt.replace(orig_ip_dst, target_host)
                     str_http_pkt = str_http_pkt.replace("\\n", "\n")
                     str_http_pkt = str_http_pkt.replace("\\r", "\r")
@@ -217,6 +217,8 @@ class JoomlaRegPrivExploit(BaseAttack.BaseAttack):
                 new_pkt.time = timestamp_next_pkt
 
             packets.append(new_pkt)
+
+        # TO-DO: Last connection, victim start a connection from port 4444.
 
         # Store timestamp of first packet (for attack label)
         self.attack_start_utime = packets[0].time
