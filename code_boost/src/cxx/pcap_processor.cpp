@@ -224,7 +224,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
         stats.assignMacAddress(ipAddressReceiver, macAddressReceiver);        
 
         // Aidmar - Artifacts Tests: contemporary (ToS)
-        tests.check_tos(ipLayer.tos());
+        //tests.check_tos(ipLayer.tos());
         
     } // PDU is IPv6
     else if (pdu_l3_type == PDU::PDUType::IPv6) {
@@ -256,17 +256,17 @@ void pcap_processor::process_packets(const Packet &pkt) {
         PDU::PDUType p = pdu_l4->pdu_type();  
         
         // Aidmar - Artifacts Tests: payload
-        if (pdu_l3_type == PDU::PDUType::IP) {            
+        /*if (pdu_l3_type == PDU::PDUType::IP) {            
             tests.check_payload(pdu_l4);
-          }
+          }*/
           
         if (p == PDU::PDUType::TCP) {
             TCP tcpPkt = (const TCP &) *pdu_l4;
             
           // Aidmar - Artifacts Tests: checksum
-          if (pdu_l3_type == PDU::PDUType::IP) {            
+          /*if (pdu_l3_type == PDU::PDUType::IP) {            
             tests.check_checksum(ipAddressSender, ipAddressReceiver, tcpPkt);
-          }
+          }*/
             
             stats.incrementProtocolCount(ipAddressSender, "TCP");                        
                     
