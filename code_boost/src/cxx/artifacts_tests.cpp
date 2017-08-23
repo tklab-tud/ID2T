@@ -99,8 +99,16 @@ void artifacts_tests::check_checksum(std::string ipAddressSender, std::string ip
     unsigned short calculatedChecsum = 0;
     
     int headerSize = tcpPkt.header_size();
-
-    std::vector<uint8_t> bufferArray_8 = tcpPkt.serialize();
+    std::vector<uint8_t> bufferArray_8;
+      
+    try {
+        bufferArray_8 = tcpPkt.serialize();
+    } catch (serialization_error) {        
+        std::cout << "Error: Could not serialize TCP packet with sender: " << ipAddressSender << ", receiver: " 
+        << ipAddressReceiver << ", seq: " << tcpPkt.seq() << std::endl;
+        return;
+    }
+            
     std::vector<unsigned short> bufferArray_16;
      for(int i=0; (unsigned)i<bufferArray_8.size();i++){
          bufferArray_16.push_back(bufferArray_8[i]);
