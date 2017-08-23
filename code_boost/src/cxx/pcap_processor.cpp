@@ -138,6 +138,7 @@ void pcap_processor::collect_statistics() {
         std::cout << "Aidmar: Interval duration:" << timeInterval_microsec << std::endl;        
         //int pktsInterval = 1000;        
         int previousPacketCount = 0;
+        float previousSumPacketSize = 0;
         
         // Iterate over all packets and collect statistics
         for (; i != sniffer.end(); i++) {
@@ -151,10 +152,11 @@ void pcap_processor::collect_statistics() {
             std::chrono::microseconds currentCaptureDuration = lastPktTimestamp - firstTimestamp;
             std::chrono::microseconds barrier =  timeIntervalCounter*timeInterval;
             if(currentCaptureDuration>barrier){                    
-                stats.addIntervalStat(timeInterval, intervalStartTimestamp, lastPktTimestamp, previousPacketCount);
+                stats.addIntervalStat(timeInterval, intervalStartTimestamp, lastPktTimestamp, previousPacketCount, previousSumPacketSize);
                 timeIntervalCounter++;   
                 intervalStartTimestamp = lastPktTimestamp;
                 previousPacketCount = stats.getPacketCount();
+                previousSumPacketSize = stats.getSumPacketSize();
             }
             
             std::cout << "Aidmar: addIntervalStat + getPacketCount" << std::endl;

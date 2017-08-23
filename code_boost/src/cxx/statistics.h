@@ -184,6 +184,7 @@ struct entry_ipStat {
  */
 struct entry_intervalStat {
     int pkts_count;
+    float kbytes;
     float ip_src_entropy; 
     float ip_dst_entropy;
     float ip_src_cum_entropy; 
@@ -195,6 +196,7 @@ struct entry_intervalStat {
 
     bool operator==(const entry_intervalStat &other) const {
         return pkts_count == other.pkts_count
+               && kbytes == other.kbytes
                && ip_src_entropy == other.ip_src_entropy
                && ip_dst_entropy == other.ip_dst_entropy
                && ip_src_cum_entropy == other.ip_src_cum_entropy
@@ -346,7 +348,7 @@ public:
     void addConvStat(std::string ipAddressSender,int sport,std::string ipAddressReceiver,int dport, std::chrono::microseconds timestamp);
     std::vector<float> calculateIPsCumEntropy();
     std::vector<float> calculateLastIntervalIPsEntropy(std::chrono::microseconds intervalStartTimestamp);        
-    void addIntervalStat(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp, std::chrono::microseconds lastPktTimestamp, int previousPacketCount);
+    void addIntervalStat(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp, std::chrono::microseconds lastPktTimestamp, int previousPacketCount, float previousSumPacketSize);
 
     void incrementTTLcount(std::string ipAddress, int ttlValue);
 
@@ -370,6 +372,7 @@ public:
     // Aidmar
     void addIpStat_packetSent(std::string filePath, std::string ipAddressSender, std::string ipAddressReceiver, long bytesSent, std::chrono::microseconds timestamp);
     int getPacketCount();
+    int getSumPacketSize();
 
     void addMSS(std::string ipAddress, int MSSvalue);
 

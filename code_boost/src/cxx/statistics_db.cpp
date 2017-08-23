@@ -32,7 +32,7 @@ void statistics_db::writeStatisticsIP(std::unordered_map<std::string, entry_ipSt
                 "kbytesSent REAL, "
                 "maxPktRate REAL,"
                 "minPktRate REAL,"
-                "class TEXT, "
+                "ipClass TEXT, "
                 "srcAnomalyScore REAL, "
                 "dstAnomalyScore REAL, "
                 "PRIMARY KEY(ipAddress));";
@@ -378,7 +378,7 @@ void statistics_db::writeStatisticsInterval(std::unordered_map<std::string, entr
         db->exec("DROP TABLE IF EXISTS interval_statistics");
         SQLite::Transaction transaction(*db);
         const char *createTable = "CREATE TABLE interval_statistics ("
-                "timestamp TEXT,"
+                "lastPktTimestamp TEXT,"
                 "pktsCount INTEGER,"
                 "ipSrcEntropy REAL,"      
                 "ipDstEntropy REAL,"  

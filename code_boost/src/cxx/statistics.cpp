@@ -161,7 +161,7 @@ void statistics::calculateIPIntervalPacketRate(std::chrono::duration<int, std::m
  * @param intervalEndTimestamp The timstamp where the interval ends.
  * @param previousPacketCount The total number of packets in last interval.
  */
-void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp, std::chrono::microseconds intervalEndTimestamp, int previousPacketCount){
+void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp, std::chrono::microseconds intervalEndTimestamp, int previousPacketCount, float previousSumPacketSize){
     // Add packet rate for each IP to ip_statistics map
     calculateIPIntervalPacketRate(interval, intervalStartTimestamp);
     
@@ -170,6 +170,8 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
     std::string lastPktTimestamp_s = std::to_string(intervalEndTimestamp.count());
     
     interval_statistics[lastPktTimestamp_s].pkts_count = packetCount - previousPacketCount;  
+    interval_statistics[lastPktTimestamp_s].kbytes = (float(sumPacketSize - previousSumPacketSize) / 1024) ;
+    
     if(ipEntopies.size()>1){
         interval_statistics[lastPktTimestamp_s].ip_src_entropy = ipEntopies[0];
         interval_statistics[lastPktTimestamp_s].ip_dst_entropy = ipEntopies[1];
@@ -478,6 +480,12 @@ Tins::Timestamp statistics::getTimestampLastPacket() {
  */
 int statistics::getPacketCount() {
     return packetCount;
+}
+/**
+ * Getter for the sumPacketSize field.
+ */
+int statistics::getSumPacketSize() {
+    return sumPacketSize;
 }
 
 
