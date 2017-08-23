@@ -206,6 +206,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
     
     // PDU is IPv4
     if (pdu_l3_type == PDU::PDUType::IP) {
+         std::cout << "Aidmar: PDU is IPv4" << std::endl;
         const IP &ipLayer = (const IP &) *pdu_l3;
         ipAddressSender = ipLayer.src_addr().to_string();
         ipAddressReceiver = ipLayer.dst_addr().to_string();
@@ -228,6 +229,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
         
     } // PDU is IPv6
     else if (pdu_l3_type == PDU::PDUType::IPv6) {
+        std::cout << "Aidmar: PDU is IPv6" << std::endl;
         const IPv6 &ipLayer = (const IPv6 &) *pdu_l3;
         ipAddressSender = ipLayer.src_addr().to_string();
         ipAddressReceiver = ipLayer.dst_addr().to_string();
@@ -261,6 +263,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
           }*/
           
         if (p == PDU::PDUType::TCP) {
+            std::cout << "Aidmar: PDU is TCP" << std::endl;
             TCP tcpPkt = (const TCP &) *pdu_l4;
             
           // Aidmar - Artifacts Tests: checksum
@@ -295,7 +298,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
             
           // UDP Packet
         } else if (p == PDU::PDUType::UDP) {
-            
+            std::cout << "Aidmar: PDU is UDP" << std::endl;
             const UDP udpPkt = (const UDP &) *pdu_l4;
             stats.incrementProtocolCount(ipAddressSender, "UDP");            
             stats.incrementPortCount(ipAddressSender, udpPkt.sport(), ipAddressReceiver, udpPkt.dport());                        
