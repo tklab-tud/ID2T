@@ -160,8 +160,8 @@ void pcap_processor::collect_statistics() {
         stats.setTimestampLastPacket(lastProcessedPacket);
         
         // Aidmar
-        tests.get_checksum_incorrect_ratio();
-        tests.get_payload_ratio();
+        //tests.get_checksum_incorrect_ratio();
+        //tests.get_payload_ratio();
     
     }
 }
@@ -243,17 +243,17 @@ void pcap_processor::process_packets(const Packet &pkt) {
         PDU::PDUType p = pdu_l4->pdu_type();  
         
         // Aidmar - Artifacts Tests: payload
-        if (pdu_l3_type == PDU::PDUType::IP) {            
+        /*if (pdu_l3_type == PDU::PDUType::IP) {            
             tests.check_payload(pdu_l4);
           }
-          
+         */ 
         if (p == PDU::PDUType::TCP) {
             TCP tcpPkt = (const TCP &) *pdu_l4;
             
           // Aidmar - Artifacts Tests: checksum
-          if (pdu_l3_type == PDU::PDUType::IP) {            
+          /*if (pdu_l3_type == PDU::PDUType::IP) {            
             tests.check_checksum(ipAddressSender, ipAddressReceiver, tcpPkt);
-          }            
+          }*/            
             stats.incrementProtocolCount(ipAddressSender, "TCP");                        
                     
             // Aidmar
