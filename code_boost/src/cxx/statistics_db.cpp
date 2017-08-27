@@ -26,7 +26,7 @@ void statistics_db::writeStatisticsIP(std::unordered_map<std::string, entry_ipSt
         SQLite::Transaction transaction(*db);
         const char *createTable = "CREATE TABLE ip_statistics ( "
                 "ipAddress TEXT, "
-                "pktsReceived INTEGER, "
+                "pktsReceived INTEGtimestampER, "
                 "pktsSent INTEGER, "
                 "kbytesReceived REAL, "
                 "kbytesSent REAL, "
@@ -384,7 +384,7 @@ void statistics_db::writeStatisticsInterval(std::unordered_map<std::string, entr
                 "ipDstEntropy REAL,"  
                 "ipSrcCumEntropy REAL,"      
                 "ipDstCumEntropy REAL," 
-                "PRIMARY KEY(timestamp));";
+                "PRIMARY KEY(lastPktTimestamp));";
         db->exec(createTable);
         SQLite::Statement query(*db, "INSERT INTO interval_statistics VALUES (?, ?, ?, ?, ?, ?)");
         for (auto it = intervalStatistics.begin(); it != intervalStatistics.end(); ++it) {

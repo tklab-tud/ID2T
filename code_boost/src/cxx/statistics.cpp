@@ -644,11 +644,11 @@ void statistics::writeToDatabase(std::string database_path) {
     db.writeStatisticsPorts(ip_ports);
     db.writeStatisticsProtocols(protocol_distribution);
     // Aidmar
-    db.writeStatisticsMss_dist(mss_distribution);
+    /*db.writeStatisticsMss_dist(mss_distribution);
     db.writeStatisticsWin(win_distribution);
     db.writeStatisticsConv(conv_statistics);
     db.writeStatisticsInterval(interval_statistics);
-    
+    */
     
 }
 

@@ -180,7 +180,7 @@ class StatsDatabase:
             "most_used.ttlvalue": "SELECT ttlValue FROM ip_ttl GROUP BY ttlValue ORDER BY SUM(ttlCount) DESC LIMIT 1",
             "most_used.mssvalue": "SELECT mssValue FROM tcp_mss_dist GROUP BY mssValue ORDER BY SUM(mssCount) DESC LIMIT 1",
             "most_used.winsize": "SELECT winSize FROM tcp_syn_win GROUP BY winSize ORDER BY SUM(winCount) DESC LIMIT 1",
-            "most_used.ipclass": "SELECT class FROM ip_statistics GROUP BY class ORDER BY COUNT(*) DESC LIMIT 1",
+            "most_used.ipclass": "SELECT ipClass FROM ip_statistics GROUP BY ipClass ORDER BY COUNT(*) DESC LIMIT 1",
 
             "least_used.ipaddress": "SELECT ipAddress FROM ip_statistics WHERE (pktsSent+pktsReceived) == (SELECT MIN(pktsSent+pktsReceived) from ip_statistics)",
             "least_used.macaddress": "SELECT * FROM (SELECT macAddress, COUNT(*) as occ from ip_mac GROUP BY macAddress ORDER BY occ ASC) WHERE occ=(SELECT COUNT(*) as occ from ip_mac GROUP BY macAddress ORDER BY occ ASC LIMIT 1)",

@@ -1,6 +1,9 @@
 import importlib
 import sys
 
+#Aidmar
+import time
+
 from Attack.AttackParameters import Parameter
 from ID2TLib import LabelManager
 from ID2TLib import Statistics
@@ -77,11 +80,18 @@ class AttackController:
         else:
             attack_note = ""
 
+        # Aidmar
+        start_time = time.clock()
+
         # Write attack into pcap file
         print("Generating attack packets...", end=" ")
         sys.stdout.flush()  # force python to print text immediately
         total_packets, temp_attack_pcap_path = self.current_attack.generate_attack_pcap()
         print("done. (total: " + str(total_packets) + " pkts.)")
+
+        # Aidmar
+        end_time = time.clock()
+        print("Generated Attack in " + str(end_time-start_time)[:4] + " sec")
 
         # Store label into LabelManager
         l = Label(attack, self.get_attack_start_utime(),

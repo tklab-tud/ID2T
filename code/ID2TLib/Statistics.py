@@ -485,7 +485,7 @@ class Statistics:
         def plot_interval_pktCount(file_ending: str):
             plt.gcf().clear()
             result = self.stats_db._process_user_defined_query(
-                "SELECT timestamp, pktsCount FROM interval_statistics ORDER BY timestamp")
+                "SELECT lastPktTimestamp, pktsCount FROM interval_statistics ORDER BY timestamp")
             graphx, graphy = [], []
             for row in result:
                 graphx.append(row[0])
@@ -516,7 +516,7 @@ class Statistics:
         def plot_interval_ip_src_ent(file_ending: str):
             plt.gcf().clear()
             result = self.stats_db._process_user_defined_query(
-                "SELECT timestamp, ipSrcEntropy FROM interval_statistics ORDER BY timestamp")
+                "SELECT lastPktTimestamp, ipSrcEntropy FROM interval_statistics ORDER BY timestamp")
             graphx, graphy = [], []
             for row in result:
                 graphx.append(row[0])
@@ -547,7 +547,7 @@ class Statistics:
         def plot_interval_ip_dst_ent(file_ending: str):
             plt.gcf().clear()
             result = self.stats_db._process_user_defined_query(
-                "SELECT timestamp, ipDstEntropy FROM interval_statistics ORDER BY timestamp")
+                "SELECT lastPktTimestamp, ipDstEntropy FROM interval_statistics ORDER BY timestamp")
             graphx, graphy = [], []
             for row in result:
                 graphx.append(row[0])
@@ -578,7 +578,7 @@ class Statistics:
         def plot_interval_ip_dst_cum_ent(file_ending: str):
             plt.gcf().clear()
             result = self.stats_db._process_user_defined_query(
-                "SELECT timestamp, ipDstCumEntropy FROM interval_statistics ORDER BY timestamp")
+                "SELECT lastPktTimestamp, ipDstCumEntropy FROM interval_statistics ORDER BY timestamp")
             graphx, graphy = [], []
             for row in result:
                 graphx.append(row[0])
@@ -609,7 +609,7 @@ class Statistics:
             plt.gcf().clear()
 
             result = self.stats_db._process_user_defined_query(
-                "SELECT timestamp, ipSrcCumEntropy FROM interval_statistics ORDER BY timestamp")
+                "SELECT lastPktTimestamp, ipSrcCumEntropy FROM interval_statistics ORDER BY timestamp")
             graphx, graphy = [], []
             for row in result:
                 graphx.append(row[0])
@@ -663,7 +663,7 @@ class Statistics:
         :return: normalized packet rates for each time interval.
         """
         result = self.process_db_query(
-            "SELECT timestamp,pktsCount FROM interval_statistics ORDER BY timestamp")
+            "SELECT lastPktTimestamp,pktsCount FROM interval_statistics ORDER BY timestamp")
         # print(result)
         bg_interval_pps = []
         complement_interval_pps = []

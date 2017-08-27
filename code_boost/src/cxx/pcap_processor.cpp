@@ -108,7 +108,7 @@ void pcap_processor::collect_statistics() {
         std::cout << "Loading pcap..." << std::endl;
         FileSniffer sniffer(filePath);
         // Aidmar - used to know the capture duration, thus choose a suitable interval
-        FileSniffer snifferOverview(filePath);
+        //FileSniffer snifferOverview(filePath);
         
         SnifferIterator i = sniffer.begin();                
         Tins::Timestamp lastProcessedPacket;
@@ -118,38 +118,39 @@ void pcap_processor::collect_statistics() {
     
         // Aidmar
         int counter=0;
-        int timeIntervalCounter = 1;   
-        int timeIntervalsNum = 100;
-        std::chrono::microseconds intervalStartTimestamp = stats.getTimestampFirstPacket();
-        std::chrono::microseconds firstTimestamp = stats.getTimestampFirstPacket();        
+        //int timeIntervalCounter = 1;   
+        //int timeIntervalsNum = 100;
+        //std::chrono::microseconds intervalStartTimestamp = stats.getTimestampFirstPacket();
+        //std::chrono::microseconds firstTimestamp = stats.getTimestampFirstPacket();        
         SnifferIterator lastpkt;
-        for (SnifferIterator j = snifferOverview.begin(); j != snifferOverview.end(); j++) {lastpkt = j;}        
-        std::chrono::microseconds lastTimestamp = lastpkt->timestamp();                  
-        std::chrono::microseconds captureDuration = lastTimestamp - firstTimestamp;
-        if(captureDuration.count()<=0){
+        //for (SnifferIterator j = snifferOverview.begin(); j != snifferOverview.end(); j++) {lastpkt = j;}        
+        //std::chrono::microseconds lastTimestamp = lastpkt->timestamp();                  
+        //std::chrono::microseconds captureDuration = lastTimestamp - firstTimestamp;
+        /*if(captureDuration.count()<=0){
             std::cout<<"ERROR: PCAP file is empty!"<<"\n";
             return;
-        }
-        long timeInterval_microsec = captureDuration.count() / timeIntervalsNum;
-        std::chrono::duration<int, std::micro> timeInterval(timeInterval_microsec);             
-        int previousPacketCount = 0;
-        float previousSumPacketSize = 0;
+        }*/
+        //long timeInterval_microsec = captureDuration.count() / timeIntervalsNum;
+        //std::chrono::duration<int, std::micro> timeInterval(timeInterval_microsec);             
+        //int previousPacketCount = 0;
+        //float previousSumPacketSize = 0;
         
         // Iterate over all packets and collect statistics
         for (; i != sniffer.end(); i++) {                  
             // Aidmar            
-            std::chrono::microseconds lastPktTimestamp = i->timestamp();
+            //std::chrono::microseconds lastPktTimestamp = i->timestamp();
             //Tins::Timestamp tt = i->timestamp();                        
-            std::chrono::microseconds currentCaptureDuration = lastPktTimestamp - firstTimestamp;
-            std::chrono::microseconds barrier =  timeIntervalCounter*timeInterval;
+            //std::chrono::microseconds currentCaptureDuration = lastPktTimestamp - firstTimestamp;
+            //std::chrono::microseconds barrier =  timeIntervalCounter*timeInterval;
             // For each interval
-            if(currentCaptureDuration>barrier){                    
+            /*if(currentCaptureDuration>barrier){                    
                 stats.addIntervalStat(timeInterval, intervalStartTimestamp, lastPktTimestamp, previousPacketCount, previousSumPacketSize);
                 timeIntervalCounter++;   
                 intervalStartTimestamp = lastPktTimestamp;
                 previousPacketCount = stats.getPacketCount();
                 previousSumPacketSize = stats.getSumPacketSize();
-            }                    
+            }*/ 
+            
             stats.incrementPacketCount();
             this->process_packets(*i);                    
             lastProcessedPacket = i->timestamp();            
@@ -258,7 +259,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
                     
             // Aidmar
             // Conversation statistics
-            stats.addConvStat(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), pkt.timestamp());  
+            //stats.addConvStat(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), pkt.timestamp());  
             
             // Aidmar
             // Check window size for SYN noly
@@ -272,7 +273,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
                 
                 // Aidmar
                 // MSS distribution
-                stats.incrementMSScount(ipAddressSender, val);                          
+                //stats.incrementMSScount(ipAddressSender, val);                          
             } catch (Tins::option_not_found) {
                 // Ignore MSS if option not set
             }
