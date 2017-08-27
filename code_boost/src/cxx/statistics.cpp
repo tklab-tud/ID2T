@@ -170,7 +170,7 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
     std::string lastPktTimestamp_s = std::to_string(intervalEndTimestamp.count());
     
     interval_statistics[lastPktTimestamp_s].pkts_count = packetCount - previousPacketCount;  
-    interval_statistics[lastPktTimestamp_s].kbytes = (float(sumPacketSize - previousSumPacketSize) / 1024) ;
+    interval_statistics[lastPktTimestamp_s].kbytes = (float(sumPacketSize - previousSumPacketSize) / 1024);
     
     if(ipEntopies.size()>1){
         interval_statistics[lastPktTimestamp_s].ip_src_entropy = ipEntopies[0];

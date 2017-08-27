@@ -21,16 +21,9 @@ class DDoSAttack(BaseAttack.BaseAttack):
     # Aidmar - Metasploit DoS default PPS
     maxDefaultPPS = 1400
     minDefaultPPS = 400
-
-    def get_reply_delay(self, ip_dst):
-        replyDelay = self.statistics.process_db_query(
-            "SELECT avgDelay FROM conv_statistics WHERE ipAddressB='" + ip_dst + "' LIMIT 1")
-        if not replyDelay:
-            allDelays = self.statistics.process_db_query("SELECT avgDelay FROM conv_statistics")
-            replyDelay = np.median(allDelays)
-        replyDelay = int(replyDelay) * 10 ** -6  # convert from micro to seconds
-        print(replyDelay)
-        return replyDelay
+    # TO-DO: justify the values
+    minDefaultBuffer = 1000
+    maxDefaultBuffer = 2000
 
     def __init__(self, statistics, pcap_file_path):
         """
@@ -88,7 +81,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.MAC_DESTINATION, destination_mac)
 
         # Aidmar
-        self.add_param_value(Param.VICTIM_BUFFER, randint(1000,2000))
+        self.add_param_value(Param.VICTIM_BUFFER, randint(self.minDefaultBuffer,self.maxDefaultBuffer))
         # Aidmar - comment out
         """
         port_destination = self.statistics.process_db_query(
@@ -211,7 +204,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         # Aidmar
         replies = []
-        replayDelay = self.get_reply_delay(ip_destination)
+        replyDelay = self.get_reply_delay(ip_destination)
         victim_buffer = self.get_param_value(Param.VICTIM_BUFFER)
 
         # Aidmar
@@ -219,14 +212,15 @@ class DDoSAttack(BaseAttack.BaseAttack):
         attack_duration = self.get_param_value(Param.ATTACK_DURATION)
         pkts_num = int(pps * attack_duration)
         for pkt_num in range(pkts_num):
-            # Build reply package
+            # Build request package
             # Select one IP address and its corresponding MAC address
             (ip_source, mac_source) = get_nth_random_element(ip_source_list, mac_source_list)
             # Determine source port
             (port_source, ttl_value) = get_attacker_config(ip_source)
             maxdelay = randomdelay.random()
             request_ether = Ether(dst=mac_destination, src=mac_source)
-            # Aidmar - check ip.src == ip.dst
+
+            # TO-DO: move it out of the loop. Aidmar - check ip.src == ip.dst
             if ip_source == ip_destination:
                 print("\nERROR: Invalid IP addresses; source IP is the same as destination IP: " + ip_source + ".")
                 import sys
@@ -235,6 +229,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
             request_ip = IP(src=ip_source, dst=ip_destination, ttl=ttl_value)
             # Aidmar - random win size for each packet
             # request_tcp = TCP(sport=port_source, dport=port_destination, flags='S', ack=0)
+            # TO-DO: move it out of the loop
             win_size = self.statistics.process_db_query(
                 "SELECT winSize FROM tcp_syn_win ORDER BY RANDOM() LIMIT 1;")
             request_tcp = TCP(sport=port_source, dport=port_destination, flags='S', ack=0, window=win_size)
@@ -251,12 +246,13 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 # options=[('MSS', mss_dst)])
                 reply = (reply_ether / reply_ip / reply_tcp)
 
-                timestamp_reply = timestamp_next_pkt + uniform(replayDelay, 2 * replayDelay)
+                # TO-DO: justify the values
+                timestamp_reply = timestamp_next_pkt + uniform(replyDelay, 2 * replyDelay)
 
                 if len(replies) > 0:
                     last_reply_timestamp = replies[-1].time
                     while timestamp_reply <= last_reply_timestamp:
-                        timestamp_reply = timestamp_reply + uniform(replayDelay, 2 * replayDelay)
+                        timestamp_reply = timestamp_reply + uniform(replyDelay, 2 * replyDelay)
 
                 reply.time = timestamp_reply
                 replies.append(reply)

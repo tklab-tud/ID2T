@@ -131,7 +131,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
             sys.exit(0)
 
         path_attack_pcap = None
-        replayDelay = self.get_reply_delay(ip_destination)
+        replyDelay = self.get_reply_delay(ip_destination)
 
         # Inject SQLi Attack
         # Read SQLi Attack pcap file
@@ -213,7 +213,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
                     str_http_pkt = str_http_pkt.replace("\\r", "\r")
 
                 new_pkt = (eth_frame / ip_pkt / tcp_pkt / str_http_pkt)
-                timestamp_next_pkt = timestamp_next_pkt + uniform(replayDelay, 2 * replayDelay)
+                timestamp_next_pkt = timestamp_next_pkt + uniform(replyDelay, 2 * replyDelay)
                 new_pkt.time = timestamp_next_pkt
 
             packets.append(new_pkt)

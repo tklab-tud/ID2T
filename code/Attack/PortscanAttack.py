@@ -243,7 +243,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
         # Aidmar
         A_B_packets = []
         B_A_packets = []
-        replayDelay = self.get_reply_delay(ip_destination)
+        replyDelay = self.get_reply_delay(ip_destination)
 
         for dport in dest_ports:
             # Parameters changing each iteration
@@ -281,12 +281,12 @@ class PortscanAttack(BaseAttack.BaseAttack):
                 reply = (reply_ether / reply_ip / reply_tcp)
                 # Aidmar - edit name timestamp_reply
                 #print(uniform(replayDelay, 2 * replayDelay))
-                timestamp_reply = timestamp_next_pkt + uniform(replayDelay, 2 * replayDelay) # TO-DO: justify these boundaries
+                timestamp_reply = timestamp_next_pkt + uniform(replyDelay, 2 * replyDelay) # TO-DO: justify these boundaries
 
                 if len(B_A_packets) > 0:
                     last_reply_timestamp = B_A_packets[-1].time
                     while (timestamp_reply <= last_reply_timestamp):
-                        timestamp_reply = timestamp_reply + uniform(replayDelay, 2 * replayDelay)
+                        timestamp_reply = timestamp_reply + uniform(replyDelay, 2 * replyDelay)
 
                 reply.time = timestamp_reply
                 B_A_packets.append(reply)
@@ -297,7 +297,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
                 confirm_tcp = TCP(sport=sport, dport=dport, seq=1, window=0, flags='R')
                 confirm = (confirm_ether / confirm_ip / confirm_tcp)
                 # Aidmar - edit name timestamp_confirm
-                timestamp_confirm = timestamp_reply + uniform(replayDelay, 2 * replayDelay)
+                timestamp_confirm = timestamp_reply + uniform(replyDelay, 2 * replyDelay)
                 confirm.time = timestamp_confirm
                 A_B_packets.append(confirm)
 

@@ -131,46 +131,31 @@ void pcap_processor::collect_statistics() {
             return;
         }
         long timeInterval_microsec = captureDuration.count() / timeIntervalsNum;
-        std::chrono::duration<int, std::micro> timeInterval(timeInterval_microsec); // 10,000,000 = 10 sec
-        std::cout << "Aidmar: First:" << firstTimestamp.count() << std::endl;
-        std::cout << "Aidmar: Last:" << lastTimestamp.count() << std::endl;
-        std::cout << "Aidmar: Capture duration:" << captureDuration.count() << std::endl;
-        std::cout << "Aidmar: Interval duration:" << timeInterval_microsec << std::endl;        
-        //int pktsInterval = 1000;        
+        std::chrono::duration<int, std::micro> timeInterval(timeInterval_microsec);             
         int previousPacketCount = 0;
         float previousSumPacketSize = 0;
         
         // Iterate over all packets and collect statistics
-        for (; i != sniffer.end(); i++) {
-            
-            // Aidmar - packets interval
-            //if(counter%pktsInterval==0){}        
-            
+        for (; i != sniffer.end(); i++) {                  
             // Aidmar            
             std::chrono::microseconds lastPktTimestamp = i->timestamp();
             //Tins::Timestamp tt = i->timestamp();                        
             std::chrono::microseconds currentCaptureDuration = lastPktTimestamp - firstTimestamp;
             std::chrono::microseconds barrier =  timeIntervalCounter*timeInterval;
+            // For each interval
             if(currentCaptureDuration>barrier){                    
                 stats.addIntervalStat(timeInterval, intervalStartTimestamp, lastPktTimestamp, previousPacketCount, previousSumPacketSize);
                 timeIntervalCounter++;   
                 intervalStartTimestamp = lastPktTimestamp;
                 previousPacketCount = stats.getPacketCount();
                 previousSumPacketSize = stats.getSumPacketSize();
-            }
-            
-            std::cout << "Aidmar: addIntervalStat + getPacketCount" << std::endl;
-            
+            }                    
             stats.incrementPacketCount();
-            this->process_packets(*i);
-            
-             std::cout << "Aidmar: process_packets + incrementPacketCount" << std::endl;
-             
+            this->process_packets(*i);                    
             lastProcessedPacket = i->timestamp();            
             counter++;
         }
         
-         std::cout << "Aidmar: Done with packets" << std::endl;
         // Save timestamp of last packet into statistics
         stats.setTimestampLastPacket(lastProcessedPacket);
         
@@ -208,7 +193,6 @@ void pcap_processor::process_packets(const Packet &pkt) {
     
     // PDU is IPv4
     if (pdu_l3_type == PDU::PDUType::IP) {
-         std::cout << "Aidmar: PDU is IPv4" << std::endl;
         const IP &ipLayer = (const IP &) *pdu_l3;
         ipAddressSender = ipLayer.src_addr().to_string();
         ipAddressReceiver = ipLayer.dst_addr().to_string();
@@ -228,11 +212,9 @@ void pcap_processor::process_packets(const Packet &pkt) {
 
         // Aidmar - Artifacts Tests: contemporary (ToS)
         //tests.check_tos(ipLayer.tos());
-        //std::cout << "Aidmar: check_tos" << std::endl;
         
     } // PDU is IPv6
     else if (pdu_l3_type == PDU::PDUType::IPv6) {
-        std::cout << "Aidmar: PDU is IPv6" << std::endl;
         const IPv6 &ipLayer = (const IPv6 &) *pdu_l3;
         ipAddressSender = ipLayer.src_addr().to_string();
         ipAddressReceiver = ipLayer.dst_addr().to_string();
@@ -264,18 +246,14 @@ void pcap_processor::process_packets(const Packet &pkt) {
         if (pdu_l3_type == PDU::PDUType::IP) {            
             tests.check_payload(pdu_l4);
           }
-        std::cout << "Aidmar: check_payload" << std::endl;
           
         if (p == PDU::PDUType::TCP) {
-            std::cout << "Aidmar: PDU is TCP" << std::endl;
             TCP tcpPkt = (const TCP &) *pdu_l4;
             
           // Aidmar - Artifacts Tests: checksum
           if (pdu_l3_type == PDU::PDUType::IP) {            
             tests.check_checksum(ipAddressSender, ipAddressReceiver, tcpPkt);
-          }
-            std::cout << "Aidmar: check_checksum" << std::endl;
-            
+          }            
             stats.incrementProtocolCount(ipAddressSender, "TCP");                        
                     
             // Aidmar
@@ -287,8 +265,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
             if(tcpPkt.get_flag(TCP::SYN)) {
                 int win = tcpPkt.window();
                 stats.incrementWinCount(ipAddressSender, win);
-            }   
-                
+            }                   
             try {                                                                
                 int val = tcpPkt.mss();
                 stats.addMSS(ipAddressSender, val);
@@ -303,7 +280,6 @@ void pcap_processor::process_packets(const Packet &pkt) {
             
           // UDP Packet
         } else if (p == PDU::PDUType::UDP) {
-            std::cout << "Aidmar: PDU is UDP" << std::endl;
             const UDP udpPkt = (const UDP &) *pdu_l4;
             stats.incrementProtocolCount(ipAddressSender, "UDP");            
             stats.incrementPortCount(ipAddressSender, udpPkt.sport(), ipAddressReceiver, udpPkt.dport());                        
