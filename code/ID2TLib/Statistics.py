@@ -1,6 +1,4 @@
 # Aidmar
-from scipy.spatial import distance as dist
-import numpy as np
 from operator import itemgetter
 import math
 

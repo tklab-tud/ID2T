@@ -117,12 +117,12 @@ void pcap_processor::collect_statistics() {
         stats.setTimestampFirstPacket(i->timestamp());
     
         // Aidmar
-        int counter=0;
+        //int counter=0;
         //int timeIntervalCounter = 1;   
         //int timeIntervalsNum = 100;
         //std::chrono::microseconds intervalStartTimestamp = stats.getTimestampFirstPacket();
         //std::chrono::microseconds firstTimestamp = stats.getTimestampFirstPacket();        
-        SnifferIterator lastpkt;
+        //SnifferIterator lastpkt;
         //for (SnifferIterator j = snifferOverview.begin(); j != snifferOverview.end(); j++) {lastpkt = j;}        
         //std::chrono::microseconds lastTimestamp = lastpkt->timestamp();                  
         //std::chrono::microseconds captureDuration = lastTimestamp - firstTimestamp;
@@ -153,8 +153,9 @@ void pcap_processor::collect_statistics() {
             
             stats.incrementPacketCount();
             this->process_packets(*i);                    
-            lastProcessedPacket = i->timestamp();            
-            counter++;
+            lastProcessedPacket = i->timestamp(); 
+            
+            //counter++;
         }
         
         // Save timestamp of last packet into statistics
@@ -263,10 +264,11 @@ void pcap_processor::process_packets(const Packet &pkt) {
             
             // Aidmar
             // Check window size for SYN noly
-            if(tcpPkt.get_flag(TCP::SYN)) {
+            /*if(tcpPkt.get_flag(TCP::SYN)) {
                 int win = tcpPkt.window();
                 stats.incrementWinCount(ipAddressSender, win);
-            }                   
+            }
+            */
             try {                                                                
                 int val = tcpPkt.mss();
                 stats.addMSS(ipAddressSender, val);

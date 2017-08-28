@@ -308,7 +308,7 @@ void statistics::assignMacAddress(std::string ipAddress, std::string macAddress)
  * @param bytesSent The packet's size.
  */
 void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddressSender, std::string ipAddressReceiver, long bytesSent, std::chrono::microseconds timestamp) {
-    
+    /*
     // Aidmar - Adding IP as a sender for first time
     if(ip_statistics[ipAddressSender].pkts_sent==0){  
         // Add the IP class
@@ -341,8 +341,9 @@ void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddres
             s_t = packetCount - pktCntNvlSndr + 1;        
             ipSrc_Mahoney_score = (float)s_t*n/s_r;
         }
-        
-    // Replace pcap filename with 'filename_ip_entropy'
+       */
+       
+    //// Replace pcap filename with 'filename_ip_entropy'
     /*std::string new_filepath = filePath;
     const std::string &newExt = "_ip_src_anomaly_score.csv";
     std::string::size_type h = new_filepath.rfind('.', new_filepath.length());
@@ -359,6 +360,7 @@ void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddres
     file.close();  
     */
     
+    /*
     ip_statistics[ipAddressSender].firstAppearAsSenderPktCount = packetCount;  
     ip_statistics[ipAddressSender].sourceAnomalyScore = ipSrc_Mahoney_score;    
     }
@@ -392,8 +394,9 @@ void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddres
         
             ipDst_Mahoney_score = (float)s_t*n/s_r;
         }
-        
-    // Replace pcap filename with 'filename_ip_entropy'
+      */
+    
+    //// Replace pcap filename with 'filename_ip_entropy'
     /*std::string new_filepath = filePath;
     const std::string &newExt = "_ip_dst_anomaly_score.csv";
     std::string::size_type h = new_filepath.rfind('.', new_filepath.length());
@@ -409,17 +412,19 @@ void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddres
     file.close();  
     */
     
+    /*
     ip_statistics[ipAddressReceiver].firstAppearAsReceiverPktCount = packetCount;
     ip_statistics[ipAddressReceiver].destinationAnomalyScore = ipDst_Mahoney_score;
     }
+    */
     
     // Update stats for packet sender
     ip_statistics[ipAddressSender].kbytes_sent += (float(bytesSent) / 1024);
     ip_statistics[ipAddressSender].pkts_sent++;
     // Aidmar
-    ip_statistics[ipAddressSender].pktsSentTimestamp.push_back(timestamp);
+    //ip_statistics[ipAddressSender].pktsSentTimestamp.push_back(timestamp);
     
-    // Aidmar - calculate packet rate (assumption: max_pkt_rate=1/smallest time between two consecutive pkts)
+    //// Aidmar - calculate packet rate (assumption: max_pkt_rate=1/smallest time between two consecutive pkts)
     // resulting in very big rates, therefore it could be better to calculate pkt rate on time intervals
     /*if(ip_statistics[ipAddressSender].pktsSentTimestamp.size() > 0){
     std::chrono::microseconds temp_pkt_consecutive_time = timestamp - ip_statistics[ipAddressSender].pktsSentTimestamp.back();
@@ -434,7 +439,7 @@ void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddres
     ip_statistics[ipAddressReceiver].kbytes_received += (float(bytesSent) / 1024);
     ip_statistics[ipAddressReceiver].pkts_received++;  
      // Aidmar
-    ip_statistics[ipAddressReceiver].pktsReceivedTimestamp.push_back(timestamp);
+    //ip_statistics[ipAddressReceiver].pktsReceivedTimestamp.push_back(timestamp);
 }
 
 /**

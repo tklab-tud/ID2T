@@ -34,7 +34,7 @@ public:
     std::string filePath;
 
     // Aidmar
-    artifacts_tests tests;
+    //artifacts_tests tests;
     /*
      * Methods
      */
