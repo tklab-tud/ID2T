@@ -118,44 +118,41 @@ void pcap_processor::collect_statistics() {
     
         // Aidmar
         //int counter=0;
-        //int timeIntervalCounter = 1;   
-        //int timeIntervalsNum = 100;
-        //std::chrono::microseconds intervalStartTimestamp = stats.getTimestampFirstPacket();
-        //std::chrono::microseconds firstTimestamp = stats.getTimestampFirstPacket(); 
+        int timeIntervalCounter = 1;   
+        int timeIntervalsNum = 100;
+        std::chrono::microseconds intervalStartTimestamp = stats.getTimestampFirstPacket();
+        std::chrono::microseconds firstTimestamp = stats.getTimestampFirstPacket(); 
         std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();    
         SnifferIterator lastpkt; 
         for (SnifferIterator j = snifferOverview.begin(); j != snifferOverview.end();  snifferIteratorIncrement(j)) {lastpkt = j;}          
         std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count()*1e-6;
-        std::cout<< "empty loop: " << duration << " sec" << std::endl;
-
-            
-        //std::chrono::microseconds lastTimestamp = lastpkt->timestamp();                  
-        //std::chrono::microseconds captureDuration = lastTimestamp - firstTimestamp;
-        /*if(captureDuration.count()<=0){
+        std::cout<< "empty loop: " << duration << " sec" << std::endl;            
+        std::chrono::microseconds lastTimestamp = lastpkt->timestamp();                  
+        std::chrono::microseconds captureDuration = lastTimestamp - firstTimestamp;
+        if(captureDuration.count()<=0){
             std::cout<<"ERROR: PCAP file is empty!"<<"\n";
             return;
-        }*/
-        //long timeInterval_microsec = captureDuration.count() / timeIntervalsNum;
-        //std::chrono::duration<int, std::micro> timeInterval(timeInterval_microsec);             
-        //int previousPacketCount = 0;
-        //float previousSumPacketSize = 0;
+        }
+        long timeInterval_microsec = captureDuration.count() / timeIntervalsNum;
+        std::chrono::duration<int, std::micro> timeInterval(timeInterval_microsec);             
+        int previousPacketCount = 0;
+        float previousSumPacketSize = 0;
         
         // Iterate over all packets and collect statistics
         for (; i != sniffer.end(); i++) {                  
             // Aidmar            
-            //std::chrono::microseconds lastPktTimestamp = i->timestamp();
-            //Tins::Timestamp tt = i->timestamp();                        
-            //std::chrono::microseconds currentCaptureDuration = lastPktTimestamp - firstTimestamp;
-            //std::chrono::microseconds barrier =  timeIntervalCounter*timeInterval;
+            std::chrono::microseconds lastPktTimestamp = i->timestamp();
+            std::chrono::microseconds currentCaptureDuration = lastPktTimestamp - firstTimestamp;
+            std::chrono::microseconds barrier =  timeIntervalCounter*timeInterval;
             // For each interval
-            /*if(currentCaptureDuration>barrier){                    
+            if(currentCaptureDuration>barrier){                    
                 stats.addIntervalStat(timeInterval, intervalStartTimestamp, lastPktTimestamp, previousPacketCount, previousSumPacketSize);
                 timeIntervalCounter++;   
                 intervalStartTimestamp = lastPktTimestamp;
                 previousPacketCount = stats.getPacketCount();
                 previousSumPacketSize = stats.getSumPacketSize();
-            }*/ 
+            } 
             
             stats.incrementPacketCount();
             this->process_packets(*i);                    

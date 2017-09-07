@@ -165,21 +165,21 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
     // Add packet rate for each IP to ip_statistics map
     calculateIPIntervalPacketRate(interval, intervalStartTimestamp);
     
-    std::vector<float> ipEntopies = calculateLastIntervalIPsEntropy(intervalStartTimestamp); 
-    std::vector<float> ipCumEntopies = calculateIPsCumEntropy();    
+    //std::vector<float> ipEntopies = calculateLastIntervalIPsEntropy(intervalStartTimestamp); 
+    //std::vector<float> ipCumEntopies = calculateIPsCumEntropy();    
     std::string lastPktTimestamp_s = std::to_string(intervalEndTimestamp.count());
     
     interval_statistics[lastPktTimestamp_s].pkts_count = packetCount - previousPacketCount;  
     interval_statistics[lastPktTimestamp_s].kbytes = (float(sumPacketSize - previousSumPacketSize) / 1024);
     
-    if(ipEntopies.size()>1){
+    /*if(ipEntopies.size()>1){
         interval_statistics[lastPktTimestamp_s].ip_src_entropy = ipEntopies[0];
         interval_statistics[lastPktTimestamp_s].ip_dst_entropy = ipEntopies[1];
     }
     if(ipCumEntopies.size()>1){
         interval_statistics[lastPktTimestamp_s].ip_src_cum_entropy = ipCumEntopies[0];
         interval_statistics[lastPktTimestamp_s].ip_dst_cum_entropy = ipCumEntopies[1];
-    }
+    }*/
 }        
 
 // Aidmar
