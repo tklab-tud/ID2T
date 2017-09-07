@@ -7,6 +7,7 @@
 #include <sstream>
 #include <chrono>
 #include <algorithm>
+#include <tins/tins.h>
 
 // Aidmar
 /**
@@ -28,5 +29,6 @@
 void split_str(const std::string& s, char delim,std::vector<std::string>& v);
 std::string getIPv4Class(std::string ipAddress);
 int getClosestIndex(std::vector<std::chrono::microseconds> v, std::chrono::microseconds refElem);
+void snifferIteratorIncrement(Tins::SnifferIterator& iterator);
 
 #endif //UTILITIES_H

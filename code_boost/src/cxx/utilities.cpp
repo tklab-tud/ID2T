@@ -97,3 +97,11 @@ int getClosestIndex(std::vector<std::chrono::microseconds> v, std::chrono::micro
     });
     return std::distance(begin(v), i);
 }
+
+/**
+ * Advance iterator by 100 steps.
+ * @param iterator to advance
+ */
+void snifferIteratorIncrement(Tins::SnifferIterator& iterator){
+    (((((((((iterator++)++)++)++)++)++)++)++)++)++;  
+}
