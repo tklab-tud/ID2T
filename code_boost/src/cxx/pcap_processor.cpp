@@ -108,7 +108,7 @@ void pcap_processor::collect_statistics() {
         std::cout << "Loading pcap..." << std::endl;
         FileSniffer sniffer(filePath);
         // Aidmar - used to know the capture duration, thus choose a suitable interval
-        //FileSniffer snifferOverview(filePath);
+        FileSniffer snifferOverview(filePath);
         
         SnifferIterator i = sniffer.begin();                
         Tins::Timestamp lastProcessedPacket;
@@ -122,8 +122,8 @@ void pcap_processor::collect_statistics() {
         //int timeIntervalsNum = 100;
         //std::chrono::microseconds intervalStartTimestamp = stats.getTimestampFirstPacket();
         //std::chrono::microseconds firstTimestamp = stats.getTimestampFirstPacket();        
-        //SnifferIterator lastpkt;
-        //for (SnifferIterator j = snifferOverview.begin(); j != snifferOverview.end(); j++) {lastpkt = j;}        
+        SnifferIterator lastpkt;
+        for (SnifferIterator j = snifferOverview.begin(); j != snifferOverview.end(); j++) {lastpkt = j;}        
         //std::chrono::microseconds lastTimestamp = lastpkt->timestamp();                  
         //std::chrono::microseconds captureDuration = lastTimestamp - firstTimestamp;
         /*if(captureDuration.count()<=0){

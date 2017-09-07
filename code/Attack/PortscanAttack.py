@@ -29,7 +29,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
         :return: Ports numbers to be used as default dest ports or default open ports in Portscan attack.
         """
         ports_dst = []
-        spamreader = csv.reader(open('nmap-services-tcp.csv', 'rt'), delimiter=',')
+        spamreader = csv.reader(open('resources/nmap-services-tcp.csv', 'rt'), delimiter=',')
         for count in range(ports_num):
             # escape first row (header)
             next(spamreader)
