@@ -123,8 +123,8 @@ void pcap_processor::collect_statistics() {
         //std::chrono::microseconds intervalStartTimestamp = stats.getTimestampFirstPacket();
         //std::chrono::microseconds firstTimestamp = stats.getTimestampFirstPacket();   
         std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();    
-        SnifferIterator lastpkt; // (((((((j++)++)++)++)++)++)++)++
-        for (SnifferIterator j = snifferOverview.begin(); j != snifferOverview.end(); j++) {lastpkt = j;}  
+        SnifferIterator lastpkt; // 
+        for (SnifferIterator j = snifferOverview.begin(); j != snifferOverview.end(); (((((((((j++)++)++)++)++)++)++)++)++)++) {lastpkt = j;}  
         std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count()*1e-6;
         std::cout<< "empty loop: " << duration << " sec" << std::endl;
