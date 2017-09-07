@@ -165,7 +165,7 @@ The [SemVer](http://semver.org/spec/v2.0.0.html) is used for versioning. For cur
 
 ## Authors
 
-- __Emmanouil Vasilomanolakis__ - _ID2T idea, guidance and suggestions during development_
+- __Dr. Emmanouil Vasilomanolakis__ - _ID2T idea, guidance and suggestions during development_
 
 - __Carlos Garcia__ - _ID2T idea, guidance and suggestions during development_
 
