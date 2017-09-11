@@ -1,5 +1,5 @@
 import logging
-from random import randint, uniform
+from random import randint, uniform, choice #Aidmar choice
 
 #Aidmar
 import numpy as np
@@ -19,9 +19,9 @@ from collections import deque
 
 class DDoSAttack(BaseAttack.BaseAttack):
     # Aidmar - Metasploit DoS default PPS
-    maxDefaultPPS = 1400
     minDefaultPPS = 400
-    # TO-DO: justify the values
+    maxDefaultPPS = 1400
+    # Arbitrary values
     minDefaultBuffer = 1000
     maxDefaultBuffer = 2000
 
@@ -183,6 +183,12 @@ class DDoSAttack(BaseAttack.BaseAttack):
         ip_destination = self.get_param_value(Param.IP_DESTINATION)
         port_destination = self.get_param_value(Param.PORT_DESTINATION)
 
+        # Aidmar - Verify ip.src != ip.dst
+        if ip_destination in ip_source_list:
+            print("\nERROR: Invalid IP addresses; source IP is the same as destination IP: " + ip_destination + ".")
+            import sys
+            sys.exit(0)
+
         # Aidmar
         if not port_destination:  # user did not define port_dest
             port_destination = self.statistics.process_db_query(
@@ -204,13 +210,16 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         # Aidmar
         replies = []
-        replyDelay = self.get_reply_delay(ip_destination)
+        minDelay, maxDelay = self.get_reply_delay(ip_destination)
         victim_buffer = self.get_param_value(Param.VICTIM_BUFFER)
 
         # Aidmar
         #for pkt_num in range(self.get_param_value(Param.PACKETS_LIMIT)):
         attack_duration = self.get_param_value(Param.ATTACK_DURATION)
         pkts_num = int(pps * attack_duration)
+        win_sizes = self.statistics.process_db_query(
+            "SELECT winSize FROM tcp_syn_win ORDER BY RANDOM() LIMIT "+str(pkts_num)+";")
+
         for pkt_num in range(pkts_num):
             # Build request package
             # Select one IP address and its corresponding MAC address
@@ -219,19 +228,10 @@ class DDoSAttack(BaseAttack.BaseAttack):
             (port_source, ttl_value) = get_attacker_config(ip_source)
             maxdelay = randomdelay.random()
             request_ether = Ether(dst=mac_destination, src=mac_source)
-
-            # TO-DO: move it out of the loop. Aidmar - check ip.src == ip.dst
-            if ip_source == ip_destination:
-                print("\nERROR: Invalid IP addresses; source IP is the same as destination IP: " + ip_source + ".")
-                import sys
-                sys.exit(0)
-
             request_ip = IP(src=ip_source, dst=ip_destination, ttl=ttl_value)
             # Aidmar - random win size for each packet
             # request_tcp = TCP(sport=port_source, dport=port_destination, flags='S', ack=0)
-            # TO-DO: move it out of the loop
-            win_size = self.statistics.process_db_query(
-                "SELECT winSize FROM tcp_syn_win ORDER BY RANDOM() LIMIT 1;")
+            win_size = choice(win_sizes)
             request_tcp = TCP(sport=port_source, dport=port_destination, flags='S', ack=0, window=win_size)
 
             request = (request_ether / request_ip / request_tcp)
@@ -245,14 +245,12 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 reply_tcp = TCP(sport=port_destination, dport=port_source, seq=0, ack=1, flags='SA', window=29200)  # ,
                 # options=[('MSS', mss_dst)])
                 reply = (reply_ether / reply_ip / reply_tcp)
-
-                # TO-DO: justify the values
-                timestamp_reply = timestamp_next_pkt + uniform(replyDelay, 2 * replyDelay)
+                timestamp_reply = timestamp_next_pkt + uniform(minDelay, maxDelay)
 
                 if len(replies) > 0:
                     last_reply_timestamp = replies[-1].time
                     while timestamp_reply <= last_reply_timestamp:
-                        timestamp_reply = timestamp_reply + uniform(replyDelay, 2 * replyDelay)
+                        timestamp_reply = timestamp_reply + uniform(minDelay, maxDelay)
 
                 reply.time = timestamp_reply
                 replies.append(reply)

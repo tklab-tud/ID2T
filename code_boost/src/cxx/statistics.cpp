@@ -57,23 +57,6 @@ std::vector<float> statistics::calculateLastIntervalIPsEntropy(std::chrono::micr
         
         std::vector<float> entropies = {IPsSrcEntropy, IPsDstEntropy};
         return entropies;
-        
-        // Write stats to file
-        // Replace pcap filename with 'filename_ip_entropy'
-        /*std::string new_filepath = filePath;
-        const std::string &newExt = "_ip_entropy_interval.csv";
-        std::string::size_type h = new_filepath.rfind('.', new_filepath.length());
-        if (h != std::string::npos) {
-            new_filepath.replace(h, newExt.length(), newExt);
-        } else {
-            new_filepath.append(newExt);
-        }
-    
-        std::ofstream file;
-        file.open (new_filepath,std::ios_base::app);
-        file << intervalStartTimestamp.count() << "," << IPsSrcEntropy << "," << IPsDstEntropy << "\n";
-        file.close();  
-      */
 }
 
 // Aidmar
@@ -88,10 +71,6 @@ std::vector<float> statistics::calculateIPsCumEntropy(){
         IPs.push_back(i->first);        
         IPsSrcProb.push_back((float)i->second.pkts_sent/packetCount);
         IPsDstProb.push_back((float)i->second.pkts_received/packetCount);
-        
-        /*std::cout << i->first << ":" << i->second.pkts_sent << ":" << i->second.pkts_received << ":" 
-        << i->second.firstAppearAsSenderPktCount << ":" << i->second.firstAppearAsReceiverPktCount << ":" 
-        << packetCount << "\n";*/  
     }
     
     // Calculate IP source entropy 
@@ -112,22 +91,6 @@ std::vector<float> statistics::calculateIPsCumEntropy(){
     
     std::vector<float> entropies = {IPsSrcEntropy, IPsDstEntropy};
     return entropies;
-    
-    // Write stats to file    
-    /*std::ofstream file;      
-     // Replace pcap filename with 'filename_ip_entropy'
-    std::string new_filepath = filePath;
-    const std::string &newExt = "_ip_entropy.csv";
-    std::string::size_type h = new_filepath.rfind('.', new_filepath.length());
-    if (h != std::string::npos) {
-        new_filepath.replace(h, newExt.length(), newExt);
-    } else {
-        new_filepath.append(newExt);
-    }        
-    file.open (new_filepath,std::ios_base::app);
-    file << packetCount << "," << IPsSrcEntropy << "," << IPsDstEntropy << "\n";
-    file.close();   
-    */
 }
 
 
@@ -139,14 +102,9 @@ std::vector<float> statistics::calculateIPsCumEntropy(){
 void statistics::calculateIPIntervalPacketRate(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp){        
         for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
                 int indexStartSent = getClosestIndex(i->second.pktsSentTimestamp, intervalStartTimestamp);     
-                //std::cout<<i->first<<", PktsSent:"<<i->second.pktsSentTimestamp.size()<<",indexStart:"<<indexStartSent<<"\n";            
-                int IPsSrcPktsCount = i->second.pktsSentTimestamp.size() - indexStartSent;                                       
-
-                //std::cout<<"IPsSrcPktsCount: "<<IPsSrcPktsCount<<", Interval: "<< interval.count() <<"\n";
-
+                int IPsSrcPktsCount = i->second.pktsSentTimestamp.size() - indexStartSent;
                 float interval_pkt_rate = (float) IPsSrcPktsCount * 1000000 / interval.count(); // used 10^6 because interval in microseconds
-                //std::cout<<"interval_pkt_rate:"<<interval_pkt_rate<<"\n";
-                i->second.interval_pkt_rate.push_back(interval_pkt_rate);  
+                i->second.interval_pkt_rate.push_back(interval_pkt_rate);
                 if(interval_pkt_rate > i->second.max_pkt_rate || i->second.max_pkt_rate == 0)
                     i->second.max_pkt_rate = interval_pkt_rate;
                 if(interval_pkt_rate < i->second.min_pkt_rate || i->second.min_pkt_rate == 0)
@@ -204,20 +162,13 @@ void statistics::addConvStat(std::string ipAddressSender,int sport,std::string i
         conv_statistics[f1].pkts_B_A_timestamp.push_back(timestamp);
     
         // Calculate reply delay considering only delay of first two reply packets (TCP handshake)
-        if(conv_statistics[f1].pkts_A_B_timestamp.size()>0 && conv_statistics[f1].pkts_A_B_timestamp.size()<=2){
-            conv_statistics[f1].pkts_delay.push_back(std::chrono::duration_cast<std::chrono::microseconds> (timestamp - conv_statistics[f1].pkts_A_B_timestamp.back()));
-        }      
-        //std::cout<<timestamp.count()<<"::"<<ipAddressReceiver<<":"<<dport<<","<<ipAddressSender<<":"<<sport<<"\n"; 
-        //std::cout<<conv_statistics[f1].pkts_A_B<<"\n";
-        //std::cout<<conv_statistics[f1].pkts_B_A<<"\n";
+        //if(conv_statistics[f1].pkts_A_B_timestamp.size()>0 && conv_statistics[f1].pkts_A_B_timestamp.size()<=2){
+        conv_statistics[f1].pkts_delay.push_back(std::chrono::duration_cast<std::chrono::microseconds> (timestamp - conv_statistics[f1].pkts_A_B_timestamp.back()));
+        //}
     }
     else{
         conv_statistics[f2].pkts_A_B++; // increment packets number from A to B
         conv_statistics[f2].pkts_A_B_timestamp.push_back(timestamp);
-        
-        //std::cout<<timestamp.count()<<"::"<<ipAddressSender<<":"<<sport<<","<<ipAddressReceiver<<":"<<dport<<"\n"; 
-        //std::cout<<conv_statistics[f2].pkts_A_B<<"\n";
-        //std::cout<<conv_statistics[f2].pkts_B_A<<"\n";
     }        
 }
     
@@ -308,14 +259,14 @@ void statistics::assignMacAddress(std::string ipAddress, std::string macAddress)
  * @param bytesSent The packet's size.
  */
 void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddressSender, std::string ipAddressReceiver, long bytesSent, std::chrono::microseconds timestamp) {
-    /*
+
     // Aidmar - Adding IP as a sender for first time
     if(ip_statistics[ipAddressSender].pkts_sent==0){  
         // Add the IP class
         ip_statistics[ipAddressSender].ip_class = getIPv4Class(ipAddressSender);
         
         // Initialize packet rates
-        ip_statistics[ipAddressSender].max_pkt_rate = 0;
+        /*ip_statistics[ipAddressSender].max_pkt_rate = 0;
         ip_statistics[ipAddressSender].min_pkt_rate = 0;
         
         // Caculate Mahoney anomaly score for ip.src
@@ -341,28 +292,10 @@ void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddres
             s_t = packetCount - pktCntNvlSndr + 1;        
             ipSrc_Mahoney_score = (float)s_t*n/s_r;
         }
-       */
-       
-    //// Replace pcap filename with 'filename_ip_entropy'
-    /*std::string new_filepath = filePath;
-    const std::string &newExt = "_ip_src_anomaly_score.csv";
-    std::string::size_type h = new_filepath.rfind('.', new_filepath.length());
-    if (h != std::string::npos) {
-        new_filepath.replace(h, newExt.length(), newExt);
-    } else {
-        new_filepath.append(newExt);
-    }
-        
-    // Write stats to file
-    std::ofstream file;
-    file.open (new_filepath,std::ios_base::app);
-    file << ipAddressSender << ","<< s_t << "," << n << "," << s_r << "," << ipSrc_Mahoney_score << "\n";
-    file.close();  
-    */
-    
-    /*
+                
     ip_statistics[ipAddressSender].firstAppearAsSenderPktCount = packetCount;  
-    ip_statistics[ipAddressSender].sourceAnomalyScore = ipSrc_Mahoney_score;    
+    ip_statistics[ipAddressSender].sourceAnomalyScore = ipSrc_Mahoney_score;
+     */
     }
     
     // Aidmar - Adding IP as a receiver for first time
@@ -371,7 +304,7 @@ void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddres
         ip_statistics[ipAddressReceiver].ip_class = getIPv4Class(ipAddressReceiver); 
         
         // Caculate Mahoney anomaly score for ip.dst
-        float ipDst_Mahoney_score = 0;
+        /*float ipDst_Mahoney_score = 0;
         // s_r: The number of IP sources (the different values)
         // n: The number of the total instances
         // s_t: The "time" since last anomalous (novel) IP was appeared
@@ -394,29 +327,12 @@ void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddres
         
             ipDst_Mahoney_score = (float)s_t*n/s_r;
         }
-      */
-    
-    //// Replace pcap filename with 'filename_ip_entropy'
-    /*std::string new_filepath = filePath;
-    const std::string &newExt = "_ip_dst_anomaly_score.csv";
-    std::string::size_type h = new_filepath.rfind('.', new_filepath.length());
-    if (h != std::string::npos) {
-        new_filepath.replace(h, newExt.length(), newExt);
-    } else {
-        new_filepath.append(newExt);
-    }        
-    // Write stats to file
-    std::ofstream file;
-    file.open (new_filepath,std::ios_base::app);
-    file << ipAddressReceiver << ","<< s_t << "," << n << "," << s_r << "," << ipDst_Mahoney_score << "\n";
-    file.close();  
-    */
-    
-    /*
+
     ip_statistics[ipAddressReceiver].firstAppearAsReceiverPktCount = packetCount;
     ip_statistics[ipAddressReceiver].destinationAnomalyScore = ipDst_Mahoney_score;
-    }
     */
+    }
+
     
     // Update stats for packet sender
     ip_statistics[ipAddressSender].kbytes_sent += (float(bytesSent) / 1024);
@@ -649,11 +565,11 @@ void statistics::writeToDatabase(std::string database_path) {
     db.writeStatisticsPorts(ip_ports);
     db.writeStatisticsProtocols(protocol_distribution);
     // Aidmar
-    /*db.writeStatisticsMss_dist(mss_distribution);
+    db.writeStatisticsMss_dist(mss_distribution);
     db.writeStatisticsWin(win_distribution);
     db.writeStatisticsConv(conv_statistics);
     db.writeStatisticsInterval(interval_statistics);
-    */
+
     
 }
 

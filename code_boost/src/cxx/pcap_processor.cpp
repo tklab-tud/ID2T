@@ -263,22 +263,22 @@ void pcap_processor::process_packets(const Packet &pkt) {
                     
             // Aidmar
             // Conversation statistics
-            //stats.addConvStat(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), pkt.timestamp());  
+            stats.addConvStat(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), pkt.timestamp());
             
             // Aidmar
             // Check window size for SYN noly
-            /*if(tcpPkt.get_flag(TCP::SYN)) {
+            if(tcpPkt.get_flag(TCP::SYN)) {
                 int win = tcpPkt.window();
                 stats.incrementWinCount(ipAddressSender, win);
             }
-            */
+
             try {                                                                
                 int val = tcpPkt.mss();
                 stats.addMSS(ipAddressSender, val);
                 
                 // Aidmar
                 // MSS distribution
-                //stats.incrementMSScount(ipAddressSender, val);                          
+                stats.incrementMSScount(ipAddressSender, val);
             } catch (Tins::option_not_found) {
                 // Ignore MSS if option not set
             }

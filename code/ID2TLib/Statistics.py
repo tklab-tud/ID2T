@@ -712,6 +712,4 @@ class Statistics:
                 return score;
 
             print("\nbhatta distance: " + str(bhatta(graphy, graphy_aftr)))
-
-
 """

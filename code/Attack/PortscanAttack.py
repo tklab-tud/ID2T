@@ -167,9 +167,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
         #randomdelay = Lea.fromValFreqsDict({1 / pps: 70, 2 / pps: 20, 5 / pps: 7, 10 / pps: 3})
         #maxdelay = randomdelay.random()
 
-        # Aidmar- TO-DO: maxdelay should be taken from BG traffic
-        maxdelay = 2 / pps
-
         # Aidmar - calculate complement packet rates of BG traffic per interval
         complement_interval_pps = self.statistics.calculate_complement_packet_rates(pps)
 
@@ -209,7 +206,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
                 "SELECT portNumber FROM ip_ports WHERE portDirection='in' AND ipAddress='" + ip_destination + "'")
             if ports_used_by_ip_dst:
                 ports_open = ports_used_by_ip_dst
-                print("\nPorts used by %s: %s" % (ip_destination, ports_open))
             else: # if no ports were retrieved from database
             # Take open ports from nmap-service file
                 #ports_temp = self.get_ports_from_nmap_service_dst(100)
@@ -217,7 +213,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
             # OR take open ports from the most used ports in traffic statistics
                 ports_open = self.statistics.process_db_query(
                     "SELECT portNumber FROM ip_ports GROUP BY portNumber ORDER BY SUM(portCount) DESC LIMIT "+str(randint(1,10)))
-                print("\nPorts retrieved from statistics: %s" % (ports_open))
         # in case of one open port, convert ports_open to array
         if not isinstance(ports_open, list):
             ports_open = [ports_open]
@@ -243,7 +238,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
         # Aidmar
         A_B_packets = []
         B_A_packets = []
-        replyDelay = self.get_reply_delay(ip_destination)
+        minDelay,maxDelay = self.get_reply_delay(ip_destination)
 
         for dport in dest_ports:
             # Parameters changing each iteration
@@ -280,13 +275,12 @@ class PortscanAttack(BaseAttack.BaseAttack):
                                     options=[('MSS', mss_dst)])
                 reply = (reply_ether / reply_ip / reply_tcp)
                 # Aidmar - edit name timestamp_reply
-                #print(uniform(replayDelay, 2 * replayDelay))
-                timestamp_reply = timestamp_next_pkt + uniform(replyDelay, 2 * replyDelay) # TO-DO: justify these boundaries
+                timestamp_reply = timestamp_next_pkt + uniform(minDelay, maxDelay)
 
                 if len(B_A_packets) > 0:
                     last_reply_timestamp = B_A_packets[-1].time
                     while (timestamp_reply <= last_reply_timestamp):
-                        timestamp_reply = timestamp_reply + uniform(replyDelay, 2 * replyDelay)
+                        timestamp_reply = timestamp_reply + uniform(minDelay, maxDelay)
 
                 reply.time = timestamp_reply
                 B_A_packets.append(reply)
@@ -297,7 +291,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
                 confirm_tcp = TCP(sport=sport, dport=dport, seq=1, window=0, flags='R')
                 confirm = (confirm_ether / confirm_ip / confirm_tcp)
                 # Aidmar - edit name timestamp_confirm
-                timestamp_confirm = timestamp_reply + uniform(replyDelay, 2 * replyDelay)
+                timestamp_confirm = timestamp_reply + uniform(minDelay, maxDelay)
                 confirm.time = timestamp_confirm
                 A_B_packets.append(confirm)
 
@@ -324,7 +318,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
 
             # Aidmar
             pps = self.minDefaultPPS if getIntervalPPS(complement_interval_pps, timestamp_next_pkt) is None else max(getIntervalPPS(complement_interval_pps, timestamp_next_pkt),self.minDefaultPPS) # avoid case of pps = 0
-            timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
+            timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxDelay)
 
         # Aidmar - In case all requests are already sent, send all replies and confirms
         temp = A_B_packets + B_A_packets

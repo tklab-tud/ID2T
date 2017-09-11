@@ -480,14 +480,17 @@ class BaseAttack(metaclass=ABCMeta):
         else:
             return mac_addresses
 
-
     # Aidmar
     def get_reply_delay(self, ip_dst):
-        replyDelay = self.statistics.process_db_query(
-         "SELECT avgDelay FROM conv_statistics WHERE ipAddressB='" + ip_dst + "' LIMIT 1")
-        if not replyDelay:
-            allDelays = self.statistics.process_db_query("SELECT avgDelay FROM conv_statistics")
-            replyDelay = np.median(allDelays)
-        replyDelay = int(replyDelay) * 10 ** -6 # convert from micro to seconds
-        #print(replyDelay)
-        return replyDelay
+        minDelay = self.statistics.process_db_query(
+            "SELECT minDelay FROM conv_statistics WHERE ipAddressB='" + ip_dst + "' LIMIT 1")
+        maxDelay = self.statistics.process_db_query(
+            "SELECT maxDelay FROM conv_statistics WHERE ipAddressB='" + ip_dst + "' LIMIT 1")
+        if not minDelay or not maxDelay:
+            allMinDelays = self.statistics.process_db_query("SELECT minDelay FROM conv_statistics LIMIT 1000;")
+            minDelay = np.median(allMinDelays)
+            allMaxDelays = self.statistics.process_db_query("SELECT maxDelay FROM conv_statistics LIMIT 1000;")
+            maxDelay = np.median(allMaxDelays)
+        minDelay = int(minDelay) * 10 ** -6  # convert from micro to seconds
+        maxDelay = int(maxDelay) * 10 ** -6
+        return minDelay,maxDelay

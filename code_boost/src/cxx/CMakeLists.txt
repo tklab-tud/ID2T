@@ -9,6 +9,10 @@ set(SOURCE_FILES
         statistics.cpp
         statistics.h
         statistics_db.cpp
-        statistics_db.h)
+        statistics_db.h
+        artifacts_tests.cpp
+        artifacts_tests.h
+        utilities.cpp
+        utilities.h)
 
 add_executable(cxx ${SOURCE_FILES})

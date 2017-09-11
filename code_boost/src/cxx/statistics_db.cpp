@@ -332,19 +332,24 @@ void statistics_db::writeStatisticsConv(std::unordered_map<conv, entry_convStat>
                 "pkts_A_B INTEGER,"
                 "pkts_B_A INTEGER,"
                 "avgDelay INTEGER,"
-                //"medianDelay TEXT,"
+                "minDelay INTEGER,"
+                "maxDelay INTEGER,"
                 "PRIMARY KEY(ipAddressA,portA,ipAddressB,portB));";
         db->exec(createTable);
-        SQLite::Statement query(*db, "INSERT INTO conv_statistics VALUES (?, ?, ?, ?, ?, ?, ?)");
+        SQLite::Statement query(*db, "INSERT INTO conv_statistics VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
         for (auto it = convStatistics.begin(); it != convStatistics.end(); ++it) {
             conv f = it->first;
             entry_convStat e = it->second;
-            
-            // Compute the median delay
-            //e.median_delay = e.pkts_delay[e.pkts_delay.size()/2];
             int sumDelay = 0;
+            int minDelay = -1;
+            int maxDelay = -1;
             for(int i=0; (unsigned)i<e.pkts_delay.size();i++){
                 sumDelay += e.pkts_delay[i].count();
+                if(maxDelay<e.pkts_delay[i].count())
+                    maxDelay = e.pkts_delay[i].count();
+                if(minDelay>e.pkts_delay[i].count()||minDelay==-1)
+                    minDelay = e.pkts_delay[i].count();
             }
             if(e.pkts_delay.size()>0)
                 e.avg_delay = (std::chrono::microseconds)sumDelay/e.pkts_delay.size(); // average
@@ -357,7 +362,8 @@ void statistics_db::writeStatisticsConv(std::unordered_map<conv, entry_convStat>
             query.bind(5, (int) e.pkts_A_B);
             query.bind(6, (int) e.pkts_B_A);
             query.bind(7, (int) e.avg_delay.count());
-            //query.bind(7,  std::to_string(e.median_delay.count()));            
+            query.bind(8, minDelay);
+            query.bind(9, maxDelay);
             query.exec();
             query.reset();
         }
