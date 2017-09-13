@@ -5,10 +5,8 @@
 #ifndef CPP_PCAPREADER_STATISTICSDB_H
 #define CPP_PCAPREADER_STATISTICSDB_H
 
-// Aidmar
 #include <iostream>
 #include <memory>
-
 #include <string>
 #include "statistics.h"
 #include <SQLiteCpp/SQLiteCpp.h>
