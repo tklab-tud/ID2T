@@ -220,6 +220,11 @@ class DDoSAttack(BaseAttack.BaseAttack):
         win_sizes = self.statistics.process_db_query(
             "SELECT winSize FROM tcp_syn_win ORDER BY RANDOM() LIMIT "+str(pkts_num)+";")
 
+        # MSS that was used by IP destination in background traffic
+        mss_dst = self.statistics.get_most_used_mss(ip_destination)
+        if mss_dst is None:
+            mss_dst = self.statistics.process_db_query("most_used(mssValue)")
+
         for pkt_num in range(pkts_num):
             # Build request package
             # Select one IP address and its corresponding MAC address
@@ -242,8 +247,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
             if len(replies) <= victim_buffer:
                 reply_ether = Ether(src=mac_destination, dst=mac_source)
                 reply_ip = IP(src=ip_destination, dst=ip_source, flags='DF')
-                reply_tcp = TCP(sport=port_destination, dport=port_source, seq=0, ack=1, flags='SA', window=29200)  # ,
-                # options=[('MSS', mss_dst)])
+                reply_tcp = TCP(sport=port_destination, dport=port_source, seq=0, ack=1, flags='SA', window=29200,options=[('MSS', mss_dst)])
                 reply = (reply_ether / reply_ip / reply_tcp)
                 timestamp_reply = timestamp_next_pkt + uniform(minDelay, maxDelay)
 
