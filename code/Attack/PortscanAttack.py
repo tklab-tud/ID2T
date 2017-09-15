@@ -264,7 +264,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
             # Aidmar
             request.time = timestamp_next_pkt
 
-            # 2) Build reply package
+            # 2) Build reply (for open ports) package
             if dport in ports_open:  # destination port is OPEN
                 reply_ether = Ether(src=mac_destination, dst=mac_source)
                 reply_ip = IP(src=ip_destination, dst=ip_source, flags='DF')

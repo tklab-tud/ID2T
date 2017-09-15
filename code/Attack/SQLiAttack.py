@@ -171,8 +171,6 @@ class SQLiAttack(BaseAttack.BaseAttack):
                 eth_frame.payload = b''
                 ip_pkt.payload = b''
                 tcp_pkt.payload = b''
-                #temp = "GET / HTTP/1.0\r\n\r\n"
-                #temp = "GET / HTTP/1.1\r\nHost: 192.168.189.1\r\nUser-Agent: Mozilla/4.0(compatible;MSIE6.0;WindowsNT5.1)\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\n"
 
                 if len(str_http_pkt) > 0:
                     # convert payload bytes to str => str = "b'..\\r\\n..'"
@@ -181,6 +179,8 @@ class SQLiAttack(BaseAttack.BaseAttack):
                     str_http_pkt = str_http_pkt.replace(orig_ip_dst, target_host)
                     str_http_pkt = str_http_pkt.replace("\\n", "\n")
                     str_http_pkt = str_http_pkt.replace("\\r", "\r")
+                    str_tcp_seg = str_tcp_seg.replace("\\t", "\t")
+                    str_tcp_seg = str_tcp_seg.replace("\\\'", "\'")
 
                 new_pkt = (eth_frame / ip_pkt/ tcp_pkt / str_http_pkt)
                 new_pkt.time = timestamp_next_pkt
@@ -211,6 +211,8 @@ class SQLiAttack(BaseAttack.BaseAttack):
                     str_http_pkt = str_http_pkt.replace(orig_ip_dst, target_host)
                     str_http_pkt = str_http_pkt.replace("\\n", "\n")
                     str_http_pkt = str_http_pkt.replace("\\r", "\r")
+                    str_tcp_seg = str_tcp_seg.replace("\\t", "\t")
+                    str_tcp_seg = str_tcp_seg.replace("\\\'", "\'")
 
                 new_pkt = (eth_frame / ip_pkt / tcp_pkt / str_http_pkt)
                 timestamp_next_pkt = timestamp_next_pkt + uniform(replyDelay, 2 * replyDelay)
