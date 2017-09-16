@@ -12,7 +12,6 @@
 // Aidmar
 /**
  * Calculates entropy of source and destination IPs for last time interval.
- * The results are written to ip_entropy_interval.csv file.
  * @param intervalStartTimestamp The timstamp where the interval starts.
  */
 std::vector<float> statistics::calculateLastIntervalIPsEntropy(std::chrono::microseconds intervalStartTimestamp){
@@ -33,7 +32,8 @@ std::vector<float> statistics::calculateLastIntervalIPsEntropy(std::chrono::micr
             int IPsDstPktsCount = i->second.pktsReceivedTimestamp.size() - indexStartReceived;       
             IPsDstPktsCounts.push_back(IPsDstPktsCount);
             pktsReceived += IPsDstPktsCount;
-            }                
+        }
+
          for (auto i = IPsSrcPktsCounts.begin(); i != IPsSrcPktsCounts.end(); i++) {
                 IPsSrcProb.push_back((float)*i/pktsSent);
          }

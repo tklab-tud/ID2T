@@ -138,17 +138,19 @@ void pcap_processor::collect_statistics() {
         std::chrono::duration<int, std::micro> timeInterval(timeInterval_microsec);             
         int previousPacketCount = 0;
         float previousSumPacketSize = 0;
-        
+        std::chrono::microseconds barrier = timeInterval;
+
         // Iterate over all packets and collect statistics
         for (; i != sniffer.end(); i++) {                  
             // Aidmar            
             std::chrono::microseconds lastPktTimestamp = i->timestamp();
             std::chrono::microseconds currentCaptureDuration = lastPktTimestamp - firstTimestamp;
-            std::chrono::microseconds barrier =  timeIntervalCounter*timeInterval;
+
             // For each interval
             if(currentCaptureDuration>barrier && barrier.count() > 0){ // barrier becomes negative in last interval
                 stats.addIntervalStat(timeInterval, intervalStartTimestamp, lastPktTimestamp, previousPacketCount, previousSumPacketSize);
-                timeIntervalCounter++;   
+                timeIntervalCounter++;
+                barrier =  barrier+timeInterval;
                 intervalStartTimestamp = lastPktTimestamp;
                 previousPacketCount = stats.getPacketCount();
                 previousSumPacketSize = stats.getSumPacketSize();
@@ -235,7 +237,8 @@ void pcap_processor::process_packets(const Packet &pkt) {
         stats.assignMacAddress(ipAddressReceiver, macAddressReceiver);
 
     } else {
-        std::cout << "Unknown PDU Type on L3: " << pdu_l3_type << std::endl;
+        //std::cout << "Unknown PDU Type on L3: " << pdu_l3_type << std::endl;
+        // TO-DO: add this to tests
     }
 
     // Layer 4 - Transport -------------------------------
@@ -320,7 +323,7 @@ bool inline pcap_processor::file_exists(const std::string &filePath) {
  */
 //int main() {
 //    std::cout << "Starting application." << std::endl;
-//    pcap_processor pcap = pcap_processor("/home/anonymous/Downloads/ID2T-toolkit/captures/iscx/40min_iscx_11jun.pcap");
+//    pcap_processor pcap = pcap_processor("/home/anonymous/Downloads/ID2T-toolkit/captures/darpa/darpa_w1_mon_inside.pcap");
 //
 //    long double t = pcap.get_timestamp_mu_sec(87);
 //    std::cout << t << std::endl;
