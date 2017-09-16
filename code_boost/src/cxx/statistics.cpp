@@ -25,8 +25,7 @@ std::vector<float> statistics::calculateLastIntervalIPsEntropy(std::chrono::micr
         int pktsSent = 0, pktsReceived = 0;
         
         for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
-            // TO-DO: should add this condition to avoid Segmentation Fault    if(i->second.pktsSentTimestamp.size()>0) realy?
-            int indexStartSent = getClosestIndex(i->second.pktsSentTimestamp, intervalStartTimestamp);                         
+            int indexStartSent = getClosestIndex(i->second.pktsSentTimestamp, intervalStartTimestamp);
             int IPsSrcPktsCount = i->second.pktsSentTimestamp.size() - indexStartSent;
             IPsSrcPktsCounts.push_back(IPsSrcPktsCount);
             pktsSent += IPsSrcPktsCount;                        
