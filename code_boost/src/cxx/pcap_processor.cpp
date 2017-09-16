@@ -146,7 +146,7 @@ void pcap_processor::collect_statistics() {
             std::chrono::microseconds currentCaptureDuration = lastPktTimestamp - firstTimestamp;
             std::chrono::microseconds barrier =  timeIntervalCounter*timeInterval;
             // For each interval
-            if(currentCaptureDuration>barrier){                    
+            if(currentCaptureDuration>barrier && barrier.count() > 0){ // barrier becomes negative in last interval
                 stats.addIntervalStat(timeInterval, intervalStartTimestamp, lastPktTimestamp, previousPacketCount, previousSumPacketSize);
                 timeIntervalCounter++;   
                 intervalStartTimestamp = lastPktTimestamp;
@@ -165,7 +165,6 @@ void pcap_processor::collect_statistics() {
         // Aidmar
         //tests.get_checksum_incorrect_ratio();
         //tests.get_payload_ratio();
-    
     }
 }
 
@@ -321,7 +320,7 @@ bool inline pcap_processor::file_exists(const std::string &filePath) {
  */
 //int main() {
 //    std::cout << "Starting application." << std::endl;
-//    pcap_processor pcap = pcap_processor("/home/anonymous/Downloads/ID2T-toolkit/captures/capture_1.pcap");
+//    pcap_processor pcap = pcap_processor("/home/anonymous/Downloads/ID2T-toolkit/captures/iscx/40min_iscx_11jun.pcap");
 //
 //    long double t = pcap.get_timestamp_mu_sec(87);
 //    std::cout << t << std::endl;

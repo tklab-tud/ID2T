@@ -66,12 +66,20 @@ std::vector<float> statistics::calculateIPsCumEntropy(){
     std::vector <std::string> IPs; 
     std::vector <float> IPsSrcProb; 
     std::vector <float> IPsDstProb;
+
+    std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+
     for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
-        IPs.push_back(i->first);        
+        IPs.push_back(i->first);
         IPsSrcProb.push_back((float)i->second.pkts_sent/packetCount);
         IPsDstProb.push_back((float)i->second.pkts_received/packetCount);
     }
-    
+
+    std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count()*1e-6;
+    std::cout<< "CumEntCalc -> ip_statistics loop: " << duration << " sec" << std::endl;
+
+
     // Calculate IP source entropy 
     float IPsSrcEntropy = 0;
     for(unsigned i=0; i < IPsSrcProb.size();i++){
@@ -123,7 +131,7 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
     calculateIPIntervalPacketRate(interval, intervalStartTimestamp);
     
     std::vector<float> ipEntopies = calculateLastIntervalIPsEntropy(intervalStartTimestamp);
-    //std::vector<float> ipCumEntopies = calculateIPsCumEntropy();    
+    std::vector<float> ipCumEntopies = calculateIPsCumEntropy();
     std::string lastPktTimestamp_s = std::to_string(intervalEndTimestamp.count());
     
     interval_statistics[lastPktTimestamp_s].pkts_count = packetCount - previousPacketCount;  
