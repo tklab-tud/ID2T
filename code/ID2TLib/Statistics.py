@@ -396,6 +396,27 @@ class Statistics:
             return out
 
         # Aidmar
+        def plot_port(file_ending: str):
+            plt.gcf().clear()
+            result = self.stats_db._process_user_defined_query(
+                "SELECT portNumber, SUM(portCount) FROM ip_ports GROUP BY portNumber")
+            graphx, graphy = [], []
+            for row in result:
+                graphx.append(row[0])
+                graphy.append(row[1])
+            plt.autoscale(enable=True, axis='both')
+            plt.title("Ports Distribution")
+            plt.xlabel('Ports Numbers')
+            plt.ylabel('Number of Packets')
+            width = 0.5
+            plt.xlim([0, max(graphx)])
+            plt.grid(True)
+            plt.bar(graphx, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+            out = self.pcap_filepath.replace('.pcap', '_plot-port' + file_ending)
+            plt.savefig(out,dpi=500)
+            return out
+
+        # Aidmar - This distribution is not drawable for big datasets
         def plot_ip_src(file_ending: str):
             plt.gcf().clear()
             result = self.stats_db._process_user_defined_query(
@@ -426,7 +447,7 @@ class Statistics:
             plt.savefig(out, dpi=500)
             return out
 
-        # Aidmar
+        # Aidmar - This distribution is not drawable for big datasets
         def plot_ip_dst(file_ending: str):
             plt.gcf().clear()
             result = self.stats_db._process_user_defined_query(
@@ -456,28 +477,6 @@ class Statistics:
             out = self.pcap_filepath.replace('.pcap', '_plot-ip-dst' + file_ending)
             plt.savefig(out, dpi=500)
             return out
-
-        # Aidmar
-        def plot_port(file_ending: str):
-            plt.gcf().clear()
-            result = self.stats_db._process_user_defined_query(
-                "SELECT portNumber, SUM(portCount) FROM ip_ports GROUP BY portNumber")
-            graphx, graphy = [], []
-            for row in result:
-                graphx.append(row[0])
-                graphy.append(row[1])
-            plt.autoscale(enable=True, axis='both')
-            plt.title("Ports Distribution")
-            plt.xlabel('Ports Numbers')
-            plt.ylabel('Number of Packets')
-            width = 0.5
-            plt.xlim([0, max(graphx)])
-            plt.grid(True)
-            plt.bar(graphx, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
-            out = self.pcap_filepath.replace('.pcap', '_plot-port' + file_ending)
-            plt.savefig(out,dpi=500)
-            return out
-
 
         # Aidmar
         def plot_interval_pktCount(file_ending: str):
@@ -639,8 +638,8 @@ class Statistics:
         win_out_path = plot_win('.' + format)
         protocol_out_path = plot_protocol('.' + format)
         port_out_path = plot_port('.' + format)
-        ip_src_out_path = plot_ip_src('.' + format)
-        ip_dst_out_path = plot_ip_dst('.' + format)
+        #ip_src_out_path = plot_ip_src('.' + format)
+        #ip_dst_out_path = plot_ip_dst('.' + format)
         plot_interval_pktCount = plot_interval_pktCount('.' + format)
         plot_interval_ip_src_ent = plot_interval_ip_src_ent('.' + format)
         plot_interval_ip_dst_ent = plot_interval_ip_dst_ent('.' + format)
