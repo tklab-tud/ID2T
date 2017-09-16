@@ -123,17 +123,17 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
     // Add packet rate for each IP to ip_statistics map
     calculateIPIntervalPacketRate(interval, intervalStartTimestamp);
     
-    //std::vector<float> ipEntopies = calculateLastIntervalIPsEntropy(intervalStartTimestamp); 
+    std::vector<float> ipEntopies = calculateLastIntervalIPsEntropy(intervalStartTimestamp);
     //std::vector<float> ipCumEntopies = calculateIPsCumEntropy();    
     std::string lastPktTimestamp_s = std::to_string(intervalEndTimestamp.count());
     
     interval_statistics[lastPktTimestamp_s].pkts_count = packetCount - previousPacketCount;  
     interval_statistics[lastPktTimestamp_s].kbytes = (float(sumPacketSize - previousSumPacketSize) / 1024);
     
-    /*if(ipEntopies.size()>1){
+    if(ipEntopies.size()>1){
         interval_statistics[lastPktTimestamp_s].ip_src_entropy = ipEntopies[0];
         interval_statistics[lastPktTimestamp_s].ip_dst_entropy = ipEntopies[1];
-    }
+    }/*
     if(ipCumEntopies.size()>1){
         interval_statistics[lastPktTimestamp_s].ip_src_cum_entropy = ipCumEntopies[0];
         interval_statistics[lastPktTimestamp_s].ip_dst_cum_entropy = ipCumEntopies[1];
@@ -292,7 +292,7 @@ void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddres
             s_t = packetCount - pktCntNvlSndr + 1;        
             ipSrc_Mahoney_score = (float)s_t*n/s_r;
         }
-                
+
     ip_statistics[ipAddressSender].firstAppearAsSenderPktCount = packetCount;  
     ip_statistics[ipAddressSender].sourceAnomalyScore = ipSrc_Mahoney_score;
      */
