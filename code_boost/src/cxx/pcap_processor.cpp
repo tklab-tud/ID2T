@@ -152,12 +152,10 @@ void pcap_processor::collect_statistics() {
                 intervalStartTimestamp = lastPktTimestamp;
                 previousPacketCount = stats.getPacketCount();
                 previousSumPacketSize = stats.getSumPacketSize();
-            } 
-            
+            }
             stats.incrementPacketCount();
             this->process_packets(*i);                    
-            lastProcessedPacket = i->timestamp(); 
-            
+            lastProcessedPacket = i->timestamp();
             //counter++;
         }
         
@@ -321,28 +319,26 @@ bool inline pcap_processor::file_exists(const std::string &filePath) {
  * Comment in if executable should be build & run
  * Comment out if library should be build
  */
-///*int main() {
+//int main() {
 //    std::cout << "Starting application." << std::endl;
-//    //pcap_processor pcap = pcap_processor("/mnt/hgfs/datasets/95M.pcap");
-////pcap_processor pcap = pcap_processor("/home/pjattke/temp/test_me_short.pcap");
-//    pcap_processor pcap = pcap_processor("/tmp/tmp0hhz2oia");
-////long double t = pcap.get_timestamp_mu_sec(87);
-////    std::cout << t << std::endl;
+//    pcap_processor pcap = pcap_processor("/home/anonymous/Downloads/ID2T-toolkit/captures/capture_1.pcap");
 //
-////    time_t start, end;
-////    time(&start);
-////    pcap.collect_statistics();
-////    time(&end);
-////    double dif = difftime(end, start);
-////    printf("Elapsed time is %.2lf seconds.", dif);
-////    pcap.stats.writeToDatabase("/home/pjattke/myDB.sqlite3");
+//    long double t = pcap.get_timestamp_mu_sec(87);
+//    std::cout << t << std::endl;
 //
-//    std::string path = pcap.merge_pcaps("/tmp/tmp0okkfdx_");
-//    std::cout << path << std::endl;
+//    time_t start, end;
+//    time(&start);
+//    pcap.collect_statistics();
+//    time(&end);
+//    double dif = difftime(end, start);
+//    printf("Elapsed time is %.2lf seconds.", dif);
+//    pcap.stats.writeToDatabase("/home/anonymous/Downloads/myDB.sqlite3");
 //
+//    //std::string path = pcap.merge_pcaps("/tmp/tmp0okkfdx_");
+//    //std::cout << path << std::endl;
 //
 //    return 0;
-//}*/
+//}
 
 /*
  * Comment out if executable should be build & run

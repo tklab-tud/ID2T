@@ -18,7 +18,7 @@
 std::vector<float> statistics::calculateLastIntervalIPsEntropy(std::chrono::microseconds intervalStartTimestamp){
         std::vector <int> IPsSrcPktsCounts; 
         std::vector <int> IPsDstPktsCounts; 
-        
+
         std::vector <float> IPsSrcProb; 
         std::vector <float> IPsDstProb;
     
@@ -337,7 +337,7 @@ void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddres
     ip_statistics[ipAddressSender].kbytes_sent += (float(bytesSent) / 1024);
     ip_statistics[ipAddressSender].pkts_sent++;
     // Aidmar
-    //ip_statistics[ipAddressSender].pktsSentTimestamp.push_back(timestamp);
+    ip_statistics[ipAddressSender].pktsSentTimestamp.push_back(timestamp);
     
     //// Aidmar - calculate packet rate (assumption: max_pkt_rate=1/smallest time between two consecutive pkts)
     // resulting in very big rates, therefore it could be better to calculate pkt rate on time intervals
@@ -354,7 +354,7 @@ void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddres
     ip_statistics[ipAddressReceiver].kbytes_received += (float(bytesSent) / 1024);
     ip_statistics[ipAddressReceiver].pkts_received++;  
      // Aidmar
-    //ip_statistics[ipAddressReceiver].pktsReceivedTimestamp.push_back(timestamp);
+    ip_statistics[ipAddressReceiver].pktsReceivedTimestamp.push_back(timestamp);
 }
 
 /**
