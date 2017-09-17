@@ -6,7 +6,12 @@ using namespace Tins;
  * Creates a new pcap_processor object.
  * @param path The path where the PCAP to get analyzed is locatated.
  */
-pcap_processor::pcap_processor(std::string path) : filePath(path) {
+pcap_processor::pcap_processor(std::string path, std::string tests) {
+    filePath = path;
+    // Aidmar
+    if(tests == "True")
+        stats.setDoTests(true);
+    else  stats.setDoTests(false);;
 }
 
 /**
@@ -115,10 +120,8 @@ void pcap_processor::collect_statistics() {
 
         // Save timestamp of first packet
         stats.setTimestampFirstPacket(i->timestamp());
-    
-        // Aidmar
-        //int counter=0;
-        int timeIntervalCounter = 1;   
+
+        int timeIntervalCounter = 1;
         int timeIntervalsNum = 100;
         std::chrono::microseconds intervalStartTimestamp = stats.getTimestampFirstPacket();
         std::chrono::microseconds firstTimestamp = stats.getTimestampFirstPacket(); 
@@ -158,15 +161,15 @@ void pcap_processor::collect_statistics() {
             stats.incrementPacketCount();
             this->process_packets(*i);                    
             lastProcessedPacket = i->timestamp();
-            //counter++;
         }
         
         // Save timestamp of last packet into statistics
         stats.setTimestampLastPacket(lastProcessedPacket);
-        
-        // Aidmar
-        //tests.get_checksum_incorrect_ratio();
-        //tests.get_payload_ratio();
+
+        // TO-DO: to delete
+        //for (auto it = stats.dscp_distribution.begin(); it != stats.dscp_distribution.end(); ++it) {
+          //  std::cout<<it->first<<","<<it->second<<"\n";
+        //}
     }
 }
 
@@ -215,7 +218,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
         stats.assignMacAddress(ipAddressReceiver, macAddressReceiver);        
 
         // Aidmar - Artifacts Tests: contemporary (ToS)
-        //tests.check_tos(ipLayer.tos());
+        stats.checkToS(ipLayer.tos());
         
     } // PDU is IPv6
     else if (pdu_l3_type == PDU::PDUType::IPv6) {
@@ -235,7 +238,6 @@ void pcap_processor::process_packets(const Packet &pkt) {
         // Assign IP Address to MAC Address
         stats.assignMacAddress(ipAddressSender, macAddressSender);
         stats.assignMacAddress(ipAddressReceiver, macAddressReceiver);
-
     } else {
         //std::cout << "Unknown PDU Type on L3: " << pdu_l3_type << std::endl;
         // TO-DO: add this to tests
@@ -247,18 +249,19 @@ void pcap_processor::process_packets(const Packet &pkt) {
         // Protocol distribution - layer 4
         PDU::PDUType p = pdu_l4->pdu_type();  
         
-        // Aidmar - Artifacts Tests: payload
-        /*if (pdu_l3_type == PDU::PDUType::IP) {            
-            tests.check_payload(pdu_l4);
+        // Aidmar - Tests for IPv4: payload
+        if (pdu_l3_type == PDU::PDUType::IP) {
+            stats.checkPayload(pdu_l4);
           }
-         */ 
+
         if (p == PDU::PDUType::TCP) {
             TCP tcpPkt = (const TCP &) *pdu_l4;
             
-          // Aidmar - Artifacts Tests: checksum
-          /*if (pdu_l3_type == PDU::PDUType::IP) {            
-            tests.check_checksum(ipAddressSender, ipAddressReceiver, tcpPkt);
-          }*/            
+          // Aidmar - Tests TCP checksum
+          if (pdu_l3_type == PDU::PDUType::IP) {
+            stats.checkTCPChecksum(ipAddressSender, ipAddressReceiver, tcpPkt);
+          }
+
             stats.incrementProtocolCount(ipAddressSender, "TCP");                        
                     
             // Aidmar
@@ -323,7 +326,7 @@ bool inline pcap_processor::file_exists(const std::string &filePath) {
  */
 //int main() {
 //    std::cout << "Starting application." << std::endl;
-//    pcap_processor pcap = pcap_processor("/home/anonymous/Downloads/ID2T-toolkit/captures/darpa/darpa_w1_mon_inside.pcap");
+//    pcap_processor pcap = pcap_processor("/home/anonymous/Downloads/ID2T-toolkit/captures/iscx/1h_iscx_11jun.pcap", "False");
 //
 //    long double t = pcap.get_timestamp_mu_sec(87);
 //    std::cout << t << std::endl;
@@ -351,7 +354,7 @@ bool inline pcap_processor::file_exists(const std::string &filePath) {
 using namespace boost::python;
 
 BOOST_PYTHON_MODULE (libpcapreader) {
-    class_<pcap_processor>("pcap_processor", init<std::string>())
+    class_<pcap_processor>("pcap_processor", init<std::string, std::string>()) // Aidmar - added , std::string
             .def("merge_pcaps", &pcap_processor::merge_pcaps)
             .def("collect_statistics", &pcap_processor::collect_statistics)
             .def("get_timestamp_mu_sec", &pcap_processor::get_timestamp_mu_sec)

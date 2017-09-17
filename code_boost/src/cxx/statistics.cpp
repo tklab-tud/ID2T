@@ -8,6 +8,78 @@
 #include <SQLiteCpp/SQLiteCpp.h>
 #include "statistics_db.h"
 #include "statistics.h"
+#include "utilities.h"
+
+// Aidmar
+using namespace Tins;
+
+
+// Aidmar
+/**
+ * Checks if ToS is valid according to RFC2472 and increments counter.
+ * @param uint8_t ToS ToS values to be checked.
+ */
+void statistics::checkToS(uint8_t ToS) {
+    if(this->getDoTests()) {
+        //std::cout <<"ToS bin: "<< integral_to_binary_string(ToS)<<"\n";
+        if((unsigned)ToS != 0) {
+            std::bitset<8> tosBit(ToS); //convent number into bit array
+
+            std::stringstream dscpStream;
+            dscpStream <<tosBit[7]<<tosBit[6]<<tosBit[5]<<tosBit[4]<<tosBit[3]<<tosBit[2];
+            std::bitset<6> dscpBit(dscpStream.str());
+            int dscpInt = (int)(dscpBit.to_ulong());
+
+//            std::stringstream ipPrecStream;
+//            ipPrecStream <<tosBit[7]<<tosBit[6]<<tosBit[5];
+//            std::bitset<6> ipPrecedenceBit(ipPrecStream.str());
+//            int ipPrecedenceInt = (int)(ipPrecedenceBit.to_ulong());
+
+            // Commonly Used DSCP Values according to RFC2472
+            int validValues[] = {0,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,46,48,56};
+            bool exists = std::find(std::begin(validValues), std::end(validValues), dscpInt) != std::end(validValues);
+
+            // According to RFC791 ipPrecedenceInt <= 7 && tosBit[0] must be 0
+            if(!exists && tosBit[0] == 0)
+                invalidToSCount++;
+            else
+                validToSCount++;
+
+            dscp_distribution[dscpInt]++;
+        }
+    }
+}
+
+// Aidmar
+/**
+ * Checks if there is a payload and increments payloads counter.
+ * @param pdu_l4 The packet that should be checked if it has a payload or not.
+ */
+void statistics::checkPayload(const PDU *pdu_l4) {
+    if(this->getDoTests()) {
+        // pdu_l4: Tarnsport layer 4
+        int pktSize = pdu_l4->size();
+        int headerSize = pdu_l4->header_size(); // TCP/UDP header
+        int payloadSize = pktSize - headerSize;
+        if (payloadSize > 0)
+            payloadCount++;
+    }
+}
+
+// Aidmar
+/**
+ * Checks the correctness of TCP checksum and increments counter if the checksum was incorrect.
+ * @param ipAddressSender The source IP.
+ * @param ipAddressReceiver The destination IP.
+ * @param tcpPkt The packet to get checked.
+ */
+void statistics::checkTCPChecksum(std::string ipAddressSender, std::string ipAddressReceiver, TCP tcpPkt) {
+    if(this->getDoTests()) {
+        if(check_tcpChecksum(ipAddressSender, ipAddressReceiver, tcpPkt))
+            correctTCPChecksumCount++;
+        else incorrectTCPChecksumCount++;
+    }
+}
 
 // Aidmar
 /**
@@ -15,47 +87,52 @@
  * @param intervalStartTimestamp The timstamp where the interval starts.
  */
 std::vector<float> statistics::calculateLastIntervalIPsEntropy(std::chrono::microseconds intervalStartTimestamp){
-        std::vector <int> IPsSrcPktsCounts; 
-        std::vector <int> IPsDstPktsCounts; 
+    if(this->getDoTests()) {
+        std::vector<int> IPsSrcPktsCounts;
+        std::vector<int> IPsDstPktsCounts;
 
-        std::vector <float> IPsSrcProb; 
-        std::vector <float> IPsDstProb;
-    
+        std::vector<float> IPsSrcProb;
+        std::vector<float> IPsDstProb;
+
         int pktsSent = 0, pktsReceived = 0;
-        
+
         for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
             int indexStartSent = getClosestIndex(i->second.pktsSentTimestamp, intervalStartTimestamp);
             int IPsSrcPktsCount = i->second.pktsSentTimestamp.size() - indexStartSent;
             IPsSrcPktsCounts.push_back(IPsSrcPktsCount);
-            pktsSent += IPsSrcPktsCount;                        
-            int indexStartReceived = getClosestIndex(i->second.pktsReceivedTimestamp, intervalStartTimestamp);   
-            int IPsDstPktsCount = i->second.pktsReceivedTimestamp.size() - indexStartReceived;       
+            pktsSent += IPsSrcPktsCount;
+            int indexStartReceived = getClosestIndex(i->second.pktsReceivedTimestamp, intervalStartTimestamp);
+            int IPsDstPktsCount = i->second.pktsReceivedTimestamp.size() - indexStartReceived;
             IPsDstPktsCounts.push_back(IPsDstPktsCount);
             pktsReceived += IPsDstPktsCount;
         }
 
-         for (auto i = IPsSrcPktsCounts.begin(); i != IPsSrcPktsCounts.end(); i++) {
-                IPsSrcProb.push_back((float)*i/pktsSent);
-         }
-         for (auto i = IPsDstPktsCounts.begin(); i != IPsDstPktsCounts.end(); i++) {
-                IPsDstProb.push_back((float)*i/pktsReceived);
-         }
-         
-         // Calculate IP source entropy 
+        for (auto i = IPsSrcPktsCounts.begin(); i != IPsSrcPktsCounts.end(); i++) {
+            IPsSrcProb.push_back((float) *i / pktsSent);
+        }
+        for (auto i = IPsDstPktsCounts.begin(); i != IPsDstPktsCounts.end(); i++) {
+            IPsDstProb.push_back((float) *i / pktsReceived);
+        }
+
+        // Calculate IP source entropy
         float IPsSrcEntropy = 0;
-        for(unsigned i=0; i < IPsSrcProb.size();i++){
+        for (unsigned i = 0; i < IPsSrcProb.size(); i++) {
             if (IPsSrcProb[i] > 0)
-                IPsSrcEntropy += - IPsSrcProb[i]*log2(IPsSrcProb[i]);
+                IPsSrcEntropy += -IPsSrcProb[i] * log2(IPsSrcProb[i]);
         }
         // Calculate IP destination entropy
         float IPsDstEntropy = 0;
-        for(unsigned i=0; i < IPsDstProb.size();i++){
+        for (unsigned i = 0; i < IPsDstProb.size(); i++) {
             if (IPsDstProb[i] > 0)
-                IPsDstEntropy += - IPsDstProb[i]*log2(IPsDstProb[i]);
-        }                    
-        
+                IPsDstEntropy += -IPsDstProb[i] * log2(IPsDstProb[i]);
+        }
+
         std::vector<float> entropies = {IPsSrcEntropy, IPsDstEntropy};
         return entropies;
+    }
+    else {
+        return {-1, -1};
+    }
 }
 
 // Aidmar
@@ -63,41 +140,46 @@ std::vector<float> statistics::calculateLastIntervalIPsEntropy(std::chrono::micr
  * Calculates cumulative entropy of source and destination IPs, i.e., the entropy for packets from the beginning of the pcap file. 
  */
 std::vector<float> statistics::calculateIPsCumEntropy(){
-    std::vector <std::string> IPs; 
-    std::vector <float> IPsSrcProb; 
-    std::vector <float> IPsDstProb;
+    if(this->getDoTests()) {
+        std::vector <std::string> IPs;
+        std::vector <float> IPsSrcProb;
+        std::vector <float> IPsDstProb;
 
-    //std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+        //std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
-    for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
-        IPs.push_back(i->first);
-        IPsSrcProb.push_back((float)i->second.pkts_sent/packetCount);
-        IPsDstProb.push_back((float)i->second.pkts_received/packetCount);
+        for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
+            IPs.push_back(i->first);
+            IPsSrcProb.push_back((float)i->second.pkts_sent/packetCount);
+            IPsDstProb.push_back((float)i->second.pkts_received/packetCount);
+        }
+
+        //std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+        //auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count()*1e-6;
+        //std::cout<< "CumEntCalc -> ip_statistics loop: " << duration << " sec" << std::endl;
+
+
+        // Calculate IP source entropy
+        float IPsSrcEntropy = 0;
+        for(unsigned i=0; i < IPsSrcProb.size();i++){
+            if (IPsSrcProb[i] > 0)
+                IPsSrcEntropy += - IPsSrcProb[i]*log2(IPsSrcProb[i]);
+        }
+        //std::cout << packetCount << ": SrcEnt: " << IPsSrcEntropy << "\n";
+
+        // Calculate IP destination entropy
+        float IPsDstEntropy = 0;
+        for(unsigned i=0; i < IPsDstProb.size();i++){
+            if (IPsDstProb[i] > 0)
+                IPsDstEntropy += - IPsDstProb[i]*log2(IPsDstProb[i]);
+        }
+        //std::cout << packetCount << ": DstEnt: " << IPsDstEntropy << "\n";
+
+        std::vector<float> entropies = {IPsSrcEntropy, IPsDstEntropy};
+        return entropies;
     }
-
-    //std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-    //auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count()*1e-6;
-    //std::cout<< "CumEntCalc -> ip_statistics loop: " << duration << " sec" << std::endl;
-
-
-    // Calculate IP source entropy 
-    float IPsSrcEntropy = 0;
-    for(unsigned i=0; i < IPsSrcProb.size();i++){
-        if (IPsSrcProb[i] > 0)
-            IPsSrcEntropy += - IPsSrcProb[i]*log2(IPsSrcProb[i]);
+    else {
+    return {-1, -1};
     }
-    //std::cout << packetCount << ": SrcEnt: " << IPsSrcEntropy << "\n";
-    
-    // Calculate IP destination entropy
-    float IPsDstEntropy = 0;
-    for(unsigned i=0; i < IPsDstProb.size();i++){
-        if (IPsDstProb[i] > 0)
-            IPsDstEntropy += - IPsDstProb[i]*log2(IPsDstProb[i]);
-    }
-    //std::cout << packetCount << ": DstEnt: " << IPsDstEntropy << "\n";
-    
-    std::vector<float> entropies = {IPsSrcEntropy, IPsDstEntropy};
-    return entropies;
 }
 
 
@@ -133,10 +215,26 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
     std::vector<float> ipEntopies = calculateLastIntervalIPsEntropy(intervalStartTimestamp);
     std::vector<float> ipCumEntopies = calculateIPsCumEntropy();
     std::string lastPktTimestamp_s = std::to_string(intervalEndTimestamp.count());
-    
+
     interval_statistics[lastPktTimestamp_s].pkts_count = packetCount - previousPacketCount;  
     interval_statistics[lastPktTimestamp_s].kbytes = (float(sumPacketSize - previousSumPacketSize) / 1024);
-    
+
+    interval_statistics[lastPktTimestamp_s].payload_count = payloadCount;
+    interval_statistics[lastPktTimestamp_s].incorrect_checksum_count = incorrectTCPChecksumCount;
+    interval_statistics[lastPktTimestamp_s].correct_checksum_count = correctTCPChecksumCount;
+    interval_statistics[lastPktTimestamp_s].invalid_tos_count = invalidToSCount;
+    interval_statistics[lastPktTimestamp_s].valid_tos_count = validToSCount;
+
+    std::cout<<invalidToSCount<<","<<validToSCount<<"\n";
+
+
+    // Reset variables for next interval
+    payloadCount = 0;
+    incorrectTCPChecksumCount = 0;
+    correctTCPChecksumCount = 0;
+    invalidToSCount = 0;
+    validToSCount = 0;
+
     if(ipEntopies.size()>1){
         interval_statistics[lastPktTimestamp_s].ip_src_entropy = ipEntopies[0];
         interval_statistics[lastPktTimestamp_s].ip_dst_entropy = ipEntopies[1];
@@ -577,7 +675,8 @@ void statistics::writeToDatabase(std::string database_path) {
     db.writeStatisticsConv(conv_statistics);
     db.writeStatisticsInterval(interval_statistics);
 
-    
+    // Aidmar - Tests
+
 }
 
 /**
@@ -595,6 +694,15 @@ float statistics::getAvgPacketSize() const {
  */
 void statistics::addPacketSize(uint32_t packetSize) {
     sumPacketSize += ((float) packetSize);
+}
+
+// Aidmar
+void statistics::setDoTests(bool var) {
+    doTests = var;
+}
+
+bool statistics::getDoTests() {
+    return doTests;
 }
 
 

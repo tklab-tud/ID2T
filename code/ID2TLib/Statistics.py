@@ -22,6 +22,8 @@ class Statistics:
         # Fields
         self.pcap_filepath = pcap_file.pcap_file_path
         self.pcap_proc = None
+        # Aidmar
+        self.do_tests = False
 
         # Create folder for statistics database if required
         self.path_db = pcap_file.get_db_path()
@@ -52,7 +54,7 @@ class Statistics:
 
         # Recalculate statistics if database not exists OR param -r/--recalculate was provided
         if (not self.stats_db.get_db_exists()) or flag_recalculate_stats:
-            self.pcap_proc = pr.pcap_processor(self.pcap_filepath)
+            self.pcap_proc = pr.pcap_processor(self.pcap_filepath, str(self.do_tests)) # Aidmar - do_tests
             self.pcap_proc.collect_statistics()
             self.pcap_proc.write_to_database(self.path_db)
             outstring_datasource = "by PCAP file processor."

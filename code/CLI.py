@@ -29,7 +29,7 @@ class CLI(object):
         given queries.
         """
         # Create ID2T Controller
-        controller = Controller(self.args.input)
+        controller = Controller(self.args.input, self.args.tests)
 
         # Load PCAP statistics
         controller.load_pcap_statistics(self.args.export, self.args.recalculate, self.args.statistics)
@@ -82,6 +82,8 @@ class CLI(object):
         parser.add_argument('-q', '--query', metavar="QUERY",
                             action='append', nargs='?',
                             help='queries the statistics database. If no query is provided, the application enters into query mode.')
+        # Aidmar
+        parser.add_argument('-t', '--tests', help='perform defects tests on input pcap file.', action='store_true')
 
         # Parse arguments
         self.args = parser.parse_args(args)

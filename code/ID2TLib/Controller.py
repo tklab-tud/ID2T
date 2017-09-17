@@ -8,7 +8,7 @@ from ID2TLib.Statistics import Statistics
 
 
 class Controller:
-    def __init__(self, pcap_file_path: str):
+    def __init__(self, pcap_file_path: str, do_tests: bool): #Aidmar - do_tests
         """
         Creates a new Controller, acting as a central coordinator for the whole application.
         :param pcap_file_path:
@@ -17,12 +17,17 @@ class Controller:
         self.pcap_src_path = pcap_file_path.strip()
         self.pcap_dest_path = ''
         self.written_pcaps = []
+        # Aidmar
+        self.do_tests = do_tests
 
         # Initialize class instances
         print("Input file: %s" % self.pcap_src_path)
         self.pcap_file = PcapFile(self.pcap_src_path)
         self.label_manager = LabelManager(self.pcap_src_path)
         self.statistics = Statistics(self.pcap_file)
+        # Aidmar
+        self.statistics.do_tests = self.do_tests
+
         self.statisticsDB = self.statistics.get_statistics_database()
         self.attack_controller = AttackController(self.pcap_file, self.statistics, self.label_manager)
 

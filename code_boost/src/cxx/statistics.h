@@ -15,6 +15,8 @@
 
 #include "utilities.h"
 
+using namespace Tins;
+
 /*
  * Definition of structs used in unordered_map fields
  */
@@ -189,6 +191,11 @@ struct entry_intervalStat {
     float ip_dst_entropy;
     float ip_src_cum_entropy; 
     float ip_dst_cum_entropy;
+    int payload_count;
+    int incorrect_checksum_count;
+    int correct_checksum_count;
+    int invalid_tos_count;
+    int valid_tos_count;
     // Predictability score
     //float ip_src_pred_score;
     //float ip_dst_pred_score;
@@ -200,7 +207,11 @@ struct entry_intervalStat {
                && ip_src_entropy == other.ip_src_entropy
                && ip_dst_entropy == other.ip_dst_entropy
                && ip_src_cum_entropy == other.ip_src_cum_entropy
-               && ip_dst_cum_entropy == other.ip_dst_cum_entropy;              
+               && ip_dst_cum_entropy == other.ip_dst_cum_entropy
+               && payload_count == other.payload_count
+               && incorrect_checksum_count == other.incorrect_checksum_count
+               && invalid_tos_count == other.invalid_tos_count
+               && valid_tos_count == other.valid_tos_count;
     }
 };
 
@@ -349,6 +360,9 @@ public:
     std::vector<float> calculateIPsCumEntropy();
     std::vector<float> calculateLastIntervalIPsEntropy(std::chrono::microseconds intervalStartTimestamp);        
     void addIntervalStat(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp, std::chrono::microseconds lastPktTimestamp, int previousPacketCount, float previousSumPacketSize);
+    void checkPayload(const PDU *pdu_l4);
+    void checkTCPChecksum(std::string ipAddressSender, std::string ipAddressReceiver, TCP tcpPkt);
+    void checkToS(uint8_t ToS);
 
     void incrementTTLcount(std::string ipAddress, int ttlValue);
 
@@ -393,6 +407,11 @@ public:
      */
     ip_stats getStatsForIP(std::string ipAddress);
 
+    // Aidmar
+    bool getDoTests();
+    void setDoTests(bool var);
+    // TO-DO: move to private section
+    std::unordered_map<int, int> dscp_distribution;
 
 private:
     /*
@@ -402,6 +421,14 @@ private:
     Tins::Timestamp timestamp_lastPacket;
     float sumPacketSize = 0;
     int packetCount = 0;
+
+    // Aidmar
+    bool doTests = false;
+    int payloadCount = 0;
+    int incorrectTCPChecksumCount = 0;
+    int correctTCPChecksumCount = 0;
+    int validToSCount = 0;
+    int invalidToSCount = 0;
 
     /*
      * Data containers
@@ -417,7 +444,8 @@ private:
     // {IP Address A, Port A, IP Address B, Port B,   #packets_A_B, #packets_B_A}
     std::unordered_map<conv, entry_convStat> conv_statistics;
     std::unordered_map<std::string, entry_intervalStat> interval_statistics;
-    
+
+
     // {IP Address, Protocol, count}
     std::unordered_map<ipAddress_protocol, int> protocol_distribution;
 

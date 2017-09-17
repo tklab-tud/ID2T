@@ -15,7 +15,6 @@
 #include <sys/stat.h>
 #include <unordered_map>
 #include "statistics.h"
-#include "artifacts_tests.h"
 
 using namespace Tins;
 
@@ -25,7 +24,7 @@ public:
     /*
     * Class constructor
     */
-    pcap_processor(std::string path);
+    pcap_processor(std::string path, std::string tests);
 
     /*
      * Attributes
@@ -33,8 +32,6 @@ public:
     statistics stats;
     std::string filePath;
 
-    // Aidmar
-    //artifacts_tests tests;
     /*
      * Methods
      */

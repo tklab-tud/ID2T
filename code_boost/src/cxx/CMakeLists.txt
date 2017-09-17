@@ -10,8 +10,6 @@ set(SOURCE_FILES
         statistics.h
         statistics_db.cpp
         statistics_db.h
-        artifacts_tests.cpp
-        artifacts_tests.h
         utilities.cpp
         utilities.h)
 

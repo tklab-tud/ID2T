@@ -390,10 +390,13 @@ void statistics_db::writeStatisticsInterval(std::unordered_map<std::string, entr
                 "ipSrcEntropy REAL,"      
                 "ipDstEntropy REAL,"  
                 "ipSrcCumEntropy REAL,"      
-                "ipDstCumEntropy REAL," 
+                "ipDstCumEntropy REAL,"
+                "payloadCount INTEGER,"
+                "incorrectTCPChecksumCount INTEGER,"
+                "correctTCPChecksumCount INTEGER,"
                 "PRIMARY KEY(lastPktTimestamp));";
         db->exec(createTable);
-        SQLite::Statement query(*db, "INSERT INTO interval_statistics VALUES (?, ?, ?, ?, ?, ?, ?)");
+        SQLite::Statement query(*db, "INSERT INTO interval_statistics VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         for (auto it = intervalStatistics.begin(); it != intervalStatistics.end(); ++it) {
             std::string t = it->first;
             entry_intervalStat e = it->second;        
@@ -405,7 +408,9 @@ void statistics_db::writeStatisticsInterval(std::unordered_map<std::string, entr
             query.bind(5, e.ip_dst_entropy);
             query.bind(6, e.ip_src_cum_entropy);
             query.bind(7, e.ip_dst_cum_entropy);
-
+            query.bind(8, e.payload_count);
+            query.bind(9, e.incorrect_checksum_count);
+            query.bind(10, e.correct_checksum_count);
             query.exec();
             query.reset();
         }
@@ -415,3 +420,4 @@ void statistics_db::writeStatisticsInterval(std::unordered_map<std::string, entr
         std::cout << "Exception in statistics_db: " << e.what() << std::endl;
     }
 }
+
