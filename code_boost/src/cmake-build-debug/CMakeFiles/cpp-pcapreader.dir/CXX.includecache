@@ -58,28 +58,6 @@ map
 SQLiteCpp/Exception.h
 -
 
-/home/anonymous/Downloads/ID2T-toolkit/code_boost/src/cxx/artifacts_tests.cpp
-iostream
--
-fstream
--
-sstream
--
-artifacts_tests.h
-/home/anonymous/Downloads/ID2T-toolkit/code_boost/src/cxx/artifacts_tests.h
-utilities.h
-/home/anonymous/Downloads/ID2T-toolkit/code_boost/src/cxx/utilities.h
-
-/home/anonymous/Downloads/ID2T-toolkit/code_boost/src/cxx/artifacts_tests.h
-tins/tins.h
--
-iostream
--
-stdio.h
--
-utilities.h
-/home/anonymous/Downloads/ID2T-toolkit/code_boost/src/cxx/utilities.h
-
 /home/anonymous/Downloads/ID2T-toolkit/code_boost/src/cxx/pcap_processor.cpp
 pcap_processor.h
 /home/anonymous/Downloads/ID2T-toolkit/code_boost/src/cxx/pcap_processor.h
@@ -101,8 +79,6 @@ unordered_map
 -
 statistics.h
 /home/anonymous/Downloads/ID2T-toolkit/code_boost/src/cxx/statistics.h
-artifacts_tests.h
-/home/anonymous/Downloads/ID2T-toolkit/code_boost/src/cxx/artifacts_tests.h
 
 /home/anonymous/Downloads/ID2T-toolkit/code_boost/src/cxx/statistics.cpp
 iostream
@@ -178,5 +154,9 @@ chrono
 algorithm
 -
 tins/tins.h
+-
+bitset
+-
+type_traits
 -
 

@@ -151,12 +151,14 @@ void pcap_processor::collect_statistics() {
 
             // For each interval
             if(currentCaptureDuration>barrier && barrier.count() > 0){ // barrier becomes negative in last interval
-                stats.addIntervalStat(timeInterval, intervalStartTimestamp, lastPktTimestamp, previousPacketCount, previousSumPacketSize);
+                stats.addIntervalStat(timeInterval, intervalStartTimestamp, lastPktTimestamp);
                 timeIntervalCounter++;
                 barrier =  barrier+timeInterval;
                 intervalStartTimestamp = lastPktTimestamp;
+
                 previousPacketCount = stats.getPacketCount();
                 previousSumPacketSize = stats.getSumPacketSize();
+
             }
             stats.incrementPacketCount();
             this->process_packets(*i);                    
@@ -167,9 +169,9 @@ void pcap_processor::collect_statistics() {
         stats.setTimestampLastPacket(lastProcessedPacket);
 
         // TO-DO: to delete
-        for (auto it = stats.dscp_distribution.begin(); it != stats.dscp_distribution.end(); ++it) {
-            std::cout<<it->first<<","<<it->second<<"\n";
-        }
+        //for (auto it = stats.dscp_distribution.begin(); it != stats.dscp_distribution.end(); ++it) {
+        //    std::cout<<it->first<<","<<it->second<<"\n";
+        //}
     }
 }
 
@@ -208,7 +210,10 @@ void pcap_processor::process_packets(const Packet &pkt) {
         stats.addIpStat_packetSent(filePath, ipAddressSender, ipLayer.dst_addr().to_string(), sizeCurrentPacket, pkt.timestamp());
 
         // TTL distribution
-        stats.incrementTTLcount(ipAddressSender, ipLayer.ttl());      
+        stats.incrementTTLcount(ipAddressSender, ipLayer.ttl());
+
+        // Aidmar - ToS distribution
+        stats.incrementToScount(ipAddressSender, ipLayer.tos());
 
         // Protocol distribution
         stats.incrementProtocolCount(ipAddressSender, "IPv4");
@@ -326,7 +331,7 @@ bool inline pcap_processor::file_exists(const std::string &filePath) {
  */
 //int main() {
 //    std::cout << "Starting application." << std::endl;
-//    pcap_processor pcap = pcap_processor("/home/anonymous/Downloads/ID2T-toolkit/captures/iscx/1h_iscx_11jun.pcap", "False");
+//    pcap_processor pcap = pcap_processor("/home/anonymous/Downloads/ID2T-toolkit/captures/col/capture_1.pcap", "True");
 //
 //    long double t = pcap.get_timestamp_mu_sec(87);
 //    std::cout << t << std::endl;

@@ -86,6 +86,22 @@ struct ipAddress_mss {
 /*
  * Struct used to represent:
  * - IP address (IPv4 or IPv6)
+ * - ToS value
+ */
+struct ipAddress_tos {
+    std::string ipAddress;
+    int tosValue;
+
+    bool operator==(const ipAddress_tos &other) const {
+        return ipAddress == other.ipAddress
+               && tosValue == other.tosValue;
+    }
+};
+
+// Aidmar
+/*
+ * Struct used to represent:
+ * - IP address (IPv4 or IPv6)
  * - Window size
  */
 struct ipAddress_win {
@@ -196,6 +212,12 @@ struct entry_intervalStat {
     int correct_checksum_count;
     int invalid_tos_count;
     int valid_tos_count;
+    int new_ip_count;
+    int new_ttl_count;
+    int new_win_size_count;
+    int new_tos_count;
+    int new_mss_count;
+
     // Predictability score
     //float ip_src_pred_score;
     //float ip_dst_pred_score;
@@ -211,7 +233,12 @@ struct entry_intervalStat {
                && payload_count == other.payload_count
                && incorrect_checksum_count == other.incorrect_checksum_count
                && invalid_tos_count == other.invalid_tos_count
-               && valid_tos_count == other.valid_tos_count;
+               && valid_tos_count == other.valid_tos_count
+               && new_ip_count == other.new_ip_count
+               && new_ttl_count == other.new_ttl_count
+               && new_win_size_count == other.new_win_size_count
+               && new_tos_count == other.new_tos_count
+               && new_mss_count == other.new_mss_count;
     }
 };
 
@@ -282,6 +309,18 @@ namespace std {
             using std::string;
             return ((hash<string>()(k.ipAddress)
                      ^ (hash<int>()(k.mssValue) << 1)) >> 1);
+        }
+    };
+
+    // Aidmar
+    template<>
+    struct hash<ipAddress_tos> {
+        std::size_t operator()(const ipAddress_tos &k) const {
+            using std::size_t;
+            using std::hash;
+            using std::string;
+            return ((hash<string>()(k.ipAddress)
+                     ^ (hash<int>()(k.tosValue) << 1)) >> 1);
         }
     };
 
@@ -359,10 +398,11 @@ public:
     void addConvStat(std::string ipAddressSender,int sport,std::string ipAddressReceiver,int dport, std::chrono::microseconds timestamp);
     std::vector<float> calculateIPsCumEntropy();
     std::vector<float> calculateLastIntervalIPsEntropy(std::chrono::microseconds intervalStartTimestamp);        
-    void addIntervalStat(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp, std::chrono::microseconds lastPktTimestamp, int previousPacketCount, float previousSumPacketSize);
+    void addIntervalStat(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp, std::chrono::microseconds lastPktTimestamp);
     void checkPayload(const PDU *pdu_l4);
     void checkTCPChecksum(std::string ipAddressSender, std::string ipAddressReceiver, TCP tcpPkt);
     void checkToS(uint8_t ToS);
+    void incrementToScount(std::string ipAddress, int tosValue);
 
     void incrementTTLcount(std::string ipAddress, int ttlValue);
 
@@ -424,11 +464,27 @@ private:
 
     // Aidmar
     bool doTests = false;
+
     int payloadCount = 0;
     int incorrectTCPChecksumCount = 0;
     int correctTCPChecksumCount = 0;
     int validToSCount = 0;
     int invalidToSCount = 0;
+
+    int lastIntervalPayloadCount = 0;
+    int lastIntervalIncorrectTCPChecksumCount = 0;
+    int lastIntervalCorrectTCPChecksumCount = 0;
+    int lastIntervalValidToSCount = 0;
+    int lastIntervalInvalidToSCount = 0;
+    int lastIntervalCumPktCount = 0;
+    float lastIntervalCumSumPktSize = 0;
+    int lastIntervalCumNewIPCount = 0;
+    int lastIntervalCumNewTTLCount = 0;
+    int lastIntervalCumNewWinSizeCount = 0;
+    int lastIntervalCumNewToSCount = 0;
+    int lastIntervalCumNewMSSCount = 0;
+
+
 
     /*
      * Data containers
@@ -444,7 +500,7 @@ private:
     // {IP Address A, Port A, IP Address B, Port B,   #packets_A_B, #packets_B_A}
     std::unordered_map<conv, entry_convStat> conv_statistics;
     std::unordered_map<std::string, entry_intervalStat> interval_statistics;
-
+    std::unordered_map<ipAddress_tos, int> tos_distribution;
 
     // {IP Address, Protocol, count}
     std::unordered_map<ipAddress_protocol, int> protocol_distribution;

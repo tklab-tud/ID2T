@@ -129,33 +129,9 @@ CMakeFiles/cpp-pcapreader.dir/cxx/statistics_db.cpp.o.provides: CMakeFiles/cpp-p
 CMakeFiles/cpp-pcapreader.dir/cxx/statistics_db.cpp.o.provides.build: CMakeFiles/cpp-pcapreader.dir/cxx/statistics_db.cpp.o
 
 
-CMakeFiles/cpp-pcapreader.dir/cxx/artifacts_tests.cpp.o: CMakeFiles/cpp-pcapreader.dir/flags.make
-CMakeFiles/cpp-pcapreader.dir/cxx/artifacts_tests.cpp.o: ../cxx/artifacts_tests.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/anonymous/Downloads/ID2T-toolkit/code_boost/src/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/cpp-pcapreader.dir/cxx/artifacts_tests.cpp.o"
-	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/cpp-pcapreader.dir/cxx/artifacts_tests.cpp.o -c /home/anonymous/Downloads/ID2T-toolkit/code_boost/src/cxx/artifacts_tests.cpp
-
-CMakeFiles/cpp-pcapreader.dir/cxx/artifacts_tests.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/cpp-pcapreader.dir/cxx/artifacts_tests.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/anonymous/Downloads/ID2T-toolkit/code_boost/src/cxx/artifacts_tests.cpp > CMakeFiles/cpp-pcapreader.dir/cxx/artifacts_tests.cpp.i
-
-CMakeFiles/cpp-pcapreader.dir/cxx/artifacts_tests.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/cpp-pcapreader.dir/cxx/artifacts_tests.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/anonymous/Downloads/ID2T-toolkit/code_boost/src/cxx/artifacts_tests.cpp -o CMakeFiles/cpp-pcapreader.dir/cxx/artifacts_tests.cpp.s
-
-CMakeFiles/cpp-pcapreader.dir/cxx/artifacts_tests.cpp.o.requires:
-
-.PHONY : CMakeFiles/cpp-pcapreader.dir/cxx/artifacts_tests.cpp.o.requires
-
-CMakeFiles/cpp-pcapreader.dir/cxx/artifacts_tests.cpp.o.provides: CMakeFiles/cpp-pcapreader.dir/cxx/artifacts_tests.cpp.o.requires
-	$(MAKE) -f CMakeFiles/cpp-pcapreader.dir/build.make CMakeFiles/cpp-pcapreader.dir/cxx/artifacts_tests.cpp.o.provides.build
-.PHONY : CMakeFiles/cpp-pcapreader.dir/cxx/artifacts_tests.cpp.o.provides
-
-CMakeFiles/cpp-pcapreader.dir/cxx/artifacts_tests.cpp.o.provides.build: CMakeFiles/cpp-pcapreader.dir/cxx/artifacts_tests.cpp.o
-
-
 CMakeFiles/cpp-pcapreader.dir/cxx/utilities.cpp.o: CMakeFiles/cpp-pcapreader.dir/flags.make
 CMakeFiles/cpp-pcapreader.dir/cxx/utilities.cpp.o: ../cxx/utilities.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/anonymous/Downloads/ID2T-toolkit/code_boost/src/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Building CXX object CMakeFiles/cpp-pcapreader.dir/cxx/utilities.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/anonymous/Downloads/ID2T-toolkit/code_boost/src/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Building CXX object CMakeFiles/cpp-pcapreader.dir/cxx/utilities.cpp.o"
 	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/cpp-pcapreader.dir/cxx/utilities.cpp.o -c /home/anonymous/Downloads/ID2T-toolkit/code_boost/src/cxx/utilities.cpp
 
 CMakeFiles/cpp-pcapreader.dir/cxx/utilities.cpp.i: cmake_force
@@ -182,7 +158,6 @@ cpp__pcapreader_OBJECTS = \
 "CMakeFiles/cpp-pcapreader.dir/cxx/pcap_processor.cpp.o" \
 "CMakeFiles/cpp-pcapreader.dir/cxx/statistics.cpp.o" \
 "CMakeFiles/cpp-pcapreader.dir/cxx/statistics_db.cpp.o" \
-"CMakeFiles/cpp-pcapreader.dir/cxx/artifacts_tests.cpp.o" \
 "CMakeFiles/cpp-pcapreader.dir/cxx/utilities.cpp.o"
 
 # External object files for target cpp-pcapreader
@@ -191,7 +166,6 @@ cpp__pcapreader_EXTERNAL_OBJECTS =
 cpp-pcapreader: CMakeFiles/cpp-pcapreader.dir/cxx/pcap_processor.cpp.o
 cpp-pcapreader: CMakeFiles/cpp-pcapreader.dir/cxx/statistics.cpp.o
 cpp-pcapreader: CMakeFiles/cpp-pcapreader.dir/cxx/statistics_db.cpp.o
-cpp-pcapreader: CMakeFiles/cpp-pcapreader.dir/cxx/artifacts_tests.cpp.o
 cpp-pcapreader: CMakeFiles/cpp-pcapreader.dir/cxx/utilities.cpp.o
 cpp-pcapreader: CMakeFiles/cpp-pcapreader.dir/build.make
 cpp-pcapreader: /usr/lib/x86_64-linux-gnu/libboost_python-py35.so
@@ -199,7 +173,7 @@ cpp-pcapreader: /usr/local/lib/libtins.so
 cpp-pcapreader: SQLiteCpp/libSQLiteCpp.a
 cpp-pcapreader: SQLiteCpp/sqlite3/libsqlite3.a
 cpp-pcapreader: CMakeFiles/cpp-pcapreader.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/anonymous/Downloads/ID2T-toolkit/code_boost/src/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_6) "Linking CXX executable cpp-pcapreader"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/anonymous/Downloads/ID2T-toolkit/code_boost/src/cmake-build-debug/CMakeFiles --progress-num=$(CMAKE_PROGRESS_5) "Linking CXX executable cpp-pcapreader"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/cpp-pcapreader.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -210,7 +184,6 @@ CMakeFiles/cpp-pcapreader.dir/build: cpp-pcapreader
 CMakeFiles/cpp-pcapreader.dir/requires: CMakeFiles/cpp-pcapreader.dir/cxx/pcap_processor.cpp.o.requires
 CMakeFiles/cpp-pcapreader.dir/requires: CMakeFiles/cpp-pcapreader.dir/cxx/statistics.cpp.o.requires
 CMakeFiles/cpp-pcapreader.dir/requires: CMakeFiles/cpp-pcapreader.dir/cxx/statistics_db.cpp.o.requires
-CMakeFiles/cpp-pcapreader.dir/requires: CMakeFiles/cpp-pcapreader.dir/cxx/artifacts_tests.cpp.o.requires
 CMakeFiles/cpp-pcapreader.dir/requires: CMakeFiles/cpp-pcapreader.dir/cxx/utilities.cpp.o.requires
 
 .PHONY : CMakeFiles/cpp-pcapreader.dir/requires

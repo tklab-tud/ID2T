@@ -635,6 +635,171 @@ class Statistics:
             plt.savefig(out, dpi=500)
             return out
 
+        # Aidmar
+        def plot_interval_new_ip(file_ending: str):
+            plt.gcf().clear()
+
+            result = self.stats_db._process_user_defined_query(
+                "SELECT lastPktTimestamp, newIPCount FROM interval_statistics ORDER BY lastPktTimestamp")
+            graphx, graphy = [], []
+            for row in result:
+                graphx.append(row[0])
+                graphy.append(row[1])
+
+            plt.autoscale(enable=True, axis='both')
+            plt.title("IP New Values Distribution")
+            plt.xlabel('Timestamp')
+            plt.ylabel('New values count')
+            plt.xlim([0, len(graphx)])
+            plt.grid(True)
+            width = 0.5
+
+            # timestamp on x-axis
+            x = range(0, len(graphx))
+            my_xticks = graphx
+            plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
+            plt.tight_layout()
+
+            # limit the number of xticks
+            plt.locator_params(axis='x', nbins=20)
+
+            plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+            out = self.pcap_filepath.replace('.pcap', '_plot-interval-new-ip-dist' + file_ending)
+            plt.savefig(out, dpi=500)
+            return out
+
+        # Aidmar
+        def plot_interval_new_ttl(file_ending: str):
+            plt.gcf().clear()
+
+            result = self.stats_db._process_user_defined_query(
+                "SELECT lastPktTimestamp, newTTLCount FROM interval_statistics ORDER BY lastPktTimestamp")
+            graphx, graphy = [], []
+            for row in result:
+                graphx.append(row[0])
+                graphy.append(row[1])
+
+            plt.autoscale(enable=True, axis='both')
+            plt.title("TTL New Values Distribution")
+            plt.xlabel('Timestamp')
+            plt.ylabel('New values count')
+            plt.xlim([0, len(graphx)])
+            plt.grid(True)
+            width = 0.5
+
+            # timestamp on x-axis
+            x = range(0, len(graphx))
+            my_xticks = graphx
+            plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
+            plt.tight_layout()
+
+            # limit the number of xticks
+            plt.locator_params(axis='x', nbins=20)
+
+            plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+            out = self.pcap_filepath.replace('.pcap', '_plot-interval-new-ttl-dist' + file_ending)
+            plt.savefig(out, dpi=500)
+            return out
+
+        # Aidmar
+        def plot_interval_new_tos(file_ending: str):
+            plt.gcf().clear()
+
+            result = self.stats_db._process_user_defined_query(
+                "SELECT lastPktTimestamp, newToSCount FROM interval_statistics ORDER BY lastPktTimestamp")
+            graphx, graphy = [], []
+            for row in result:
+                graphx.append(row[0])
+                graphy.append(row[1])
+
+            plt.autoscale(enable=True, axis='both')
+            plt.title("ToS New Values Distribution")
+            plt.xlabel('Timestamp')
+            plt.ylabel('New values count')
+            plt.xlim([0, len(graphx)])
+            plt.grid(True)
+            width = 0.5
+
+            # timestamp on x-axis
+            x = range(0, len(graphx))
+            my_xticks = graphx
+            plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
+            plt.tight_layout()
+
+            # limit the number of xticks
+            plt.locator_params(axis='x', nbins=20)
+
+            plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+            out = self.pcap_filepath.replace('.pcap', '_plot-interval-new-tos-dist' + file_ending)
+            plt.savefig(out, dpi=500)
+            return out
+
+        # Aidmar
+        def plot_interval_new_win_size(file_ending: str):
+            plt.gcf().clear()
+
+            result = self.stats_db._process_user_defined_query(
+                "SELECT lastPktTimestamp, newWinSizeCount FROM interval_statistics ORDER BY lastPktTimestamp")
+            graphx, graphy = [], []
+            for row in result:
+                graphx.append(row[0])
+                graphy.append(row[1])
+
+            plt.autoscale(enable=True, axis='both')
+            plt.title("Window Size New Values Distribution")
+            plt.xlabel('Timestamp')
+            plt.ylabel('New values count')
+            plt.xlim([0, len(graphx)])
+            plt.grid(True)
+            width = 0.5
+
+            # timestamp on x-axis
+            x = range(0, len(graphx))
+            my_xticks = graphx
+            plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
+            plt.tight_layout()
+
+            # limit the number of xticks
+            plt.locator_params(axis='x', nbins=20)
+
+            plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+            out = self.pcap_filepath.replace('.pcap', '_plot-interval-new-win-size-dist' + file_ending)
+            plt.savefig(out, dpi=500)
+            return out
+
+        # Aidmar
+        def plot_interval_new_mss(file_ending: str):
+            plt.gcf().clear()
+
+            result = self.stats_db._process_user_defined_query(
+                "SELECT lastPktTimestamp, newMSSCount FROM interval_statistics ORDER BY lastPktTimestamp")
+            graphx, graphy = [], []
+            for row in result:
+                graphx.append(row[0])
+                graphy.append(row[1])
+
+            plt.autoscale(enable=True, axis='both')
+            plt.title("MSS New Values Distribution")
+            plt.xlabel('Timestamp')
+            plt.ylabel('New values count')
+            plt.xlim([0, len(graphx)])
+            plt.grid(True)
+            width = 0.5
+
+            # timestamp on x-axis
+            x = range(0, len(graphx))
+            my_xticks = graphx
+            plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
+            plt.tight_layout()
+
+            # limit the number of xticks
+            plt.locator_params(axis='x', nbins=20)
+
+            plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+            out = self.pcap_filepath.replace('.pcap', '_plot-interval-new-mss-dist' + file_ending)
+            plt.savefig(out, dpi=500)
+            return out
+
         ttl_out_path = plot_ttl('.' + format)
         mss_out_path = plot_mss('.' + format)
         win_out_path = plot_win('.' + format)
@@ -647,7 +812,11 @@ class Statistics:
         plot_interval_ip_dst_ent = plot_interval_ip_dst_ent('.' + format)
         plot_interval_ip_src_cum_ent = plot_interval_ip_src_cum_ent('.' + format)
         plot_interval_ip_dst_cum_ent = plot_interval_ip_dst_cum_ent('.' + format)
-
+        plot_interval_new_ip = plot_interval_new_ip('.' + format)
+        plot_interval_new_ttl = plot_interval_new_ttl('.' + format)
+        plot_interval_new_tos = plot_interval_new_tos('.' + format)
+        plot_interval_new_win_size = plot_interval_new_win_size('.' + format)
+        plot_interval_new_mss = plot_interval_new_mss('.' + format)
 
         #print("Saved distributions plots at: %s, %s, %s, %s, %s, %s, %s, %s %s" %(ttl_out_path,mss_out_path, win_out_path,
         #protocol_out_path, port_out_path,ip_src_out_path,ip_dst_out_path, plot_interval_pktCount))

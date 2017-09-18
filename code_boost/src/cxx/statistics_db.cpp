@@ -394,9 +394,14 @@ void statistics_db::writeStatisticsInterval(std::unordered_map<std::string, entr
                 "payloadCount INTEGER,"
                 "incorrectTCPChecksumCount INTEGER,"
                 "correctTCPChecksumCount INTEGER,"
+                "newIPCount INTEGER,"
+                "newTTLCount INTEGER,"
+                "newWinSizeCount INTEGER,"
+                "newToSCount INTEGER,"
+                "newMSSCount INTEGER,"
                 "PRIMARY KEY(lastPktTimestamp));";
         db->exec(createTable);
-        SQLite::Statement query(*db, "INSERT INTO interval_statistics VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        SQLite::Statement query(*db, "INSERT INTO interval_statistics VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         for (auto it = intervalStatistics.begin(); it != intervalStatistics.end(); ++it) {
             std::string t = it->first;
             entry_intervalStat e = it->second;        
@@ -411,6 +416,11 @@ void statistics_db::writeStatisticsInterval(std::unordered_map<std::string, entr
             query.bind(8, e.payload_count);
             query.bind(9, e.incorrect_checksum_count);
             query.bind(10, e.correct_checksum_count);
+            query.bind(11, e.new_ip_count);
+            query.bind(12, e.new_ttl_count);
+            query.bind(13, e.new_win_size_count);
+            query.bind(14, e.new_tos_count);
+            query.bind(15, e.new_mss_count);
             query.exec();
             query.reset();
         }

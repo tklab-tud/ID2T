@@ -208,32 +208,44 @@ void statistics::calculateIPIntervalPacketRate(std::chrono::duration<int, std::m
  * @param intervalEndTimestamp The timstamp where the interval ends.
  * @param previousPacketCount The total number of packets in last interval.
  */
-void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp, std::chrono::microseconds intervalEndTimestamp, int previousPacketCount, float previousSumPacketSize){
+void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp, std::chrono::microseconds intervalEndTimestamp){
     // Add packet rate for each IP to ip_statistics map
     calculateIPIntervalPacketRate(interval, intervalStartTimestamp);
     
     std::vector<float> ipEntopies = calculateLastIntervalIPsEntropy(intervalStartTimestamp);
     std::vector<float> ipCumEntopies = calculateIPsCumEntropy();
     std::string lastPktTimestamp_s = std::to_string(intervalEndTimestamp.count());
+    std::string  intervalStartTimestamp_s = std::to_string(intervalStartTimestamp.count());
 
-    interval_statistics[lastPktTimestamp_s].pkts_count = packetCount - previousPacketCount;  
-    interval_statistics[lastPktTimestamp_s].kbytes = (float(sumPacketSize - previousSumPacketSize) / 1024);
+    // The intervalStartTimestamp_s is the previous interval lastPktTimestamp_s
+    interval_statistics[lastPktTimestamp_s].pkts_count = packetCount - lastIntervalCumPktCount;
+    interval_statistics[lastPktTimestamp_s].kbytes = (float(sumPacketSize - lastIntervalCumSumPktSize) / 1024);
 
-    interval_statistics[lastPktTimestamp_s].payload_count = payloadCount;
-    interval_statistics[lastPktTimestamp_s].incorrect_checksum_count = incorrectTCPChecksumCount;
-    interval_statistics[lastPktTimestamp_s].correct_checksum_count = correctTCPChecksumCount;
-    interval_statistics[lastPktTimestamp_s].invalid_tos_count = invalidToSCount;
-    interval_statistics[lastPktTimestamp_s].valid_tos_count = validToSCount;
+    interval_statistics[lastPktTimestamp_s].payload_count = payloadCount - lastIntervalPayloadCount;
+    interval_statistics[lastPktTimestamp_s].incorrect_checksum_count = incorrectTCPChecksumCount - lastIntervalIncorrectTCPChecksumCount;
+    interval_statistics[lastPktTimestamp_s].correct_checksum_count = correctTCPChecksumCount - lastIntervalCorrectTCPChecksumCount;
+    interval_statistics[lastPktTimestamp_s].invalid_tos_count = invalidToSCount - lastIntervalInvalidToSCount;
+    interval_statistics[lastPktTimestamp_s].valid_tos_count = validToSCount - lastIntervalValidToSCount;
+    interval_statistics[lastPktTimestamp_s].new_ip_count = ip_statistics.size() - lastIntervalCumNewIPCount;
+    interval_statistics[lastPktTimestamp_s].new_ttl_count = ttl_distribution.size() - lastIntervalCumNewTTLCount;
+    interval_statistics[lastPktTimestamp_s].new_win_size_count = win_distribution.size() - lastIntervalCumNewWinSizeCount;
+    interval_statistics[lastPktTimestamp_s].new_tos_count = tos_distribution.size() - lastIntervalCumNewToSCount;
+    interval_statistics[lastPktTimestamp_s].new_mss_count = mss_distribution.size() - lastIntervalCumNewMSSCount;
 
-    std::cout<<invalidToSCount<<","<<validToSCount<<"\n";
+    //std::cout<<invalidToSCount<<","<<validToSCount<<"\n";
 
-
-    // Reset variables for next interval
-    payloadCount = 0;
-    incorrectTCPChecksumCount = 0;
-    correctTCPChecksumCount = 0;
-    invalidToSCount = 0;
-    validToSCount = 0;
+    lastIntervalPayloadCount = payloadCount;
+    lastIntervalIncorrectTCPChecksumCount = incorrectTCPChecksumCount;
+    lastIntervalCorrectTCPChecksumCount = correctTCPChecksumCount;
+    lastIntervalInvalidToSCount = invalidToSCount;
+    lastIntervalValidToSCount = validToSCount;
+    lastIntervalCumPktCount = packetCount;
+    lastIntervalCumSumPktSize = sumPacketSize;
+    lastIntervalCumNewIPCount =  ip_statistics.size();
+    lastIntervalCumNewTTLCount = ttl_distribution.size();
+    lastIntervalCumNewWinSizeCount = win_distribution.size();
+    lastIntervalCumNewToSCount = tos_distribution.size();
+    lastIntervalCumNewMSSCount = mss_distribution.size();
 
     if(ipEntopies.size()>1){
         interval_statistics[lastPktTimestamp_s].ip_src_entropy = ipEntopies[0];
@@ -305,6 +317,15 @@ void statistics::incrementWinCount(std::string ipAddress, int winSize) {
  */
 void statistics::incrementTTLcount(std::string ipAddress, int ttlValue) {
     ttl_distribution[{ipAddress, ttlValue}]++;
+}
+
+/**
+ * Increments the packet counter for the given IP address and ToS value.
+ * @param ipAddress The IP address whose ToS packet counter should be incremented.
+ * @param tosValue The ToS value of the packet.
+ */
+void statistics::incrementToScount(std::string ipAddress, int tosValue) {
+    tos_distribution[{ipAddress, tosValue}]++;
 }
 
 /**
