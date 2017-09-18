@@ -138,9 +138,7 @@ void pcap_processor::collect_statistics() {
             return;
         }
         long timeInterval_microsec = captureDuration.count() / timeIntervalsNum;
-        std::chrono::duration<int, std::micro> timeInterval(timeInterval_microsec);             
-        int previousPacketCount = 0;
-        float previousSumPacketSize = 0;
+        std::chrono::duration<int, std::micro> timeInterval(timeInterval_microsec);
         std::chrono::microseconds barrier = timeInterval;
 
         // Iterate over all packets and collect statistics
@@ -155,10 +153,6 @@ void pcap_processor::collect_statistics() {
                 timeIntervalCounter++;
                 barrier =  barrier+timeInterval;
                 intervalStartTimestamp = lastPktTimestamp;
-
-                previousPacketCount = stats.getPacketCount();
-                previousSumPacketSize = stats.getSumPacketSize();
-
             }
             stats.incrementPacketCount();
             this->process_packets(*i);                    
