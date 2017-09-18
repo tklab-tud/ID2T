@@ -167,9 +167,9 @@ void pcap_processor::collect_statistics() {
         stats.setTimestampLastPacket(lastProcessedPacket);
 
         // TO-DO: to delete
-        //for (auto it = stats.dscp_distribution.begin(); it != stats.dscp_distribution.end(); ++it) {
-          //  std::cout<<it->first<<","<<it->second<<"\n";
-        //}
+        for (auto it = stats.dscp_distribution.begin(); it != stats.dscp_distribution.end(); ++it) {
+            std::cout<<it->first<<","<<it->second<<"\n";
+        }
     }
 }
 

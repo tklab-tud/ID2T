@@ -35,8 +35,8 @@ void statistics::checkToS(uint8_t ToS) {
 //            std::bitset<6> ipPrecedenceBit(ipPrecStream.str());
 //            int ipPrecedenceInt = (int)(ipPrecedenceBit.to_ulong());
 
-            // Commonly Used DSCP Values according to RFC2472
-            int validValues[] = {0,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,46,48,56};
+            // Commonly Used DSCP Values according to RFC2472. The value 2 was added because it is massively used.
+            int validValues[] = {0,2,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,46,48,56};
             bool exists = std::find(std::begin(validValues), std::end(validValues), dscpInt) != std::end(validValues);
 
             // According to RFC791 ipPrecedenceInt <= 7 && tosBit[0] must be 0
