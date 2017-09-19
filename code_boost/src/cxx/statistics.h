@@ -501,6 +501,12 @@ private:
     std::unordered_map<conv, entry_convStat> conv_statistics;
     std::unordered_map<std::string, entry_intervalStat> interval_statistics;
     std::unordered_map<ipAddress_tos, int> tos_distribution;
+    // {TTL value, count}
+    std::unordered_map<int, int> ttl_values;
+    // {Win size, count}
+    std::unordered_map<int, int> win_values;
+    std::unordered_map<int, int> tos_values;
+    std::unordered_map<int, int> mss_values;
 
     // {IP Address, Protocol, count}
     std::unordered_map<ipAddress_protocol, int> protocol_distribution;

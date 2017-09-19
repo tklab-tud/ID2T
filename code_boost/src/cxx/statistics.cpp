@@ -227,10 +227,10 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
     interval_statistics[lastPktTimestamp_s].invalid_tos_count = invalidToSCount - lastIntervalInvalidToSCount;
     interval_statistics[lastPktTimestamp_s].valid_tos_count = validToSCount - lastIntervalValidToSCount;
     interval_statistics[lastPktTimestamp_s].new_ip_count = ip_statistics.size() - lastIntervalCumNewIPCount;
-    interval_statistics[lastPktTimestamp_s].new_ttl_count = ttl_distribution.size() - lastIntervalCumNewTTLCount;
-    interval_statistics[lastPktTimestamp_s].new_win_size_count = win_distribution.size() - lastIntervalCumNewWinSizeCount;
-    interval_statistics[lastPktTimestamp_s].new_tos_count = tos_distribution.size() - lastIntervalCumNewToSCount;
-    interval_statistics[lastPktTimestamp_s].new_mss_count = mss_distribution.size() - lastIntervalCumNewMSSCount;
+    interval_statistics[lastPktTimestamp_s].new_ttl_count = ttl_values.size() - lastIntervalCumNewTTLCount;
+    interval_statistics[lastPktTimestamp_s].new_win_size_count = win_values.size() - lastIntervalCumNewWinSizeCount;
+    interval_statistics[lastPktTimestamp_s].new_tos_count = tos_values.size() - lastIntervalCumNewToSCount;
+    interval_statistics[lastPktTimestamp_s].new_mss_count = mss_values.size() - lastIntervalCumNewMSSCount;
 
     //std::cout<<invalidToSCount<<","<<validToSCount<<"\n";
 
@@ -242,10 +242,10 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
     lastIntervalCumPktCount = packetCount;
     lastIntervalCumSumPktSize = sumPacketSize;
     lastIntervalCumNewIPCount =  ip_statistics.size();
-    lastIntervalCumNewTTLCount = ttl_distribution.size();
-    lastIntervalCumNewWinSizeCount = win_distribution.size();
-    lastIntervalCumNewToSCount = tos_distribution.size();
-    lastIntervalCumNewMSSCount = mss_distribution.size();
+    lastIntervalCumNewTTLCount = ttl_values.size();
+    lastIntervalCumNewWinSizeCount = win_values.size();
+    lastIntervalCumNewToSCount = tos_values.size();
+    lastIntervalCumNewMSSCount = mss_values.size();
 
     if(ipEntopies.size()>1){
         interval_statistics[lastPktTimestamp_s].ip_src_entropy = ipEntopies[0];
@@ -297,6 +297,7 @@ void statistics::addConvStat(std::string ipAddressSender,int sport,std::string i
  * @param mssValue The MSS value of the packet.
  */
 void statistics::incrementMSScount(std::string ipAddress, int mssValue) {
+    mss_values[mssValue]++;
     mss_distribution[{ipAddress, mssValue}]++;
 }
 
@@ -307,6 +308,7 @@ void statistics::incrementMSScount(std::string ipAddress, int mssValue) {
  * @param winSize The window size of the packet.
  */
 void statistics::incrementWinCount(std::string ipAddress, int winSize) {
+    win_values[winSize]++;
     win_distribution[{ipAddress, winSize}]++;
 }
 
@@ -316,6 +318,7 @@ void statistics::incrementWinCount(std::string ipAddress, int winSize) {
  * @param ttlValue The TTL value of the packet.
  */
 void statistics::incrementTTLcount(std::string ipAddress, int ttlValue) {
+    ttl_values[ttlValue]++;
     ttl_distribution[{ipAddress, ttlValue}]++;
 }
 
@@ -325,6 +328,7 @@ void statistics::incrementTTLcount(std::string ipAddress, int ttlValue) {
  * @param tosValue The ToS value of the packet.
  */
 void statistics::incrementToScount(std::string ipAddress, int tosValue) {
+    tos_values[tosValue]++;
     tos_distribution[{ipAddress, tosValue}]++;
 }
 
