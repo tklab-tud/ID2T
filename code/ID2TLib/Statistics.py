@@ -357,48 +357,54 @@ class Statistics:
             plt.gcf().clear()
             result = self.stats_db._process_user_defined_query(
                 "SELECT winSize, SUM(winCount) FROM tcp_syn_win GROUP BY winSize")
-            graphx, graphy = [], []
-            for row in result:
-                graphx.append(row[0])
-                graphy.append(row[1])
-            plt.autoscale(enable=True, axis='both')
-            plt.title("Window Size Distribution")
-            plt.xlabel('Window Size')
-            plt.ylabel('Number of Packets')
-            width = 0.5
-            plt.xlim([0, max(graphx)])
-            plt.grid(True)
-            plt.bar(graphx, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
-            out = self.pcap_filepath.replace('.pcap', '_plot-win' + file_ending)
-            plt.savefig(out,dpi=500)
-            return out
+            if (result):
+                graphx, graphy = [], []
+                for row in result:
+                    graphx.append(row[0])
+                    graphy.append(row[1])
+                plt.autoscale(enable=True, axis='both')
+                plt.title("Window Size Distribution")
+                plt.xlabel('Window Size')
+                plt.ylabel('Number of Packets')
+                width = 0.5
+                plt.xlim([0, max(graphx)])
+                plt.grid(True)
+                plt.bar(graphx, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+                out = self.pcap_filepath.replace('.pcap', '_plot-win' + file_ending)
+                plt.savefig(out,dpi=500)
+                return out
+            else:
+                print("Error plot WinSize: No WinSize values found!")
 
         # Aidmar
         def plot_protocol(file_ending: str):
             plt.gcf().clear()
             result = self.stats_db._process_user_defined_query(
                 "SELECT protocolName, SUM(protocolCount) FROM ip_protocols GROUP BY protocolName")
-            graphx, graphy = [], []
-            for row in result:
-                graphx.append(row[0])
-                graphy.append(row[1])
-            plt.autoscale(enable=True, axis='both')
-            plt.title("Protocols Distribution")
-            plt.xlabel('Protocols')
-            plt.ylabel('Number of Packets')
-            width = 0.5
-            plt.xlim([0, len(graphx)])
-            plt.grid(True)
+            if (result):
+                graphx, graphy = [], []
+                for row in result:
+                    graphx.append(row[0])
+                    graphy.append(row[1])
+                plt.autoscale(enable=True, axis='both')
+                plt.title("Protocols Distribution")
+                plt.xlabel('Protocols')
+                plt.ylabel('Number of Packets')
+                width = 0.5
+                plt.xlim([0, len(graphx)])
+                plt.grid(True)
 
-            # Protocols' names on x-axis
-            x = range(0,len(graphx))
-            my_xticks = graphx
-            plt.xticks(x, my_xticks)
+                # Protocols' names on x-axis
+                x = range(0,len(graphx))
+                my_xticks = graphx
+                plt.xticks(x, my_xticks)
 
-            plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
-            out = self.pcap_filepath.replace('.pcap', '_plot-protocol' + file_ending)
-            plt.savefig(out,dpi=500)
-            return out
+                plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+                out = self.pcap_filepath.replace('.pcap', '_plot-protocol' + file_ending)
+                plt.savefig(out,dpi=500)
+                return out
+            else:
+                print("Error plot protocol: No protocol values found!")
 
         # Aidmar
         def plot_port(file_ending: str):
@@ -641,7 +647,6 @@ class Statistics:
         # Aidmar
         def plot_interval_new_ip(file_ending: str):
             plt.gcf().clear()
-
             result = self.stats_db._process_user_defined_query(
                 "SELECT lastPktTimestamp, newIPCount FROM interval_statistics ORDER BY lastPktTimestamp")
             graphx, graphy = [], []
@@ -674,40 +679,41 @@ class Statistics:
         # Aidmar
         def plot_interval_new_ttl(file_ending: str):
             plt.gcf().clear()
-
             result = self.stats_db._process_user_defined_query(
                 "SELECT lastPktTimestamp, newTTLCount FROM interval_statistics ORDER BY lastPktTimestamp")
-            graphx, graphy = [], []
-            for row in result:
-                graphx.append(row[0])
-                graphy.append(row[1])
+            if(result):
+                graphx, graphy = [], []
+                for row in result:
+                    graphx.append(row[0])
+                    graphy.append(row[1])
 
-            plt.autoscale(enable=True, axis='both')
-            plt.title("TTL New Values Distribution")
-            plt.xlabel('Timestamp')
-            plt.ylabel('New values count')
-            plt.xlim([0, len(graphx)])
-            plt.grid(True)
-            width = 0.5
+                plt.autoscale(enable=True, axis='both')
+                plt.title("TTL New Values Distribution")
+                plt.xlabel('Timestamp')
+                plt.ylabel('New values count')
+                plt.xlim([0, len(graphx)])
+                plt.grid(True)
+                width = 0.5
 
-            # timestamp on x-axis
-            x = range(0, len(graphx))
-            my_xticks = graphx
-            plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
-            plt.tight_layout()
+                # timestamp on x-axis
+                x = range(0, len(graphx))
+                my_xticks = graphx
+                plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
+                plt.tight_layout()
 
-            # limit the number of xticks
-            plt.locator_params(axis='x', nbins=20)
+                # limit the number of xticks
+                plt.locator_params(axis='x', nbins=20)
 
-            plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
-            out = self.pcap_filepath.replace('.pcap', '_plot-interval-new-ttl-dist' + file_ending)
-            plt.savefig(out, dpi=500)
-            return out
+                plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+                out = self.pcap_filepath.replace('.pcap', '_plot-interval-new-ttl-dist' + file_ending)
+                plt.savefig(out, dpi=500)
+                return out
+            else:
+                print("Error plot TTL: No TTL values found!")
 
         # Aidmar
         def plot_interval_new_tos(file_ending: str):
             plt.gcf().clear()
-
             result = self.stats_db._process_user_defined_query(
                 "SELECT lastPktTimestamp, newToSCount FROM interval_statistics ORDER BY lastPktTimestamp")
             graphx, graphy = [], []
@@ -740,35 +746,37 @@ class Statistics:
         # Aidmar
         def plot_interval_new_win_size(file_ending: str):
             plt.gcf().clear()
-
             result = self.stats_db._process_user_defined_query(
                 "SELECT lastPktTimestamp, newWinSizeCount FROM interval_statistics ORDER BY lastPktTimestamp")
-            graphx, graphy = [], []
-            for row in result:
-                graphx.append(row[0])
-                graphy.append(row[1])
+            if(result):
+                graphx, graphy = [], []
+                for row in result:
+                    graphx.append(row[0])
+                    graphy.append(row[1])
 
-            plt.autoscale(enable=True, axis='both')
-            plt.title("Window Size New Values Distribution")
-            plt.xlabel('Timestamp')
-            plt.ylabel('New values count')
-            plt.xlim([0, len(graphx)])
-            plt.grid(True)
-            width = 0.5
+                plt.autoscale(enable=True, axis='both')
+                plt.title("Window Size New Values Distribution")
+                plt.xlabel('Timestamp')
+                plt.ylabel('New values count')
+                plt.xlim([0, len(graphx)])
+                plt.grid(True)
+                width = 0.5
 
-            # timestamp on x-axis
-            x = range(0, len(graphx))
-            my_xticks = graphx
-            plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
-            plt.tight_layout()
+                # timestamp on x-axis
+                x = range(0, len(graphx))
+                my_xticks = graphx
+                plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
+                plt.tight_layout()
 
-            # limit the number of xticks
-            plt.locator_params(axis='x', nbins=20)
+                # limit the number of xticks
+                plt.locator_params(axis='x', nbins=20)
 
-            plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
-            out = self.pcap_filepath.replace('.pcap', '_plot-interval-new-win-size-dist' + file_ending)
-            plt.savefig(out, dpi=500)
-            return out
+                plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+                out = self.pcap_filepath.replace('.pcap', '_plot-interval-new-win-size-dist' + file_ending)
+                plt.savefig(out, dpi=500)
+                return out
+            else:
+                print("Error plot new values WinSize: No WinSize values found!")
 
         # Aidmar
         def plot_interval_new_mss(file_ending: str):
@@ -776,32 +784,35 @@ class Statistics:
 
             result = self.stats_db._process_user_defined_query(
                 "SELECT lastPktTimestamp, newMSSCount FROM interval_statistics ORDER BY lastPktTimestamp")
-            graphx, graphy = [], []
-            for row in result:
-                graphx.append(row[0])
-                graphy.append(row[1])
+            if(result):
+                graphx, graphy = [], []
+                for row in result:
+                    graphx.append(row[0])
+                    graphy.append(row[1])
 
-            plt.autoscale(enable=True, axis='both')
-            plt.title("MSS New Values Distribution")
-            plt.xlabel('Timestamp')
-            plt.ylabel('New values count')
-            plt.xlim([0, len(graphx)])
-            plt.grid(True)
-            width = 0.5
+                plt.autoscale(enable=True, axis='both')
+                plt.title("MSS New Values Distribution")
+                plt.xlabel('Timestamp')
+                plt.ylabel('New values count')
+                plt.xlim([0, len(graphx)])
+                plt.grid(True)
+                width = 0.5
 
-            # timestamp on x-axis
-            x = range(0, len(graphx))
-            my_xticks = graphx
-            plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
-            plt.tight_layout()
+                # timestamp on x-axis
+                x = range(0, len(graphx))
+                my_xticks = graphx
+                plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
+                plt.tight_layout()
 
-            # limit the number of xticks
-            plt.locator_params(axis='x', nbins=20)
+                # limit the number of xticks
+                plt.locator_params(axis='x', nbins=20)
 
-            plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
-            out = self.pcap_filepath.replace('.pcap', '_plot-interval-new-mss-dist' + file_ending)
-            plt.savefig(out, dpi=500)
-            return out
+                plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+                out = self.pcap_filepath.replace('.pcap', '_plot-interval-new-mss-dist' + file_ending)
+                plt.savefig(out, dpi=500)
+                return out
+            else:
+                print("Error plot new values MSS: No MSS values found!")
 
         ttl_out_path = plot_ttl('.' + format)
         mss_out_path = plot_mss('.' + format)
