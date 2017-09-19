@@ -333,21 +333,24 @@ class Statistics:
             plt.gcf().clear()
             result = self.stats_db._process_user_defined_query(
                 "SELECT mssValue, SUM(mssCount) FROM tcp_mss_dist GROUP BY mssValue")
-            graphx, graphy = [], []
-            for row in result:
-                graphx.append(row[0])
-                graphy.append(row[1])
-            plt.autoscale(enable=True, axis='both')
-            plt.title("MSS Distribution")
-            plt.xlabel('MSS Value')
-            plt.ylabel('Number of Packets')
-            width = 0.5
-            plt.xlim([0, max(graphx)])
-            plt.grid(True)
-            plt.bar(graphx, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
-            out = self.pcap_filepath.replace('.pcap', '_plot-mss' + file_ending)
-            plt.savefig(out,dpi=500)
-            return out
+            if(result):
+                graphx, graphy = [], []
+                for row in result:
+                    graphx.append(row[0])
+                    graphy.append(row[1])
+                plt.autoscale(enable=True, axis='both')
+                plt.title("MSS Distribution")
+                plt.xlabel('MSS Value')
+                plt.ylabel('Number of Packets')
+                width = 0.5
+                plt.xlim([0, max(graphx)])
+                plt.grid(True)
+                plt.bar(graphx, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+                out = self.pcap_filepath.replace('.pcap', '_plot-mss' + file_ending)
+                plt.savefig(out,dpi=500)
+                return out
+            else:
+                print("Error plot MSS: No MSS values found!")
 
         # Aidmar
         def plot_win(file_ending: str):
