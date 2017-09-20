@@ -33,7 +33,8 @@ public:
 
     void writeStatisticsIpMac(std::unordered_map<std::string, std::string> IpMacStatistics);
 
-    void writeStatisticsMss(std::unordered_map<std::string, int> mssStatistics);
+    // Aidmar - comment out
+    //void writeStatisticsMss(std::unordered_map<std::string, int> mssStatistics);
 
     void writeStatisticsFile(int packetCount, float captureDuration, std::string timestampFirstPkt,
                              std::string timestampLastPkt, float avgPacketRate, float avgPacketSize,

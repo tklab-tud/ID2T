@@ -180,31 +180,32 @@ void statistics_db::writeStatisticsIpMac(std::unordered_map<std::string, std::st
     }
 }
 
+// Aidmar - comment out
 /**
  * Writes the MSS statistics into the database.
  * @param mssStatistics The MSS statistics from class statistics.
  */
-void statistics_db::writeStatisticsMss(std::unordered_map<std::string, int> mssStatistics) {
-    try {
-        db->exec("DROP TABLE IF EXISTS tcp_mss");
-        SQLite::Transaction transaction(*db);
-        const char *createTable = "CREATE TABLE tcp_mss ("
-                "ipAddress TEXT,"
-                "mss INTEGER);";
-        db->exec(createTable);
-        SQLite::Statement query(*db, "INSERT INTO tcp_mss VALUES (?, ?)");
-        for (auto it = mssStatistics.begin(); it != mssStatistics.end(); ++it) {
-            query.bind(1, it->first);
-            query.bind(2, it->second);
-            query.exec();
-            query.reset();
-        }
-        transaction.commit();
-    }
-    catch (std::exception &e) {
-        std::cout << "Exception in statistics_db: " << e.what() << std::endl;
-    }
-}
+//void statistics_db::writeStatisticsMss(std::unordered_map<std::string, int> mssStatistics) {
+//    try {
+//        db->exec("DROP TABLE IF EXISTS tcp_mss");
+//        SQLite::Transaction transaction(*db);
+//        const char *createTable = "CREATE TABLE tcp_mss ("
+//                "ipAddress TEXT,"
+//                "mss INTEGER);";
+//        db->exec(createTable);
+//        SQLite::Statement query(*db, "INSERT INTO tcp_mss VALUES (?, ?)");
+//        for (auto it = mssStatistics.begin(); it != mssStatistics.end(); ++it) {
+//            query.bind(1, it->first);
+//            query.bind(2, it->second);
+//            query.exec();
+//            query.reset();
+//        }
+//        transaction.commit();
+//    }
+//    catch (std::exception &e) {
+//        std::cout << "Exception in statistics_db: " << e.what() << std::endl;
+//    }
+//}
 
 /**
  * Writes general file statistics into the database.

@@ -276,7 +276,8 @@ void pcap_processor::process_packets(const Packet &pkt) {
 
             try {                                                                
                 int val = tcpPkt.mss();
-                stats.addMSS(ipAddressSender, val);
+                // Aidmar - comment out
+                //stats.addMSS(ipAddressSender, val);
                 
                 // Aidmar
                 // MSS distribution

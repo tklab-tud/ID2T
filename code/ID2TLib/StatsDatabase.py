@@ -192,10 +192,10 @@ class StatsDatabase:
             "avg.kbytesreceived": "SELECT avg(kbytesReceived) from ip_statistics",
             "avg.kbytessent": "SELECT avg(kbytesSent) from ip_statistics",
             "avg.ttlvalue": "SELECT avg(ttlValue) from ip_ttl",
-            "avg.mss": "SELECT avg(mss) from tcp_mss",
+            #"avg.mss": "SELECT avg(mss) from tcp_mss",
             "all.ipaddress": "SELECT ipAddress from ip_statistics",
             "all.ttlvalue": "SELECT DISTINCT ttlValue from ip_ttl",
-            "all.mss": "SELECT DISTINCT mss from tcp_mss",
+            #"all.mss": "SELECT DISTINCT mss from tcp_mss",
             "all.macaddress": "SELECT DISTINCT macAddress from ip_mac",
             "all.portnumber": "SELECT DISTINCT portNumber from ip_ports",
             "all.protocolname": "SELECT DISTINCT protocolName from ip_protocols"}

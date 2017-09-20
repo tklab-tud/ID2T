@@ -1,6 +1,6 @@
 # Aidmar
 from operator import itemgetter
-import math
+from math import sqrt, ceil
 
 import os
 import time
@@ -246,17 +246,18 @@ class Statistics:
         """
         return self.process_db_query('macAddress(ipAddress=' + ipAddress + ")")
 
-    def get_mss(self, ipAddress: str):
-        """
-        :param ipAddress: The IP address whose used MSS should be determined
-        :return: The TCP MSS value used by the IP address, or if the IP addresses never specified a MSS,
-        then None is returned
-        """
-        mss_value = self.process_db_query('SELECT mss from tcp_mss WHERE ipAddress="' + ipAddress + '"')
-        if isinstance(mss_value, int):
-            return mss_value
-        else:
-            return None
+    # Aidmar - comment out
+    # def get_mss(self, ipAddress: str):
+    #     """
+    #     :param ipAddress: The IP address whose used MSS should be determined
+    #     :return: The TCP MSS value used by the IP address, or if the IP addresses never specified a MSS,
+    #     then None is returned
+    #     """
+    #     mss_value = self.process_db_query('SELECT mss from tcp_mss WHERE ipAddress="' + ipAddress + '"')
+    #     if isinstance(mss_value, int):
+    #         return mss_value
+    #     else:
+    #         return None
 
     # Aidmar
     def get_most_used_mss(self, ipAddress: str):
@@ -301,6 +302,26 @@ class Statistics:
         else:
             return (any(x in value.lower().strip() for x in self.stats_db.get_all_named_query_keywords()) or
                     any(x in value.lower().strip() for x in self.stats_db.get_all_sql_query_keywords()))
+
+
+
+    def calculate_standard_deviation(self, lst):
+        """Calculates the standard deviation for a list of numbers."""
+        num_items = len(lst)
+        mean = sum(lst) / num_items
+        differences = [x - mean for x in lst]
+        sq_differences = [d ** 2 for d in differences]
+        ssd = sum(sq_differences)
+        variance = ssd / num_items
+        sd = sqrt(variance)
+        #print('The mean of {} is {}.'.format(lst, mean))
+        #print('The differences are {}.'.format(differences))
+        #print('The sum of squared differences is {}.'.format(ssd))
+        #print('The variance is {}.'.format(variance))
+        print('The standard deviation is {}.'.format(sd))
+        print('--------------------------')
+        return sd
+
 
     def plot_statistics(self, format: str = 'pdf'): #'png'):
         """
@@ -674,6 +695,9 @@ class Statistics:
             plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
             out = self.pcap_filepath.replace('.pcap', '_plot-interval-new-ip-dist' + file_ending)
             plt.savefig(out, dpi=500)
+
+            print("IP Standard Deviation:")
+            self.calculate_standard_deviation(graphy)
             return out
 
         # Aidmar
@@ -707,6 +731,9 @@ class Statistics:
                 plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
                 out = self.pcap_filepath.replace('.pcap', '_plot-interval-new-ttl-dist' + file_ending)
                 plt.savefig(out, dpi=500)
+
+                print("TTL Standard Deviation:")
+                self.calculate_standard_deviation(graphy)
                 return out
             else:
                 print("Error plot TTL: No TTL values found!")
@@ -741,6 +768,10 @@ class Statistics:
             plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
             out = self.pcap_filepath.replace('.pcap', '_plot-interval-new-tos-dist' + file_ending)
             plt.savefig(out, dpi=500)
+
+            print("ToS Standard Deviation:")
+            self.calculate_standard_deviation(graphy)
+
             return out
 
         # Aidmar
@@ -774,6 +805,10 @@ class Statistics:
                 plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
                 out = self.pcap_filepath.replace('.pcap', '_plot-interval-new-win-size-dist' + file_ending)
                 plt.savefig(out, dpi=500)
+
+                # Calculate Standart Deviation
+                print("Window Size Standard Deviation:")
+                self.calculate_standard_deviation(graphy)
                 return out
             else:
                 print("Error plot new values WinSize: No WinSize values found!")
@@ -810,6 +845,10 @@ class Statistics:
                 plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
                 out = self.pcap_filepath.replace('.pcap', '_plot-interval-new-mss-dist' + file_ending)
                 plt.savefig(out, dpi=500)
+
+                # Calculate Standart Deviation
+                print("MSS Standard Deviation:")
+                self.calculate_standard_deviation(graphy)
                 return out
             else:
                 print("Error plot new values MSS: No MSS values found!")
@@ -854,7 +893,7 @@ class Statistics:
             # Get the interval in seconds
             for i, row in enumerate(result):
                 if i < len(result) - 1:
-                    intervalsSum += math.ceil((int(result[i + 1][0]) * 10 ** -6) - (int(row[0]) * 10 ** -6))
+                    intervalsSum += ceil((int(result[i + 1][0]) * 10 ** -6) - (int(row[0]) * 10 ** -6))
             interval = intervalsSum / (len(result) - 1)
             # Convert timestamp from micro to seconds, convert packet rate "per interval" to "per second"
             for row in result:
@@ -866,6 +905,9 @@ class Statistics:
                 complement_interval_pps.append((row[0], int(pps * (maxPPS - row[1]) / maxPPS)))
 
         return complement_interval_pps
+
+
+
 
 """
  # Aidmar      

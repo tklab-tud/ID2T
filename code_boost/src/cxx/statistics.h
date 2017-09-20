@@ -520,8 +520,9 @@ private:
     // {IP Address, MAC Address}
     std::unordered_map<std::string, std::string> ip_mac_mapping;
 
+    // Aidmar - comment out
     // {IP Address, avg MSS}
-    std::unordered_map<std::string, int> ip_sumMss;
+    //std::unordered_map<std::string, int> ip_sumMss;
 };
 
 

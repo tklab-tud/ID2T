@@ -488,14 +488,15 @@ void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddres
     ip_statistics[ipAddressReceiver].pktsReceivedTimestamp.push_back(timestamp);
 }
 
+// Aidmar - comment out
 /**
  * Registers a value of the TCP option Maximum Segment Size (MSS).
  * @param ipAddress The IP address which sent the TCP packet.
  * @param MSSvalue The MSS value found.
  */
-void statistics::addMSS(std::string ipAddress, int MSSvalue) {
-    ip_sumMss[ipAddress] += MSSvalue;
-}
+//void statistics::addMSS(std::string ipAddress, int MSSvalue) {
+//    ip_sumMss[ipAddress] += MSSvalue;
+//}
 
 /**
  * Setter for the timestamp_firstPacket field.
@@ -610,9 +611,10 @@ ip_stats statistics::getStatsForIP(std::string ipAddress) {
     s.packetPerSecondOut = (ipStatEntry.pkts_sent / duration);
     s.AvgPacketSizeSent = (ipStatEntry.kbytes_sent / ipStatEntry.pkts_sent);
     s.AvgPacketSizeRecv = (ipStatEntry.kbytes_received / ipStatEntry.pkts_received);
-    int sumMSS = ip_sumMss[ipAddress];
-    int tcpPacketsSent = getProtocolCount(ipAddress, "TCP");
-    s.AvgMaxSegmentSizeTCP = ((sumMSS > 0 && tcpPacketsSent > 0) ? (sumMSS / tcpPacketsSent) : 0);
+    // Aidmar - comment out
+    //int sumMSS = ip_sumMss[ipAddress];
+    //int tcpPacketsSent = getProtocolCount(ipAddress, "TCP");
+    //s.AvgMaxSegmentSizeTCP = ((sumMSS > 0 && tcpPacketsSent > 0) ? (sumMSS / tcpPacketsSent) : 0);
 
     return s;
 }
@@ -652,7 +654,7 @@ void statistics::printStats(std::string ipAddress) {
         ss << "Packets per second OUT: " << is.packetPerSecondOut << std::endl;
         ss << "Avg Packet Size Sent: " << is.AvgPacketSizeSent << " kbytes" << std::endl;
         ss << "Avg Packet Size Received: " << is.AvgPacketSizeRecv << " kbytes" << std::endl;
-        ss << "Avg MSS: " << is.AvgMaxSegmentSizeTCP << " bytes" << std::endl;
+        //ss << "Avg MSS: " << is.AvgMaxSegmentSizeTCP << " bytes" << std::endl;
     }
     std::cout << ss.str();
 }
@@ -691,7 +693,7 @@ void statistics::writeToDatabase(std::string database_path) {
     db.writeStatisticsIP(ip_statistics);
     db.writeStatisticsTTL(ttl_distribution);
     db.writeStatisticsIpMac(ip_mac_mapping);
-    db.writeStatisticsMss(ip_sumMss);
+    //db.writeStatisticsMss(ip_sumMss);
     db.writeStatisticsPorts(ip_ports);
     db.writeStatisticsProtocols(protocol_distribution);
     // Aidmar
