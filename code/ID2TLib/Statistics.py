@@ -341,10 +341,10 @@ class Statistics:
             plt.title("TTL Distribution")
             plt.xlabel('TTL Value')
             plt.ylabel('Number of Packets')
-            width = 0.5
+            width = 0.1
             plt.xlim([0, max(graphx)])
             plt.grid(True)
-            plt.bar(graphx, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+            plt.bar(graphx, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
             out = self.pcap_filepath.replace('.pcap', '_plot-ttl' + file_ending)
             plt.savefig(out,dpi=500)
             return out
@@ -363,10 +363,10 @@ class Statistics:
                 plt.title("MSS Distribution")
                 plt.xlabel('MSS Value')
                 plt.ylabel('Number of Packets')
-                width = 0.5
+                width = 0.1
                 plt.xlim([0, max(graphx)])
                 plt.grid(True)
-                plt.bar(graphx, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+                plt.bar(graphx, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
                 out = self.pcap_filepath.replace('.pcap', '_plot-mss' + file_ending)
                 plt.savefig(out,dpi=500)
                 return out
@@ -387,10 +387,10 @@ class Statistics:
                 plt.title("Window Size Distribution")
                 plt.xlabel('Window Size')
                 plt.ylabel('Number of Packets')
-                width = 0.5
+                width = 0.1
                 plt.xlim([0, max(graphx)])
                 plt.grid(True)
-                plt.bar(graphx, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+                plt.bar(graphx, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
                 out = self.pcap_filepath.replace('.pcap', '_plot-win' + file_ending)
                 plt.savefig(out,dpi=500)
                 return out
@@ -411,7 +411,7 @@ class Statistics:
                 plt.title("Protocols Distribution")
                 plt.xlabel('Protocols')
                 plt.ylabel('Number of Packets')
-                width = 0.5
+                width = 0.1
                 plt.xlim([0, len(graphx)])
                 plt.grid(True)
 
@@ -420,7 +420,7 @@ class Statistics:
                 my_xticks = graphx
                 plt.xticks(x, my_xticks)
 
-                plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+                plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
                 out = self.pcap_filepath.replace('.pcap', '_plot-protocol' + file_ending)
                 plt.savefig(out,dpi=500)
                 return out
@@ -440,10 +440,10 @@ class Statistics:
             plt.title("Ports Distribution")
             plt.xlabel('Ports Numbers')
             plt.ylabel('Number of Packets')
-            width = 0.5
+            width = 0.1
             plt.xlim([0, max(graphx)])
             plt.grid(True)
-            plt.bar(graphx, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+            plt.bar(graphx, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
             out = self.pcap_filepath.replace('.pcap', '_plot-port' + file_ending)
             plt.savefig(out,dpi=500)
             return out
@@ -461,7 +461,7 @@ class Statistics:
             plt.title("Source IP Distribution")
             plt.xlabel('Source IP')
             plt.ylabel('Number of Packets')
-            width = 0.5
+            width = 0.1
             plt.xlim([0, len(graphx)])
             plt.grid(True)
 
@@ -474,7 +474,7 @@ class Statistics:
             # limit the number of xticks
             plt.locator_params(axis='x', nbins=20)
 
-            plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+            plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
             out = self.pcap_filepath.replace('.pcap', '_plot-ip-src' + file_ending)
             plt.savefig(out, dpi=500)
             return out
@@ -492,7 +492,7 @@ class Statistics:
             plt.title("Destination IP Distribution")
             plt.xlabel('Destination IP')
             plt.ylabel('Number of Packets')
-            width = 0.5
+            width = 0.1
             plt.xlim([0, len(graphx)])
             plt.grid(True)
 
@@ -505,7 +505,7 @@ class Statistics:
             # limit the number of xticks
             plt.locator_params(axis='x', nbins=20)
 
-            plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+            plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
             out = self.pcap_filepath.replace('.pcap', '_plot-ip-dst' + file_ending)
             plt.savefig(out, dpi=500)
             return out
@@ -523,7 +523,7 @@ class Statistics:
             plt.title("Packet Rate")
             plt.xlabel('Timestamp')
             plt.ylabel('Number of Packets')
-            width = 0.5
+            width = 0.1
             plt.xlim([0, len(graphx)])
             plt.grid(True)
 
@@ -536,7 +536,7 @@ class Statistics:
             # limit the number of xticks
             plt.locator_params(axis='x', nbins=20)
 
-            plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+            plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
             out = self.pcap_filepath.replace('.pcap', '_plot-interval-pkt-count' + file_ending)
             plt.savefig(out, dpi=500)
             return out
@@ -554,7 +554,7 @@ class Statistics:
             plt.title("Source IP Entropy")
             plt.xlabel('Timestamp')
             plt.ylabel('Entropy')
-            width = 0.5
+            width = 0.1
             plt.xlim([0, len(graphx)])
             plt.grid(True)
 
@@ -567,7 +567,7 @@ class Statistics:
             # limit the number of xticks
             plt.locator_params(axis='x', nbins=20)
 
-            plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+            plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
             out = self.pcap_filepath.replace('.pcap', '_plot-interval-ip-src-ent' + file_ending)
             plt.savefig(out, dpi=500)
             return out
@@ -585,7 +585,7 @@ class Statistics:
             plt.title("Destination IP Entropy")
             plt.xlabel('Timestamp')
             plt.ylabel('Entropy')
-            width = 0.5
+            width = 0.1
             plt.xlim([0, len(graphx)])
             plt.grid(True)
 
@@ -598,7 +598,7 @@ class Statistics:
             # limit the number of xticks
             plt.locator_params(axis='x', nbins=20)
 
-            plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+            plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
             out = self.pcap_filepath.replace('.pcap', '_plot-interval-ip-dst-ent' + file_ending)
             plt.savefig(out, dpi=500)
             return out
@@ -681,7 +681,7 @@ class Statistics:
             plt.ylabel('New values count')
             plt.xlim([0, len(graphx)])
             plt.grid(True)
-            width = 0.5
+            width = 0.1
 
             # timestamp on x-axis
             x = range(0, len(graphx))
@@ -692,7 +692,7 @@ class Statistics:
             # limit the number of xticks
             plt.locator_params(axis='x', nbins=20)
 
-            plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+            plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
             out = self.pcap_filepath.replace('.pcap', '_plot-interval-new-ip-dist' + file_ending)
             plt.savefig(out, dpi=500)
 
@@ -717,7 +717,7 @@ class Statistics:
                 plt.ylabel('New values count')
                 plt.xlim([0, len(graphx)])
                 plt.grid(True)
-                width = 0.5
+                width = 0.1
 
                 # timestamp on x-axis
                 x = range(0, len(graphx))
@@ -728,7 +728,7 @@ class Statistics:
                 # limit the number of xticks
                 plt.locator_params(axis='x', nbins=20)
 
-                plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+                plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
                 out = self.pcap_filepath.replace('.pcap', '_plot-interval-new-ttl-dist' + file_ending)
                 plt.savefig(out, dpi=500)
 
@@ -754,7 +754,7 @@ class Statistics:
             plt.ylabel('New values count')
             plt.xlim([0, len(graphx)])
             plt.grid(True)
-            width = 0.5
+            width = 0.1
 
             # timestamp on x-axis
             x = range(0, len(graphx))
@@ -765,7 +765,7 @@ class Statistics:
             # limit the number of xticks
             plt.locator_params(axis='x', nbins=20)
 
-            plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+            plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
             out = self.pcap_filepath.replace('.pcap', '_plot-interval-new-tos-dist' + file_ending)
             plt.savefig(out, dpi=500)
 
@@ -791,7 +791,7 @@ class Statistics:
                 plt.ylabel('New values count')
                 plt.xlim([0, len(graphx)])
                 plt.grid(True)
-                width = 0.5
+                width = 0.1
 
                 # timestamp on x-axis
                 x = range(0, len(graphx))
@@ -802,7 +802,7 @@ class Statistics:
                 # limit the number of xticks
                 plt.locator_params(axis='x', nbins=20)
 
-                plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+                plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
                 out = self.pcap_filepath.replace('.pcap', '_plot-interval-new-win-size-dist' + file_ending)
                 plt.savefig(out, dpi=500)
 
@@ -831,7 +831,7 @@ class Statistics:
                 plt.ylabel('New values count')
                 plt.xlim([0, len(graphx)])
                 plt.grid(True)
-                width = 0.5
+                width = 0.1
 
                 # timestamp on x-axis
                 x = range(0, len(graphx))
@@ -842,7 +842,7 @@ class Statistics:
                 # limit the number of xticks
                 plt.locator_params(axis='x', nbins=20)
 
-                plt.bar(x, graphy, width, align='center', linewidth=2, color='red', edgecolor='red')
+                plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
                 out = self.pcap_filepath.replace('.pcap', '_plot-interval-new-mss-dist' + file_ending)
                 plt.savefig(out, dpi=500)
 
