@@ -287,6 +287,37 @@ void statistics_db::writeStatisticsMss_dist(std::unordered_map<ipAddress_mss, in
 
 // Aidamr
 /**
+ * Writes the ToS distribution into the database.
+ * @param tosDistribution The ToS distribution from class statistics.
+ */
+void statistics_db::writeStatisticsTos_dist(std::unordered_map<ipAddress_tos, int> tosDistribution) {
+    try {
+        db->exec("DROP TABLE IF EXISTS ip_tos");
+        SQLite::Transaction transaction(*db);
+        const char *createTable = "CREATE TABLE ip_tos ("
+                "ipAddress TEXT,"
+                "tosValue INTEGER,"
+                "tosCount INTEGER,"
+                "PRIMARY KEY(ipAddress,tosValue));";
+        db->exec(createTable);
+        SQLite::Statement query(*db, "INSERT INTO ip_tos VALUES (?, ?, ?)");
+        for (auto it = tosDistribution.begin(); it != tosDistribution.end(); ++it) {
+            ipAddress_tos e = it->first;
+            query.bind(1, e.ipAddress);
+            query.bind(2, e.tosValue);
+            query.bind(3, it->second);
+            query.exec();
+            query.reset();
+        }
+        transaction.commit();
+    }
+    catch (std::exception &e) {
+        std::cout << "Exception in statistics_db: " << e.what() << std::endl;
+    }
+}
+
+// Aidamr
+/**
  * Writes the window size distribution into the database.
  * @param winDistribution The window size distribution from class statistics.
  */

@@ -42,6 +42,7 @@ public:
 
     // Aidmar - new tables
     void writeStatisticsMss_dist(std::unordered_map<ipAddress_mss, int> mssDistribution);
+    void writeStatisticsTos_dist(std::unordered_map<ipAddress_tos, int> tosDistribution);
     void writeStatisticsWin(std::unordered_map<ipAddress_win, int> winDistribution);
     void writeStatisticsConv(std::unordered_map<conv, entry_convStat> convStatistics);
     void writeStatisticsInterval(std::unordered_map<std::string, entry_intervalStat> intervalStatistics);

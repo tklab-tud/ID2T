@@ -698,6 +698,7 @@ void statistics::writeToDatabase(std::string database_path) {
     db.writeStatisticsProtocols(protocol_distribution);
     // Aidmar
     db.writeStatisticsMss_dist(mss_distribution);
+    db.writeStatisticsTos_dist(tos_distribution);
     db.writeStatisticsWin(win_distribution);
     db.writeStatisticsConv(conv_statistics);
     db.writeStatisticsInterval(interval_statistics);

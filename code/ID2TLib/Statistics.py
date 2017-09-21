@@ -1,6 +1,6 @@
 # Aidmar
 from operator import itemgetter
-from math import sqrt, ceil
+from math import sqrt, ceil, log
 
 import os
 import time
@@ -140,6 +140,16 @@ class Statistics:
         Statistics.write_list(self.get_general_file_statistics(), print, "")
         print("\n")
 
+    #Aidmar
+    def calculate_entropy(self, data, frequency):
+        entropy = 0
+        sumFreq = sum(frequency)
+        for i, x in enumerate(data):
+            p_x = float(frequency[i] / sumFreq)
+            if p_x > 0:
+                entropy += - p_x * log(p_x, 2)
+        return entropy
+
     # Aidmar
     def get_tests_statistics(self):
         """
@@ -168,27 +178,62 @@ class Statistics:
 
         newIPCount = self.stats_db._process_user_defined_query("SELECT newIPCount FROM interval_statistics")
         avgNewIPCount = calc_normalized_avg(newIPCount)
+        result = self.stats_db._process_user_defined_query("SELECT ipSrcCumEntropy FROM interval_statistics")
+        ipSrcEntropy = result[-1][0]
+        result = self.stats_db._process_user_defined_query("SELECT ipDstCumEntropy FROM interval_statistics")
+        ipDstEntropy = result[-1][0]
 
         newTTLCount = self.stats_db._process_user_defined_query("SELECT newTTLCount FROM interval_statistics")
         avgNewTTLCount = calc_normalized_avg(newTTLCount)
+        result = self.stats_db._process_user_defined_query("SELECT ttlValue,SUM(ttlCount) FROM ip_ttl GROUP BY ttlValue")
+        data, frequency = [], []
+        for row in result:
+            data.append(row[0])
+            frequency.append(row[1])
+        ttlEntopy = self.calculate_entropy(data,frequency)
 
         newWinSizeCount = self.stats_db._process_user_defined_query("SELECT newWinSizeCount FROM interval_statistics")
         avgNewWinCount = calc_normalized_avg(newWinSizeCount)
+        result = self.stats_db._process_user_defined_query("SELECT winSize,SUM(winCount) FROM tcp_syn_win GROUP BY winSize")
+        data, frequency = [], []
+        for row in result:
+            data.append(row[0])
+            frequency.append(row[1])
+        winEntopy = self.calculate_entropy(data, frequency)
 
         newToSCount = self.stats_db._process_user_defined_query("SELECT newToSCount FROM interval_statistics")
         avgNewToSCount = calc_normalized_avg(newToSCount)
+        result = self.stats_db._process_user_defined_query(
+            "SELECT tosValue,SUM(tosCount) FROM ip_tos GROUP BY tosValue")
+        data, frequency = [], []
+        for row in result:
+            data.append(row[0])
+            frequency.append(row[1])
+        tosEntopy = self.calculate_entropy(data, frequency)
 
         newMSSCount = self.stats_db._process_user_defined_query("SELECT newMSSCount FROM interval_statistics")
         avgNewMSSCount = calc_normalized_avg(newMSSCount)
-
+        result = self.stats_db._process_user_defined_query(
+            "SELECT mssValue,SUM(mssCount) FROM tcp_mss_dist GROUP BY mssValue")
+        data, frequency = [], []
+        for row in result:
+            data.append(row[0])
+            frequency.append(row[1])
+        mssEntopy = self.calculate_entropy(data, frequency)
 
         return [("Payload ratio", payloadRatio, "%"),
                 ("Incorrect TCP checksum ratio", incorrectChecksumRatio, "%"),
                 ("Avg. new IP", avgNewIPCount, ""),
+                ("IP Src Entropy", ipSrcEntropy, ""),
+                ("IP Dst Entropy", ipDstEntropy, ""),
                 ("Avg. new TTL", avgNewTTLCount, ""),
+                ("TTL Entropy", ttlEntopy, ""),
                 ("Avg. new WinSize", avgNewWinCount, ""),
+                ("WinSize Entropy", winEntopy, ""),
                 ("Avg. new ToS", avgNewToSCount, ""),
-                ("Avg. new MSS", avgNewMSSCount, "")]
+                ("ToS Entropy", tosEntopy, ""),
+                ("Avg. new MSS", avgNewMSSCount, ""),
+                ("MSS Entropy", mssEntopy, "")]
 
     def write_statistics_to_file(self):
         """
