@@ -289,7 +289,7 @@ class BaseAttack(metaclass=ABCMeta):
         elif param_type == ParameterTypes.TYPE_BOOLEAN:
             is_valid, value = self._is_boolean(value)
         elif param_type == ParameterTypes.TYPE_PACKET_POSITION:
-            ts = pr.pcap_processor(self.statistics.pcap_filepath).get_timestamp_mu_sec(int(value))
+            ts = pr.pcap_processor(self.statistics.pcap_filepath, "False").get_timestamp_mu_sec(int(value))
             if 0 <= int(value) <= self.statistics.get_packet_count() and ts >= 0:
                 is_valid = True
                 param_name = Parameter.INJECT_AT_TIMESTAMP

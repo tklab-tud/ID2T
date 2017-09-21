@@ -1,0 +1,26 @@
+====================== 
+PCAP file information 
+====================== 
+Pcap file:	capture_1.pcap
+#Packets:	23211 packets
+Capture length:	32.503 seconds
+Capture start:	2017-06-12 15:40:36.142820
+Capture end:	2017-06-12 15:47:08.645789
+====================== 
+General statistics 
+====================== 
+Avg. packet rate:	714.1194 packets/sec
+Avg. packet size:	0.0 kbytes
+Avg. packets sent:	321.0 packets
+Avg. bandwidth in:	57.2475 kbit/s
+Avg. bandwidth out:	57.2475 kbit/s
+====================== 
+Tests statistics 
+====================== 
+Payload ratio:	0.0 %
+Incorrect TCP checksum ratio:	0 %
+Avg. new IP:	0.72 
+Avg. new TTL:	0.27 
+Avg. new WinSize:	0.1 
+Avg. new ToS:	0.04 
+Avg. new MSS:	0.04 

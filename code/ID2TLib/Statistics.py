@@ -122,7 +122,7 @@ class Statistics:
                     pass  # do nothing -> value was not a float
             # round float
             if isinstance(value, float):
-                value = round(value, 2)
+                value = round(value, 4)
             # write into file
             if len(entry) == 3:
                 unit = entry[2]
@@ -139,6 +139,56 @@ class Statistics:
         print("\nGENERAL FILE STATISTICS ----------------------------")
         Statistics.write_list(self.get_general_file_statistics(), print, "")
         print("\n")
+
+    # Aidmar
+    def get_tests_statistics(self):
+        """
+        Writes the calculated basic defects tests statistics into a file.
+        """
+        # self.stats_db._process_user_defined_query output is list of tuples, thus, we ned [0][0] to access data
+        sumPayloadCount = self.stats_db._process_user_defined_query("SELECT sum(payloadCount) FROM interval_statistics")
+        pktCount = self.stats_db._process_user_defined_query("SELECT packetCount FROM file_statistics")
+        payloadRatio=0
+        if(pktCount[0][0]!=0):
+            payloadRatio = float(sumPayloadCount[0][0] / pktCount[0][0] * 100)
+
+        incorrectChecksumCount = self.stats_db._process_user_defined_query("SELECT sum(incorrectTCPChecksumCount) FROM interval_statistics")
+        correctChecksumCount = self.stats_db._process_user_defined_query("SELECT avg(correctTCPChecksumCount) FROM interval_statistics")
+        incorrectChecksumRatio=0
+        if(incorrectChecksumCount[0][0] + correctChecksumCount[0][0])!=0:
+            incorrectChecksumRatio = float(incorrectChecksumCount[0][0]  / (incorrectChecksumCount[0][0] + correctChecksumCount[0][0] ) * 100)
+
+        def calc_normalized_avg(valuesList):
+            sumValues = 0
+            for x in valuesList: sumValues += x[0]
+            normalizedValues = []
+            for row in valuesList:
+                normalizedValues.append(float(row[0] ))#/ sumValues))
+            return float(sum(normalizedValues) / len(normalizedValues))
+
+        newIPCount = self.stats_db._process_user_defined_query("SELECT newIPCount FROM interval_statistics")
+        avgNewIPCount = calc_normalized_avg(newIPCount)
+
+        newTTLCount = self.stats_db._process_user_defined_query("SELECT newTTLCount FROM interval_statistics")
+        avgNewTTLCount = calc_normalized_avg(newTTLCount)
+
+        newWinSizeCount = self.stats_db._process_user_defined_query("SELECT newWinSizeCount FROM interval_statistics")
+        avgNewWinCount = calc_normalized_avg(newWinSizeCount)
+
+        newToSCount = self.stats_db._process_user_defined_query("SELECT newToSCount FROM interval_statistics")
+        avgNewToSCount = calc_normalized_avg(newToSCount)
+
+        newMSSCount = self.stats_db._process_user_defined_query("SELECT newMSSCount FROM interval_statistics")
+        avgNewMSSCount = calc_normalized_avg(newMSSCount)
+
+
+        return [("Payload ratio", payloadRatio, "%"),
+                ("Incorrect TCP checksum ratio", incorrectChecksumRatio, "%"),
+                ("Avg. new IP", avgNewIPCount, ""),
+                ("Avg. new TTL", avgNewTTLCount, ""),
+                ("Avg. new WinSize", avgNewWinCount, ""),
+                ("Avg. new ToS", avgNewToSCount, ""),
+                ("Avg. new MSS", avgNewMSSCount, "")]
 
     def write_statistics_to_file(self):
         """
@@ -163,6 +213,9 @@ class Statistics:
 
         _write_header("General statistics")
         Statistics.write_list(self.get_general_file_statistics(), target.write)
+
+        _write_header("Tests statistics")
+        Statistics.write_list(self.get_tests_statistics(), target.write)
 
         target.close()
 
@@ -304,7 +357,7 @@ class Statistics:
                     any(x in value.lower().strip() for x in self.stats_db.get_all_sql_query_keywords()))
 
 
-
+    # Aidmar
     def calculate_standard_deviation(self, lst):
         """Calculates the standard deviation for a list of numbers."""
         num_items = len(lst)

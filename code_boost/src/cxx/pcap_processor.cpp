@@ -192,7 +192,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
     const PDU *pdu_l3 = pkt.pdu()->inner_pdu();
     const PDU::PDUType pdu_l3_type = pdu_l3->pdu_type();
     std::string ipAddressSender;
-    std::string ipAddressReceiver;    
+    std::string ipAddressReceiver;
     
     // PDU is IPv4
     if (pdu_l3_type == PDU::PDUType::IP) {

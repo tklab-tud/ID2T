@@ -60,8 +60,8 @@ class StatsDatabase:
         :return: True if the database was already existent, otherwise False
         """
         # Aidmar - for testing: return false always
-        return self.existing_db
-        #return False
+        #return self.existing_db
+        return False
 
     @staticmethod
     def _get_selector_keywords():
