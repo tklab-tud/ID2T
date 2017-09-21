@@ -1,5 +1,5 @@
 # Aidmar
-import validators # TO-DO: it needs to be added to required packages
+#import validators # TO-DO: it needs to be added to required packages
 
 import ipaddress
 import os
