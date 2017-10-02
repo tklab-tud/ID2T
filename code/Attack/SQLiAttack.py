@@ -56,8 +56,8 @@ class SQLiAttack(BaseAttack.BaseAttack):
             Param.IP_SOURCE: ParameterTypes.TYPE_IP_ADDRESS,
             Param.MAC_DESTINATION: ParameterTypes.TYPE_MAC_ADDRESS,
             Param.IP_DESTINATION: ParameterTypes.TYPE_IP_ADDRESS,
-            Param.TARGET_HOST: ParameterTypes.TYPE_URI,
-            Param.TARGET_URI: ParameterTypes.TYPE_URI,
+            Param.TARGET_HOST: ParameterTypes.TYPE_DOMAIN,
+            #Param.TARGET_URI: ParameterTypes.TYPE_URI,
             Param.INJECT_AT_TIMESTAMP: ParameterTypes.TYPE_FLOAT,
             Param.INJECT_AFTER_PACKET: ParameterTypes.TYPE_PACKET_POSITION,
             Param.PACKETS_PER_SECOND: ParameterTypes.TYPE_FLOAT
@@ -70,7 +70,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
             most_used_ip_address = most_used_ip_address[0]
         self.add_param_value(Param.IP_SOURCE, most_used_ip_address)
         self.add_param_value(Param.MAC_SOURCE, self.statistics.get_mac_address(most_used_ip_address))
-        self.add_param_value(Param.TARGET_URI, "/")
+        #self.add_param_value(Param.TARGET_URI, "/")
         self.add_param_value(Param.TARGET_HOST, "www.hackme.com")
         self.add_param_value(Param.INJECT_AFTER_PACKET, randint(0, self.statistics.get_packet_count()))
         self.add_param_value(Param.PACKETS_PER_SECOND,self.maxDefaultPPS)
@@ -122,7 +122,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
         mac_destination = self.get_param_value(Param.MAC_DESTINATION)
         ip_destination = self.get_param_value(Param.IP_DESTINATION)
         target_host = self.get_param_value(Param.TARGET_HOST)
-        target_uri = self.get_param_value(Param.TARGET_URI)
+        target_uri = "/" #self.get_param_value(Param.TARGET_URI)
 
         # Aidmar - check ip.src == ip.dst
         if ip_source == ip_destination:
@@ -132,6 +132,21 @@ class SQLiAttack(BaseAttack.BaseAttack):
 
         path_attack_pcap = None
         minDelay, maxDelay = self.get_reply_delay(ip_destination)
+
+        # Set TTL based on TTL distribution of IP address
+        source_ttl_dist = self.statistics.get_ttl_distribution(ip_source)
+        if len(source_ttl_dist) > 0:
+            source_ttl_prob_dict = Lea.fromValFreqsDict(source_ttl_dist)
+            source_ttl_value = source_ttl_prob_dict.random()
+        else:
+            source_ttl_value = self.statistics.process_db_query("most_used(ttlValue)")
+
+        destination_ttl_dist = self.statistics.get_ttl_distribution(ip_destination)
+        if len(destination_ttl_dist) > 0:
+            destination_ttl_prob_dict = Lea.fromValFreqsDict(destination_ttl_dist)
+            destination_ttl_value = destination_ttl_prob_dict.random()
+        else:
+            destination_ttl_value = self.statistics.process_db_query("most_used(ttlValue)")
 
         # Inject SQLi Attack
         # Read SQLi Attack pcap file
@@ -159,91 +174,169 @@ class SQLiAttack(BaseAttack.BaseAttack):
 
             if pkt_num == 0:
                 prev_orig_port_source = tcp_pkt.getfieldval("sport")
-                if tcp_pkt.getfieldval("dport") == self.http_port:
-                    orig_ip_dst = ip_pkt.getfieldval("dst") # victim IP
+                orig_ip_dst = ip_pkt.getfieldval("dst")  # victim IP
 
-            # Request: Attacker --> vicitm
-            if ip_pkt.getfieldval("dst") == orig_ip_dst: # victim IP
 
-                # There are 363 TCP connections with different source ports, for each of them we generate random port
-                if tcp_pkt.getfieldval("sport") != prev_orig_port_source:
-                    port_source = randint(self.minDefaultPort, self.maxDefaultPort)
-                    prev_orig_port_source = tcp_pkt.getfieldval("sport")
-                    # New connection, new random TCP sequence numbers
-                    attacker_seq = randint(1000, 50000)
-                    victim_seq = randint(1000, 50000)
-                    # First packet in a connection has ACK = 0
-                    tcp_pkt.setfieldval("ack", 0)
+            if tcp_pkt.getfieldval("dport") == 80 or tcp_pkt.getfieldval("sport") == 80:
+                # Attacker --> vicitm
+                if ip_pkt.getfieldval("dst") == orig_ip_dst: # victim IP
 
-                # Ether
-                eth_frame.setfieldval("src", mac_source)
-                eth_frame.setfieldval("dst", mac_destination)
-                # IP
-                ip_pkt.setfieldval("src", ip_source)
-                ip_pkt.setfieldval("dst", ip_destination)
-                # TCP
-                tcp_pkt.setfieldval("sport",port_source)
+                    # There are 363 TCP connections with different source ports, for each of them we generate random port
+                    if tcp_pkt.getfieldval("sport") != prev_orig_port_source and tcp_pkt.getfieldval("dport") != 4444:
+                        port_source = randint(self.minDefaultPort, self.maxDefaultPort)
+                        prev_orig_port_source = tcp_pkt.getfieldval("sport")
+                        # New connection, new random TCP sequence numbers
+                        attacker_seq = randint(1000, 50000)
+                        victim_seq = randint(1000, 50000)
+                        # First packet in a connection has ACK = 0
+                        tcp_pkt.setfieldval("ack", 0)
 
-                if len(str_tcp_seg) > 0:
-                    # convert payload bytes to str => str = "b'..\\r\\n..'"
-                    str_tcp_seg = str_tcp_seg[2:-1]
-                    str_tcp_seg = str_tcp_seg.replace('/ATutor', target_uri)
-                    str_tcp_seg = str_tcp_seg.replace(orig_ip_dst, target_host)
-                    str_tcp_seg = str_tcp_seg.replace("\\n", "\n")
-                    str_tcp_seg = str_tcp_seg.replace("\\r", "\r")
-                    str_tcp_seg = str_tcp_seg.replace("\\t", "\t")
-                    str_tcp_seg = str_tcp_seg.replace("\\\'", "\'")
+                    # Ether
+                    eth_frame.setfieldval("src", mac_source)
+                    eth_frame.setfieldval("dst", mac_destination)
+                    # IP
+                    ip_pkt.setfieldval("src", ip_source)
+                    ip_pkt.setfieldval("dst", ip_destination)
+                    ip_pkt.setfieldval("ttl", source_ttl_value)
+                    # TCP
+                    tcp_pkt.setfieldval("sport",port_source)
 
-                # TCP Seq, Ack
-                if tcp_pkt.getfieldval("ack") != 0:
-                    tcp_pkt.setfieldval("ack", victim_seq)
-                tcp_pkt.setfieldval("seq", attacker_seq)
-                if not (tcp_pkt.getfieldval("flags") == 16 and len(str_tcp_seg) == 0):  # flags=A:
-                    attacker_seq += max(len(str_tcp_seg), 1)
+                    if len(str_tcp_seg) > 0:
+                        # convert payload bytes to str => str = "b'..\\r\\n..'"
+                        str_tcp_seg = str_tcp_seg[2:-1]
+                        str_tcp_seg = str_tcp_seg.replace('/ATutor', target_uri)
+                        str_tcp_seg = str_tcp_seg.replace(orig_ip_dst, target_host)
+                        str_tcp_seg = str_tcp_seg.replace("\\n", "\n")
+                        str_tcp_seg = str_tcp_seg.replace("\\r", "\r")
+                        str_tcp_seg = str_tcp_seg.replace("\\t", "\t")
+                        str_tcp_seg = str_tcp_seg.replace("\\\'", "\'")
 
-                new_pkt = (eth_frame / ip_pkt/ tcp_pkt / str_tcp_seg)
-                new_pkt.time = timestamp_next_pkt
+                    # TCP Seq, Ack
+                    if tcp_pkt.getfieldval("ack") != 0:
+                        tcp_pkt.setfieldval("ack", victim_seq)
+                    tcp_pkt.setfieldval("seq", attacker_seq)
+                    if not (tcp_pkt.getfieldval("flags") == 16 and len(str_tcp_seg) == 0):  # flags=A:
+                        attacker_seq += max(len(str_tcp_seg), 1)
 
-                maxdelay = randomdelay.random()
-                pps = self.minDefaultPPS if getIntervalPPS(complement_interval_pps, timestamp_next_pkt) is None else max(
-                    getIntervalPPS(complement_interval_pps, timestamp_next_pkt), self.minDefaultPPS)
-                timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
+                    new_pkt = (eth_frame / ip_pkt/ tcp_pkt / str_tcp_seg)
+                    new_pkt.time = timestamp_next_pkt
 
-            # Reply: Victim --> attacker
+                    maxdelay = randomdelay.random()
+                    pps = max(getIntervalPPS(complement_interval_pps, timestamp_next_pkt), self.minDefaultPPS)
+                    timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
+
+                # Victim --> attacker
+                else:
+                    # Ether
+                    eth_frame.setfieldval("src", mac_destination)
+                    eth_frame.setfieldval("dst", mac_source)
+                    # IP
+                    ip_pkt.setfieldval("src", ip_destination)
+                    ip_pkt.setfieldval("dst", ip_source)
+                    ip_pkt.setfieldval("ttl", destination_ttl_value)
+                    # TCP
+                    tcp_pkt.setfieldval("dport", port_source)
+
+                    if len(str_tcp_seg) > 0:
+                        # convert payload bytes to str => str = "b'..\\r\\n..'"
+                        str_tcp_seg = str_tcp_seg[2:-1]
+                        str_tcp_seg = str_tcp_seg.replace('/ATutor', target_uri)
+                        str_tcp_seg = str_tcp_seg.replace(orig_ip_dst, target_host)
+                        str_tcp_seg = str_tcp_seg.replace("\\n", "\n")
+                        str_tcp_seg = str_tcp_seg.replace("\\r", "\r")
+                        str_tcp_seg = str_tcp_seg.replace("\\t", "\t")
+                        str_tcp_seg = str_tcp_seg.replace("\\\'", "\'")
+
+                    # TCP Seq, ACK
+                    tcp_pkt.setfieldval("ack", attacker_seq)
+                    tcp_pkt.setfieldval("seq", victim_seq)
+                    strLen = len(str_tcp_seg)
+                    if not (tcp_pkt.getfieldval("flags") == 16 and strLen == 0):  # flags=A:
+                        victim_seq += max(strLen, 1)
+
+                    new_pkt = (eth_frame / ip_pkt / tcp_pkt / str_tcp_seg)
+                    timestamp_next_pkt = timestamp_next_pkt + uniform(minDelay, 2 * maxDelay)
+                    new_pkt.time = timestamp_next_pkt
+
+            # The last connection
             else:
-                # Ether
-                eth_frame.setfieldval("src", mac_destination)
-                eth_frame.setfieldval("dst", mac_source)
-                # IP
-                ip_pkt.setfieldval("src", ip_destination)
-                ip_pkt.setfieldval("dst", ip_source)
-                # TCP
-                tcp_pkt.setfieldval("dport", port_source)
+                # New connection, new random TCP sequence numbers
+                attacker_seq = randint(1000, 50000)
+                victim_seq = randint(1000, 50000)
+                # First packet in a connection has ACK = 0
+                tcp_pkt.setfieldval("ack", 0)
+                #port_source = randint(self.minDefaultPort, self.maxDefaultPort)
 
-                if len(str_tcp_seg) > 0:
-                    # convert payload bytes to str => str = "b'..\\r\\n..'"
-                    str_tcp_seg = str_tcp_seg[2:-1]
-                    str_tcp_seg = str_tcp_seg.replace('/ATutor', target_uri)
-                    str_tcp_seg = str_tcp_seg.replace(orig_ip_dst, target_host)
-                    str_tcp_seg = str_tcp_seg.replace("\\n", "\n")
-                    str_tcp_seg = str_tcp_seg.replace("\\r", "\r")
-                    str_tcp_seg = str_tcp_seg.replace("\\t", "\t")
-                    str_tcp_seg = str_tcp_seg.replace("\\\'", "\'")
+                # Attacker --> vicitm
+                if ip_pkt.getfieldval("dst") == orig_ip_dst:  # victim IP
+                    # Ether
+                    eth_frame.setfieldval("src", mac_source)
+                    eth_frame.setfieldval("dst", mac_destination)
+                    # IP
+                    ip_pkt.setfieldval("src", ip_source)
+                    ip_pkt.setfieldval("dst", ip_destination)
+                    ip_pkt.setfieldval("ttl", source_ttl_value)
+                    # TCP
+                    #tcp_pkt.setfieldval("sport", port_source)
 
-                # TCP Seq, ACK
-                tcp_pkt.setfieldval("ack", attacker_seq)
-                tcp_pkt.setfieldval("seq", victim_seq)
-                strLen = len(str_tcp_seg)
-                if not (tcp_pkt.getfieldval("flags") == 16 and strLen == 0):  # flags=A:
-                    victim_seq += max(strLen, 1)
+                    if len(str_tcp_seg) > 0:
+                        # convert payload bytes to str => str = "b'..\\r\\n..'"
+                        str_tcp_seg = str_tcp_seg[2:-1]
+                        str_tcp_seg = str_tcp_seg.replace('/ATutor', target_uri)
+                        str_tcp_seg = str_tcp_seg.replace(orig_ip_dst, target_host)
+                        str_tcp_seg = str_tcp_seg.replace("\\n", "\n")
+                        str_tcp_seg = str_tcp_seg.replace("\\r", "\r")
+                        str_tcp_seg = str_tcp_seg.replace("\\t", "\t")
+                        str_tcp_seg = str_tcp_seg.replace("\\\'", "\'")
 
-                new_pkt = (eth_frame / ip_pkt / tcp_pkt / str_tcp_seg)
-                timestamp_next_pkt = timestamp_next_pkt + uniform(minDelay, 2 * maxDelay)
-                new_pkt.time = timestamp_next_pkt
+                    # TCP Seq, Ack
+                    if tcp_pkt.getfieldval("ack") != 0:
+                        tcp_pkt.setfieldval("ack", victim_seq)
+                    tcp_pkt.setfieldval("seq", attacker_seq)
+                    if not (tcp_pkt.getfieldval("flags") == 16 and len(str_tcp_seg) == 0):  # flags=A:
+                        attacker_seq += max(len(str_tcp_seg), 1)
+
+                    new_pkt = (eth_frame / ip_pkt / tcp_pkt / str_tcp_seg)
+                    new_pkt.time = timestamp_next_pkt
+
+                    maxdelay = randomdelay.random()
+                    pps = max(getIntervalPPS(complement_interval_pps, timestamp_next_pkt), self.minDefaultPPS)
+                    timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
+
+                # Victim --> attacker
+                else:
+                    # Ether
+                    eth_frame.setfieldval("src", mac_destination)
+                    eth_frame.setfieldval("dst", mac_source)
+                    # IP
+                    ip_pkt.setfieldval("src", ip_destination)
+                    ip_pkt.setfieldval("dst", ip_source)
+                    ip_pkt.setfieldval("ttl", destination_ttl_value)
+                    # TCP
+                    #tcp_pkt.setfieldval("dport", port_source)
+
+                    if len(str_tcp_seg) > 0:
+                        # convert payload bytes to str => str = "b'..\\r\\n..'"
+                        str_tcp_seg = str_tcp_seg[2:-1]
+                        str_tcp_seg = str_tcp_seg.replace('/ATutor', target_uri)
+                        str_tcp_seg = str_tcp_seg.replace(orig_ip_dst, target_host)
+                        str_tcp_seg = str_tcp_seg.replace("\\n", "\n")
+                        str_tcp_seg = str_tcp_seg.replace("\\r", "\r")
+                        str_tcp_seg = str_tcp_seg.replace("\\t", "\t")
+                        str_tcp_seg = str_tcp_seg.replace("\\\'", "\'")
+
+                    # TCP Seq, ACK
+                    tcp_pkt.setfieldval("ack", attacker_seq)
+                    tcp_pkt.setfieldval("seq", victim_seq)
+                    strLen = len(str_tcp_seg)
+                    if not (tcp_pkt.getfieldval("flags") == 16 and strLen == 0):  # flags=A:
+                        victim_seq += max(strLen, 1)
+
+                    new_pkt = (eth_frame / ip_pkt / tcp_pkt / str_tcp_seg)
+                    timestamp_next_pkt = timestamp_next_pkt + uniform(minDelay, 2 * maxDelay)
+                    new_pkt.time = timestamp_next_pkt
 
             packets.append(new_pkt)
-
-        # TO-DO: Last connection, victim start a connection from port 4444.
 
         # Store timestamp of first packet (for attack label)
         self.attack_start_utime = packets[0].time
