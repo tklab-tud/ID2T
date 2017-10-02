@@ -225,67 +225,74 @@ class DDoSAttack(BaseAttack.BaseAttack):
         if mss_dst is None:
             mss_dst = self.statistics.process_db_query("most_used(mssValue)")
 
-        for pkt_num in range(pkts_num):
-            # Build request package
-            # Select one IP address and its corresponding MAC address
-            (ip_source, mac_source) = get_nth_random_element(ip_source_list, mac_source_list)
-            # Determine source port
-            (port_source, ttl_value) = get_attacker_config(ip_source)
+        # Aidmar
+        for attacker in range(num_attackers):
             maxdelay = randomdelay.random()
-            request_ether = Ether(dst=mac_destination, src=mac_source)
-            request_ip = IP(src=ip_source, dst=ip_destination, ttl=ttl_value)
-            # Aidmar - random win size for each packet
-            # request_tcp = TCP(sport=port_source, dport=port_destination, flags='S', ack=0)
-            win_size = choice(win_sizes)
-            request_tcp = TCP(sport=port_source, dport=port_destination, flags='S', ack=0, window=win_size)
+            attacker_pps = pps / num_attackers
+            timestamp_next_pkt = self.get_param_value(Param.INJECT_AT_TIMESTAMP)
+            timestamp_next_pkt = update_timestamp(timestamp_next_pkt, attacker_pps, maxdelay)
+            attacker_pkts_num = int(pkts_num / num_attackers) + randint(0,100)
+            for pkt_num in range(attacker_pkts_num):
+                # Build request package
+                # Select one IP address and its corresponding MAC address
+                (ip_source, mac_source) = get_nth_random_element(ip_source_list, mac_source_list)
+                # Determine source port
+                (port_source, ttl_value) = get_attacker_config(ip_source)
 
-            request = (request_ether / request_ip / request_tcp)
-            request.time = timestamp_next_pkt
+                request_ether = Ether(dst=mac_destination, src=mac_source)
+                request_ip = IP(src=ip_source, dst=ip_destination, ttl=ttl_value)
+                # Aidmar - random win size for each packet
+                # request_tcp = TCP(sport=port_source, dport=port_destination, flags='S', ack=0)
+                win_size = choice(win_sizes)
+                request_tcp = TCP(sport=port_source, dport=port_destination, flags='S', ack=0, window=win_size)
 
-            # Build reply package
-            # Aidmar
-            if len(replies) <= victim_buffer:
-                reply_ether = Ether(src=mac_destination, dst=mac_source)
-                reply_ip = IP(src=ip_destination, dst=ip_source, flags='DF')
-                reply_tcp = TCP(sport=port_destination, dport=port_source, seq=0, ack=1, flags='SA', window=29200,options=[('MSS', mss_dst)])
-                reply = (reply_ether / reply_ip / reply_tcp)
-                timestamp_reply = timestamp_next_pkt + uniform(minDelay, maxDelay)
+                request = (request_ether / request_ip / request_tcp)
+                request.time = timestamp_next_pkt
 
-                if len(replies) > 0:
-                    last_reply_timestamp = replies[-1].time
-                    while timestamp_reply <= last_reply_timestamp:
-                        timestamp_reply = timestamp_reply + uniform(minDelay, maxDelay)
+                # Build reply package
+                # Aidmar
+                if len(replies) <= victim_buffer:
+                    reply_ether = Ether(src=mac_destination, dst=mac_source)
+                    reply_ip = IP(src=ip_destination, dst=ip_source, flags='DF')
+                    reply_tcp = TCP(sport=port_destination, dport=port_source, seq=0, ack=1, flags='SA', window=29200,options=[('MSS', mss_dst)])
+                    reply = (reply_ether / reply_ip / reply_tcp)
+                    timestamp_reply = timestamp_next_pkt + uniform(minDelay, maxDelay)
 
-                reply.time = timestamp_reply
-                replies.append(reply)
+                    if len(replies) > 0:
+                        last_reply_timestamp = replies[-1].time
+                        while timestamp_reply <= last_reply_timestamp:
+                            timestamp_reply = timestamp_reply + uniform(minDelay, maxDelay)
 
-            # Aidmar
-            # Append reply
-            if replies:
-                while timestamp_next_pkt >= replies[0].time:
-                    packets.append(replies[0])
-                    replies.remove(replies[0])
-                    if len(replies) == 0:
-                        break
+                    reply.time = timestamp_reply
+                    replies.append(reply)
 
-            # Append request
-            packets.append(request)
+                # Aidmar
+                # Append reply
+                if replies:
+                    while timestamp_next_pkt >= replies[0].time:
+                        packets.append(replies[0])
+                        replies.remove(replies[0])
+                        if len(replies) == 0:
+                            break
 
-            timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
+                # Append request
+                packets.append(request)
 
-            # Store timestamp of first packet (for attack label)
-            if pkt_num == 1:
-                self.attack_start_utime = packets[0].time
-            elif pkt_num % BUFFER_SIZE == 0: # every 1000 packets write them to the pcap file (append)
-                last_packet = packets[-1]
-                packets = sorted(packets, key=lambda pkt: pkt.time)
-                path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
-                packets = []
+                timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
 
-            # Requests are sent all, send all replies
-            if pkt_num == pkts_num-1:
-                for reply in replies:
-                    packets.append(reply)
+                # Store timestamp of first packet (for attack label)
+                if pkt_num == 1:
+                    self.attack_start_utime = packets[0].time
+                elif pkt_num % BUFFER_SIZE == 0: # every 1000 packets write them to the pcap file (append)
+                    last_packet = packets[-1]
+                    packets = sorted(packets, key=lambda pkt: pkt.time)
+                    path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
+                    packets = []
+
+                # Requests are sent all, send all replies
+                if pkt_num == pkts_num-1:
+                    for reply in replies:
+                        packets.append(reply)
 
         if len(packets) > 0:
             packets = sorted(packets, key=lambda pkt: pkt.time)
