@@ -228,12 +228,20 @@ class PortscanAttack(BaseAttack.BaseAttack):
         # mss = self.statistics.get_mss(ip_destination)
 
         # Set TTL based on TTL distribution of IP address
-        ttl_dist = self.statistics.get_ttl_distribution(ip_source)
-        if len(ttl_dist) > 0:
-            ttl_prob_dict = Lea.fromValFreqsDict(ttl_dist)
-            ttl_value = ttl_prob_dict.random()
+        # Aidmar - create two ttl for source and destination
+        source_ttl_dist = self.statistics.get_ttl_distribution(ip_source)
+        if len(source_ttl_dist) > 0:
+            source_ttl_prob_dict = Lea.fromValFreqsDict(source_ttl_dist)
+            source_ttl_value = source_ttl_prob_dict.random()
         else:
-            ttl_value = self.statistics.process_db_query("most_used(ttlValue)")
+            source_ttl_value = self.statistics.process_db_query("most_used(ttlValue)")
+
+        destination_ttl_dist = self.statistics.get_ttl_distribution(ip_destination)
+        if len(destination_ttl_dist) > 0:
+            destination_ttl_prob_dict = Lea.fromValFreqsDict(destination_ttl_dist)
+            destination_ttl_value = destination_ttl_prob_dict.random()
+        else:
+            destination_ttl_value = self.statistics.process_db_query("most_used(ttlValue)")
 
         # Aidmar
         A_B_packets = []
@@ -247,7 +255,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
 
             # 1) Build request package
             request_ether = Ether(src=mac_source, dst=mac_destination)
-            request_ip = IP(src=ip_source, dst=ip_destination, ttl=ttl_value)
+            request_ip = IP(src=ip_source, dst=ip_destination, ttl=source_ttl_value)
 
             # Aidmar - random src port for each packet
             sport = randint(1, 65535)
@@ -267,7 +275,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
             # 2) Build reply (for open ports) package
             if dport in ports_open:  # destination port is OPEN
                 reply_ether = Ether(src=mac_destination, dst=mac_source)
-                reply_ip = IP(src=ip_destination, dst=ip_source, flags='DF')
+                reply_ip = IP(src=ip_destination, dst=ip_source, ttl=destination_ttl_value, flags='DF')
                 #if mss_dst is None:
                 #   reply_tcp = TCP(sport=dport, dport=sport, seq=0, ack=1, flags='SA', window=29200)
                 #else:
@@ -317,7 +325,8 @@ class PortscanAttack(BaseAttack.BaseAttack):
             packets.append(request)
 
             # Aidmar
-            pps = self.minDefaultPPS if getIntervalPPS(complement_interval_pps, timestamp_next_pkt) is None else max(getIntervalPPS(complement_interval_pps, timestamp_next_pkt),self.minDefaultPPS) # avoid case of pps = 0
+            #pps = self.minDefaultPPS if getIntervalPPS(complement_interval_pps, timestamp_next_pkt) is None else max(getIntervalPPS(complement_interval_pps, timestamp_next_pkt),self.minDefaultPPS) # avoid case of pps = 0
+            pps = max(getIntervalPPS(complement_interval_pps, timestamp_next_pkt),self.minDefaultPPS)
             timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxDelay)
 
         # Aidmar - In case all requests are already sent, send all replies and confirms

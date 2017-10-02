@@ -1,5 +1,5 @@
 # Aidmar
-#import validators # TO-DO: it needs to be added to required packages
+from scapy.layers.inet import Ether
 
 import ipaddress
 import os
@@ -15,6 +15,7 @@ from scapy.utils import PcapWriter
 from Attack import AttackParameters
 from Attack.AttackParameters import Parameter
 from Attack.AttackParameters import ParameterTypes
+
 
 
 class BaseAttack(metaclass=ABCMeta):
@@ -213,14 +214,15 @@ class BaseAttack(metaclass=ABCMeta):
 
     # Aidmar
     @staticmethod
-    def _is_uri(uri: str):
+    def _is_domain(val: str):
         """
         Verifies that the given string is a valid URI.
 
         :param uri: The URI as string.
         :return: True if URI is valid, otherwise False.
         """
-        return validators.url(uri)
+        domain = re.match('^(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+$', val)
+        return (domain is not None)
 
 
     #########################################
@@ -294,9 +296,9 @@ class BaseAttack(metaclass=ABCMeta):
                 is_valid = True
                 param_name = Parameter.INJECT_AT_TIMESTAMP
                 value = (ts / 1000000)  # convert microseconds from getTimestampMuSec into seconds
-        # Aidmar - TO-DO
-        elif param_type == ParameterTypes.TYPE_URI:
-            is_valid = True#self._is_uri(value)
+        # Aidmar
+        elif param_type == ParameterTypes.TYPE_DOMAIN:
+            is_valid = self._is_domain(value)
 
         # add value iff validation was successful
         if is_valid:
@@ -482,6 +484,13 @@ class BaseAttack(metaclass=ABCMeta):
 
     # Aidmar
     def get_reply_delay(self, ip_dst):
+        """
+           Gets the minimum and the maximum reply delay for all the connections of a specific IP.
+           :param ip_dst: The IP to reterive its reply delay.
+           :return minDelay: minimum delay
+           :return maxDelay: maximum delay
+
+           """
         minDelay = self.statistics.process_db_query(
             "SELECT minDelay FROM conv_statistics WHERE ipAddressB='" + ip_dst + "' LIMIT 1")
         maxDelay = self.statistics.process_db_query(
@@ -494,3 +503,44 @@ class BaseAttack(metaclass=ABCMeta):
         minDelay = int(minDelay) * 10 ** -6  # convert from micro to seconds
         maxDelay = int(maxDelay) * 10 ** -6
         return minDelay,maxDelay
+
+    # Group the packets in conversations
+    def packetsToConvs(self,exploit_raw_packets):
+        """
+           Classifies a bunch of packets to conversations groups. A conversation is a set of packets go between host A (IP,port)
+           to host B (IP,port)
+           :param exploit_raw_packets: A set of packets contains several conversations.
+           :return conversations: A set of arrays, each array contains the packet of specifc conversation
+           :return orderList_conversations: An array contains the conversations ids (IP_A,port_A, IP_b,port_B) in the order
+           they appeared in the original packets.
+           """
+        conversations = {}
+        orderList_conversations = []
+        for pkt_num, pkt in enumerate(exploit_raw_packets):
+            eth_frame = Ether(pkt[0])
+
+            ip_pkt = eth_frame.payload
+            ip_dst = ip_pkt.getfieldval("dst")
+            ip_src = ip_pkt.getfieldval("src")
+
+            tcp_pkt = ip_pkt.payload
+            port_dst = tcp_pkt.getfieldval("dport")
+            port_src = tcp_pkt.getfieldval("sport")
+
+            conv_req = (ip_src, port_src, ip_dst, port_dst)
+            conv_rep = (ip_dst, port_dst, ip_src, port_src)
+            if conv_req not in conversations and conv_rep not in conversations:
+                pktList = [pkt]
+                conversations[conv_req] = pktList
+                # Order list of conv
+                orderList_conversations.append(conv_req)
+            else:
+                if conv_req in conversations:
+                    pktList = conversations[conv_req]
+                    pktList.append(pkt)
+                    conversations[conv_req] = pktList
+                else:
+                    pktList = conversations[conv_rep]
+                    pktList.append(pkt)
+                    conversations[conv_rep] = pktList
+        return (conversations, orderList_conversations)

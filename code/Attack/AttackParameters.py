@@ -56,4 +56,4 @@ class ParameterTypes(Enum):
     TYPE_PACKET_POSITION = 7  # used to derive timestamp from parameter INJECT_AFTER_PACKET
 
     # Aidmar
-    TYPE_URI = 8
+    TYPE_DOMAIN = 8

@@ -774,9 +774,9 @@ class Statistics:
                 graphy.append(row[1])
 
             plt.autoscale(enable=True, axis='both')
-            plt.title("IP New Values Distribution")
+            plt.title("IP Novelity Distribution")
             plt.xlabel('Timestamp')
-            plt.ylabel('New values count')
+            plt.ylabel('Novel values count')
             plt.xlim([0, len(graphx)])
             plt.grid(True)
             width = 0.1
@@ -791,7 +791,7 @@ class Statistics:
             plt.locator_params(axis='x', nbins=20)
 
             plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
-            out = self.pcap_filepath.replace('.pcap', '_plot-interval-new-ip-dist' + file_ending)
+            out = self.pcap_filepath.replace('.pcap', '_plot-interval-novel-ip-dist' + file_ending)
             plt.savefig(out, dpi=500)
 
             print("IP Standard Deviation:")
@@ -810,9 +810,9 @@ class Statistics:
                     graphy.append(row[1])
 
                 plt.autoscale(enable=True, axis='both')
-                plt.title("TTL New Values Distribution")
+                plt.title("TTL Novelity Distribution")
                 plt.xlabel('Timestamp')
-                plt.ylabel('New values count')
+                plt.ylabel('Novel values count')
                 plt.xlim([0, len(graphx)])
                 plt.grid(True)
                 width = 0.1
@@ -827,7 +827,7 @@ class Statistics:
                 plt.locator_params(axis='x', nbins=20)
 
                 plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
-                out = self.pcap_filepath.replace('.pcap', '_plot-interval-new-ttl-dist' + file_ending)
+                out = self.pcap_filepath.replace('.pcap', '_plot-interval-novel-ttl-dist' + file_ending)
                 plt.savefig(out, dpi=500)
 
                 print("TTL Standard Deviation:")
@@ -847,9 +847,9 @@ class Statistics:
                 graphy.append(row[1])
 
             plt.autoscale(enable=True, axis='both')
-            plt.title("ToS New Values Distribution")
+            plt.title("ToS Novelity Distribution")
             plt.xlabel('Timestamp')
-            plt.ylabel('New values count')
+            plt.ylabel('Novel values count')
             plt.xlim([0, len(graphx)])
             plt.grid(True)
             width = 0.1
@@ -864,7 +864,7 @@ class Statistics:
             plt.locator_params(axis='x', nbins=20)
 
             plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
-            out = self.pcap_filepath.replace('.pcap', '_plot-interval-new-tos-dist' + file_ending)
+            out = self.pcap_filepath.replace('.pcap', '_plot-interval-novel-tos-dist' + file_ending)
             plt.savefig(out, dpi=500)
 
             print("ToS Standard Deviation:")
@@ -884,9 +884,9 @@ class Statistics:
                     graphy.append(row[1])
 
                 plt.autoscale(enable=True, axis='both')
-                plt.title("Window Size New Values Distribution")
+                plt.title("Window Size Novelity Distribution")
                 plt.xlabel('Timestamp')
-                plt.ylabel('New values count')
+                plt.ylabel('Novel values count')
                 plt.xlim([0, len(graphx)])
                 plt.grid(True)
                 width = 0.1
@@ -901,7 +901,7 @@ class Statistics:
                 plt.locator_params(axis='x', nbins=20)
 
                 plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
-                out = self.pcap_filepath.replace('.pcap', '_plot-interval-new-win-size-dist' + file_ending)
+                out = self.pcap_filepath.replace('.pcap', '_plot-interval-novel-win-size-dist' + file_ending)
                 plt.savefig(out, dpi=500)
 
                 # Calculate Standart Deviation
@@ -924,9 +924,9 @@ class Statistics:
                     graphy.append(row[1])
 
                 plt.autoscale(enable=True, axis='both')
-                plt.title("MSS New Values Distribution")
+                plt.title("MSS Novelity Distribution")
                 plt.xlabel('Timestamp')
-                plt.ylabel('New values count')
+                plt.ylabel('Novel values count')
                 plt.xlim([0, len(graphx)])
                 plt.grid(True)
                 width = 0.1
@@ -941,7 +941,7 @@ class Statistics:
                 plt.locator_params(axis='x', nbins=20)
 
                 plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
-                out = self.pcap_filepath.replace('.pcap', '_plot-interval-new-mss-dist' + file_ending)
+                out = self.pcap_filepath.replace('.pcap', '_plot-interval-novel-mss-dist' + file_ending)
                 plt.savefig(out, dpi=500)
 
                 # Calculate Standart Deviation
@@ -976,7 +976,7 @@ class Statistics:
      # Aidmar
     def calculate_complement_packet_rates(self, pps):
         """
-        Calculates the complement packet rates of the background traffic packet rates per interval.
+        Calculates the complement packet rates of the background traffic packet rates for each interval.
         Then normalize it to maximum boundary, which is the input parameter pps
 
         :return: normalized packet rates for each time interval.
