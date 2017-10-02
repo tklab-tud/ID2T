@@ -46,7 +46,7 @@ class Statistics:
         if flag_recalculate_stats:
             print("Flag -r/--recalculate found. Recalculating statistics.")
 
-        # Recalculate statistics if database not exists OR param -r/--recalculate was provided
+        # Recalculate statistics if database does not exist OR param -r/--recalculate is provided
         if (not self.stats_db.get_db_exists()) or flag_recalculate_stats:
             self.pcap_proc = pr.pcap_processor(self.pcap_filepath)
             self.pcap_proc.collect_statistics()
@@ -76,7 +76,7 @@ class Statistics:
         :return: a list of tuples, each consisting of (description, value, unit), where unit is optional.
         """
         return [("Pcap file", self.pcap_filepath),
-                ("#Packets", self.get_packet_count(), "packets"),
+                ("Packets", self.get_packet_count(), "packets"),
                 ("Capture length", self.get_capture_duration(), "seconds"),
                 ("Capture start", self.get_pcap_timestamp_start()),
                 ("Capture end", self.get_pcap_timestamp_end())]
@@ -285,7 +285,7 @@ class Statistics:
 
     def plot_statistics(self, format: str = 'png'):
         """
-        Plots the statistics associated with the dataset prior attack injection.
+        Plots the statistics associated with the dataset.
         :param format: The format to be used to save the statistics diagrams.
         """
 
@@ -309,4 +309,4 @@ class Statistics:
             return out
 
         out_path = plot_ttl('.' + format)
-        print("Saved TTL distribution plot at: ", out_path)
+        print("Saved TTL distribution plot in: ", out_path)

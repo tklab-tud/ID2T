@@ -58,37 +58,37 @@ class CLI(object):
         """
         # Create parser for arguments
         parser = argparse.ArgumentParser(description="Intrusion Detection Dataset Toolkit (ID2T) - A toolkit for "
-                                         "injection of synthetically created attacks into PCAP datasets.",
+                                         "injecting synthetically created attacks into PCAP files.",
                                          prog="id2t")
         # Define required arguments
         requiredNamed = parser.add_argument_group('required named arguments')
-        requiredNamed.add_argument('-i', '--input', metavar="FILEPATH", help='path to the input pcap file', required=True)
+        requiredNamed.add_argument('-i', '--input', metavar="PCAP_FILE", help='path to the input pcap file', required=True)
 
         # Define optional arguments
-        parser.add_argument('-c', '--config', metavar='FILEPATH', help='file containing parameters used as input.',
+        parser.add_argument('-c', '--config', metavar='CONFIG_FILE', help='file containing configuration parameters.',
                             action=LoadFromFile, type=open)
         parser.add_argument('-e', '--export',
-                            help='stores the statistics as a textfile with ending .stat into the dataset directory',
+                            help='store statistics as a ".stat" file',
                             action='store_true', default=False)
-        parser.add_argument('-a', '--attack', metavar="ATTACKNAME", action='append',
-                            help='injects a new attack into the given dataset.', nargs='+')
+        parser.add_argument('-a', '--attack', metavar="ATTACK", action='append',
+                            help='injects an ATTACK into a PCAP file.', nargs='+')
         parser.add_argument('-r', '--recalculate',
-                            help='forces to recalculate the statistics in case of an already existing statistics database.',
+                            help='recalculate statistics even if a cached version exists.',
                             action='store_true', default=False)
-        parser.add_argument('-s', '--statistics', help='print general file statistics to stdout.', action='store_true',
+        parser.add_argument('-s', '--statistics', help='print file statistics to stdout.', action='store_true',
                             default=False)
-        parser.add_argument('-p', '--plot', help='creates a plot of common dataset statistics', action='append',
+        parser.add_argument('-p', '--plot', help='creates statistics plots.', action='append',
                             nargs='?')
         parser.add_argument('-q', '--query', metavar="QUERY",
                             action='append', nargs='?',
-                            help='queries the statistics database. If no query is provided, the application enters into query mode.')
+                            help='query the statistics database. If no query is provided, the application enters query mode.')
 
         # Parse arguments
         self.args = parser.parse_args(args)
 
         # Either PCAP filepath or GUI mode must be enabled
         if not self.args.input:
-            parser.error("Parameter -i/--input required. See available options with -h/--help ")
+            parser.error("Parameter -i/--input required. See available options with -h/--help")
 
         self.process_arguments()
 
