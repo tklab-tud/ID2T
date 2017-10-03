@@ -12,7 +12,7 @@ from Attack.AttackParameters import ParameterTypes
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 # noinspection PyPep8
 from scapy.layers.inet import IP, Ether, TCP
-
+import numpy as np
 
 class PortscanAttack(BaseAttack.BaseAttack):
     # Aidmar - Values derived empirically from Nmap experiments.
@@ -117,10 +117,10 @@ class PortscanAttack(BaseAttack.BaseAttack):
 
             :return: Timestamp to be used for the next packet.
             """
-            # Aidmar - why to use 0.1/pps?
-            #return timestamp + uniform(0.1 / pps, maxdelay)
             # Aidmar
-            return timestamp + uniform(1 / pps, maxdelay)
+            # To imitate the bursty behavior of traffic
+            randomdelay = Lea.fromValFreqsDict({1 / pps: 70, 2 / pps: 20, 5 / pps: 7, 10 / pps: 3})
+            return timestamp + uniform(1/pps ,  randomdelay.random())
 
         # Aidmar
         def getIntervalPPS(complement_interval_pps, timestamp):
@@ -232,7 +232,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
             destination_win_value = self.statistics.process_db_query("most_used(winSize)")
 
         # Aidmar
-        minDelay,maxDelay = self.get_reply_delay(ip_destination)
+        minDelay,maxDelay, SDDelay = self.get_reply_delay(ip_destination)
 
         for dport in dest_ports:
             # Parameters changing each iteration
@@ -287,7 +287,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
 
             # Aidmar
             pps = max(getIntervalPPS(complement_interval_pps, timestamp_next_pkt),self.minDefaultPPS)
-            timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxDelay)
+            timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, minDelay)
 
         # store end time of attack
         self.attack_end_utime = packets[-1].time
