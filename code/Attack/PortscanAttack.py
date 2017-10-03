@@ -1,7 +1,5 @@
 import logging
 import csv
-import socket
-
 
 from random import shuffle, randint, choice, uniform
 
@@ -17,16 +15,16 @@ from scapy.layers.inet import IP, Ether, TCP
 
 
 class PortscanAttack(BaseAttack.BaseAttack):
-    # Aidmar - Nmap default packet rate
-    maxDefaultPPS = 300
-    minDefaultPPS = 5
+    # Aidmar - Values derived empirically from Nmap experiments.
+    maxDefaultPPS = randint(300,500)
+    minDefaultPPS = randint(5,10)
 
     # Aidmar
     def get_ports_from_nmap_service_dst(self, ports_num):
         """
-        Read the most ports_num frequently open ports from nmap-service-tcp file to be used in Portscan attack.
+        Read the most ports_num frequently open ports from nmap-service-tcp file to be used in the port scan.
 
-        :return: Ports numbers to be used as default dest ports or default open ports in Portscan attack.
+        :return: Ports numbers to be used as default destination ports or default open ports in the port scan.
         """
         ports_dst = []
         spamreader = csv.reader(open('resources/nmap-services-tcp.csv', 'rt'), delimiter=',')
@@ -35,7 +33,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
             next(spamreader)
             # save ports numbers
             ports_dst.append(next(spamreader)[0])
-        # shuffle ports numbers
+        # shuffle ports numbers partially
         if(ports_num==1000): # used for port.dst
             temp_array = [[0 for i in range(10)] for i in range(100)]
             port_dst_shuffled = []
@@ -47,20 +45,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
             shuffle(ports_dst)
             port_dst_shuffled = ports_dst
         return port_dst_shuffled
-
-    def is_valid_ip_address(self,addr):
-        """
-        Check if the IP address family is suported.
-
-        :param addr: IP address to be checked
-        :return: Boolean
-        """
-        try:
-            socket.inet_aton(addr)
-            return True
-        except socket.error:
-            return False
-
 
     def __init__(self, statistics, pcap_file_path):
         """
@@ -110,28 +94,18 @@ class PortscanAttack(BaseAttack.BaseAttack):
         if isinstance(destination_mac, list) and len(destination_mac) == 0:
             destination_mac = self.generate_random_mac_address()
         self.add_param_value(Param.MAC_DESTINATION, destination_mac)
-
         self.add_param_value(Param.PORT_DESTINATION, self.get_ports_from_nmap_service_dst(1000))
-        #self.add_param_value(Param.PORT_DESTINATION, '1-1023,1720,1900,8080,56652')
-
-        # Not used initial value
-        self.add_param_value(Param.PORT_OPEN, '1,11,111,1111')
-
+        # Temporal value to be changed later accordint to the destination host open ports
+        self.add_param_value(Param.PORT_OPEN, '1')
         self.add_param_value(Param.PORT_DEST_SHUFFLE, 'False')
         self.add_param_value(Param.PORT_DEST_ORDER_DESC, 'False')
-
         self.add_param_value(Param.PORT_SOURCE, randint(1024, 65535))
         self.add_param_value(Param.PORT_SOURCE_RANDOMIZE, 'False')
 
-        # Aidamr - we used pps for sent packets, so no need to include received packets rate
-        # most used ip not necessary provide a realsitic packet rate for portscan attack
-        # calculating the pps is not accurate (taking the whole capture duration into account ingnores the intermittent
-        # of packets flow)
         #self.add_param_value(Param.PACKETS_PER_SECOND,
                              #(self.statistics.get_pps_sent(most_used_ip_address) +
                              # self.statistics.get_pps_received(most_used_ip_address)) / 2)
         # Aidmar
-        # using nmap empirically observed packet rate [5,300] packet per second
         self.add_param_value(Param.PACKETS_PER_SECOND,self.maxDefaultPPS)
 
         self.add_param_value(Param.INJECT_AFTER_PACKET, randint(0, self.statistics.get_packet_count()))
@@ -151,9 +125,11 @@ class PortscanAttack(BaseAttack.BaseAttack):
         # Aidmar
         def getIntervalPPS(complement_interval_pps, timestamp):
             """
-            Gets the packet rate (pps) in specific time interval.
+            Gets the packet rate (pps) for a specific time interval.
 
-            :return: the corresponding packet rate for packet rate (pps) .
+            :param complement_interval_pps: an array of tuples (the last timestamp in the interval, the packet rate in the crresponding interval).
+            :param timestamp: the timestamp at which the packet rate is required.
+            :return: the corresponding packet rate (pps) .
             """
             for row in complement_interval_pps:
                 if timestamp<=row[0]:
@@ -167,7 +143,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
         #randomdelay = Lea.fromValFreqsDict({1 / pps: 70, 2 / pps: 20, 5 / pps: 7, 10 / pps: 3})
         #maxdelay = randomdelay.random()
 
-        # Aidmar - calculate complement packet rates of BG traffic per interval
+        # Aidmar - calculate complement packet rates of the background traffic for each interval
         complement_interval_pps = self.statistics.calculate_complement_packet_rates(pps)
 
         # Determine ports
@@ -185,6 +161,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
         timestamp_next_pkt = self.get_param_value(Param.INJECT_AT_TIMESTAMP)
         # store start time of attack
         self.attack_start_utime = timestamp_next_pkt
+        timestamp_prv_reply, timestamp_confirm = 0,0
 
         # Initialize parameters
         packets = []
@@ -192,50 +169,46 @@ class PortscanAttack(BaseAttack.BaseAttack):
         ip_destination = self.get_param_value(Param.IP_DESTINATION)
 
         # Aidmar - check ip.src == ip.dst
-        if ip_source == ip_destination:
-            print("\nERROR: Invalid IP addresses; source IP is the same as destination IP: " + ip_source + ".")
-            import sys
-            sys.exit(0)
+        self.ip_src_dst_equal_check(ip_source, ip_destination)
 
-        # open ports
         # Aidmar
+        # Select open ports
         ports_open = self.get_param_value(Param.PORT_OPEN)
-        if ports_open == [1,11,111,1111]:  # user did not define open ports
+        if ports_open == 1:  # user did not specify open ports
             # the ports that were already used by ip.dst (direction in) in the background traffic are open ports
             ports_used_by_ip_dst = self.statistics.process_db_query(
                 "SELECT portNumber FROM ip_ports WHERE portDirection='in' AND ipAddress='" + ip_destination + "'")
             if ports_used_by_ip_dst:
                 ports_open = ports_used_by_ip_dst
             else: # if no ports were retrieved from database
-            # Take open ports from nmap-service file
-                #ports_temp = self.get_ports_from_nmap_service_dst(100)
-                #ports_open = ports_temp[0:randint(1,10)]
-            # OR take open ports from the most used ports in traffic statistics
                 ports_open = self.statistics.process_db_query(
                     "SELECT portNumber FROM ip_ports GROUP BY portNumber ORDER BY SUM(portCount) DESC LIMIT "+str(randint(1,10)))
         # in case of one open port, convert ports_open to array
         if not isinstance(ports_open, list):
             ports_open = [ports_open]
 
-        # MSS (Maximum Segment Size) for Ethernet. Allowed values [536,1500]
         # Aidmar
-        mss_dst = self.statistics.get_most_used_mss(ip_destination)
-        if mss_dst is None:
-            mss_dst = self.statistics.process_db_query("most_used(mssValue)")
-        mss_src = self.statistics.get_most_used_mss(ip_source)
-        if mss_src is None:
-            mss_src = self.statistics.process_db_query("most_used(mssValue)")
-        # mss = self.statistics.get_mss(ip_destination)
+        # Set MSS (Maximum Segment Size) based on MSS distribution of IP address
+        source_mss_dist = self.statistics.get_mss_distribution(ip_source)
+        if len(source_mss_dist) > 0:
+            source_mss_prob_dict = Lea.fromValFreqsDict(source_mss_dist)
+            source_mss_value = source_mss_prob_dict.random()
+        else:
+            source_mss_value = self.statistics.process_db_query("most_used(mssValue)")
+        destination_mss_dist = self.statistics.get_mss_distribution(ip_destination)
+        if len(destination_mss_dist) > 0:
+            destination_mss_prob_dict = Lea.fromValFreqsDict(destination_mss_dist)
+            destination_mss_value = destination_mss_prob_dict.random()
+        else:
+            destination_mss_value = self.statistics.process_db_query("most_used(mssValue)")
 
         # Set TTL based on TTL distribution of IP address
-        # Aidmar - create two ttl for source and destination
         source_ttl_dist = self.statistics.get_ttl_distribution(ip_source)
         if len(source_ttl_dist) > 0:
             source_ttl_prob_dict = Lea.fromValFreqsDict(source_ttl_dist)
             source_ttl_value = source_ttl_prob_dict.random()
         else:
             source_ttl_value = self.statistics.process_db_query("most_used(ttlValue)")
-
         destination_ttl_dist = self.statistics.get_ttl_distribution(ip_destination)
         if len(destination_ttl_dist) > 0:
             destination_ttl_prob_dict = Lea.fromValFreqsDict(destination_ttl_dist)
@@ -244,8 +217,21 @@ class PortscanAttack(BaseAttack.BaseAttack):
             destination_ttl_value = self.statistics.process_db_query("most_used(ttlValue)")
 
         # Aidmar
-        A_B_packets = []
-        B_A_packets = []
+        # Set Window Size based on Window Size distribution of IP address
+        source_win_dist = self.statistics.get_win_distribution(ip_source)
+        if len(source_win_dist) > 0:
+            source_win_prob_dict = Lea.fromValFreqsDict(source_win_dist)
+            source_win_value = source_win_prob_dict.random()
+        else:
+            source_win_value = self.statistics.process_db_query("most_used(winSize)")
+        destination_win_dist = self.statistics.get_win_distribution(ip_destination)
+        if len(destination_win_dist) > 0:
+            destination_win_prob_dict = Lea.fromValFreqsDict(destination_win_dist)
+            destination_win_value = destination_win_prob_dict.random()
+        else:
+            destination_win_value = self.statistics.process_db_query("most_used(winSize)")
+
+        # Aidmar
         minDelay,maxDelay = self.get_reply_delay(ip_destination)
 
         for dport in dest_ports:
@@ -259,39 +245,32 @@ class PortscanAttack(BaseAttack.BaseAttack):
 
             # Aidmar - random src port for each packet
             sport = randint(1, 65535)
-            # Aidmar - use most used window size
-            win_size = self.statistics.process_db_query("most_used(winSize)")
-            request_tcp = TCP(sport=sport, dport=dport,  window=win_size, flags='S', options=[('MSS', mss_src)])
+
+            request_tcp = TCP(sport=sport, dport=dport,  window= source_win_value, flags='S', options=[('MSS', source_mss_value)])
 
             request = (request_ether / request_ip / request_tcp)
-            # first packet uses timestamp provided by attack parameter Param.INJECT_AT_TIMESTAMP
-            """if len(packets) > 0:
-                timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
-            request.time = timestamp_next_pkt
-            """
+
             # Aidmar
             request.time = timestamp_next_pkt
+            # Append request
+            packets.append(request)
 
             # 2) Build reply (for open ports) package
             if dport in ports_open:  # destination port is OPEN
                 reply_ether = Ether(src=mac_destination, dst=mac_source)
                 reply_ip = IP(src=ip_destination, dst=ip_source, ttl=destination_ttl_value, flags='DF')
-                #if mss_dst is None:
-                #   reply_tcp = TCP(sport=dport, dport=sport, seq=0, ack=1, flags='SA', window=29200)
-                #else:
-                reply_tcp = TCP(sport=dport, dport=sport, seq=0, ack=1, flags='SA', window=29200,
-                                    options=[('MSS', mss_dst)])
+                reply_tcp = TCP(sport=dport, dport=sport, seq=0, ack=1, flags='SA', window=destination_win_value,
+                                    options=[('MSS', destination_mss_value)])
                 reply = (reply_ether / reply_ip / reply_tcp)
                 # Aidmar - edit name timestamp_reply
                 timestamp_reply = timestamp_next_pkt + uniform(minDelay, maxDelay)
-
-                if len(B_A_packets) > 0:
-                    last_reply_timestamp = B_A_packets[-1].time
-                    while (timestamp_reply <= last_reply_timestamp):
-                        timestamp_reply = timestamp_reply + uniform(minDelay, maxDelay)
+                while (timestamp_reply <= timestamp_prv_reply):
+                    timestamp_reply = timestamp_prv_reply + uniform(minDelay, maxDelay)
+                timestamp_prv_reply = timestamp_reply
 
                 reply.time = timestamp_reply
-                B_A_packets.append(reply)
+                # B_A_packets.append(reply)
+                packets.append(reply)
 
                 # requester confirms
                 confirm_ether = request_ether
@@ -301,39 +280,14 @@ class PortscanAttack(BaseAttack.BaseAttack):
                 # Aidmar - edit name timestamp_confirm
                 timestamp_confirm = timestamp_reply + uniform(minDelay, maxDelay)
                 confirm.time = timestamp_confirm
-                A_B_packets.append(confirm)
+                # A_B_packets.append(confirm)
+                packets.append(confirm)
 
                 # else: destination port is NOT OPEN -> no reply is sent by target
 
             # Aidmar
-            # Append reply
-            if B_A_packets:
-                while timestamp_next_pkt >= B_A_packets[0].time:
-                    packets.append(B_A_packets[0])
-                    B_A_packets.remove(B_A_packets[0])
-                    if len(B_A_packets) == 0:
-                        break
-            # Append confirm
-            if A_B_packets:
-                while timestamp_next_pkt >= A_B_packets[0].time:
-                    packets.append(A_B_packets[0])
-                    A_B_packets.remove(A_B_packets[0])
-                    if len(A_B_packets) == 0:
-                        break
-
-            # Append request
-            packets.append(request)
-
-            # Aidmar
-            #pps = self.minDefaultPPS if getIntervalPPS(complement_interval_pps, timestamp_next_pkt) is None else max(getIntervalPPS(complement_interval_pps, timestamp_next_pkt),self.minDefaultPPS) # avoid case of pps = 0
             pps = max(getIntervalPPS(complement_interval_pps, timestamp_next_pkt),self.minDefaultPPS)
             timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxDelay)
-
-        # Aidmar - In case all requests are already sent, send all replies and confirms
-        temp = A_B_packets + B_A_packets
-        temp.sort(key=lambda x: x.time)
-        for pkt in temp:
-            packets.append(pkt)
 
         # store end time of attack
         self.attack_end_utime = packets[-1].time
