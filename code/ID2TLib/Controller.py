@@ -70,7 +70,7 @@ class Controller:
         print("done.")
 
         # delete intermediate PCAP files
-        print('Deleting intermediate attack pcap...', end="")
+        print('Deleting intermediate attack pcap...', end=" ")
         sys.stdout.flush()  # force python to print text immediately
         os.remove(attacks_pcap_path)
         print("done.")

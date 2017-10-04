@@ -21,9 +21,6 @@ class AttackController:
         self.current_attack = None
         self.added_attacks = []
 
-        # The PCAP where the attack should be injected into
-        self.base_pcap = self.statistics.pcap_filepath
-
     def create_attack(self, attack_name: str):
         """
         Creates dynamically a new class instance based on the given attack_name.
@@ -52,7 +49,7 @@ class AttackController:
         # Add attack parameters if provided
         print("Validating and adding attack parameters.")
         params_dict = []
-        if params is not None:
+        if isinstance(params, list) and params:
             # Convert attack param list into dictionary
             for entry in params:
                 params_dict.append(entry.split('='))
@@ -75,7 +72,7 @@ class AttackController:
             # Pass paramters to attack controller
             self.set_params(params_dict)
         else:
-            attack_note = ""
+            attack_note = "This attack used only (random) default parameters."
 
         # Write attack into pcap file
         print("Generating attack packets...", end=" ")

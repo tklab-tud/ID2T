@@ -86,10 +86,6 @@ class CLI(object):
         # Parse arguments
         self.args = parser.parse_args(args)
 
-        # Either PCAP filepath or GUI mode must be enabled
-        if not self.args.input:
-            parser.error("Parameter -i/--input required. See available options with -h/--help")
-
         self.process_arguments()
 
 def main(args):
