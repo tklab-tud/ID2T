@@ -15,14 +15,12 @@ from collections import deque
 
 
 class DDoSAttack(BaseAttack.BaseAttack):
-    def __init__(self, statistics, pcap_file_path):
+    def __init__(self):
         """
         Creates a new instance of the DDoS attack.
-
-        :param statistics: A reference to the statistics class.
         """
         # Initialize attack
-        super(DDoSAttack, self).__init__(statistics, "DDoS Attack", "Injects a DDoS attack'",
+        super(DDoSAttack, self).__init__("DDoS Attack", "Injects a DDoS attack'",
                                         "Resource Exhaustion")
 
         # Define allowed parameters and their type
@@ -40,6 +38,14 @@ class DDoSAttack(BaseAttack.BaseAttack):
             Param.NUMBER_ATTACKERS: ParameterTypes.TYPE_INTEGER_POSITIVE
         }
 
+    def init_params(self):
+        """
+        Initialize the parameters of this attack using the user supplied command line parameters.
+        Use the provided statistics to calculate default parameters and to process user 
+        supplied queries.
+
+        :param statistics: Reference to a statistics object.
+        """
         # PARAMETERS: initialize with default values
         # (values are overwritten if user specifies them)
 

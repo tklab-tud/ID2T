@@ -18,7 +18,7 @@ class BaseAttack(metaclass=ABCMeta):
     Abstract base class for all attack classes. Provides basic functionalities, like parameter validation.
     """
 
-    def __init__(self, statistics, name, description, attack_type):
+    def __init__(self, name, description, attack_type):
         """
         To be called within the individual attack class to initialize the required parameters.
 
@@ -28,7 +28,7 @@ class BaseAttack(metaclass=ABCMeta):
         :param attack_type: The type the attack belongs to, like probing/scanning, malware.
         """
         # Reference to statistics class
-        self.statistics = statistics
+        self.statistics = None
 
         # Class fields
         self.attack_name = name
@@ -38,6 +38,25 @@ class BaseAttack(metaclass=ABCMeta):
         self.supported_params = {}
         self.attack_start_utime = 0
         self.attack_end_utime = 0
+
+    def set_statistics(self, statistics):
+        """
+        Specify the statistics object that will be used to calculate the parameters of this attack.
+        The statistics are used to calculate default parameters and to process user supplied 
+        queries.
+
+        :param statistics: Reference to a statistics object.
+        """
+        self.statistics = statistics
+
+    @abstractmethod
+    def init_params(self):
+        """
+        Initialize all required parameters taking into account user supplied values. If no value is supplied,
+        or if a user defined query is supplied, use a statistics object to do the calculations.
+        A call to this function requires a call to 'set_statistics' first.
+        """
+        pass
 
     @abstractmethod
     def generate_attack_pcap(self):
@@ -216,10 +235,16 @@ class BaseAttack(metaclass=ABCMeta):
         Adds the pair param : value to the dictionary of attack parameters. Prints and error message and skips the
         parameter if the validation fails.
 
-        :param param: The parameter name.
-        :param value: The parameter's value.
+        :param stats: Statistics used to calculate user queries or default values.
+        :param param: Name of the parameter that we wish to modify.
+        :param value: The value we wish to assign to the specifried parameter.
         :return: None.
         """
+        # This function call is valid only if there is a statistics object available.
+        if self.statistics is None:
+            print('Error: Attack parameter added without setting a statistics object first.')
+            exit(1)
+
         # by default no param is valid
         is_valid = False
 

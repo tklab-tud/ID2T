@@ -32,8 +32,12 @@ class AttackController:
         attack_module = importlib.import_module("Attack." + attack_name)
         attack_class = getattr(attack_module, attack_name)
 
-        # Set current attack
-        self.current_attack = attack_class(self.statistics, self.base_pcap)
+        # Instantiate the desired attack
+        self.current_attack = attack_class()
+        # Initialize the parameters of the attack with defaults or user supplied values.
+        self.current_attack.set_statistics(self.statistics)
+        self.current_attack.init_params()
+        # Record the attack
         self.added_attacks.append(self.current_attack)
 
     def process_attack(self, attack: str, params: str):
