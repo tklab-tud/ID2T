@@ -233,7 +233,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
         stats.assignMacAddress(ipAddressSender, macAddressSender);
         stats.assignMacAddress(ipAddressReceiver, macAddressReceiver);
     } else {
-        std::cout << "Unknown PDU Type on L3: " << pdu_l3_type << std::endl;
+        //std::cout << "Unknown PDU Type on L3: " << pdu_l3_type << std::endl;
     }
 
     // Layer 4 - Transport -------------------------------
