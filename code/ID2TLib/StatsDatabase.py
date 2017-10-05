@@ -174,10 +174,9 @@ class StatsDatabase:
             "most_used.portnumber": "SELECT portNumber, COUNT(portNumber) as cntPort FROM ip_ports GROUP BY portNumber HAVING cntPort=(SELECT MAX(cntPort) from (SELECT portNumber, COUNT(portNumber) as cntPort FROM ip_ports GROUP BY portNumber))",
             "most_used.protocolname": "SELECT protocolName, COUNT(protocolCount) as countProtocols FROM ip_protocols GROUP BY protocolName HAVING countProtocols=(SELECT COUNT(protocolCount) as cnt FROM ip_protocols GROUP BY protocolName ORDER BY cnt DESC LIMIT 1)",
             # Aidmar
-            #"most_used.ttlvalue": "SELECT ttlValue FROM ip_ttl WHERE ttlCount == (SELECT MAX(ttlCount) FROM ip_ttl)",
             "most_used.ttlvalue": "SELECT ttlValue FROM ip_ttl GROUP BY ttlValue ORDER BY SUM(ttlCount) DESC LIMIT 1",
-            "most_used.mssvalue": "SELECT mssValue FROM tcp_mss_dist GROUP BY mssValue ORDER BY SUM(mssCount) DESC LIMIT 1",
-            "most_used.winsize": "SELECT winSize FROM tcp_syn_win GROUP BY winSize ORDER BY SUM(winCount) DESC LIMIT 1",
+            "most_used.mssvalue": "SELECT mssValue FROM tcp_mss GROUP BY mssValue ORDER BY SUM(mssCount) DESC LIMIT 1",
+            "most_used.winsize": "SELECT winSize FROM tcp_win GROUP BY winSize ORDER BY SUM(winCount) DESC LIMIT 1",
             "most_used.ipclass": "SELECT ipClass FROM ip_statistics GROUP BY ipClass ORDER BY COUNT(*) DESC LIMIT 1",
 
             "least_used.ipaddress": "SELECT ipAddress FROM ip_statistics WHERE (pktsSent+pktsReceived) == (SELECT MIN(pktsSent+pktsReceived) from ip_statistics)",
@@ -190,10 +189,10 @@ class StatsDatabase:
             "avg.kbytesreceived": "SELECT avg(kbytesReceived) from ip_statistics",
             "avg.kbytessent": "SELECT avg(kbytesSent) from ip_statistics",
             "avg.ttlvalue": "SELECT avg(ttlValue) from ip_ttl",
-            #"avg.mss": "SELECT avg(mss) from tcp_mss_dist",
+            "avg.mss": "SELECT avg(mssValue) from tcp_mss",
             "all.ipaddress": "SELECT ipAddress from ip_statistics",
             "all.ttlvalue": "SELECT DISTINCT ttlValue from ip_ttl",
-            #"all.mss": "SELECT DISTINCT mss from tcp_mss",
+            "all.mss": "SELECT DISTINCT mssValue from tcp_mss",
             "all.macaddress": "SELECT DISTINCT macAddress from ip_mac",
             "all.portnumber": "SELECT DISTINCT portNumber from ip_ports",
             "all.protocolname": "SELECT DISTINCT protocolName from ip_protocols"}

@@ -218,7 +218,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         attack_duration = self.get_param_value(Param.ATTACK_DURATION)
         pkts_num = int(pps * attack_duration)
         win_sizes = self.statistics.process_db_query(
-            "SELECT winSize FROM tcp_syn_win ORDER BY RANDOM() LIMIT "+str(pkts_num)+";")
+            "SELECT winSize FROM tcp_win ORDER BY RANDOM() LIMIT "+str(pkts_num)+";")
 
         # MSS that was used by IP destination in background traffic
         mss_dst = self.statistics.get_most_used_mss(ip_destination)

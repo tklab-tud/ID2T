@@ -125,11 +125,11 @@ void pcap_processor::collect_statistics() {
         int timeIntervalsNum = 100;
         std::chrono::microseconds intervalStartTimestamp = stats.getTimestampFirstPacket();
         std::chrono::microseconds firstTimestamp = stats.getTimestampFirstPacket(); 
-        std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();    
+        //std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
         SnifferIterator lastpkt; 
         for (SnifferIterator j = snifferOverview.begin(); j != snifferOverview.end();  snifferIteratorIncrement(j)) {lastpkt = j;}          
-        std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-        auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count()*1e-6;
+        //std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+        //auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count()*1e-6;
         //std::cout<< "empty loop: " << duration << " sec" << std::endl;
         std::chrono::microseconds lastTimestamp = lastpkt->timestamp();                  
         std::chrono::microseconds captureDuration = lastTimestamp - firstTimestamp;
@@ -262,11 +262,9 @@ void pcap_processor::process_packets(const Packet &pkt) {
             stats.addConvStat(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), pkt.timestamp());
             
             // Aidmar
-            // Check window size for SYN noly
-            //if(tcpPkt.get_flag(TCP::SYN)) {
-                int win = tcpPkt.window();
-                stats.incrementWinCount(ipAddressSender, win);
-            //}
+            // Window Size distribution
+            int win = tcpPkt.window();
+            stats.incrementWinCount(ipAddressSender, win);
 
             try {                                                                
                 int val = tcpPkt.mss();

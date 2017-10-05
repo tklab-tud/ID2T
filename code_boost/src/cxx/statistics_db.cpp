@@ -231,15 +231,15 @@ void statistics_db::writeStatisticsFile(int packetCount, float captureDuration, 
  */
 void statistics_db::writeStatisticsMss_dist(std::unordered_map<ipAddress_mss, int> mssDistribution) {
     try {
-        db->exec("DROP TABLE IF EXISTS tcp_mss_dist");
+        db->exec("DROP TABLE IF EXISTS tcp_mss");
         SQLite::Transaction transaction(*db);
-        const char *createTable = "CREATE TABLE tcp_mss_dist ("
+        const char *createTable = "CREATE TABLE tcp_mss ("
                 "ipAddress TEXT,"
                 "mssValue INTEGER,"
                 "mssCount INTEGER,"
                 "PRIMARY KEY(ipAddress,mssValue));";
         db->exec(createTable);
-        SQLite::Statement query(*db, "INSERT INTO tcp_mss_dist VALUES (?, ?, ?)");
+        SQLite::Statement query(*db, "INSERT INTO tcp_mss VALUES (?, ?, ?)");
         for (auto it = mssDistribution.begin(); it != mssDistribution.end(); ++it) {
             ipAddress_mss e = it->first;
             query.bind(1, e.ipAddress);
@@ -293,15 +293,15 @@ void statistics_db::writeStatisticsTos_dist(std::unordered_map<ipAddress_tos, in
  */
 void statistics_db::writeStatisticsWin(std::unordered_map<ipAddress_win, int> winDistribution) {
     try {
-        db->exec("DROP TABLE IF EXISTS tcp_syn_win");
+        db->exec("DROP TABLE IF EXISTS tcp_win");
         SQLite::Transaction transaction(*db);
-        const char *createTable = "CREATE TABLE tcp_syn_win ("
+        const char *createTable = "CREATE TABLE tcp_win ("
                 "ipAddress TEXT,"
                 "winSize INTEGER,"
                 "winCount INTEGER,"
                 "PRIMARY KEY(ipAddress,winSize));";
         db->exec(createTable);
-        SQLite::Statement query(*db, "INSERT INTO tcp_syn_win VALUES (?, ?, ?)");
+        SQLite::Statement query(*db, "INSERT INTO tcp_win VALUES (?, ?, ?)");
         for (auto it = winDistribution.begin(); it != winDistribution.end(); ++it) {
             ipAddress_win e = it->first;
             query.bind(1, e.ipAddress);

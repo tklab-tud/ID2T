@@ -27,7 +27,6 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 # noinspection PyPep8
 from scapy.utils import RawPcapReader
 from scapy.layers.inet import IP, Ether, TCP, RandShort
-#from scapy.all import *
 
 
 class SQLiAttack(BaseAttack.BaseAttack):

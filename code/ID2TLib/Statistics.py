@@ -177,16 +177,22 @@ class Statistics:
         ####### Payload Tests #######
         sumPayloadCount = self.stats_db._process_user_defined_query("SELECT sum(payloadCount) FROM interval_statistics")
         pktCount = self.stats_db._process_user_defined_query("SELECT packetCount FROM file_statistics")
-        payloadRatio=0
-        if(pktCount[0][0]!=0):
-            payloadRatio = float(sumPayloadCount[0][0] / pktCount[0][0] * 100)
+        if sumPayloadCount and pktCount:
+            payloadRatio=0
+            if(pktCount[0][0]!=0):
+                payloadRatio = float(sumPayloadCount[0][0] / pktCount[0][0] * 100)
+        else:
+            payloadRatio = -1
 
         ####### TCP checksum Tests #######
         incorrectChecksumCount = self.stats_db._process_user_defined_query("SELECT sum(incorrectTCPChecksumCount) FROM interval_statistics")
         correctChecksumCount = self.stats_db._process_user_defined_query("SELECT avg(correctTCPChecksumCount) FROM interval_statistics")
-        incorrectChecksumRatio=0
-        if(incorrectChecksumCount[0][0] + correctChecksumCount[0][0])!=0:
-            incorrectChecksumRatio = float(incorrectChecksumCount[0][0]  / (incorrectChecksumCount[0][0] + correctChecksumCount[0][0] ) * 100)
+        if incorrectChecksumCount and correctChecksumCount:
+            incorrectChecksumRatio=0
+            if(incorrectChecksumCount[0][0] + correctChecksumCount[0][0])!=0:
+                incorrectChecksumRatio = float(incorrectChecksumCount[0][0]  / (incorrectChecksumCount[0][0] + correctChecksumCount[0][0] ) * 100)
+        else:
+            incorrectChecksumRatio = -1
 
         ####### IP Tests #######
         newIPCount = self.stats_db._process_user_defined_query("SELECT newIPCount FROM interval_statistics")
@@ -215,7 +221,7 @@ class Statistics:
         else:
             reservedPortCount = reservedPortCount[0][0]
         totalPortCount = self.stats_db._process_user_defined_query("SELECT SUM(portCount) FROM ip_ports")
-        reservedPortRatio = (reservedPortCount/ totalPortCount[0][0]) * 100
+        reservedPortRatio = float(reservedPortCount/ totalPortCount[0][0]) * 100
 
         ####### TTL Tests #######
         newTTLCount = self.stats_db._process_user_defined_query("SELECT newTTLCount FROM interval_statistics")
@@ -229,7 +235,7 @@ class Statistics:
 
         ####### Window Size Tests #######
         newWinSizeCount = self.stats_db._process_user_defined_query("SELECT newWinSizeCount FROM interval_statistics")
-        result = self.stats_db._process_user_defined_query("SELECT winSize,SUM(winCount) FROM tcp_syn_win GROUP BY winSize")
+        result = self.stats_db._process_user_defined_query("SELECT winSize,SUM(winCount) FROM tcp_win GROUP BY winSize")
         data, frequency = [], []
         for row in result:
             frequency.append(row[1])
@@ -251,7 +257,7 @@ class Statistics:
         ####### MSS Tests #######
         newMSSCount = self.stats_db._process_user_defined_query("SELECT newMSSCount FROM interval_statistics")
         result = self.stats_db._process_user_defined_query(
-            "SELECT mssValue,SUM(mssCount) FROM tcp_mss_dist GROUP BY mssValue")
+            "SELECT mssValue,SUM(mssCount) FROM tcp_mss GROUP BY mssValue")
         data, frequency = [], []
         for row in result:
             frequency.append(row[1])
@@ -259,7 +265,7 @@ class Statistics:
         mssNovelsPerInterval, mssNovelsPerIntervalFrequency = count_frequncy(newMSSCount)
         mssNovelityDistEntropy = self.calculate_entropy(mssNovelsPerIntervalFrequency)
 
-        result = self.stats_db._process_user_defined_query("SELECT SUM(mssCount) FROM tcp_mss_dist WHERE mssValue > 536 AND mssValue < 1460")
+        result = self.stats_db._process_user_defined_query("SELECT SUM(mssCount) FROM tcp_mss WHERE mssValue > 536 AND mssValue < 1460")
         # The most used range of MSS: 536 < MSS < 1460. Calculate the ratio of the values in this range to total values.
         if not result[0][0]:
             result = 0
@@ -380,13 +386,13 @@ class Statistics:
 
     # Aidmar
     def get_mss_distribution(self, ipAddress: str):
-        result = self.process_db_query('SELECT mssValue, mssCount from tcp_mss_dist WHERE ipAddress="' + ipAddress + '"')
+        result = self.process_db_query('SELECT mssValue, mssCount from tcp_mss WHERE ipAddress="' + ipAddress + '"')
         result_dict = {key: value for (key, value) in result}
         return result_dict
 
     # Aidmar
     def get_win_distribution(self, ipAddress: str):
-        result = self.process_db_query('SELECT winSize, winCount from tcp_syn_win WHERE ipAddress="' + ipAddress + '"')
+        result = self.process_db_query('SELECT winSize, winCount from tcp_win WHERE ipAddress="' + ipAddress + '"')
         result_dict = {key: value for (key, value) in result}
         return result_dict
 
@@ -423,7 +429,7 @@ class Statistics:
         :return: The TCP MSS value used by the IP address, or if the IP addresses never specified a MSS,
         then None is returned
         """
-        mss_value = self.process_db_query('SELECT mssValue from tcp_mss_dist WHERE ipAddress="' + ipAddress + '" ORDER BY mssCount DESC LIMIT 1')
+        mss_value = self.process_db_query('SELECT mssValue from tcp_mss WHERE ipAddress="' + ipAddress + '" ORDER BY mssCount DESC LIMIT 1')
         if isinstance(mss_value, int):
             return mss_value
         else:
@@ -475,8 +481,8 @@ class Statistics:
         #print('The differences are {}.'.format(differences))
         #print('The sum of squared differences is {}.'.format(ssd))
         #print('The variance is {}.'.format(variance))
-        print('The standard deviation is {}.'.format(sd))
-        print('--------------------------')
+        #print('The standard deviation is {}.'.format(sd))
+        #print('--------------------------')
         return sd
 
 
@@ -510,7 +516,7 @@ class Statistics:
         def plot_mss(file_ending: str):
             plt.gcf().clear()
             result = self.stats_db._process_user_defined_query(
-                "SELECT mssValue, SUM(mssCount) FROM tcp_mss_dist GROUP BY mssValue")
+                "SELECT mssValue, SUM(mssCount) FROM tcp_mss GROUP BY mssValue")
             if(result):
                 graphx, graphy = [], []
                 for row in result:
@@ -534,7 +540,7 @@ class Statistics:
         def plot_win(file_ending: str):
             plt.gcf().clear()
             result = self.stats_db._process_user_defined_query(
-                "SELECT winSize, SUM(winCount) FROM tcp_syn_win GROUP BY winSize")
+                "SELECT winSize, SUM(winCount) FROM tcp_win GROUP BY winSize")
             if (result):
                 graphx, graphy = [], []
                 for row in result:
@@ -853,8 +859,8 @@ class Statistics:
             out = self.pcap_filepath.replace('.pcap', '_plot-interval-novel-ip-dist' + file_ending)
             plt.savefig(out, dpi=500)
 
-            print("IP Standard Deviation:")
-            self.calculate_standard_deviation(graphy)
+            #print("IP Standard Deviation:")
+            #self.calculate_standard_deviation(graphy)
             return out
 
         # Aidmar
@@ -889,8 +895,8 @@ class Statistics:
                 out = self.pcap_filepath.replace('.pcap', '_plot-interval-novel-ttl-dist' + file_ending)
                 plt.savefig(out, dpi=500)
 
-                print("TTL Standard Deviation:")
-                self.calculate_standard_deviation(graphy)
+                #print("TTL Standard Deviation:")
+                #self.calculate_standard_deviation(graphy)
                 return out
             else:
                 print("Error plot TTL: No TTL values found!")
@@ -926,8 +932,8 @@ class Statistics:
             out = self.pcap_filepath.replace('.pcap', '_plot-interval-novel-tos-dist' + file_ending)
             plt.savefig(out, dpi=500)
 
-            print("ToS Standard Deviation:")
-            self.calculate_standard_deviation(graphy)
+            #print("ToS Standard Deviation:")
+            #self.calculate_standard_deviation(graphy)
 
             return out
 
@@ -964,8 +970,8 @@ class Statistics:
                 plt.savefig(out, dpi=500)
 
                 # Calculate Standart Deviation
-                print("Window Size Standard Deviation:")
-                self.calculate_standard_deviation(graphy)
+                #print("Window Size Standard Deviation:")
+                #self.calculate_standard_deviation(graphy)
                 return out
             else:
                 print("Error plot new values WinSize: No WinSize values found!")
@@ -1004,8 +1010,8 @@ class Statistics:
                 plt.savefig(out, dpi=500)
 
                 # Calculate Standart Deviation
-                print("MSS Standard Deviation:")
-                self.calculate_standard_deviation(graphy)
+                #print("MSS Standard Deviation:")
+                #self.calculate_standard_deviation(graphy)
                 return out
             else:
                 print("Error plot new values MSS: No MSS values found!")
