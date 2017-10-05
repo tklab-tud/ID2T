@@ -33,11 +33,9 @@ void statistics_db::writeStatisticsIP(std::unordered_map<std::string, entry_ipSt
                 "maxPktRate REAL,"
                 "minPktRate REAL,"
                 "ipClass TEXT, "
-                "srcAnomalyScore REAL, "
-                "dstAnomalyScore REAL, "
                 "PRIMARY KEY(ipAddress));";
         db->exec(createTable);
-        SQLite::Statement query(*db, "INSERT INTO ip_statistics VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        SQLite::Statement query(*db, "INSERT INTO ip_statistics VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
         for (auto it = ipStatistics.begin(); it != ipStatistics.end(); ++it) {
             entry_ipStat e = it->second;
             query.bind(1, it->first);
@@ -49,8 +47,6 @@ void statistics_db::writeStatisticsIP(std::unordered_map<std::string, entry_ipSt
             query.bind(6, e.max_pkt_rate);
             query.bind(7, e.min_pkt_rate);
             query.bind(8, e.ip_class);
-            query.bind(9, e.sourceAnomalyScore);
-            query.bind(10, e.destinationAnomalyScore);
             query.exec();
             query.reset();
         }
@@ -361,43 +357,62 @@ void statistics_db::writeStatisticsConv(std::unordered_map<conv, entry_convStat>
                 "portA INTEGER,"
                 "ipAddressB TEXT,"              
                 "portB INTEGER,"
-                "pkts_A_B INTEGER,"
-                "pkts_B_A INTEGER,"
+                "pktsCount INTEGER,"
+                "avgPktRate REAL,"
                 "avgDelay INTEGER,"
+                "standardDeviationDelay INTEGER,"
                 "minDelay INTEGER,"
                 "maxDelay INTEGER,"
                 "PRIMARY KEY(ipAddressA,portA,ipAddressB,portB));";
         db->exec(createTable);
-        SQLite::Statement query(*db, "INSERT INTO conv_statistics VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        SQLite::Statement query(*db, "INSERT INTO conv_statistics VALUES (?, ?, ?, ?, ?,  ?, ?, ?, ?, ?)");
 
         for (auto it = convStatistics.begin(); it != convStatistics.end(); ++it) {
             conv f = it->first;
             entry_convStat e = it->second;
-            int sumDelay = 0;
-            int minDelay = -1;
-            int maxDelay = -1;
-            for(int i=0; (unsigned)i<e.pkts_delay.size();i++){
-                sumDelay += e.pkts_delay[i].count();
-                if(maxDelay<e.pkts_delay[i].count())
-                    maxDelay = e.pkts_delay[i].count();
-                if(minDelay>e.pkts_delay[i].count()||minDelay==-1)
-                    minDelay = e.pkts_delay[i].count();
-            }
-            if(e.pkts_delay.size()>0)
-                e.avg_delay = (std::chrono::microseconds)sumDelay/e.pkts_delay.size(); // average
-            else e.avg_delay = (std::chrono::microseconds)0;
+            if (e.pkts_count > 1){
+                int sumDelay = 0;
+                int minDelay = -1;
+                int maxDelay = -1;
+                for (int i = 0; (unsigned) i < e.pkts_delay.size(); i++) {
+                    sumDelay += e.pkts_delay[i].count();
+                    if (maxDelay < e.pkts_delay[i].count())
+                        maxDelay = e.pkts_delay[i].count();
+                    if (minDelay > e.pkts_delay[i].count() || minDelay == -1)
+                        minDelay = e.pkts_delay[i].count();
+                }
+                if (e.pkts_delay.size() > 0)
+                    e.avg_delay = (std::chrono::microseconds) sumDelay / e.pkts_delay.size(); // average
+                else e.avg_delay = (std::chrono::microseconds) 0;
 
-            query.bind(1, f.ipAddressA);
-            query.bind(2, f.portA);
-            query.bind(3, f.ipAddressB);
-            query.bind(4, f.portB);
-            query.bind(5, (int) e.pkts_A_B);
-            query.bind(6, (int) e.pkts_B_A);
-            query.bind(7, (int) e.avg_delay.count());
-            query.bind(8, minDelay);
-            query.bind(9, maxDelay);
-            query.exec();
-            query.reset();
+                // Calculate the variance
+                long temp = 0;
+                for (int i = 0; (unsigned) i < e.pkts_delay.size(); i++) {
+                    long del = e.pkts_delay[i].count();
+                    long avg = e.avg_delay.count();
+                    temp += (del - avg) * (del - avg);
+                }
+                long standardDeviation = sqrt(temp / e.pkts_delay.size());
+                e.standardDeviation_delay = (std::chrono::microseconds) standardDeviation;
+
+                std::chrono::microseconds start_timesttamp = e.pkts_timestamp[0];
+                std::chrono::microseconds end_timesttamp = e.pkts_timestamp.back();
+                std::chrono::microseconds conn_duration = end_timesttamp - start_timesttamp;
+                e.avg_pkt_rate = (float) e.pkts_count * 1000000 / conn_duration.count(); // pkt per sec
+
+                query.bind(1, f.ipAddressA);
+                query.bind(2, f.portA);
+                query.bind(3, f.ipAddressB);
+                query.bind(4, f.portB);
+                query.bind(5, (int) e.pkts_count);
+                query.bind(6, (float) e.avg_pkt_rate);
+                query.bind(7, (int) e.avg_delay.count());
+                query.bind(8, (int) e.standardDeviation_delay.count());
+                query.bind(9, minDelay);
+                query.bind(10, maxDelay);
+                query.exec();
+                query.reset();
+            }
         }
         transaction.commit();
     }
