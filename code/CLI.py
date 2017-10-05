@@ -71,7 +71,11 @@ class CLI(object):
                             help='stores the statistics as a textfile with ending .stat into the dataset directory',
                             action='store_true', default=False)
         parser.add_argument('-a', '--attack', metavar="ATTACKNAME", action='append',
-                            help='injects a new attack into the given dataset.', nargs='+')
+                            help='injects a new attack into the given dataset. '
+                                 'Attacks parameters are: ip.src, ip.dst, ip.dns, mac.src, mac.dst, port.open, '
+                                 'port.dst, port.src, packets.limit, attackers.count, attack.duration, victim.buffer, '
+                                 'target.uri, target.host, packets.per-second, inject.at-timestamp, inject.after-pkt, '
+                                 'port.dst.shuffle, port.dst.order-desc, ip.src.shuffle, port.src.shuffle', nargs='+')
         parser.add_argument('-r', '--recalculate',
                             help='forces to recalculate the statistics in case of an already existing statistics database.',
                             action='store_true', default=False)

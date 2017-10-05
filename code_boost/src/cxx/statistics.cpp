@@ -1,23 +1,20 @@
-// Aidmar
 #include <iostream>
 #include <fstream>
 #include <vector>
 #include <math.h>
-
 #include <sstream>
 #include <SQLiteCpp/SQLiteCpp.h>
 #include "statistics_db.h"
 #include "statistics.h"
 #include "utilities.h"
 
-// Aidmar
 using namespace Tins;
 
 
 // Aidmar
 /**
  * Checks if ToS is valid according to RFC2472 and increments counter.
- * @param uint8_t ToS ToS values to be checked.
+ * @param uint8_t ToS value to be checked.
  */
 void statistics::checkToS(uint8_t ToS) {
     if(this->getDoTests()) {
@@ -29,11 +26,6 @@ void statistics::checkToS(uint8_t ToS) {
             dscpStream <<tosBit[7]<<tosBit[6]<<tosBit[5]<<tosBit[4]<<tosBit[3]<<tosBit[2];
             std::bitset<6> dscpBit(dscpStream.str());
             int dscpInt = (int)(dscpBit.to_ulong());
-
-//            std::stringstream ipPrecStream;
-//            ipPrecStream <<tosBit[7]<<tosBit[6]<<tosBit[5];
-//            std::bitset<6> ipPrecedenceBit(ipPrecStream.str());
-//            int ipPrecedenceInt = (int)(ipPrecedenceBit.to_ulong());
 
             // Commonly Used DSCP Values according to RFC2472. The value 2 was added because it is massively used.
             int validValues[] = {0,2,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,46,48,56};
@@ -153,18 +145,12 @@ std::vector<float> statistics::calculateIPsCumEntropy(){
             IPsDstProb.push_back((float)i->second.pkts_received/packetCount);
         }
 
-        //std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-        //auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count()*1e-6;
-        //std::cout<< "CumEntCalc -> ip_statistics loop: " << duration << " sec" << std::endl;
-
-
         // Calculate IP source entropy
         float IPsSrcEntropy = 0;
         for(unsigned i=0; i < IPsSrcProb.size();i++){
             if (IPsSrcProb[i] > 0)
                 IPsSrcEntropy += - IPsSrcProb[i]*log2(IPsSrcProb[i]);
         }
-        //std::cout << packetCount << ": SrcEnt: " << IPsSrcEntropy << "\n";
 
         // Calculate IP destination entropy
         float IPsDstEntropy = 0;
@@ -172,7 +158,6 @@ std::vector<float> statistics::calculateIPsCumEntropy(){
             if (IPsDstProb[i] > 0)
                 IPsDstEntropy += - IPsDstProb[i]*log2(IPsDstProb[i]);
         }
-        //std::cout << packetCount << ": DstEnt: " << IPsDstEntropy << "\n";
 
         std::vector<float> entropies = {IPsSrcEntropy, IPsDstEntropy};
         return entropies;
@@ -628,9 +613,6 @@ void statistics::writeToDatabase(std::string database_path) {
     db.writeStatisticsWin(win_distribution);
     db.writeStatisticsConv(conv_statistics);
     db.writeStatisticsInterval(interval_statistics);
-
-    // Aidmar - Tests
-
 }
 
 /**

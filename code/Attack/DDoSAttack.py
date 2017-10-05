@@ -69,6 +69,9 @@ class DDoSAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.PORT_SOURCE, str(RandShort()))
         # Aidmar
         #self.add_param_value(Param.PACKETS_PER_SECOND, randint(1, 64))
+        # TO-DO: packet rate
+        # oneAttackerMinPPS = self.statistics.process_db_query("SELECT MAX(maxPktRate) FROM ip_statistics;")
+
         self.add_param_value(Param.PACKETS_PER_SECOND, randint(self.minDefaultPPS, self.maxDefaultPPS))
         self.add_param_value(Param.ATTACK_DURATION, randint(5,30))
 
@@ -183,11 +186,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
         ip_destination = self.get_param_value(Param.IP_DESTINATION)
         port_destination = self.get_param_value(Param.PORT_DESTINATION)
 
-        # Aidmar - Verify ip.src != ip.dst
-        if ip_destination in ip_source_list:
-            print("\nERROR: Invalid IP addresses; source IP is the same as destination IP: " + ip_destination + ".")
-            import sys
-            sys.exit(0)
+        # Aidmar - check ip.src == ip.dst
+        self.ip_src_dst_equal_check(ip_source_list, ip_destination)
 
         # Aidmar
         if not port_destination:  # user did not define port_dest
@@ -210,7 +210,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         # Aidmar
         replies = []
-        minDelay, maxDelay = self.get_reply_delay(ip_destination)
+        minDelay, maxDelay, SDDelay = self.get_reply_delay(ip_destination)
         victim_buffer = self.get_param_value(Param.VICTIM_BUFFER)
 
         # Aidmar

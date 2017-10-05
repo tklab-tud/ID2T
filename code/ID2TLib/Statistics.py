@@ -6,6 +6,9 @@ import os
 import time
 import ID2TLib.libpcapreader as pr
 import matplotlib
+from numpy.random.mtrand import normal
+from scipy.linalg.misc import norm
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from ID2TLib.PcapFile import PcapFile
@@ -141,14 +144,18 @@ class Statistics:
         print("\n")
 
     #Aidmar
-    def calculate_entropy(self, data, frequency):
+    def calculate_entropy(self, frequency:list, normalized:bool = False):
         entropy = 0
         sumFreq = sum(frequency)
-        for i, x in enumerate(data):
+        for i, x in enumerate(frequency):
             p_x = float(frequency[i] / sumFreq)
             if p_x > 0:
                 entropy += - p_x * log(p_x, 2)
-        return entropy
+        if normalized:
+            normalizedEnt = entropy/log(len(frequency), 2)
+            return entropy, normalizedEnt
+        else:
+            return entropy
 
     # Aidmar
     def get_tests_statistics(self):
@@ -156,84 +163,127 @@ class Statistics:
         Writes the calculated basic defects tests statistics into a file.
         """
         # self.stats_db._process_user_defined_query output is list of tuples, thus, we ned [0][0] to access data
+
+        def count_frequncy(valuesList):
+            values, frequency = [] , []
+            for x in valuesList:
+                if x in values:
+                    frequency[values.index(x)] += 1
+                else:
+                    values.append(x)
+                    frequency.append(1)
+            return values, frequency
+
+        ####### Payload Tests #######
         sumPayloadCount = self.stats_db._process_user_defined_query("SELECT sum(payloadCount) FROM interval_statistics")
         pktCount = self.stats_db._process_user_defined_query("SELECT packetCount FROM file_statistics")
         payloadRatio=0
         if(pktCount[0][0]!=0):
             payloadRatio = float(sumPayloadCount[0][0] / pktCount[0][0] * 100)
 
+        ####### TCP checksum Tests #######
         incorrectChecksumCount = self.stats_db._process_user_defined_query("SELECT sum(incorrectTCPChecksumCount) FROM interval_statistics")
         correctChecksumCount = self.stats_db._process_user_defined_query("SELECT avg(correctTCPChecksumCount) FROM interval_statistics")
         incorrectChecksumRatio=0
         if(incorrectChecksumCount[0][0] + correctChecksumCount[0][0])!=0:
             incorrectChecksumRatio = float(incorrectChecksumCount[0][0]  / (incorrectChecksumCount[0][0] + correctChecksumCount[0][0] ) * 100)
 
-        def calc_normalized_avg(valuesList):
-            sumValues = 0
-            for x in valuesList: sumValues += x[0]
-            normalizedValues = []
-            for row in valuesList:
-                normalizedValues.append(float(row[0] ))#/ sumValues))
-            return float(sum(normalizedValues) / len(normalizedValues))
-
+        ####### IP Tests #######
         newIPCount = self.stats_db._process_user_defined_query("SELECT newIPCount FROM interval_statistics")
-        avgNewIPCount = calc_normalized_avg(newIPCount)
+        # Retrieve the last cumulative entropy which is the entropy of the all IPs
         result = self.stats_db._process_user_defined_query("SELECT ipSrcCumEntropy FROM interval_statistics")
         ipSrcEntropy = result[-1][0]
+        ipSrcCount = self.stats_db._process_user_defined_query(
+            "SELECT COUNT(ipAddress) FROM ip_statistics WHERE pktsSent > 0")
+        ipSrcNormEntropy = ipSrcEntropy / log(ipSrcCount[0][0],2)
         result = self.stats_db._process_user_defined_query("SELECT ipDstCumEntropy FROM interval_statistics")
         ipDstEntropy = result[-1][0]
+        ipDstCount = self.stats_db._process_user_defined_query(
+            "SELECT COUNT(ipAddress) FROM ip_statistics WHERE pktsReceived > 0")
+        ipDstNormEntropy = ipDstEntropy / log(ipDstCount[0][0],2)
 
+        ####### Ports Tests #######
+        port0Count = self.stats_db._process_user_defined_query("SELECT SUM(portCount) FROM ip_ports WHERE portNumber = 0")
+        if not port0Count[0][0]:
+            port0Count = 0
+        else:
+            port0Count = port0Count[0][0]
+        reservedPortCount = self.stats_db._process_user_defined_query(
+            "SELECT SUM(portCount) FROM ip_ports WHERE portNumber IN (0,100,114,1023,1024,49151,49152,65535)")# could be extended
+        if not reservedPortCount[0][0]:
+            reservedPortCount = 0
+        else:
+            reservedPortCount = reservedPortCount[0][0]
+        totalPortCount = self.stats_db._process_user_defined_query("SELECT SUM(portCount) FROM ip_ports")
+        reservedPortRatio = (reservedPortCount/ totalPortCount[0][0]) * 100
+
+        ####### TTL Tests #######
         newTTLCount = self.stats_db._process_user_defined_query("SELECT newTTLCount FROM interval_statistics")
-        avgNewTTLCount = calc_normalized_avg(newTTLCount)
         result = self.stats_db._process_user_defined_query("SELECT ttlValue,SUM(ttlCount) FROM ip_ttl GROUP BY ttlValue")
         data, frequency = [], []
         for row in result:
-            data.append(row[0])
             frequency.append(row[1])
-        ttlEntopy = self.calculate_entropy(data,frequency)
+        ttlEntopy, ttlNormEntopy  = self.calculate_entropy(frequency,True)
+        ttlNovelsPerInterval, ttlNovelsPerIntervalFrequency = count_frequncy(newTTLCount)
+        ttlNovelityDistEntropy = self.calculate_entropy(ttlNovelsPerIntervalFrequency)
 
+        ####### Window Size Tests #######
         newWinSizeCount = self.stats_db._process_user_defined_query("SELECT newWinSizeCount FROM interval_statistics")
-        avgNewWinCount = calc_normalized_avg(newWinSizeCount)
         result = self.stats_db._process_user_defined_query("SELECT winSize,SUM(winCount) FROM tcp_syn_win GROUP BY winSize")
         data, frequency = [], []
         for row in result:
-            data.append(row[0])
             frequency.append(row[1])
-        winEntopy = self.calculate_entropy(data, frequency)
+        winEntopy, winNormEntopy = self.calculate_entropy(frequency, True)
+        winNovelsPerInterval, winNovelsPerIntervalFrequency = count_frequncy(newWinSizeCount)
+        winNovelityDistEntropy = self.calculate_entropy(winNovelsPerIntervalFrequency)
 
+        ####### ToS Tests #######
         newToSCount = self.stats_db._process_user_defined_query("SELECT newToSCount FROM interval_statistics")
-        avgNewToSCount = calc_normalized_avg(newToSCount)
         result = self.stats_db._process_user_defined_query(
             "SELECT tosValue,SUM(tosCount) FROM ip_tos GROUP BY tosValue")
         data, frequency = [], []
         for row in result:
-            data.append(row[0])
             frequency.append(row[1])
-        tosEntopy = self.calculate_entropy(data, frequency)
+        tosEntopy, tosNormEntopy = self.calculate_entropy(frequency, True)
+        tosNovelsPerInterval, tosNovelsPerIntervalFrequency = count_frequncy(newToSCount)
+        tosNovelityDistEntropy = self.calculate_entropy(tosNovelsPerIntervalFrequency)
 
+        ####### MSS Tests #######
         newMSSCount = self.stats_db._process_user_defined_query("SELECT newMSSCount FROM interval_statistics")
-        avgNewMSSCount = calc_normalized_avg(newMSSCount)
         result = self.stats_db._process_user_defined_query(
             "SELECT mssValue,SUM(mssCount) FROM tcp_mss_dist GROUP BY mssValue")
         data, frequency = [], []
         for row in result:
-            data.append(row[0])
             frequency.append(row[1])
-        mssEntopy = self.calculate_entropy(data, frequency)
+        mssEntopy, mssNormEntopy = self.calculate_entropy(frequency, True)
+        mssNovelsPerInterval, mssNovelsPerIntervalFrequency = count_frequncy(newMSSCount)
+        mssNovelityDistEntropy = self.calculate_entropy(mssNovelsPerIntervalFrequency)
+
+        result = self.stats_db._process_user_defined_query("SELECT SUM(mssCount) FROM tcp_mss_dist WHERE mssValue > 536 AND mssValue < 1460")
+        # The most used range of MSS: 536 < MSS < 1460. Calculate the ratio of the values in this range to total values.
+        mss5361460 = (result[0][0] / sum(frequency)) * 100
 
         return [("Payload ratio", payloadRatio, "%"),
                 ("Incorrect TCP checksum ratio", incorrectChecksumRatio, "%"),
-                ("Avg. new IP", avgNewIPCount, ""),
                 ("IP Src Entropy", ipSrcEntropy, ""),
+                ("IP Src Normalized Entropy", ipSrcNormEntropy, ""),
                 ("IP Dst Entropy", ipDstEntropy, ""),
-                ("Avg. new TTL", avgNewTTLCount, ""),
+                ("IP Dst Normalized Entropy", ipDstNormEntropy, ""),
+                ("Port 0 count", port0Count, ""),
+                ("Reserved ports", reservedPortRatio, "%"),
                 ("TTL Entropy", ttlEntopy, ""),
-                ("Avg. new WinSize", avgNewWinCount, ""),
+                ("TTL Normalized Entropy", ttlNormEntopy, ""),
+                ("TTL Distribution Entropy", ttlNovelityDistEntropy, ""),
                 ("WinSize Entropy", winEntopy, ""),
-                ("Avg. new ToS", avgNewToSCount, ""),
+                ("WinSize Normalized Entropy", winNormEntopy, ""),
+                ("WinSize Distribution Entropy", winNovelityDistEntropy, ""),
                 ("ToS Entropy", tosEntopy, ""),
-                ("Avg. new MSS", avgNewMSSCount, ""),
-                ("MSS Entropy", mssEntopy, "")]
+                ("ToS Normalized Entropy", tosNormEntopy, ""),
+                ("ToS Distribution Entropy", tosNovelityDistEntropy, ""),
+                ("MSS Entropy", mssEntopy, ""),
+                ("MSS Normalized Entropy", mssNormEntopy, ""),
+                ("MSS Distribution Entropy", mssNovelityDistEntropy, ""),
+                ("536 < MSS < 1460", mss5361460, "%")]
 
     def write_statistics_to_file(self):
         """
@@ -324,6 +374,24 @@ class Statistics:
         result_dict = {key: value for (key, value) in result}
         return result_dict
 
+    # Aidmar
+    def get_mss_distribution(self, ipAddress: str):
+        result = self.process_db_query('SELECT mssValue, mssCount from tcp_mss_dist WHERE ipAddress="' + ipAddress + '"')
+        result_dict = {key: value for (key, value) in result}
+        return result_dict
+
+    # Aidmar
+    def get_win_distribution(self, ipAddress: str):
+        result = self.process_db_query('SELECT winSize, winCount from tcp_syn_win WHERE ipAddress="' + ipAddress + '"')
+        result_dict = {key: value for (key, value) in result}
+        return result_dict
+
+    # Aidmar
+    def get_tos_distribution(self, ipAddress: str):
+        result = self.process_db_query('SELECT tosValue, tosCount from ip_tos WHERE ipAddress="' + ipAddress + '"')
+        result_dict = {key: value for (key, value) in result}
+        return result_dict
+
     def get_random_ip_address(self, count: int = 1):
         """
         :param count: The number of IP addreses to return
@@ -343,19 +411,6 @@ class Statistics:
         :return: The MAC address used in the dataset for the given IP address.
         """
         return self.process_db_query('macAddress(ipAddress=' + ipAddress + ")")
-
-    # Aidmar - comment out
-    # def get_mss(self, ipAddress: str):
-    #     """
-    #     :param ipAddress: The IP address whose used MSS should be determined
-    #     :return: The TCP MSS value used by the IP address, or if the IP addresses never specified a MSS,
-    #     then None is returned
-    #     """
-    #     mss_value = self.process_db_query('SELECT mss from tcp_mss WHERE ipAddress="' + ipAddress + '"')
-    #     if isinstance(mss_value, int):
-    #         return mss_value
-    #     else:
-    #         return None
 
     # Aidmar
     def get_most_used_mss(self, ipAddress: str):
@@ -1003,37 +1058,3 @@ class Statistics:
                 complement_interval_pps.append((row[0], int(pps * (maxPPS - row[1]) / maxPPS)))
 
         return complement_interval_pps
-
-
-
-
-"""
- # Aidmar      
-
-            # bhattacharyya test
-            import math
-
-            def mean(hist):
-                mean = 0.0;
-                for i in hist:
-                    mean += i;
-                mean /= len(hist);
-                return mean;
-
-            def bhatta(hist1, hist2):
-                # calculate mean of hist1
-                h1_ = mean(hist1);
-
-                # calculate mean of hist2
-                h2_ = mean(hist2);
-
-                # calculate score
-                score = 0;
-                for i in range(len(hist1)):
-                    score += math.sqrt(hist1[i] * hist2[i]);
-                # print h1_,h2_,score;
-                score = math.sqrt(1 - (1 / math.sqrt(h1_ * h2_ * len(hist1) * len(hist1))) * score);
-                return score;
-
-            print("\nbhatta distance: " + str(bhatta(graphy, graphy_aftr)))
-"""

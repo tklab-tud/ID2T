@@ -73,12 +73,6 @@ std::string getIPv4Class(std::string ipAddress){
     else if (b1 >= 240 && b1 <= 254)
         ipClass = "E"; // Experimental; used for research    
     }
-    /*
-     // Could be done by using libtin IPv4Address
-    IPv4Range range = IPv4Address("192.168.1.0") / 24;
-    range.contains("192.168.1.250"); // Yey, it belongs to this network
-    range.contains("192.168.0.100"); // NOPE
-    */
     return ipClass;
 }
 

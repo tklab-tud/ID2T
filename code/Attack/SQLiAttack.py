@@ -125,10 +125,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
         target_uri = "/" #self.get_param_value(Param.TARGET_URI)
 
         # Aidmar - check ip.src == ip.dst
-        if ip_source == ip_destination:
-            print("\nERROR: Invalid IP addresses; source IP is the same as destination IP: " + ip_source + ".")
-            import sys
-            sys.exit(0)
+        self.ip_src_dst_equal_check(ip_source, ip_destination)
 
         path_attack_pcap = None
         minDelay, maxDelay = self.get_reply_delay(ip_destination)
@@ -206,10 +203,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
                         str_tcp_seg = str_tcp_seg[2:-1]
                         str_tcp_seg = str_tcp_seg.replace('/ATutor', target_uri)
                         str_tcp_seg = str_tcp_seg.replace(orig_ip_dst, target_host)
-                        str_tcp_seg = str_tcp_seg.replace("\\n", "\n")
-                        str_tcp_seg = str_tcp_seg.replace("\\r", "\r")
-                        str_tcp_seg = str_tcp_seg.replace("\\t", "\t")
-                        str_tcp_seg = str_tcp_seg.replace("\\\'", "\'")
+                        str_tcp_seg = self.clean_white_spaces(str_tcp_seg)
 
                     # TCP Seq, Ack
                     if tcp_pkt.getfieldval("ack") != 0:
@@ -242,10 +236,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
                         str_tcp_seg = str_tcp_seg[2:-1]
                         str_tcp_seg = str_tcp_seg.replace('/ATutor', target_uri)
                         str_tcp_seg = str_tcp_seg.replace(orig_ip_dst, target_host)
-                        str_tcp_seg = str_tcp_seg.replace("\\n", "\n")
-                        str_tcp_seg = str_tcp_seg.replace("\\r", "\r")
-                        str_tcp_seg = str_tcp_seg.replace("\\t", "\t")
-                        str_tcp_seg = str_tcp_seg.replace("\\\'", "\'")
+                        str_tcp_seg = self.clean_white_spaces(str_tcp_seg)
 
                     # TCP Seq, ACK
                     tcp_pkt.setfieldval("ack", attacker_seq)
@@ -284,10 +275,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
                         str_tcp_seg = str_tcp_seg[2:-1]
                         str_tcp_seg = str_tcp_seg.replace('/ATutor', target_uri)
                         str_tcp_seg = str_tcp_seg.replace(orig_ip_dst, target_host)
-                        str_tcp_seg = str_tcp_seg.replace("\\n", "\n")
-                        str_tcp_seg = str_tcp_seg.replace("\\r", "\r")
-                        str_tcp_seg = str_tcp_seg.replace("\\t", "\t")
-                        str_tcp_seg = str_tcp_seg.replace("\\\'", "\'")
+                        str_tcp_seg = self.clean_white_spaces(str_tcp_seg)
 
                     # TCP Seq, Ack
                     if tcp_pkt.getfieldval("ack") != 0:
@@ -320,10 +308,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
                         str_tcp_seg = str_tcp_seg[2:-1]
                         str_tcp_seg = str_tcp_seg.replace('/ATutor', target_uri)
                         str_tcp_seg = str_tcp_seg.replace(orig_ip_dst, target_host)
-                        str_tcp_seg = str_tcp_seg.replace("\\n", "\n")
-                        str_tcp_seg = str_tcp_seg.replace("\\r", "\r")
-                        str_tcp_seg = str_tcp_seg.replace("\\t", "\t")
-                        str_tcp_seg = str_tcp_seg.replace("\\\'", "\'")
+                        str_tcp_seg = self.clean_white_spaces(str_tcp_seg)
 
                     # TCP Seq, ACK
                     tcp_pkt.setfieldval("ack", attacker_seq)

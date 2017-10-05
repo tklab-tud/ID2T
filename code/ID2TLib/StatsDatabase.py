@@ -59,9 +59,7 @@ class StatsDatabase:
         """
         :return: True if the database was already existent, otherwise False
         """
-        # Aidmar - for testing: return false always
         return self.existing_db
-        #return False
 
     @staticmethod
     def _get_selector_keywords():
@@ -192,7 +190,7 @@ class StatsDatabase:
             "avg.kbytesreceived": "SELECT avg(kbytesReceived) from ip_statistics",
             "avg.kbytessent": "SELECT avg(kbytesSent) from ip_statistics",
             "avg.ttlvalue": "SELECT avg(ttlValue) from ip_ttl",
-            #"avg.mss": "SELECT avg(mss) from tcp_mss",
+            #"avg.mss": "SELECT avg(mss) from tcp_mss_dist",
             "all.ipaddress": "SELECT ipAddress from ip_statistics",
             "all.ttlvalue": "SELECT DISTINCT ttlValue from ip_ttl",
             #"all.mss": "SELECT DISTINCT mss from tcp_mss",

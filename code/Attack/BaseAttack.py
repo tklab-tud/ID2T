@@ -1,5 +1,8 @@
 # Aidmar
 from scapy.layers.inet import Ether
+import socket
+import sys
+from math import sqrt
 
 import ipaddress
 import os
@@ -376,23 +379,7 @@ class BaseAttack(metaclass=ABCMeta):
                    ipAddress.is_link_local or ipAddress.is_reserved or ipAddress.is_private
 
         # Aidmar - generate a random IP from specific class
-        #def generate_address():
-        #    return ipaddress.IPv4Address(random.randint(0, 2 ** 32 - 1))
         def generate_address(ipClass):
-            #print(ipClass)
-            """if "private" in ipClass:
-                ipClassesByte1 = {"A-private": 10, "B-private": 172, "C-private": 192}
-                b1 = ipClassesByte1[ipClass]
-
-                ipClassesByte2 = {"A-private": {0,255}, "B-private": {16,131}, "C-private": {168,168}}
-                minB2 = ipClassesByte1[ipClass][0]
-                maxB2 = ipClassesByte1[ipClass][1]
-                b2 = random.randint(minB2, maxB2)
-
-                b3b4 = random.randint(0, 2 ** 16 - 1)
-
-                ipAddress = ipaddress.IPv4Address(str(b1)+str(b2)+str(b3b4))
-            else:"""
             if ipClass == "Unknown":
                 return ipaddress.IPv4Address(random.randint(0, 2 ** 32 - 1))
             else:
@@ -491,18 +478,23 @@ class BaseAttack(metaclass=ABCMeta):
            :return maxDelay: maximum delay
 
            """
-        minDelay = self.statistics.process_db_query(
-            "SELECT minDelay FROM conv_statistics WHERE ipAddressB='" + ip_dst + "' LIMIT 1")
-        maxDelay = self.statistics.process_db_query(
-            "SELECT maxDelay FROM conv_statistics WHERE ipAddressB='" + ip_dst + "' LIMIT 1")
-        if not minDelay or not maxDelay:
-            allMinDelays = self.statistics.process_db_query("SELECT minDelay FROM conv_statistics LIMIT 1000;")
+        result = self.statistics.process_db_query(
+            "SELECT standardDeviationDelay, minDelay, maxDelay FROM conv_statistics WHERE ipAddressB='" + ip_dst + "' LIMIT 1;")
+        if result:
+            standardDeviationDelay = result[0][0]
+            minDelay = result[0][1]
+            maxDelay = result[0][2]
+        else:
+            allMinDelays = self.statistics.process_db_query("SELECT minDelay FROM conv_statistics LIMIT 500;")
             minDelay = np.median(allMinDelays)
-            allMaxDelays = self.statistics.process_db_query("SELECT maxDelay FROM conv_statistics LIMIT 1000;")
+            allMaxDelays = self.statistics.process_db_query("SELECT maxDelay FROM conv_statistics LIMIT 500;")
             maxDelay = np.median(allMaxDelays)
+            allStandardDeviationDelay = self.statistics.process_db_query("SELECT standardDeviationDelay FROM conv_statistics LIMIT 500;")
+            standardDeviationDelay = np.median(allStandardDeviationDelay)
         minDelay = int(minDelay) * 10 ** -6  # convert from micro to seconds
         maxDelay = int(maxDelay) * 10 ** -6
-        return minDelay,maxDelay
+        standardDeviationDelay = int(standardDeviationDelay) * 10 ** -6
+        return minDelay, maxDelay, standardDeviationDelay
 
     # Group the packets in conversations
     def packetsToConvs(self,exploit_raw_packets):
@@ -544,3 +536,43 @@ class BaseAttack(metaclass=ABCMeta):
                     pktList.append(pkt)
                     conversations[conv_rep] = pktList
         return (conversations, orderList_conversations)
+
+
+    def is_valid_ip_address(self,addr):
+        """
+        Checks if the IP address family is supported.
+
+        :param addr: IP address to be checked.
+        :return: Boolean
+        """
+        try:
+            socket.inet_aton(addr)
+            return True
+        except socket.error:
+            return False
+
+    def ip_src_dst_equal_check(self, ip_source, ip_destination):
+        """
+        Checks if the source IP and destination IP are equal.
+
+        :param ip_source: source IP address.
+        :param ip_destination: destination IP address.
+        """
+        equal = False
+        if isinstance(ip_source, list):
+            if ip_destination in ip_source:
+                equal = True
+        else:
+            if ip_source == ip_destination:
+                equal = True
+        if equal:
+            print("\nERROR: Invalid IP addresses; source IP is the same as destination IP: " + ip_source + ".")
+            sys.exit(0)
+
+
+    def clean_white_spaces(self, str):
+        str = str.replace("\\n", "\n")
+        str = str.replace("\\r", "\r")
+        str = str.replace("\\t", "\t")
+        str = str.replace("\\\'", "\'")
+        return str

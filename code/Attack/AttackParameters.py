@@ -23,11 +23,11 @@ class Parameter(Enum):
 
     # Aidmar
     # For DDoS
-    ATTACK_DURATION = "attack.duration" # in seconds
-    VICTIM_BUFFER = "victim.buffer" # in packets
-    # For JoomlaRedPrivExploit
-    TARGET_URI = "target.uri"
-    TARGET_HOST = "target.host"
+    ATTACK_DURATION = 'attack.duration' # in seconds
+    VICTIM_BUFFER = 'victim.buffer' # in packets
+    # For Web app exploit
+    TARGET_URI = 'target.uri'
+    TARGET_HOST = 'target.host'
 
     # recommended type: Float ------------------------------------
     PACKETS_PER_SECOND = 'packets.per-second'  # packets per second

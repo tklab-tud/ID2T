@@ -249,20 +249,24 @@ struct entry_intervalStat {
  * - Number of packets from B to A
  */
 struct entry_convStat {
-    long pkts_A_B;
-    long pkts_B_A;
-    std::vector<std::chrono::microseconds> pkts_A_B_timestamp;
-    std::vector<std::chrono::microseconds> pkts_B_A_timestamp;
+//    long pkts_A_B;
+//    long pkts_B_A;
+//    std::vector<std::chrono::microseconds> pkts_A_B_timestamp;
+//    std::vector<std::chrono::microseconds> pkts_B_A_timestamp;
+    long pkts_count;
+    float avg_pkt_rate;
+    std::vector<std::chrono::microseconds> pkts_timestamp;
     std::vector<std::chrono::microseconds> pkts_delay;
-    //std::chrono::duration<double, std::micro> median_delay;
     std::chrono::microseconds avg_delay;
+    std::chrono::microseconds standardDeviation_delay;
     
     bool operator==(const entry_convStat &other) const {
-        return pkts_A_B == other.pkts_A_B
-               && pkts_A_B_timestamp == other.pkts_A_B_timestamp
-               && pkts_B_A_timestamp == other.pkts_B_A_timestamp
+        return pkts_count == other.pkts_count
+               && avg_pkt_rate == avg_pkt_rate
+               && pkts_timestamp == other.pkts_timestamp
                && pkts_delay == other.pkts_delay
-               && avg_delay == other.avg_delay;
+               && avg_delay == other.avg_delay
+               && standardDeviation_delay == other.standardDeviation_delay;
     }
 };
 
@@ -450,8 +454,6 @@ public:
     // Aidmar
     bool getDoTests();
     void setDoTests(bool var);
-    // TO-DO: move to private section
-    std::unordered_map<int, int> dscp_distribution;
 
 private:
     /*
@@ -483,8 +485,6 @@ private:
     int lastIntervalCumNewWinSizeCount = 0;
     int lastIntervalCumNewToSCount = 0;
     int lastIntervalCumNewMSSCount = 0;
-
-
 
     /*
      * Data containers
@@ -519,6 +519,10 @@ private:
 
     // {IP Address, MAC Address}
     std::unordered_map<std::string, std::string> ip_mac_mapping;
+
+    // Aidmar
+    // {DSCP value, count}
+    std::unordered_map<int, int> dscp_distribution;
 
     // Aidmar - comment out
     // {IP Address, avg MSS}

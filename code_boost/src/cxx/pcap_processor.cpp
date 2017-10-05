@@ -161,11 +161,6 @@ void pcap_processor::collect_statistics() {
         
         // Save timestamp of last packet into statistics
         stats.setTimestampLastPacket(lastProcessedPacket);
-
-        // TO-DO: to delete
-        //for (auto it = stats.dscp_distribution.begin(); it != stats.dscp_distribution.end(); ++it) {
-        //    std::cout<<it->first<<","<<it->second<<"\n";
-        //}
     }
 }
 
@@ -238,8 +233,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
         stats.assignMacAddress(ipAddressSender, macAddressSender);
         stats.assignMacAddress(ipAddressReceiver, macAddressReceiver);
     } else {
-        //std::cout << "Unknown PDU Type on L3: " << pdu_l3_type << std::endl;
-        // TO-DO: add this to tests
+        std::cout << "Unknown PDU Type on L3: " << pdu_l3_type << std::endl;
     }
 
     // Layer 4 - Transport -------------------------------
@@ -269,10 +263,10 @@ void pcap_processor::process_packets(const Packet &pkt) {
             
             // Aidmar
             // Check window size for SYN noly
-            if(tcpPkt.get_flag(TCP::SYN)) {
+            //if(tcpPkt.get_flag(TCP::SYN)) {
                 int win = tcpPkt.window();
                 stats.incrementWinCount(ipAddressSender, win);
-            }
+            //}
 
             try {                                                                
                 int val = tcpPkt.mss();
@@ -326,7 +320,7 @@ bool inline pcap_processor::file_exists(const std::string &filePath) {
  */
 //int main() {
 //    std::cout << "Starting application." << std::endl;
-//    pcap_processor pcap = pcap_processor("/home/anonymous/Downloads/ID2T-toolkit/captures/col/capture_3.pcap", "True");
+//    pcap_processor pcap = pcap_processor("/home/anonymous/Downloads/ID2T-toolkit/code/20min_iscx_11jun.pcap", "False");
 //
 //    long double t = pcap.get_timestamp_mu_sec(87);
 //    std::cout << t << std::endl;
