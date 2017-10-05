@@ -1,4 +1,5 @@
 #include "statistics_db.h"
+#include <math.h>
 #include <iostream>
 #include <sstream>
 
