@@ -686,7 +686,7 @@ class Statistics:
             plt.title("Packet Rate")
             plt.xlabel('Timestamp')
             plt.ylabel('Number of Packets')
-            width = 0.1
+            width = 0.5
             plt.xlim([0, len(graphx)])
             plt.grid(True)
 
@@ -717,7 +717,7 @@ class Statistics:
             plt.title("Source IP Entropy")
             plt.xlabel('Timestamp')
             plt.ylabel('Entropy')
-            width = 0.1
+            width = 0.5
             plt.xlim([0, len(graphx)])
             plt.grid(True)
 
@@ -748,7 +748,7 @@ class Statistics:
             plt.title("Destination IP Entropy")
             plt.xlabel('Timestamp')
             plt.ylabel('Entropy')
-            width = 0.1
+            width = 0.5
             plt.xlim([0, len(graphx)])
             plt.grid(True)
 
@@ -844,7 +844,7 @@ class Statistics:
             plt.ylabel('Novel values count')
             plt.xlim([0, len(graphx)])
             plt.grid(True)
-            width = 0.1
+            width = 0.5
 
             # timestamp on x-axis
             x = range(0, len(graphx))
@@ -880,7 +880,7 @@ class Statistics:
                 plt.ylabel('Novel values count')
                 plt.xlim([0, len(graphx)])
                 plt.grid(True)
-                width = 0.1
+                width = 0.5
 
                 # timestamp on x-axis
                 x = range(0, len(graphx))
@@ -917,8 +917,7 @@ class Statistics:
             plt.ylabel('Novel values count')
             plt.xlim([0, len(graphx)])
             plt.grid(True)
-            width = 0.1
-
+            width = 0.5
             # timestamp on x-axis
             x = range(0, len(graphx))
             my_xticks = graphx
@@ -954,7 +953,7 @@ class Statistics:
                 plt.ylabel('Novel values count')
                 plt.xlim([0, len(graphx)])
                 plt.grid(True)
-                width = 0.1
+                width = 0.5
 
                 # timestamp on x-axis
                 x = range(0, len(graphx))
@@ -994,7 +993,7 @@ class Statistics:
                 plt.ylabel('Novel values count')
                 plt.xlim([0, len(graphx)])
                 plt.grid(True)
-                width = 0.1
+                width = 0.5
 
                 # timestamp on x-axis
                 x = range(0, len(graphx))
