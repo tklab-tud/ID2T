@@ -261,7 +261,11 @@ class Statistics:
 
         result = self.stats_db._process_user_defined_query("SELECT SUM(mssCount) FROM tcp_mss_dist WHERE mssValue > 536 AND mssValue < 1460")
         # The most used range of MSS: 536 < MSS < 1460. Calculate the ratio of the values in this range to total values.
-        mss5361460 = (result[0][0] / sum(frequency)) * 100
+        if not result[0][0]:
+            result = 0
+        else:
+            result = result[0][0]
+        mss5361460 = (result / sum(frequency)) * 100
 
         return [("Payload ratio", payloadRatio, "%"),
                 ("Incorrect TCP checksum ratio", incorrectChecksumRatio, "%"),
