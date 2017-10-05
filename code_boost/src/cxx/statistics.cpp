@@ -268,25 +268,24 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
  * @param dport The destination port.
  * @param timestamp The timestamp of the packet.
  */
-void statistics::addConvStat(std::string ipAddressSender,int sport,std::string ipAddressReceiver,int dport, std::chrono::microseconds timestamp){       
-    
+void statistics::addConvStat(std::string ipAddressSender,int sport,std::string ipAddressReceiver,int dport, std::chrono::microseconds timestamp){
+
     conv f1 = {ipAddressReceiver, dport, ipAddressSender, sport};
     conv f2 = {ipAddressSender, sport, ipAddressReceiver, dport};
-    
-    // if already exist A(ipAddressReceiver, dport), B(ipAddressSender, sport)
+
+    // if already exist A(ipAddressReceiver, dport), B(ipAddressSender, sport) conversation
     if (conv_statistics.count(f1)>0){
-        conv_statistics[f1].pkts_B_A++; // increment packets number from B to A
-        conv_statistics[f1].pkts_B_A_timestamp.push_back(timestamp);
-    
-        // Calculate reply delay considering only delay of first two reply packets (TCP handshake)
-        //if(conv_statistics[f1].pkts_A_B_timestamp.size()>0 && conv_statistics[f1].pkts_A_B_timestamp.size()<=2){
-        conv_statistics[f1].pkts_delay.push_back(std::chrono::duration_cast<std::chrono::microseconds> (timestamp - conv_statistics[f1].pkts_A_B_timestamp.back()));
-        //}
+        conv_statistics[f1].pkts_count++;
+        if(conv_statistics[f1].pkts_count<=3)
+            conv_statistics[f1].pkts_delay.push_back(std::chrono::duration_cast<std::chrono::microseconds> (timestamp - conv_statistics[f1].pkts_timestamp.back()));
+        conv_statistics[f1].pkts_timestamp.push_back(timestamp);
     }
     else{
-        conv_statistics[f2].pkts_A_B++; // increment packets number from A to B
-        conv_statistics[f2].pkts_A_B_timestamp.push_back(timestamp);
-    }        
+        conv_statistics[f2].pkts_count++;
+        if(conv_statistics[f2].pkts_timestamp.size()>0 && conv_statistics[f2].pkts_count<=3 )
+            conv_statistics[f2].pkts_delay.push_back(std::chrono::duration_cast<std::chrono::microseconds> (timestamp - conv_statistics[f2].pkts_timestamp.back()));
+        conv_statistics[f2].pkts_timestamp.push_back(timestamp);
+    }
 }
     
     
@@ -394,92 +393,19 @@ void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddres
     if(ip_statistics[ipAddressSender].pkts_sent==0){  
         // Add the IP class
         ip_statistics[ipAddressSender].ip_class = getIPv4Class(ipAddressSender);
-        
-        // Initialize packet rates
-        /*ip_statistics[ipAddressSender].max_pkt_rate = 0;
-        ip_statistics[ipAddressSender].min_pkt_rate = 0;
-        
-        // Caculate Mahoney anomaly score for ip.src
-        float ipSrc_Mahoney_score = 0;
-        // s_r: The number of IP sources (the different values)
-        // n: The number of the total instances
-        // s_t: The "time" since last anomalous (novel) IP was appeared
-        int s_t = 0, n = 0, s_r = 0;        
-        for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
-                if (i->second.pkts_sent > 0)
-                    s_r++;
-            }
-        if(s_r > 0){
-            // The number of the total instances
-            n = packetCount;
-            // The packet count when the last novel IP was added as a sender
-            int pktCntNvlSndr = 0;
-            for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
-                if (pktCntNvlSndr < i->second.firstAppearAsSenderPktCount)
-                    pktCntNvlSndr = i->second.firstAppearAsSenderPktCount;
-            }
-            // The "time" since last anomalous (novel) IP was appeared
-            s_t = packetCount - pktCntNvlSndr + 1;        
-            ipSrc_Mahoney_score = (float)s_t*n/s_r;
-        }
-
-    ip_statistics[ipAddressSender].firstAppearAsSenderPktCount = packetCount;  
-    ip_statistics[ipAddressSender].sourceAnomalyScore = ipSrc_Mahoney_score;
-     */
     }
     
     // Aidmar - Adding IP as a receiver for first time
     if(ip_statistics[ipAddressReceiver].pkts_received==0){
         // Add the IP class
-        ip_statistics[ipAddressReceiver].ip_class = getIPv4Class(ipAddressReceiver); 
-        
-        // Caculate Mahoney anomaly score for ip.dst
-        /*float ipDst_Mahoney_score = 0;
-        // s_r: The number of IP sources (the different values)
-        // n: The number of the total instances
-        // s_t: The "time" since last anomalous (novel) IP was appeared
-        int s_t = 0, n = 0, s_r = 0;        
-        for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
-                if (i->second.pkts_received > 0)
-                    s_r++;
-            }
-        if(s_r > 0){
-            // The number of the total instances
-            n = packetCount;
-            // The packet count when the last novel IP was added as a sender
-            int pktCntNvlRcvr = 0;
-            for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
-                if (pktCntNvlRcvr < i->second.firstAppearAsReceiverPktCount)
-                    pktCntNvlRcvr = i->second.firstAppearAsReceiverPktCount;
-            }
-            // The "time" since last anomalous (novel) IP was appeared
-            s_t = packetCount - pktCntNvlRcvr + 1;
-        
-            ipDst_Mahoney_score = (float)s_t*n/s_r;
-        }
-
-    ip_statistics[ipAddressReceiver].firstAppearAsReceiverPktCount = packetCount;
-    ip_statistics[ipAddressReceiver].destinationAnomalyScore = ipDst_Mahoney_score;
-    */
+        ip_statistics[ipAddressReceiver].ip_class = getIPv4Class(ipAddressReceiver);
     }
 
-    
     // Update stats for packet sender
     ip_statistics[ipAddressSender].kbytes_sent += (float(bytesSent) / 1024);
     ip_statistics[ipAddressSender].pkts_sent++;
     // Aidmar
     ip_statistics[ipAddressSender].pktsSentTimestamp.push_back(timestamp);
-    
-    //// Aidmar - calculate packet rate (assumption: max_pkt_rate=1/smallest time between two consecutive pkts)
-    // resulting in very big rates, therefore it could be better to calculate pkt rate on time intervals
-    /*if(ip_statistics[ipAddressSender].pktsSentTimestamp.size() > 0){
-    std::chrono::microseconds temp_pkt_consecutive_time = timestamp - ip_statistics[ipAddressSender].pktsSentTimestamp.back();
-    float temp_pkt_rate = (float) 1000000/temp_pkt_consecutive_time.count(); // pkt per sec = 10**6/micro sec
-    if(temp_pkt_rate > ip_statistics[ipAddressSender].max_pkt_rate || ip_statistics[ipAddressSender].max_pkt_rate == 0)
-        ip_statistics[ipAddressSender].max_pkt_rate = temp_pkt_rate;
-    if(temp_pkt_rate < ip_statistics[ipAddressSender].min_pkt_rate || ip_statistics[ipAddressSender].min_pkt_rate == 0)
-        ip_statistics[ipAddressSender].min_pkt_rate = temp_pkt_rate;
-    }*/
                 
     // Update stats for packet receiver
     ip_statistics[ipAddressReceiver].kbytes_received += (float(bytesSent) / 1024);
