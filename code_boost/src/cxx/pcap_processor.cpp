@@ -251,9 +251,9 @@ void pcap_processor::process_packets(const Packet &pkt) {
             TCP tcpPkt = (const TCP &) *pdu_l4;
             
           // Aidmar - Tests TCP checksum
-          if (pdu_l3_type == PDU::PDUType::IP) {
-            stats.checkTCPChecksum(ipAddressSender, ipAddressReceiver, tcpPkt);
-          }
+//          if (pdu_l3_type == PDU::PDUType::IP) {
+//            stats.checkTCPChecksum(ipAddressSender, ipAddressReceiver, tcpPkt);
+//          }
 
             stats.incrementProtocolCount(ipAddressSender, "TCP");                        
                     
@@ -268,9 +268,6 @@ void pcap_processor::process_packets(const Packet &pkt) {
 
             try {                                                                
                 int val = tcpPkt.mss();
-                // Aidmar - comment out
-                //stats.addMSS(ipAddressSender, val);
-                
                 // Aidmar
                 // MSS distribution
                 stats.incrementMSScount(ipAddressSender, val);
