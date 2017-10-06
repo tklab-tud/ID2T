@@ -112,7 +112,6 @@ void pcap_processor::collect_statistics() {
     if (file_exists(filePath)) {
         std::cout << "Loading pcap..." << std::endl;
         FileSniffer sniffer(filePath);
-        // Aidmar - used to know the capture duration, thus choose a suitable interval
         FileSniffer snifferOverview(filePath);
         
         SnifferIterator i = sniffer.begin();                
@@ -124,13 +123,12 @@ void pcap_processor::collect_statistics() {
         int timeIntervalCounter = 1;
         int timeIntervalsNum = 100;
         std::chrono::microseconds intervalStartTimestamp = stats.getTimestampFirstPacket();
-        std::chrono::microseconds firstTimestamp = stats.getTimestampFirstPacket(); 
-        //std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+        std::chrono::microseconds firstTimestamp = stats.getTimestampFirstPacket();
+
+        // Aidmar - used to know the capture duration, thus choose a suitable interval
         SnifferIterator lastpkt; 
         for (SnifferIterator j = snifferOverview.begin(); j != snifferOverview.end();  snifferIteratorIncrement(j)) {lastpkt = j;}          
-        //std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-        //auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count()*1e-6;
-        //std::cout<< "empty loop: " << duration << " sec" << std::endl;
+
         std::chrono::microseconds lastTimestamp = lastpkt->timestamp();                  
         std::chrono::microseconds captureDuration = lastTimestamp - firstTimestamp;
         if(captureDuration.count()<=0){

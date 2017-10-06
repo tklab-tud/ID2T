@@ -197,8 +197,8 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
     // Add packet rate for each IP to ip_statistics map
     calculateIPIntervalPacketRate(interval, intervalStartTimestamp);
     
-    std::vector<float> ipEntopies = calculateLastIntervalIPsEntropy(intervalStartTimestamp);
-    std::vector<float> ipCumEntopies = calculateIPsCumEntropy();
+    std::vector<float> ipEntopies = {0,0};//calculateLastIntervalIPsEntropy(intervalStartTimestamp);
+    std::vector<float> ipCumEntopies = {0,0};//calculateIPsCumEntropy();
     std::string lastPktTimestamp_s = std::to_string(intervalEndTimestamp.count());
     std::string  intervalStartTimestamp_s = std::to_string(intervalStartTimestamp.count());
 
