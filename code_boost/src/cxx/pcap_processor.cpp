@@ -207,10 +207,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
 
         // Assign IP Address to MAC Address
         stats.assignMacAddress(ipAddressSender, macAddressSender);
-        stats.assignMacAddress(ipAddressReceiver, macAddressReceiver);        
-
-        // Aidmar - Artifacts Tests: contemporary (ToS)
-        stats.checkToS(ipLayer.tos());
+        stats.assignMacAddress(ipAddressReceiver, macAddressReceiver);
         
     } // PDU is IPv6
     else if (pdu_l3_type == PDU::PDUType::IPv6) {
@@ -249,9 +246,9 @@ void pcap_processor::process_packets(const Packet &pkt) {
             TCP tcpPkt = (const TCP &) *pdu_l4;
             
           // Aidmar - Tests TCP checksum
-//          if (pdu_l3_type == PDU::PDUType::IP) {
-//            stats.checkTCPChecksum(ipAddressSender, ipAddressReceiver, tcpPkt);
-//          }
+          if (pdu_l3_type == PDU::PDUType::IP) {
+            stats.checkTCPChecksum(ipAddressSender, ipAddressReceiver, tcpPkt);
+          }
 
             stats.incrementProtocolCount(ipAddressSender, "TCP");                        
                     

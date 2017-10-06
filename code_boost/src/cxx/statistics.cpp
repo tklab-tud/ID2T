@@ -13,37 +13,6 @@ using namespace Tins;
 
 // Aidmar
 /**
- * Checks if ToS is valid according to RFC2472 and increments counter.
- * @param uint8_t ToS value to be checked.
- */
-void statistics::checkToS(uint8_t ToS) {
-    if(this->getDoTests()) {
-        //std::cout <<"ToS bin: "<< integral_to_binary_string(ToS)<<"\n";
-        if((unsigned)ToS != 0) {
-            std::bitset<8> tosBit(ToS); //convent number into bit array
-
-            std::stringstream dscpStream;
-            dscpStream <<tosBit[7]<<tosBit[6]<<tosBit[5]<<tosBit[4]<<tosBit[3]<<tosBit[2];
-            std::bitset<6> dscpBit(dscpStream.str());
-            int dscpInt = (int)(dscpBit.to_ulong());
-
-            // Commonly Used DSCP Values according to RFC2472. The value 2 was added because it is massively used.
-            int validValues[] = {0,2,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,46,48,56};
-            bool exists = std::find(std::begin(validValues), std::end(validValues), dscpInt) != std::end(validValues);
-
-            // According to RFC791 ipPrecedenceInt <= 7 && tosBit[0] must be 0
-            if(!exists && tosBit[0] == 0)
-                invalidToSCount++;
-            else
-                validToSCount++;
-
-            dscp_distribution[dscpInt]++;
-        }
-    }
-}
-
-// Aidmar
-/**
  * Checks if there is a payload and increments payloads counter.
  * @param pdu_l4 The packet that should be checked if it has a payload or not.
  */
@@ -197,8 +166,8 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
     // Add packet rate for each IP to ip_statistics map
     calculateIPIntervalPacketRate(interval, intervalStartTimestamp);
     
-    std::vector<float> ipEntopies = {0,0};//calculateLastIntervalIPsEntropy(intervalStartTimestamp);
-    std::vector<float> ipCumEntopies = {0,0};//calculateIPsCumEntropy();
+    std::vector<float> ipEntopies = calculateLastIntervalIPsEntropy(intervalStartTimestamp);
+    std::vector<float> ipCumEntopies = calculateIPsCumEntropy();
     std::string lastPktTimestamp_s = std::to_string(intervalEndTimestamp.count());
     std::string  intervalStartTimestamp_s = std::to_string(intervalStartTimestamp.count());
 
