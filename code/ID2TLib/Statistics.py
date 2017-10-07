@@ -230,13 +230,11 @@ class Statistics:
         else:
             port0Count = port0Count[0][0]
         reservedPortCount = self.stats_db._process_user_defined_query(
-            "SELECT SUM(portCount) FROM ip_ports WHERE portNumber IN (0,100,114,1023,1024,49151,49152,65535)")# could be extended
+            "SELECT SUM(portCount) FROM ip_ports WHERE portNumber IN (100,114,1023,1024,49151,49152,65535)")# could be extended
         if not reservedPortCount[0][0]:
             reservedPortCount = 0
         else:
             reservedPortCount = reservedPortCount[0][0]
-        totalPortCount = self.stats_db._process_user_defined_query("SELECT SUM(portCount) FROM ip_ports")
-        reservedPortRatio = float(reservedPortCount/ totalPortCount[0][0]) * 100
 
         ####### TTL Tests #######
         result = self.stats_db._process_user_defined_query("SELECT ttlValue,SUM(ttlCount) FROM ip_ttl GROUP BY ttlValue")
@@ -280,23 +278,21 @@ class Statistics:
         mssNovelsPerInterval, mssNovelsPerIntervalFrequency = count_frequncy(newMSSCount)
         mssNovelityDistEntropy = self.calculate_entropy(mssNovelsPerIntervalFrequency)
 
-        result = self.stats_db._process_user_defined_query("SELECT SUM(mssCount) FROM tcp_mss WHERE mssValue > 536 AND mssValue < 1460")
-        # The most used range of MSS: 536 < MSS < 1460. Calculate the ratio of the values in this range to total values.
+        result = self.stats_db._process_user_defined_query("SELECT SUM(mssCount) FROM tcp_mss WHERE mssValue > 1460")
+        # The most used MSS < 1460. Calculate the ratio of the values bigger that 1460.
         if not result[0][0]:
             result = 0
         else:
             result = result[0][0]
-        mss5361460 = (result / sum(frequency)) * 100
+        bigMSS = (result / sum(frequency)) * 100
 
-        return [("Payload ratio", payloadRatio, "%"),
+        output = [("Payload ratio", payloadRatio, "%"),
                 ("Incorrect TCP checksum ratio", incorrectChecksumRatio, "%"),
                 ("IP Src Entropy", ipSrcEntropy, ""),
                 ("IP Src Normalized Entropy", ipSrcNormEntropy, ""),
                 ("IP Dst Entropy", ipDstEntropy, ""),
                 ("IP Dst Normalized Entropy", ipDstNormEntropy, ""),
                 ("TTL Distribution Entropy", ipNovelityDistEntropy, ""),
-                ("Port 0 count", port0Count, ""),
-                ("Reserved ports", reservedPortRatio, "%"),
                 ("TTL Entropy", ttlEntropy, ""),
                 ("TTL Normalized Entropy", ttlNormEntropy, ""),
                 ("TTL Distribution Entropy", ttlNovelityDistEntropy, ""),
@@ -309,7 +305,69 @@ class Statistics:
                 ("MSS Entropy", mssEntropy, ""),
                 ("MSS Normalized Entropy", mssNormEntropy, ""),
                 ("MSS Distribution Entropy", mssNovelityDistEntropy, ""),
-                ("536 < MSS < 1460", mss5361460, "%")]
+                ("======================","","")]
+
+
+        # Reasoning the statistics values
+        if payloadRatio > 80:
+            output.append(("WARNING: Too high payload ratio", payloadRatio, "%."))
+        if payloadRatio < 30:
+            output.append(("WARNING: Too low payload ratio", payloadRatio, "% (Injecting attacks that are carried out in the packet payloads is not recommmanded)."))
+
+        if incorrectChecksumRatio > 5:
+            output.append(("WARNING: High incorrect TCP checksum ratio",incorrectChecksumRatio,"%."))
+
+        if ipSrcNormEntropy > 0.65:
+            output.append(("WARNING: High IP source normalized entropy",ipSrcNormEntropy,"."))
+        if ipSrcNormEntropy < 0.2:
+            output.append(("WARNING: Low IP source normalized entropy", ipSrcNormEntropy, "."))
+        if ipDstNormEntropy > 0.65:
+            output.append(("WARNING: High IP destination normalized entropy", ipDstNormEntropy, "."))
+        if ipDstNormEntropy < 0.2:
+            output.append(("WARNING: Low IP destination normalized entropy", ipDstNormEntropy, "."))
+
+        if ttlNormEntropy > 0.65:
+            output.append(("WARNING: High TTL normalized entropy", ttlNormEntropy, "."))
+        if ttlNormEntropy < 0.2:
+            output.append(("WARNING: Low TTL normalized entropy", ttlNormEntropy, "."))
+        if ttlNovelityDistEntropy < 1:
+            output.append(("WARNING: Too low TTL novelity distribution entropy", ttlNovelityDistEntropy,
+                           "(The distribution of the novel TTL values is suspicious)."))
+
+        if winNormEntropy > 0.6:
+            output.append(("WARNING: High Window Size normalized entropy", winNormEntropy, "."))
+        if winNormEntropy < 0.1:
+            output.append(("WARNING: Low Window Size normalized entropy", winNormEntropy, "."))
+        if winNovelityDistEntropy < 4:
+            output.append(("WARNING: Low Window Size novelity distribution entropy", winNovelityDistEntropy,
+                           "(The distribution of the novel Window Size values is suspicious)."))
+
+        if tosNormEntropy > 0.4:
+            output.append(("WARNING: High ToS normalized entropy", tosNormEntropy, "."))
+        if tosNormEntropy < 0.1:
+            output.append(("WARNING: Low ToS normalized entropy", tosNormEntropy, "."))
+        if tosNovelityDistEntropy < 0.5:
+            output.append(("WARNING: Low ToS novelity distribution entropy", tosNovelityDistEntropy,
+                           "(The distribution of the novel ToS values is suspicious)."))
+
+        if mssNormEntropy > 0.4:
+            output.append(("WARNING: High MSS normalized entropy", mssNormEntropy, "."))
+        if mssNormEntropy < 0.1:
+            output.append(("WARNING: Low MSS normalized entropy", mssNormEntropy, "."))
+        if mssNovelityDistEntropy < 0.5:
+            output.append(("WARNING: Low MSS novelity distribution entropy", mssNovelityDistEntropy,
+                           "(The distribution of the novel MSS values is suspicious)."))
+
+        if bigMSS > 50:
+            output.append(("WARNING: High ratio of MSS > 1460", bigMSS, "% (High fragmentation rate in Ethernet)."))
+
+        if port0Count > 0:
+            output.append(("WARNING: Port number 0 is used in ",port0Count,"packets (awkward-looking port)."))
+        if reservedPortCount > 0:
+            output.append(("WARNING: Reserved port numbers are used in ",reservedPortCount,"packets (uncommonly-used ports)."))
+
+
+        return output
 
     def write_statistics_to_file(self):
         """
