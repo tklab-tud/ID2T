@@ -145,14 +145,16 @@ class Statistics:
 
     #Aidmar
     def calculate_entropy(self, frequency:list, normalized:bool = False):
-        entropy = 0
+        entropy, normalizedEnt, n = 0, 0, 0
         sumFreq = sum(frequency)
         for i, x in enumerate(frequency):
             p_x = float(frequency[i] / sumFreq)
             if p_x > 0:
+                n += 1
                 entropy += - p_x * log(p_x, 2)
         if normalized:
-            normalizedEnt = entropy/log(len(frequency), 2)
+            if log(n)>0:
+                normalizedEnt = entropy/log(n, 2)
             return entropy, normalizedEnt
         else:
             return entropy
@@ -194,19 +196,32 @@ class Statistics:
         else:
             incorrectChecksumRatio = -1
 
-        ####### IP Tests #######
+        ####### IP Src Tests #######
+        result = self.stats_db._process_user_defined_query("SELECT ipAddress,pktsSent,pktsReceived FROM ip_statistics")
+        data, srcFrequency, dstFrequency = [], [], []
+        if result:
+            for row in result:
+                srcFrequency.append(row[1])
+                dstFrequency.append(row[2])
+        ipSrcEntropy, ipSrcNormEntropy = self.calculate_entropy(srcFrequency, True)
+        ipDstEntropy, ipDstNormEntropy = self.calculate_entropy(dstFrequency, True)
+
         newIPCount = self.stats_db._process_user_defined_query("SELECT newIPCount FROM interval_statistics")
-        # Retrieve the last cumulative entropy which is the entropy of the all IPs
-        result = self.stats_db._process_user_defined_query("SELECT ipSrcCumEntropy FROM interval_statistics")
-        ipSrcEntropy = result[-1][0]
-        ipSrcCount = self.stats_db._process_user_defined_query(
-            "SELECT COUNT(ipAddress) FROM ip_statistics WHERE pktsSent > 0")
-        ipSrcNormEntropy = ipSrcEntropy / log(ipSrcCount[0][0],2)
-        result = self.stats_db._process_user_defined_query("SELECT ipDstCumEntropy FROM interval_statistics")
-        ipDstEntropy = result[-1][0]
-        ipDstCount = self.stats_db._process_user_defined_query(
-            "SELECT COUNT(ipAddress) FROM ip_statistics WHERE pktsReceived > 0")
-        ipDstNormEntropy = ipDstEntropy / log(ipDstCount[0][0],2)
+        ipNovelsPerInterval, ipNovelsPerIntervalFrequency = count_frequncy(newIPCount)
+        ipNovelityDistEntropy = self.calculate_entropy(ipNovelsPerIntervalFrequency)
+
+        # newIPCount = self.stats_db._process_user_defined_query("SELECT newIPCount FROM interval_statistics")
+        # # Retrieve the last cumulative entropy which is the entropy of the all IPs
+        # result = self.stats_db._process_user_defined_query("SELECT ipSrcCumEntropy FROM interval_statistics")
+        # ipSrcEntropy = result[-1][0]
+        # ipSrcCount = self.stats_db._process_user_defined_query(
+        #     "SELECT COUNT(ipAddress) FROM ip_statistics WHERE pktsSent > 0")
+        # ipSrcNormEntropy = ipSrcEntropy / log(ipSrcCount[0][0],2)
+        # result = self.stats_db._process_user_defined_query("SELECT ipDstCumEntropy FROM interval_statistics")
+        # ipDstEntropy = result[-1][0]
+        # ipDstCount = self.stats_db._process_user_defined_query(
+        #     "SELECT COUNT(ipAddress) FROM ip_statistics WHERE pktsReceived > 0")
+        # ipDstNormEntropy = ipDstEntropy / log(ipDstCount[0][0],2)
 
         ####### Ports Tests #######
         port0Count = self.stats_db._process_user_defined_query("SELECT SUM(portCount) FROM ip_ports WHERE portNumber = 0")
@@ -224,44 +239,44 @@ class Statistics:
         reservedPortRatio = float(reservedPortCount/ totalPortCount[0][0]) * 100
 
         ####### TTL Tests #######
-        newTTLCount = self.stats_db._process_user_defined_query("SELECT newTTLCount FROM interval_statistics")
         result = self.stats_db._process_user_defined_query("SELECT ttlValue,SUM(ttlCount) FROM ip_ttl GROUP BY ttlValue")
         data, frequency = [], []
         for row in result:
             frequency.append(row[1])
-        ttlEntopy, ttlNormEntopy  = self.calculate_entropy(frequency,True)
+        ttlEntropy, ttlNormEntropy  = self.calculate_entropy(frequency,True)
+        newTTLCount = self.stats_db._process_user_defined_query("SELECT newTTLCount FROM interval_statistics")
         ttlNovelsPerInterval, ttlNovelsPerIntervalFrequency = count_frequncy(newTTLCount)
         ttlNovelityDistEntropy = self.calculate_entropy(ttlNovelsPerIntervalFrequency)
 
         ####### Window Size Tests #######
-        newWinSizeCount = self.stats_db._process_user_defined_query("SELECT newWinSizeCount FROM interval_statistics")
         result = self.stats_db._process_user_defined_query("SELECT winSize,SUM(winCount) FROM tcp_win GROUP BY winSize")
         data, frequency = [], []
         for row in result:
             frequency.append(row[1])
-        winEntopy, winNormEntopy = self.calculate_entropy(frequency, True)
+        winEntropy, winNormEntropy = self.calculate_entropy(frequency, True)
+        newWinSizeCount = self.stats_db._process_user_defined_query("SELECT newWinSizeCount FROM interval_statistics")
         winNovelsPerInterval, winNovelsPerIntervalFrequency = count_frequncy(newWinSizeCount)
         winNovelityDistEntropy = self.calculate_entropy(winNovelsPerIntervalFrequency)
 
         ####### ToS Tests #######
-        newToSCount = self.stats_db._process_user_defined_query("SELECT newToSCount FROM interval_statistics")
         result = self.stats_db._process_user_defined_query(
             "SELECT tosValue,SUM(tosCount) FROM ip_tos GROUP BY tosValue")
         data, frequency = [], []
         for row in result:
             frequency.append(row[1])
-        tosEntopy, tosNormEntopy = self.calculate_entropy(frequency, True)
+        tosEntropy, tosNormEntropy = self.calculate_entropy(frequency, True)
+        newToSCount = self.stats_db._process_user_defined_query("SELECT newToSCount FROM interval_statistics")
         tosNovelsPerInterval, tosNovelsPerIntervalFrequency = count_frequncy(newToSCount)
         tosNovelityDistEntropy = self.calculate_entropy(tosNovelsPerIntervalFrequency)
 
         ####### MSS Tests #######
-        newMSSCount = self.stats_db._process_user_defined_query("SELECT newMSSCount FROM interval_statistics")
         result = self.stats_db._process_user_defined_query(
             "SELECT mssValue,SUM(mssCount) FROM tcp_mss GROUP BY mssValue")
         data, frequency = [], []
         for row in result:
             frequency.append(row[1])
-        mssEntopy, mssNormEntopy = self.calculate_entropy(frequency, True)
+        mssEntropy, mssNormEntropy = self.calculate_entropy(frequency, True)
+        newMSSCount = self.stats_db._process_user_defined_query("SELECT newMSSCount FROM interval_statistics")
         mssNovelsPerInterval, mssNovelsPerIntervalFrequency = count_frequncy(newMSSCount)
         mssNovelityDistEntropy = self.calculate_entropy(mssNovelsPerIntervalFrequency)
 
@@ -279,19 +294,20 @@ class Statistics:
                 ("IP Src Normalized Entropy", ipSrcNormEntropy, ""),
                 ("IP Dst Entropy", ipDstEntropy, ""),
                 ("IP Dst Normalized Entropy", ipDstNormEntropy, ""),
+                ("TTL Distribution Entropy", ipNovelityDistEntropy, ""),
                 ("Port 0 count", port0Count, ""),
                 ("Reserved ports", reservedPortRatio, "%"),
-                ("TTL Entropy", ttlEntopy, ""),
-                ("TTL Normalized Entropy", ttlNormEntopy, ""),
+                ("TTL Entropy", ttlEntropy, ""),
+                ("TTL Normalized Entropy", ttlNormEntropy, ""),
                 ("TTL Distribution Entropy", ttlNovelityDistEntropy, ""),
-                ("WinSize Entropy", winEntopy, ""),
-                ("WinSize Normalized Entropy", winNormEntopy, ""),
+                ("WinSize Entropy", winEntropy, ""),
+                ("WinSize Normalized Entropy", winNormEntropy, ""),
                 ("WinSize Distribution Entropy", winNovelityDistEntropy, ""),
-                ("ToS Entropy", tosEntopy, ""),
-                ("ToS Normalized Entropy", tosNormEntopy, ""),
+                ("ToS Entropy", tosEntropy, ""),
+                ("ToS Normalized Entropy", tosNormEntropy, ""),
                 ("ToS Distribution Entropy", tosNovelityDistEntropy, ""),
-                ("MSS Entropy", mssEntopy, ""),
-                ("MSS Normalized Entropy", mssNormEntopy, ""),
+                ("MSS Entropy", mssEntropy, ""),
+                ("MSS Normalized Entropy", mssNormEntropy, ""),
                 ("MSS Distribution Entropy", mssNovelityDistEntropy, ""),
                 ("536 < MSS < 1460", mss5361460, "%")]
 
