@@ -208,7 +208,7 @@ class Statistics:
 
         newIPCount = self.stats_db._process_user_defined_query("SELECT newIPCount FROM interval_statistics")
         ipNovelsPerInterval, ipNovelsPerIntervalFrequency = count_frequncy(newIPCount)
-        ipNovelityDistEntropy = self.calculate_entropy(ipNovelsPerIntervalFrequency)
+        ipNoveltyDistEntropy = self.calculate_entropy(ipNovelsPerIntervalFrequency)
 
         # newIPCount = self.stats_db._process_user_defined_query("SELECT newIPCount FROM interval_statistics")
         # # Retrieve the last cumulative entropy which is the entropy of the all IPs
@@ -244,7 +244,7 @@ class Statistics:
         ttlEntropy, ttlNormEntropy  = self.calculate_entropy(frequency,True)
         newTTLCount = self.stats_db._process_user_defined_query("SELECT newTTLCount FROM interval_statistics")
         ttlNovelsPerInterval, ttlNovelsPerIntervalFrequency = count_frequncy(newTTLCount)
-        ttlNovelityDistEntropy = self.calculate_entropy(ttlNovelsPerIntervalFrequency)
+        ttlNoveltyDistEntropy = self.calculate_entropy(ttlNovelsPerIntervalFrequency)
 
         ####### Window Size Tests #######
         result = self.stats_db._process_user_defined_query("SELECT winSize,SUM(winCount) FROM tcp_win GROUP BY winSize")
@@ -254,7 +254,7 @@ class Statistics:
         winEntropy, winNormEntropy = self.calculate_entropy(frequency, True)
         newWinSizeCount = self.stats_db._process_user_defined_query("SELECT newWinSizeCount FROM interval_statistics")
         winNovelsPerInterval, winNovelsPerIntervalFrequency = count_frequncy(newWinSizeCount)
-        winNovelityDistEntropy = self.calculate_entropy(winNovelsPerIntervalFrequency)
+        winNoveltyDistEntropy = self.calculate_entropy(winNovelsPerIntervalFrequency)
 
         ####### ToS Tests #######
         result = self.stats_db._process_user_defined_query(
@@ -265,7 +265,7 @@ class Statistics:
         tosEntropy, tosNormEntropy = self.calculate_entropy(frequency, True)
         newToSCount = self.stats_db._process_user_defined_query("SELECT newToSCount FROM interval_statistics")
         tosNovelsPerInterval, tosNovelsPerIntervalFrequency = count_frequncy(newToSCount)
-        tosNovelityDistEntropy = self.calculate_entropy(tosNovelsPerIntervalFrequency)
+        tosNoveltyDistEntropy = self.calculate_entropy(tosNovelsPerIntervalFrequency)
 
         ####### MSS Tests #######
         result = self.stats_db._process_user_defined_query(
@@ -276,7 +276,7 @@ class Statistics:
         mssEntropy, mssNormEntropy = self.calculate_entropy(frequency, True)
         newMSSCount = self.stats_db._process_user_defined_query("SELECT newMSSCount FROM interval_statistics")
         mssNovelsPerInterval, mssNovelsPerIntervalFrequency = count_frequncy(newMSSCount)
-        mssNovelityDistEntropy = self.calculate_entropy(mssNovelsPerIntervalFrequency)
+        mssNoveltyDistEntropy = self.calculate_entropy(mssNovelsPerIntervalFrequency)
 
         result = self.stats_db._process_user_defined_query("SELECT SUM(mssCount) FROM tcp_mss WHERE mssValue > 1460")
         # The most used MSS < 1460. Calculate the ratio of the values bigger that 1460.
@@ -294,22 +294,22 @@ class Statistics:
                 ("IP Dst Entropy", ipDstEntropy, ""),
                 ("IP Dst Normalized Entropy", ipDstNormEntropy, ""),
                 ("# TTL values", sum([x[0] for x in newTTLCount]), ""),
-                ("TTL Distribution Entropy", ipNovelityDistEntropy, ""),
+                ("TTL Distribution Entropy", ipNoveltyDistEntropy, ""),
                 ("TTL Entropy", ttlEntropy, ""),
                 ("TTL Normalized Entropy", ttlNormEntropy, ""),
-                ("TTL Distribution Entropy", ttlNovelityDistEntropy, ""),
+                ("TTL Distribution Entropy", ttlNoveltyDistEntropy, ""),
                 ("# WinSize values", sum([x[0] for x in newWinSizeCount]), ""),
                 ("WinSize Entropy", winEntropy, ""),
                 ("WinSize Normalized Entropy", winNormEntropy, ""),
-                ("WinSize Distribution Entropy", winNovelityDistEntropy, ""),
+                ("WinSize Distribution Entropy", winNoveltyDistEntropy, ""),
                 ("# ToS values",  sum([x[0] for x in newToSCount]), ""),
                 ("ToS Entropy", tosEntropy, ""),
                 ("ToS Normalized Entropy", tosNormEntropy, ""),
-                ("ToS Distribution Entropy", tosNovelityDistEntropy, ""),
+                ("ToS Distribution Entropy", tosNoveltyDistEntropy, ""),
                 ("# MSS values", sum([x[0] for x in newMSSCount]), ""),
                 ("MSS Entropy", mssEntropy, ""),
                 ("MSS Normalized Entropy", mssNormEntropy, ""),
-                ("MSS Distribution Entropy", mssNovelityDistEntropy, ""),
+                ("MSS Distribution Entropy", mssNoveltyDistEntropy, ""),
                 ("======================","","")]
 
 
@@ -335,32 +335,32 @@ class Statistics:
             output.append(("WARNING: High TTL normalized entropy", ttlNormEntropy, "."))
         if ttlNormEntropy < 0.2:
             output.append(("WARNING: Low TTL normalized entropy", ttlNormEntropy, "."))
-        if ttlNovelityDistEntropy < 1:
-            output.append(("WARNING: Too low TTL novelity distribution entropy", ttlNovelityDistEntropy,
+        if ttlNoveltyDistEntropy < 1:
+            output.append(("WARNING: Too low TTL novelty distribution entropy", ttlNoveltyDistEntropy,
                            "(The distribution of the novel TTL values is suspicious)."))
 
         if winNormEntropy > 0.6:
             output.append(("WARNING: High Window Size normalized entropy", winNormEntropy, "."))
         if winNormEntropy < 0.1:
             output.append(("WARNING: Low Window Size normalized entropy", winNormEntropy, "."))
-        if winNovelityDistEntropy < 4:
-            output.append(("WARNING: Low Window Size novelity distribution entropy", winNovelityDistEntropy,
+        if winNoveltyDistEntropy < 4:
+            output.append(("WARNING: Low Window Size novelty distribution entropy", winNoveltyDistEntropy,
                            "(The distribution of the novel Window Size values is suspicious)."))
 
         if tosNormEntropy > 0.4:
             output.append(("WARNING: High ToS normalized entropy", tosNormEntropy, "."))
         if tosNormEntropy < 0.1:
             output.append(("WARNING: Low ToS normalized entropy", tosNormEntropy, "."))
-        if tosNovelityDistEntropy < 0.5:
-            output.append(("WARNING: Low ToS novelity distribution entropy", tosNovelityDistEntropy,
+        if tosNoveltyDistEntropy < 0.5:
+            output.append(("WARNING: Low ToS novelty distribution entropy", tosNoveltyDistEntropy,
                            "(The distribution of the novel ToS values is suspicious)."))
 
         if mssNormEntropy > 0.4:
             output.append(("WARNING: High MSS normalized entropy", mssNormEntropy, "."))
         if mssNormEntropy < 0.1:
             output.append(("WARNING: Low MSS normalized entropy", mssNormEntropy, "."))
-        if mssNovelityDistEntropy < 0.5:
-            output.append(("WARNING: Low MSS novelity distribution entropy", mssNovelityDistEntropy,
+        if mssNoveltyDistEntropy < 0.5:
+            output.append(("WARNING: Low MSS novelty distribution entropy", mssNoveltyDistEntropy,
                            "(The distribution of the novel MSS values is suspicious)."))
 
         if bigMSS > 50:
@@ -918,7 +918,7 @@ class Statistics:
                 graphy.append(row[1])
 
             plt.autoscale(enable=True, axis='both')
-            plt.title("IP Novelity Distribution")
+            plt.title("IP Novelty Distribution")
             plt.xlabel('Timestamp')
             plt.ylabel('Novel values count')
             plt.xlim([0, len(graphx)])
@@ -954,7 +954,7 @@ class Statistics:
                     graphy.append(row[1])
 
                 plt.autoscale(enable=True, axis='both')
-                plt.title("TTL Novelity Distribution")
+                plt.title("TTL Novelty Distribution")
                 plt.xlabel('Timestamp')
                 plt.ylabel('Novel values count')
                 plt.xlim([0, len(graphx)])
@@ -991,7 +991,7 @@ class Statistics:
                 graphy.append(row[1])
 
             plt.autoscale(enable=True, axis='both')
-            plt.title("ToS Novelity Distribution")
+            plt.title("ToS Novelty Distribution")
             plt.xlabel('Timestamp')
             plt.ylabel('Novel values count')
             plt.xlim([0, len(graphx)])
@@ -1027,7 +1027,7 @@ class Statistics:
                     graphy.append(row[1])
 
                 plt.autoscale(enable=True, axis='both')
-                plt.title("Window Size Novelity Distribution")
+                plt.title("Window Size Novelty Distribution")
                 plt.xlabel('Timestamp')
                 plt.ylabel('Novel values count')
                 plt.xlim([0, len(graphx)])
@@ -1067,7 +1067,7 @@ class Statistics:
                     graphy.append(row[1])
 
                 plt.autoscale(enable=True, axis='both')
-                plt.title("MSS Novelity Distribution")
+                plt.title("MSS Novelty Distribution")
                 plt.xlabel('Timestamp')
                 plt.ylabel('Novel values count')
                 plt.xlim([0, len(graphx)])
