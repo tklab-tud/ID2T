@@ -12,7 +12,6 @@ from Attack.AttackParameters import ParameterTypes
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 # noinspection PyPep8
 from scapy.layers.inet import IP, Ether, TCP
-import numpy as np
 
 class PortscanAttack(BaseAttack.BaseAttack):
 
@@ -72,7 +71,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
             destination_mac = self.generate_random_mac_address()
         self.add_param_value(Param.MAC_DESTINATION, destination_mac)
         self.add_param_value(Param.PORT_DESTINATION, self.get_ports_from_nmap_service_dst(1000))
-        # Temporal value to be changed later accordint to the destination host open ports
         self.add_param_value(Param.PORT_OPEN, '1')
         self.add_param_value(Param.PORT_DEST_SHUFFLE, 'False')
         self.add_param_value(Param.PORT_DEST_ORDER_DESC, 'False')
@@ -83,7 +81,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
                               self.statistics.get_pps_received(most_used_ip_address)) / 2)
         self.add_param_value(Param.INJECT_AFTER_PACKET, randint(0, self.statistics.get_packet_count()))
 
-    # Aidmar
     def get_ports_from_nmap_service_dst(self, ports_num):
         """
         Read the most ports_num frequently open ports from nmap-service-tcp file to be used in the port scan.
@@ -127,7 +124,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
                 randomdelay = Lea.fromValFreqsDict({2*delay: 70, 3*delay: 20, 5*delay: 7, 10*delay: 3})
                 return timestamp + uniform(1 / pps + delay,  1 / pps + randomdelay.random())
 
-        # Aidmar
         def getIntervalPPS(complement_interval_pps, timestamp):
             """
             Gets the packet rate (pps) for a specific time interval.
@@ -145,7 +141,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
         mac_destination = self.get_param_value(Param.MAC_DESTINATION)
         pps = self.get_param_value(Param.PACKETS_PER_SECOND)
 
-        # Aidmar - calculate complement packet rates of the background traffic for each interval
+        # Calculate complement packet rates of the background traffic for each interval
         complement_interval_pps = self.statistics.calculate_complement_packet_rates(pps)
 
         # Determine ports
@@ -170,10 +166,9 @@ class PortscanAttack(BaseAttack.BaseAttack):
         ip_source = self.get_param_value(Param.IP_SOURCE)
         ip_destination = self.get_param_value(Param.IP_DESTINATION)
 
-        # Aidmar - check ip.src == ip.dst
+        # Check ip.src == ip.dst
         self.ip_src_dst_equal_check(ip_source, ip_destination)
 
-        # Aidmar
         # Select open ports
         ports_open = self.get_param_value(Param.PORT_OPEN)
         if ports_open == 1:  # user did not specify open ports
@@ -189,7 +184,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
         if not isinstance(ports_open, list):
             ports_open = [ports_open]
 
-        # Aidmar
         # Set MSS (Maximum Segment Size) based on MSS distribution of IP address
         source_mss_dist = self.statistics.get_mss_distribution(ip_source)
         if len(source_mss_dist) > 0:
@@ -218,7 +212,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
         else:
             destination_ttl_value = self.statistics.process_db_query("most_used(ttlValue)")
 
-        # Aidmar
         # Set Window Size based on Window Size distribution of IP address
         source_win_dist = self.statistics.get_win_distribution(ip_source)
         if len(source_win_dist) > 0:
@@ -233,7 +226,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
         else:
             destination_win_value = self.statistics.process_db_query("most_used(winSize)")
 
-        # Aidmar
         minDelay,maxDelay = self.get_reply_delay(ip_destination)
 
         for dport in dest_ports:
@@ -245,7 +237,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
             request_ether = Ether(src=mac_source, dst=mac_destination)
             request_ip = IP(src=ip_source, dst=ip_destination, ttl=source_ttl_value)
 
-            # Aidmar - random src port for each packet
+            # Random src port for each packet
             sport = randint(1, 65535)
 
             request_tcp = TCP(sport=sport, dport=dport,  window= source_win_value, flags='S', options=[('MSS', source_mss_value)])
@@ -284,7 +276,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
 
                 # else: destination port is NOT OPEN -> no reply is sent by target
 
-            # Aidmar
             pps = max(getIntervalPPS(complement_interval_pps, timestamp_next_pkt),10)
             timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps)
 

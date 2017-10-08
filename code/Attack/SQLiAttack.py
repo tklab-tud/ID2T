@@ -86,7 +86,6 @@ class SQLiAttack(BaseAttack.BaseAttack):
             randomdelay = Lea.fromValFreqsDict({1 / pps: 70, 2 / pps: 20, 5 / pps: 7, 10 / pps: 3})
             return timestamp + uniform(1 / pps, randomdelay.random())
 
-        # Aidmar
         def getIntervalPPS(complement_interval_pps, timestamp):
             """
             Gets the packet rate (pps) in specific time interval.
@@ -190,7 +189,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
                     # TCP
                     tcp_pkt.setfieldval("sport",port_source)
 
-                    str_tcp_seg = self.modify_payload(str_tcp_seg, '/ATutor', target_uri, orig_ip_dst, target_host)
+                    str_tcp_seg = self.modify_http_header(str_tcp_seg, '/ATutor', target_uri, orig_ip_dst, target_host)
 
                     # TCP Seq, Ack
                     if tcp_pkt.getfieldval("ack") != 0:
@@ -217,7 +216,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
                     # TCP
                     tcp_pkt.setfieldval("dport", port_source)
 
-                    str_tcp_seg = self.modify_payload(str_tcp_seg, '/ATutor', target_uri, orig_ip_dst, target_host)
+                    str_tcp_seg = self.modify_http_header(str_tcp_seg, '/ATutor', target_uri, orig_ip_dst, target_host)
 
                     # TCP Seq, ACK
                     tcp_pkt.setfieldval("ack", attacker_seq)
@@ -251,7 +250,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
                     # TCP
                     #tcp_pkt.setfieldval("sport", port_source)
 
-                    str_tcp_seg = self.modify_payload(str_tcp_seg, '/ATutor', target_uri, orig_ip_dst, target_host)
+                    str_tcp_seg = self.modify_http_header(str_tcp_seg, '/ATutor', target_uri, orig_ip_dst, target_host)
 
                     # TCP Seq, Ack
                     if tcp_pkt.getfieldval("ack") != 0:
@@ -278,7 +277,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
                     # TCP
                     #tcp_pkt.setfieldval("dport", port_source)
 
-                    str_tcp_seg = self.modify_payload(str_tcp_seg, '/ATutor', target_uri, orig_ip_dst, target_host)
+                    str_tcp_seg = self.modify_http_header(str_tcp_seg, '/ATutor', target_uri, orig_ip_dst, target_host)
 
                     # TCP Seq, ACK
                     tcp_pkt.setfieldval("ack", attacker_seq)

@@ -173,12 +173,10 @@ class StatsDatabase:
             "most_used.macaddress": "SELECT * FROM (SELECT macAddress, COUNT(*) as occ from ip_mac GROUP BY macAddress ORDER BY occ DESC) WHERE occ=(SELECT COUNT(*) as occ from ip_mac GROUP BY macAddress ORDER BY occ DESC LIMIT 1)",
             "most_used.portnumber": "SELECT portNumber, COUNT(portNumber) as cntPort FROM ip_ports GROUP BY portNumber HAVING cntPort=(SELECT MAX(cntPort) from (SELECT portNumber, COUNT(portNumber) as cntPort FROM ip_ports GROUP BY portNumber))",
             "most_used.protocolname": "SELECT protocolName, COUNT(protocolCount) as countProtocols FROM ip_protocols GROUP BY protocolName HAVING countProtocols=(SELECT COUNT(protocolCount) as cnt FROM ip_protocols GROUP BY protocolName ORDER BY cnt DESC LIMIT 1)",
-            # Aidmar
             "most_used.ttlvalue": "SELECT ttlValue FROM ip_ttl GROUP BY ttlValue ORDER BY SUM(ttlCount) DESC LIMIT 1",
             "most_used.mssvalue": "SELECT mssValue FROM tcp_mss GROUP BY mssValue ORDER BY SUM(mssCount) DESC LIMIT 1",
             "most_used.winsize": "SELECT winSize FROM tcp_win GROUP BY winSize ORDER BY SUM(winCount) DESC LIMIT 1",
             "most_used.ipclass": "SELECT ipClass FROM ip_statistics GROUP BY ipClass ORDER BY COUNT(*) DESC LIMIT 1",
-
             "least_used.ipaddress": "SELECT ipAddress FROM ip_statistics WHERE (pktsSent+pktsReceived) == (SELECT MIN(pktsSent+pktsReceived) from ip_statistics)",
             "least_used.macaddress": "SELECT * FROM (SELECT macAddress, COUNT(*) as occ from ip_mac GROUP BY macAddress ORDER BY occ ASC) WHERE occ=(SELECT COUNT(*) as occ from ip_mac GROUP BY macAddress ORDER BY occ ASC LIMIT 1)",
             "least_used.portnumber": "SELECT portNumber, COUNT(portNumber) as cntPort FROM ip_ports GROUP BY portNumber HAVING cntPort=(SELECT MIN(cntPort) from (SELECT portNumber, COUNT(portNumber) as cntPort FROM ip_ports GROUP BY portNumber))",

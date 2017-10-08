@@ -20,13 +20,10 @@ class Parameter(Enum):
     # recommended type: Integer positive -------------------------
     PACKETS_LIMIT = 'packets.limit'
     NUMBER_ATTACKERS = 'attackers.count'
-
-    # Aidmar
-    # For DDoS
     ATTACK_DURATION = 'attack.duration' # in seconds
     VICTIM_BUFFER = 'victim.buffer' # in packets
-    # For Web app exploit
     TARGET_URI = 'target.uri'
+    # recommended type: domain -----------------------------------
     TARGET_HOST = 'target.host'
 
     # recommended type: Float ------------------------------------
@@ -54,6 +51,4 @@ class ParameterTypes(Enum):
     TYPE_BOOLEAN = 5
     TYPE_FLOAT = 6
     TYPE_PACKET_POSITION = 7  # used to derive timestamp from parameter INJECT_AFTER_PACKET
-
-    # Aidmar
     TYPE_DOMAIN = 8

@@ -718,7 +718,7 @@ class Statistics:
             plt.savefig(out, dpi=500)
             return out
 
-        # Aidmar - This distribution is not drawable for big datasets
+        # This distribution is not drawable for big datasets
         def plot_ip_dst(file_ending: str):
             plt.gcf().clear()
             result = self.stats_db._process_user_defined_query(
@@ -749,7 +749,6 @@ class Statistics:
             plt.savefig(out, dpi=500)
             return out
 
-        # Aidmar
         def plot_interval_pktCount(file_ending: str):
             plt.gcf().clear()
             result = self.stats_db._process_user_defined_query(
@@ -780,8 +779,6 @@ class Statistics:
             plt.savefig(out, dpi=500)
             return out
 
-
-        # Aidmar
         def plot_interval_ip_src_ent(file_ending: str):
             plt.gcf().clear()
             result = self.stats_db._process_user_defined_query(

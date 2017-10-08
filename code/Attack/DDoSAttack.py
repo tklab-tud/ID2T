@@ -176,7 +176,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
         mac_destination = self.get_param_value(Param.MAC_DESTINATION)
         ip_destination = self.get_param_value(Param.IP_DESTINATION)
 
-
         most_used_ip_address = self.statistics.get_most_used_ip_address()
         pps = self.get_param_value(Param.PACKETS_PER_SECOND)
         if pps == 0:
@@ -194,7 +193,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
         # Check ip.src == ip.dst
         self.ip_src_dst_equal_check(ip_source_list, ip_destination)
 
-        # Aidmar
         port_destination = self.get_param_value(Param.PORT_DESTINATION)
         if not port_destination:  # user did not define port_dest
             port_destination = self.statistics.process_db_query(
@@ -214,12 +212,10 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         path_attack_pcap = None
 
-        # Aidmar
         timestamp_prv_reply, timestamp_confirm = 0, 0
         minDelay, maxDelay = self.get_reply_delay(ip_destination)
         victim_buffer = self.get_param_value(Param.VICTIM_BUFFER)
 
-        # Aidmar
         pkts_num = self.get_param_value(Param.PACKETS_LIMIT)
         if pkts_num == 0:
             attack_duration = self.get_param_value(Param.ATTACK_DURATION)
@@ -242,7 +238,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         replies_count = 0
 
-        # Aidmar
+        # For each attacker, generate his own packets, then merge all packets
         for attacker in range(num_attackers):
             # Timestamp
             timestamp_next_pkt = self.get_param_value(Param.INJECT_AT_TIMESTAMP)
@@ -256,8 +252,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 (port_source, ttl_value) = get_attacker_config(ip_source)
                 request_ether = Ether(dst=mac_destination, src=mac_source)
                 request_ip = IP(src=ip_source, dst=ip_destination, ttl=ttl_value)
-                # Aidmar - random win size for each packet
-                # request_tcp = TCP(sport=port_source, dport=port_destination, flags='S', ack=0)
+                # Random win size for each packet
                 source_win_size = choice(source_win_sizes)
                 request_tcp = TCP(sport=port_source, dport=port_destination, flags='S', ack=0, window=source_win_size)
 
@@ -267,7 +262,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 packets.append(request)
 
                 # Build reply package
-                # Aidmar
                 if replies_count <= victim_buffer:
                     reply_ether = Ether(src=mac_destination, dst=mac_source)
                     reply_ip = IP(src=ip_destination, dst=ip_source, flags='DF')
@@ -302,6 +296,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
         # Store timestamp of last packet
         self.attack_end_utime = last_packet.time
 
-        # return packets sorted by packet time_sec_start
+        # Return packets sorted by packet time_sec_start
         # pkt_num+1: because pkt_num starts at 0
         return pkt_num + 1, path_attack_pcap
