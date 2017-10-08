@@ -1,4 +1,3 @@
-# Aidmar
 from operator import itemgetter
 from math import sqrt, ceil, log
 
@@ -781,7 +780,7 @@ class Statistics:
             plt.savefig(out, dpi=500)
             return out
 
-<<<<<<< HEAD
+
         # Aidmar
         def plot_interval_ip_src_ent(file_ending: str):
             plt.gcf().clear()
@@ -1145,7 +1144,4 @@ class Statistics:
                 complement_interval_pps.append((row[0], int(pps * (maxPPS - row[1]) / maxPPS)))
 
         return complement_interval_pps
-=======
-        out_path = plot_ttl('.' + format)
-        print("Saved TTL distribution plot in: ", out_path)
->>>>>>> 48c729f6dbfeb1e2670c762729090a48d5f0b490
+

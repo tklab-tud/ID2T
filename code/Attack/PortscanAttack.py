@@ -15,10 +15,7 @@ from scapy.layers.inet import IP, Ether, TCP
 import numpy as np
 
 class PortscanAttack(BaseAttack.BaseAttack):
-<<<<<<< HEAD
 
-=======
->>>>>>> 48c729f6dbfeb1e2670c762729090a48d5f0b490
     def __init__(self):
         """
         Creates a new instance of the PortscanAttack.
@@ -49,11 +46,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
     def init_params(self):
         """
         Initialize the parameters of this attack using the user supplied command line parameters.
-<<<<<<< HEAD
         Use the provided statistics to calculate default parameters and to process user
-=======
-        Use the provided statistics to calculate default parameters and to process user 
->>>>>>> 48c729f6dbfeb1e2670c762729090a48d5f0b490
         supplied queries.
 
         :param statistics: Reference to a statistics object.
