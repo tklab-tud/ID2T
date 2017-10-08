@@ -22,3 +22,6 @@ code_boost/src/cmake-build-debug/*
 test.py
 dbs/
 *.csv
+code_boost/src/CMakeLists.txt
+code_boost/src/cxx/CMakeLists.txt
+code_boost/src/cxx/cmake-build-debug/
