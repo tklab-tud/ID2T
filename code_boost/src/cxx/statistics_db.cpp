@@ -89,6 +89,96 @@ void statistics_db::writeStatisticsTTL(std::unordered_map<ipAddress_ttl, int> tt
 }
 
 /**
+ * Writes the MSS distribution into the database.
+ * @param mssDistribution The MSS distribution from class statistics.
+ */
+void statistics_db::writeStatisticsMSS(std::unordered_map<ipAddress_mss, int> mssDistribution) {
+    try {
+        db->exec("DROP TABLE IF EXISTS tcp_mss");
+        SQLite::Transaction transaction(*db);
+        const char *createTable = "CREATE TABLE tcp_mss ("
+                "ipAddress TEXT,"
+                "mssValue INTEGER,"
+                "mssCount INTEGER,"
+                "PRIMARY KEY(ipAddress,mssValue));";
+        db->exec(createTable);
+        SQLite::Statement query(*db, "INSERT INTO tcp_mss VALUES (?, ?, ?)");
+        for (auto it = mssDistribution.begin(); it != mssDistribution.end(); ++it) {
+            ipAddress_mss e = it->first;
+            query.bind(1, e.ipAddress);
+            query.bind(2, e.mssValue);
+            query.bind(3, it->second);
+            query.exec();
+            query.reset();
+        }
+        transaction.commit();
+    }
+    catch (std::exception &e) {
+        std::cout << "Exception in statistics_db: " << e.what() << std::endl;
+    }
+}
+
+/**
+ * Writes the ToS distribution into the database.
+ * @param tosDistribution The ToS distribution from class statistics.
+ */
+void statistics_db::writeStatisticsToS(std::unordered_map<ipAddress_tos, int> tosDistribution) {
+    try {
+        db->exec("DROP TABLE IF EXISTS ip_tos");
+        SQLite::Transaction transaction(*db);
+        const char *createTable = "CREATE TABLE ip_tos ("
+                "ipAddress TEXT,"
+                "tosValue INTEGER,"
+                "tosCount INTEGER,"
+                "PRIMARY KEY(ipAddress,tosValue));";
+        db->exec(createTable);
+        SQLite::Statement query(*db, "INSERT INTO ip_tos VALUES (?, ?, ?)");
+        for (auto it = tosDistribution.begin(); it != tosDistribution.end(); ++it) {
+            ipAddress_tos e = it->first;
+            query.bind(1, e.ipAddress);
+            query.bind(2, e.tosValue);
+            query.bind(3, it->second);
+            query.exec();
+            query.reset();
+        }
+        transaction.commit();
+    }
+    catch (std::exception &e) {
+        std::cout << "Exception in statistics_db: " << e.what() << std::endl;
+    }
+}
+
+/**
+ * Writes the window size distribution into the database.
+ * @param winDistribution The window size distribution from class statistics.
+ */
+void statistics_db::writeStatisticsWin(std::unordered_map<ipAddress_win, int> winDistribution) {
+    try {
+        db->exec("DROP TABLE IF EXISTS tcp_win");
+        SQLite::Transaction transaction(*db);
+        const char *createTable = "CREATE TABLE tcp_win ("
+                "ipAddress TEXT,"
+                "winSize INTEGER,"
+                "winCount INTEGER,"
+                "PRIMARY KEY(ipAddress,winSize));";
+        db->exec(createTable);
+        SQLite::Statement query(*db, "INSERT INTO tcp_win VALUES (?, ?, ?)");
+        for (auto it = winDistribution.begin(); it != winDistribution.end(); ++it) {
+            ipAddress_win e = it->first;
+            query.bind(1, e.ipAddress);
+            query.bind(2, e.winSize);
+            query.bind(3, it->second);
+            query.exec();
+            query.reset();
+        }
+        transaction.commit();
+    }
+    catch (std::exception &e) {
+        std::cout << "Exception in statistics_db: " << e.what() << std::endl;
+    }
+}
+
+/**
  * Writes the protocol distribution into the database.
  * @param protocolDistribution The protocol distribution from class statistics.
  */
@@ -224,100 +314,7 @@ void statistics_db::writeStatisticsFile(int packetCount, float captureDuration, 
     }
 }
 
-// Aidamr
-/**
- * Writes the MSS distribution into the database.
- * @param mssDistribution The MSS distribution from class statistics.
- */
-void statistics_db::writeStatisticsMss_dist(std::unordered_map<ipAddress_mss, int> mssDistribution) {
-    try {
-        db->exec("DROP TABLE IF EXISTS tcp_mss");
-        SQLite::Transaction transaction(*db);
-        const char *createTable = "CREATE TABLE tcp_mss ("
-                "ipAddress TEXT,"
-                "mssValue INTEGER,"
-                "mssCount INTEGER,"
-                "PRIMARY KEY(ipAddress,mssValue));";
-        db->exec(createTable);
-        SQLite::Statement query(*db, "INSERT INTO tcp_mss VALUES (?, ?, ?)");
-        for (auto it = mssDistribution.begin(); it != mssDistribution.end(); ++it) {
-            ipAddress_mss e = it->first;
-            query.bind(1, e.ipAddress);
-            query.bind(2, e.mssValue);
-            query.bind(3, it->second);
-            query.exec();
-            query.reset();
-        }
-        transaction.commit();
-    }
-    catch (std::exception &e) {
-        std::cout << "Exception in statistics_db: " << e.what() << std::endl;
-    }
-}
 
-// Aidamr
-/**
- * Writes the ToS distribution into the database.
- * @param tosDistribution The ToS distribution from class statistics.
- */
-void statistics_db::writeStatisticsTos_dist(std::unordered_map<ipAddress_tos, int> tosDistribution) {
-    try {
-        db->exec("DROP TABLE IF EXISTS ip_tos");
-        SQLite::Transaction transaction(*db);
-        const char *createTable = "CREATE TABLE ip_tos ("
-                "ipAddress TEXT,"
-                "tosValue INTEGER,"
-                "tosCount INTEGER,"
-                "PRIMARY KEY(ipAddress,tosValue));";
-        db->exec(createTable);
-        SQLite::Statement query(*db, "INSERT INTO ip_tos VALUES (?, ?, ?)");
-        for (auto it = tosDistribution.begin(); it != tosDistribution.end(); ++it) {
-            ipAddress_tos e = it->first;
-            query.bind(1, e.ipAddress);
-            query.bind(2, e.tosValue);
-            query.bind(3, it->second);
-            query.exec();
-            query.reset();
-        }
-        transaction.commit();
-    }
-    catch (std::exception &e) {
-        std::cout << "Exception in statistics_db: " << e.what() << std::endl;
-    }
-}
-
-// Aidamr
-/**
- * Writes the window size distribution into the database.
- * @param winDistribution The window size distribution from class statistics.
- */
-void statistics_db::writeStatisticsWin(std::unordered_map<ipAddress_win, int> winDistribution) {
-    try {
-        db->exec("DROP TABLE IF EXISTS tcp_win");
-        SQLite::Transaction transaction(*db);
-        const char *createTable = "CREATE TABLE tcp_win ("
-                "ipAddress TEXT,"
-                "winSize INTEGER,"
-                "winCount INTEGER,"
-                "PRIMARY KEY(ipAddress,winSize));";
-        db->exec(createTable);
-        SQLite::Statement query(*db, "INSERT INTO tcp_win VALUES (?, ?, ?)");
-        for (auto it = winDistribution.begin(); it != winDistribution.end(); ++it) {
-            ipAddress_win e = it->first;
-            query.bind(1, e.ipAddress);
-            query.bind(2, e.winSize);
-            query.bind(3, it->second);
-            query.exec();
-            query.reset();
-        }
-        transaction.commit();
-    }
-    catch (std::exception &e) {
-        std::cout << "Exception in statistics_db: " << e.what() << std::endl;
-    }
-}
-
-// Aidamr
 /**
  * Writes the conversation statistics into the database.
  * @param convStatistics The conversation from class statistics.
@@ -340,6 +337,7 @@ void statistics_db::writeStatisticsConv(std::unordered_map<conv, entry_convStat>
         db->exec(createTable);
         SQLite::Statement query(*db, "INSERT INTO conv_statistics VALUES (?, ?, ?, ?, ?,  ?, ?, ?, ?)");
 
+        // Calculate average of inter-arrival times and average packet rate
         for (auto it = convStatistics.begin(); it != convStatistics.end(); ++it) {
             conv f = it->first;
             entry_convStat e = it->second;
@@ -357,15 +355,6 @@ void statistics_db::writeStatisticsConv(std::unordered_map<conv, entry_convStat>
                 if (e.interarrival_time.size() > 0)
                     e.avg_interarrival_time = (std::chrono::microseconds) sumDelay / e.interarrival_time.size(); // average
                 else e.avg_interarrival_time = (std::chrono::microseconds) 0;
-
-                // Calculate the variance
-                long temp = 0;
-                for (int i = 0; (unsigned) i < e.interarrival_time.size(); i++) {
-                    long del = e.interarrival_time[i].count();
-                    long avg = e.avg_interarrival_time.count();
-                    temp += (del - avg) * (del - avg);
-                }
-                long standardDeviation = sqrt(temp / e.interarrival_time.size());
 
                 std::chrono::microseconds start_timesttamp = e.pkts_timestamp[0];
                 std::chrono::microseconds end_timesttamp = e.pkts_timestamp.back();
@@ -392,7 +381,6 @@ void statistics_db::writeStatisticsConv(std::unordered_map<conv, entry_convStat>
     }
 }
 
-// Aidamr
 /**
  * Writes the interval statistics into the database.
  * @param intervalStatistics The interval entries from class statistics.

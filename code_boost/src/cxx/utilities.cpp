@@ -1,5 +1,3 @@
-// Created by Aidmar
-
 #include "utilities.h"
 
 using namespace Tins;
@@ -13,9 +11,9 @@ std::string integral_to_binary_string(T byte)
 
 /**
  * Split a string.
- * @param str string to be splitted 
- * @param delimiter delimiter to use in splitting
- * @return vector of substrings
+ * @param str string to be splitted.
+ * @param delimiter delimiter to use in splitting.
+ * @return vector of substrings.
  */
 void split_str(const std::string& s, char delim,std::vector<std::string>& v) {
     auto i = 0;
@@ -33,7 +31,7 @@ void split_str(const std::string& s, char delim,std::vector<std::string>& v) {
 
 /**
  * Get the class (A,B,C,D,E) of IP address.
- * @param ipAddress IP that we get its class
+ * @param ipAddress IP that we get its class.
  */
 std::string getIPv4Class(std::string ipAddress){
     std::string ipClass="Unknown";
@@ -77,9 +75,9 @@ std::string getIPv4Class(std::string ipAddress){
 }
 
 /**
- * Get closest index for element in vector.
- * @param v vector
- * @param refElem element that we search for or for closest element
+ * Get closest index for element in a vector.
+ * @param v vector.
+ * @param refElem element that we search for or for closest element.
  */
 int getClosestIndex(std::vector<std::chrono::microseconds> v, std::chrono::microseconds refElem)
 {
@@ -91,14 +89,18 @@ int getClosestIndex(std::vector<std::chrono::microseconds> v, std::chrono::micro
 }
 
 /**
- * Advance iterator by 100 steps.
- * @param iterator to advance
+ * Advance iterator by 10 steps.
+ * @param iterator to advance.
  */
 void snifferIteratorIncrement(Tins::SnifferIterator& iterator){
     (((((((((iterator++)++)++)++)++)++)++)++)++)++;  
 }
 
-
+/**
+ * Convert IP address from string to array of bytes.
+ * @param IP to convert.
+ * @param IP_bytes to be filled and retrieved.
+ */
 void convertIPv4toArray(std::string IP, unsigned short IP_bytes[]){
     std::vector<std::string> temp_v;
     split_str(IP,'.',temp_v);
@@ -108,7 +110,15 @@ void convertIPv4toArray(std::string IP, unsigned short IP_bytes[]){
     IP_bytes[3] = std::stoi(temp_v[3]);
 }
 
-//Calculate TCP checksum
+/**
+ * Calculate TCP checksum.
+ * @param len_tcp TCP packet length
+ * @param src_addr source IP address
+ * @param dest_addr destination IP address
+ * @param padding
+ * @param buff
+ * @return checksum.
+ */
 u16 tcp_sum_calc(u16 len_tcp, u16 src_addr[],u16 dest_addr[], bool padding, u16 buff[])
 {
     u16 prot_tcp=6;
@@ -189,9 +199,8 @@ bool check_tcpChecksum(std::string ipAddressSender, std::string ipAddressReceive
     convertIPv4toArray(ipAddressSender, ipAddressSender_bytes);
     convertIPv4toArray(ipAddressReceiver, ipAddressReceiver_bytes);
 
-    //tcp_sum_calc(unsigned short len_tcp, unsigned short src_addr[],unsigned short dest_addr[], bool padding, unsigned short buff[])
     bool padding = false;
-    int dataSize = bufferArray_8.size() - headerSize;  // TO-DO: why don't you use pkt.size()
+    int dataSize = bufferArray_8.size() - headerSize;
     if(dataSize != 0)
         if(dataSize % 2 != 0)
             padding = true; // padding if the data size is odd

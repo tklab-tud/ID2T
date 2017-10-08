@@ -239,7 +239,7 @@ struct entry_convStat {
                && avg_pkt_rate == avg_pkt_rate
                && pkts_timestamp == other.pkts_timestamp
                && interarrival_time == other.interarrival_time
-               && avg_interarrival_time == other.avg_interarrival_time
+               && avg_interarrival_time == other.avg_interarrival_time;
     }
 };
 

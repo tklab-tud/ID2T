@@ -578,8 +578,8 @@ void statistics::writeToDatabase(std::string database_path) {
         db.writeStatisticsIpMac(ip_mac_mapping);
         db.writeStatisticsPorts(ip_ports);
         db.writeStatisticsProtocols(protocol_distribution);
-        db.writeStatisticsMss_dist(mss_distribution);
-        db.writeStatisticsTos_dist(tos_distribution);
+        db.writeStatisticsMSS(mss_distribution);
+        db.writeStatisticsToS(tos_distribution);
         db.writeStatisticsWin(win_distribution);
         db.writeStatisticsConv(conv_statistics);
         db.writeStatisticsInterval(interval_statistics);
