@@ -8,7 +8,6 @@ using namespace Tins;
  */
 pcap_processor::pcap_processor(std::string path, std::string extraTests) {
     filePath = path;
-    // Aidmar
     if(extraTests == "True")
         stats.setDoExtraTests(true);
     else stats.setDoExtraTests(false);;
@@ -140,8 +139,7 @@ void pcap_processor::collect_statistics() {
         std::chrono::microseconds barrier = timeInterval;
 
         // Iterate over all packets and collect statistics
-        for (; i != sniffer.end(); i++) {                  
-            // Aidmar            
+        for (; i != sniffer.end(); i++) {
             std::chrono::microseconds lastPktTimestamp = i->timestamp();
             std::chrono::microseconds currentCaptureDuration = lastPktTimestamp - firstTimestamp;
 
@@ -199,7 +197,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
         // TTL distribution
         stats.incrementTTLcount(ipAddressSender, ipLayer.ttl());
 
-        // Aidmar - ToS distribution
+        // ToS distribution
         stats.incrementToScount(ipAddressSender, ipLayer.tos());
 
         // Protocol distribution
@@ -228,7 +226,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
         stats.assignMacAddress(ipAddressSender, macAddressSender);
         stats.assignMacAddress(ipAddressReceiver, macAddressReceiver);
     } else {
-        //std::cout << "Unknown PDU Type on L3: " << pdu_l3_type << std::endl;
+        std::cout << "Unknown PDU Type on L3: " << pdu_l3_type << std::endl;
     }
 
     // Layer 4 - Transport -------------------------------
@@ -237,7 +235,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
         // Protocol distribution - layer 4
         PDU::PDUType p = pdu_l4->pdu_type();  
         
-        // Aidmar - check for IPv4: payload
+        // Check for IPv4: payload
         if (pdu_l3_type == PDU::PDUType::IP) {
             stats.checkPayload(pdu_l4);
           }
@@ -245,25 +243,23 @@ void pcap_processor::process_packets(const Packet &pkt) {
         if (p == PDU::PDUType::TCP) {
             TCP tcpPkt = (const TCP &) *pdu_l4;
             
-          // Aidmar - Tests TCP checksum
+          // Check TCP checksum
           if (pdu_l3_type == PDU::PDUType::IP) {
             stats.checkTCPChecksum(ipAddressSender, ipAddressReceiver, tcpPkt);
           }
 
             stats.incrementProtocolCount(ipAddressSender, "TCP");                        
-                    
-            // Aidmar
+
             // Conversation statistics
             stats.addConvStat(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), pkt.timestamp());
-            
-            // Aidmar
+
             // Window Size distribution
             int win = tcpPkt.window();
             stats.incrementWinCount(ipAddressSender, win);
 
             try {                                                                
                 int val = tcpPkt.mss();
-                // Aidmar
+
                 // MSS distribution
                 stats.incrementMSScount(ipAddressSender, val);
             } catch (Tins::option_not_found) {
@@ -338,7 +334,7 @@ bool inline pcap_processor::file_exists(const std::string &filePath) {
 using namespace boost::python;
 
 BOOST_PYTHON_MODULE (libpcapreader) {
-    class_<pcap_processor>("pcap_processor", init<std::string, std::string>()) // Aidmar - added , std::string
+    class_<pcap_processor>("pcap_processor", init<std::string, std::string>())
             .def("merge_pcaps", &pcap_processor::merge_pcaps)
             .def("collect_statistics", &pcap_processor::collect_statistics)
             .def("get_timestamp_mu_sec", &pcap_processor::get_timestamp_mu_sec)

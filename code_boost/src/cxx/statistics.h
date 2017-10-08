@@ -468,18 +468,16 @@ private:
     int correctTCPChecksumCount = 0;
 
     // Variables that are used for interval-wise tests
-    int lastIntervalPayloadCount = 0;
-    int lastIntervalIncorrectTCPChecksumCount = 0;
-    int lastIntervalCorrectTCPChecksumCount = 0;
-    int lastIntervalValidToSCount = 0;
-    int lastIntervalInvalidToSCount = 0;
-    int lastIntervalCumPktCount = 0;
-    float lastIntervalCumSumPktSize = 0;
-    int lastIntervalCumNewIPCount = 0;
-    int lastIntervalCumNewTTLCount = 0;
-    int lastIntervalCumNewWinSizeCount = 0;
-    int lastIntervalCumNewToSCount = 0;
-    int lastIntervalCumNewMSSCount = 0;
+    int intervalPayloadCount = 0;
+    int intervalIncorrectTCPChecksumCount = 0;
+    int intervalCorrectTCPChecksumCount = 0;
+    int intervalCumPktCount = 0;
+    float intervalCumSumPktSize = 0;
+    int intervalCumNewIPCount = 0;
+    int intervalCumNewTTLCount = 0;
+    int intervalCumNewWinSizeCount = 0;
+    int intervalCumNewToSCount = 0;
+    int intervalCumNewMSSCount = 0;
 
     /*
      * Data containers

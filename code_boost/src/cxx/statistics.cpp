@@ -10,8 +10,6 @@
 
 using namespace Tins;
 
-
-// Aidmar
 /**
  * Checks if there is a payload and increments payloads counter.
  * @param pdu_l4 The packet that should be checked if it has a payload or not.
@@ -27,7 +25,6 @@ void statistics::checkPayload(const PDU *pdu_l4) {
     }
 }
 
-// Aidmar
 /**
  * Checks the correctness of TCP checksum and increments counter if the checksum was incorrect.
  * @param ipAddressSender The source IP.
@@ -42,10 +39,10 @@ void statistics::checkTCPChecksum(std::string ipAddressSender, std::string ipAdd
     }
 }
 
-// Aidmar
 /**
- * Calculates entropy of source and destination IPs for last time interval.
+ * Calculates entropy of the source and destination IPs in a time interval.
  * @param intervalStartTimestamp The timstamp where the interval starts.
+ * @return a vector: contains source IP entropy and destination IP entropy.
  */
 std::vector<float> statistics::calculateLastIntervalIPsEntropy(std::chrono::microseconds intervalStartTimestamp){
     if(this->getDoExtraTests()) {
@@ -96,17 +93,16 @@ std::vector<float> statistics::calculateLastIntervalIPsEntropy(std::chrono::micr
     }
 }
 
-// Aidmar
+
 /**
- * Calculates cumulative entropy of source and destination IPs, i.e., the entropy for packets from the beginning of the pcap file. 
+ * Calculates the cumulative entropy of the source and destination IPs, i.e., the entropy for packets from the beginning of the pcap file.
+ * @return a vector: contains the cumulative entropies of source and destination IPs
  */
 std::vector<float> statistics::calculateIPsCumEntropy(){
     if(this->getDoExtraTests()) {
         std::vector <std::string> IPs;
         std::vector <float> IPsSrcProb;
         std::vector <float> IPsDstProb;
-
-        //std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
 
         for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
             IPs.push_back(i->first);
@@ -136,10 +132,8 @@ std::vector<float> statistics::calculateIPsCumEntropy(){
     }
 }
 
-
-// Aidmar
 /**
- * Calculates sending packet rate for each IP in last time interval. Finds min and max packet rate and adds them to ip_statistics map.
+ * Calculates sending packet rate for each IP in a time interval. Finds min and max packet rate and adds them to ip_statistics map.
  * @param intervalStartTimestamp The timstamp where the interval starts.
  */
 void statistics::calculateIPIntervalPacketRate(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp){        
@@ -155,9 +149,8 @@ void statistics::calculateIPIntervalPacketRate(std::chrono::duration<int, std::m
         }
 }
 
-// Aidmar
 /**
- * Registers statistical data for last time interval. Calculates packet rate. Calculates IPs entropy. Calculates IPs cumulative entropy.
+ * Registers statistical data for a time interval.
  * @param intervalStartTimestamp The timstamp where the interval starts.
  * @param intervalEndTimestamp The timstamp where the interval ends.
  * @param previousPacketCount The total number of packets in last interval.
@@ -172,28 +165,28 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
     std::string  intervalStartTimestamp_s = std::to_string(intervalStartTimestamp.count());
 
     // The intervalStartTimestamp_s is the previous interval lastPktTimestamp_s
-    interval_statistics[lastPktTimestamp_s].pkts_count = packetCount - lastIntervalCumPktCount;
-    interval_statistics[lastPktTimestamp_s].kbytes = (float(sumPacketSize - lastIntervalCumSumPktSize) / 1024);
+    interval_statistics[lastPktTimestamp_s].pkts_count = packetCount - intervalCumPktCount;
+    interval_statistics[lastPktTimestamp_s].kbytes = (float(sumPacketSize - intervalCumSumPktSize) / 1024);
 
-    interval_statistics[lastPktTimestamp_s].payload_count = payloadCount - lastIntervalPayloadCount;
-    interval_statistics[lastPktTimestamp_s].incorrect_checksum_count = incorrectTCPChecksumCount - lastIntervalIncorrectTCPChecksumCount;
-    interval_statistics[lastPktTimestamp_s].correct_checksum_count = correctTCPChecksumCount - lastIntervalCorrectTCPChecksumCount;
-    interval_statistics[lastPktTimestamp_s].new_ip_count = ip_statistics.size() - lastIntervalCumNewIPCount;
-    interval_statistics[lastPktTimestamp_s].new_ttl_count = ttl_values.size() - lastIntervalCumNewTTLCount;
-    interval_statistics[lastPktTimestamp_s].new_win_size_count = win_values.size() - lastIntervalCumNewWinSizeCount;
-    interval_statistics[lastPktTimestamp_s].new_tos_count = tos_values.size() - lastIntervalCumNewToSCount;
-    interval_statistics[lastPktTimestamp_s].new_mss_count = mss_values.size() - lastIntervalCumNewMSSCount;
+    interval_statistics[lastPktTimestamp_s].payload_count = payloadCount - intervalPayloadCount;
+    interval_statistics[lastPktTimestamp_s].incorrect_checksum_count = incorrectTCPChecksumCount - intervalIncorrectTCPChecksumCount;
+    interval_statistics[lastPktTimestamp_s].correct_checksum_count = correctTCPChecksumCount - intervalCorrectTCPChecksumCount;
+    interval_statistics[lastPktTimestamp_s].new_ip_count = ip_statistics.size() - intervalCumNewIPCount;
+    interval_statistics[lastPktTimestamp_s].new_ttl_count = ttl_values.size() - intervalCumNewTTLCount;
+    interval_statistics[lastPktTimestamp_s].new_win_size_count = win_values.size() - intervalCumNewWinSizeCount;
+    interval_statistics[lastPktTimestamp_s].new_tos_count = tos_values.size() - intervalCumNewToSCount;
+    interval_statistics[lastPktTimestamp_s].new_mss_count = mss_values.size() - intervalCumNewMSSCount;
 
-    lastIntervalPayloadCount = payloadCount;
-    lastIntervalIncorrectTCPChecksumCount = incorrectTCPChecksumCount;
-    lastIntervalCorrectTCPChecksumCount = correctTCPChecksumCount;
-    lastIntervalCumPktCount = packetCount;
-    lastIntervalCumSumPktSize = sumPacketSize;
-    lastIntervalCumNewIPCount =  ip_statistics.size();
-    lastIntervalCumNewTTLCount = ttl_values.size();
-    lastIntervalCumNewWinSizeCount = win_values.size();
-    lastIntervalCumNewToSCount = tos_values.size();
-    lastIntervalCumNewMSSCount = mss_values.size();
+    intervalPayloadCount = payloadCount;
+    intervalIncorrectTCPChecksumCount = incorrectTCPChecksumCount;
+    intervalCorrectTCPChecksumCount = correctTCPChecksumCount;
+    intervalCumPktCount = packetCount;
+    intervalCumSumPktSize = sumPacketSize;
+    intervalCumNewIPCount =  ip_statistics.size();
+    intervalCumNewTTLCount = ttl_values.size();
+    intervalCumNewWinSizeCount = win_values.size();
+    intervalCumNewToSCount = tos_values.size();
+    intervalCumNewMSSCount = mss_values.size();
 
     if(ipEntopies.size()>1){
         interval_statistics[lastPktTimestamp_s].ip_src_entropy = ipEntopies[0];
@@ -205,7 +198,6 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
     }
 }        
 
-// Aidmar
 /**
  * Registers statistical data for a sent packet in a given conversation (two IPs, two ports). 
  * Increments the counter packets_A_B or packets_B_A.
@@ -228,6 +220,7 @@ void statistics::addConvStat(std::string ipAddressSender,int sport,std::string i
             conv_statistics[f1].pkts_delay.push_back(std::chrono::duration_cast<std::chrono::microseconds> (timestamp - conv_statistics[f1].pkts_timestamp.back()));
         conv_statistics[f1].pkts_timestamp.push_back(timestamp);
     }
+    // Add new conversation A(ipAddressSender, sport), B(ipAddressReceiver, dport)
     else{
         conv_statistics[f2].pkts_count++;
         if(conv_statistics[f2].pkts_timestamp.size()>0 && conv_statistics[f2].pkts_count<=3 )
@@ -235,9 +228,7 @@ void statistics::addConvStat(std::string ipAddressSender,int sport,std::string i
         conv_statistics[f2].pkts_timestamp.push_back(timestamp);
     }
 }
-    
-    
-// Aidmar
+
 /**
  * Increments the packet counter for the given IP address and MSS value.
  * @param ipAddress The IP address whose MSS packet counter should be incremented.
@@ -248,7 +239,6 @@ void statistics::incrementMSScount(std::string ipAddress, int mssValue) {
     mss_distribution[{ipAddress, mssValue}]++;
 }
 
-// Aidmar
 /**
  * Increments the packet counter for the given IP address and window size.
  * @param ipAddress The IP address whose window size packet counter should be incremented.
@@ -362,16 +352,6 @@ void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddres
     ip_statistics[ipAddressReceiver].pktsReceivedTimestamp.push_back(timestamp);
 }
 
-// Aidmar - comment out
-/**
- * Registers a value of the TCP option Maximum Segment Size (MSS).
- * @param ipAddress The IP address which sent the TCP packet.
- * @param MSSvalue The MSS value found.
- */
-//void statistics::addMSS(std::string ipAddress, int MSSvalue) {
-//    ip_sumMss[ipAddress] += MSSvalue;
-//}
-
 /**
  * Setter for the timestamp_firstPacket field.
  * @param ts The timestamp of the first packet in the PCAP file.
@@ -388,30 +368,64 @@ void statistics::setTimestampLastPacket(Tins::Timestamp ts) {
     timestamp_lastPacket = ts;
 }
 
-// Aidmar
 /**
  * Getter for the timestamp_firstPacket field.
  */
 Tins::Timestamp statistics::getTimestampFirstPacket() {
     return timestamp_firstPacket;
 }
+
 /**
  * Getter for the timestamp_lastPacket field.
  */
 Tins::Timestamp statistics::getTimestampLastPacket() {
     return timestamp_lastPacket;
 }
+
 /**
  * Getter for the packetCount field.
  */
 int statistics::getPacketCount() {
     return packetCount;
 }
+
 /**
  * Getter for the sumPacketSize field.
  */
 int statistics::getSumPacketSize() {
     return sumPacketSize;
+}
+
+
+/**
+ * Returns the average packet size.
+ * @return a float indicating the average packet size in kbytes.
+ */
+float statistics::getAvgPacketSize() const {
+    // AvgPktSize = (Sum of all packet sizes / #Packets)
+    return (sumPacketSize / packetCount) / 1024;
+}
+
+/**
+ * Adds the size of a packet (to be used to calculate the avg. packet size).
+ * @param packetSize The size of the current packet in bytes.
+ */
+void statistics::addPacketSize(uint32_t packetSize) {
+    sumPacketSize += ((float) packetSize);
+}
+
+/**
+ * Setter for the doExtraTests field.
+ */
+void statistics::setDoExtraTests(bool var) {
+    doExtraTests = var;
+}
+
+/**
+ * Getter for the doExtraTests field.
+ */
+bool statistics::getDoExtraTests() {
+    return doExtraTests;
 }
 
 
@@ -485,11 +499,6 @@ ip_stats statistics::getStatsForIP(std::string ipAddress) {
     s.packetPerSecondOut = (ipStatEntry.pkts_sent / duration);
     s.AvgPacketSizeSent = (ipStatEntry.kbytes_sent / ipStatEntry.pkts_sent);
     s.AvgPacketSizeRecv = (ipStatEntry.kbytes_received / ipStatEntry.pkts_received);
-    // Aidmar - comment out
-    //int sumMSS = ip_sumMss[ipAddress];
-    //int tcpPacketsSent = getProtocolCount(ipAddress, "TCP");
-    //s.AvgMaxSegmentSizeTCP = ((sumMSS > 0 && tcpPacketsSent > 0) ? (sumMSS / tcpPacketsSent) : 0);
-
     return s;
 }
 
@@ -528,7 +537,6 @@ void statistics::printStats(std::string ipAddress) {
         ss << "Packets per second OUT: " << is.packetPerSecondOut << std::endl;
         ss << "Avg Packet Size Sent: " << is.AvgPacketSizeSent << " kbytes" << std::endl;
         ss << "Avg Packet Size Received: " << is.AvgPacketSizeRecv << " kbytes" << std::endl;
-        //ss << "Avg MSS: " << is.AvgMaxSegmentSizeTCP << " bytes" << std::endl;
     }
     std::cout << ss.str();
 }
@@ -568,10 +576,8 @@ void statistics::writeToDatabase(std::string database_path) {
         db.writeStatisticsIP(ip_statistics);
         db.writeStatisticsTTL(ttl_distribution);
         db.writeStatisticsIpMac(ip_mac_mapping);
-        //db.writeStatisticsMss(ip_sumMss);
         db.writeStatisticsPorts(ip_ports);
         db.writeStatisticsProtocols(protocol_distribution);
-        // Aidmar
         db.writeStatisticsMss_dist(mss_distribution);
         db.writeStatisticsTos_dist(tos_distribution);
         db.writeStatisticsWin(win_distribution);
@@ -583,34 +589,8 @@ void statistics::writeToDatabase(std::string database_path) {
         std::cout<<"ERROR: Statistics could not be collected from the input PCAP!"<<"\n";
         return;
     }
-
 }
 
-/**
- * Returns the average packet size.
- * @return a float indicating the average packet size in kbytes.
- */
-float statistics::getAvgPacketSize() const {
-    // AvgPktSize = (Sum of all packet sizes / #Packets)
-    return (sumPacketSize / packetCount) / 1024;
-}
-
-/**
- * Adds the size of a packet (to be used to calculate the avg. packet size).
- * @param packetSize The size of the current packet in bytes.
- */
-void statistics::addPacketSize(uint32_t packetSize) {
-    sumPacketSize += ((float) packetSize);
-}
-
-// Aidmar
-void statistics::setDoExtraTests(bool var) {
-    doExtraTests = var;
-}
-
-bool statistics::getDoExtraTests() {
-    return doExtraTests;
-}
 
 
 
