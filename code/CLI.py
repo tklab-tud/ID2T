@@ -23,13 +23,112 @@ class CLI(object):
         self.args = None
         self.attack_config = None
 
+    def parse_arguments(self, args):
+        """
+        Defines the allowed application arguments and invokes the evaluation of the arguments.
+
+        :param args: The application arguments
+        """
+        # Create parser for arguments
+        parser = argparse.ArgumentParser(description="Intrusion Detection Dataset Toolkit (ID2T) - A toolkit for "
+                                         "injecting synthetically created attacks into PCAP files.",
+                                         prog="id2t")
+        # Required arguments
+        required_group = parser.add_argument_group('required arguments')
+        required_args_group = required_group.add_mutually_exclusive_group(required=True)
+        required_args_group.add_argument('-i', '--input', metavar="PCAP_FILE",
+                                         help='path to the input pcap file')
+        required_args_group.add_argument('-l', '--list-attacks', action='store_true')
+
+        # Optional arguments
+        parser.add_argument('-c', '--config', metavar='CONFIG_FILE', help='file containing configuration parameters.',
+                            action=LoadFromFile, type=open)
+        parser.add_argument('-e', '--export',
+                            help='store statistics as a ".stat" file',
+                            action='store_true', default=False)
+        parser.add_argument('-r', '--recalculate',
+                            help='recalculate statistics even if a cached version exists.',
+                            action='store_true', default=False)
+        parser.add_argument('-s', '--statistics', help='print file statistics to stdout.', action='store_true',
+                            default=False)
+        parser.add_argument('-p', '--plot', help='creates statistics plots.', action='append',
+                            nargs='?')
+        parser.add_argument('-q', '--query', metavar="QUERY",
+                            action='append', nargs='?',
+                            help='query the statistics database. If no query is provided, the application enters query mode.')
+        parser.add_argument('-t', '--extraTests', help='perform extra tests on the input pcap file, including calculating IP entropy'
+                                                       'in interval-wise, TCP checksum, and checking payload availability.', action='store_true')
+
+        # Attack arguments
+        parser.add_argument('-a', '--attack', metavar="ATTACK", action='append',
+                                       help='injects ATTACK into a PCAP file.', nargs='+')
+
+        # Parse arguments
+        self.args = parser.parse_args(args)
+
+        self.process_arguments()
+
     def process_arguments(self):
+        """
+        Decide what to do with each  of the command line parameters.
+        """
+        if self.args.list_attacks:
+            # User wants to see the available attacks
+            self.process_attack_listing()
+        else:
+            # User wants to process a PCAP
+            self.process_pcap()
+
+    def process_attack_listing(self):
+        import pkgutil
+        import importlib
+        import Attack
+
+        # Find all attacks, exclude some classes
+        package = Attack
+        attack_names = []
+        for _, name, __ in pkgutil.iter_modules(package.__path__):
+            if name != 'BaseAttack' and name != 'AttackParameters':
+                attack_names.append(name)
+
+        # List the attacks and their parameters
+        emph_start = '\033[1m'
+        emph_end = '\033[0m'
+        for attack_name in attack_names:
+            attack_module = importlib.import_module('Attack.{}'.format(attack_name))
+            attack_class = getattr(attack_module, attack_name)
+            # Instantiate the attack to get to its definitions.
+            attack_obj = attack_class()
+            print('* {}{}{}'.format(emph_start, attack_obj.attack_name, emph_end))
+            print('\t- {}Description:{} {}'.format(emph_start, emph_end,
+                                                   attack_obj.attack_description))
+            print('\t- {}Type:{} {}'.format(emph_start, emph_end,
+                                            attack_obj.attack_type))
+            print('\t- {}Supported Parameters:{}'.format(emph_start, emph_end), end=' ')
+            # Get all the parameter names in a list and sort them
+            param_list = []
+            for key in attack_obj.supported_params:
+                param_list.append(key.value)
+            param_list.sort()
+            # Print each parameter type per line
+            last_prefix = None
+            current_prefix = None
+            for param in param_list:
+                current_prefix = param.split('.')[0]
+                if not last_prefix or current_prefix != last_prefix:
+                    print('\n\t + |', end=' ')
+                print(param, end=' | ')
+                last_prefix = current_prefix
+            # Print an empty line
+            print()
+
+    def process_pcap(self):
         """
         Loads the application controller, the PCAP file statistics and if present, processes the given attacks. Evaluates
         given queries.
         """
         # Create ID2T Controller
-        controller = Controller(self.args.input, self.args.tests)
+        controller = Controller(self.args.input, self.args.extraTests)
 
         # Load PCAP statistics
         controller.load_pcap_statistics(self.args.export, self.args.recalculate, self.args.statistics)
@@ -50,54 +149,6 @@ class CLI(object):
         elif self.args.query is not None:
             controller.process_db_queries(self.args.query, True)
 
-    def parse_arguments(self, args):
-        """
-        Defines the allowed application arguments and invokes the evaluation of the arguments.
-
-        :param args: The application arguments
-        """
-        # Create parser for arguments
-        parser = argparse.ArgumentParser(description="Intrusion Detection Dataset Toolkit (ID2T) - A toolkit for "
-                                         "injection of synthetically created attacks into PCAP datasets.",
-                                         prog="id2t")
-        # Define required arguments
-        requiredNamed = parser.add_argument_group('required named arguments')
-        requiredNamed.add_argument('-i', '--input', metavar="FILEPATH", help='path to the input pcap file', required=True)
-
-        # Define optional arguments
-        parser.add_argument('-c', '--config', metavar='FILEPATH', help='file containing parameters used as input.',
-                            action=LoadFromFile, type=open)
-        parser.add_argument('-e', '--export',
-                            help='stores the statistics as a textfile with ending .stat into the dataset directory',
-                            action='store_true', default=False)
-        parser.add_argument('-a', '--attack', metavar="ATTACKNAME", action='append',
-                            help='injects a new attack into the given dataset. '
-                                 'Attacks parameters are: ip.src, ip.dst, ip.dns, mac.src, mac.dst, port.open, '
-                                 'port.dst, port.src, packets.limit, attackers.count, attack.duration, victim.buffer, '
-                                 'target.uri, target.host, packets.per-second, inject.at-timestamp, inject.after-pkt, '
-                                 'port.dst.shuffle, port.dst.order-desc, ip.src.shuffle, port.src.shuffle', nargs='+')
-        parser.add_argument('-r', '--recalculate',
-                            help='forces to recalculate the statistics in case of an already existing statistics database.',
-                            action='store_true', default=False)
-        parser.add_argument('-s', '--statistics', help='print general file statistics to stdout.', action='store_true',
-                            default=False)
-        parser.add_argument('-p', '--plot', help='creates a plot of common dataset statistics', action='append',
-                            nargs='?')
-        parser.add_argument('-q', '--query', metavar="QUERY",
-                            action='append', nargs='?',
-                            help='queries the statistics database. If no query is provided, the application enters into query mode.')
-        # Aidmar
-        parser.add_argument('-t', '--tests', help='perform defects tests on input pcap file.', action='store_true')
-
-        # Parse arguments
-        self.args = parser.parse_args(args)
-
-        # Either PCAP filepath or GUI mode must be enabled
-        if not self.args.input:
-            parser.error("Parameter -i/--input required. See available options with -h/--help ")
-
-        self.process_arguments()
-
 def main(args):
     """
     Creates a new CLI object and invokes the arguments parsing.
@@ -108,29 +159,6 @@ def main(args):
     # Check arguments
     cli.parse_arguments(args)
 
-# Test main
-"""def main_0(args):
-    from scapy.utils import RawPcapReader
-    from scapy.layers.inet import IP, Ether, TCP
-
-    pkts = RawPcapReader("Win7_eternalblue_scan_vulnerable.pcap")
-    for pkt in pkts:
-        eth_frame = Ether(pkt[0])
-        ip_pkt = eth_frame.payload
-        tcp_pkt = ip_pkt.payload
-
-        new_pkt = (eth_frame / ip_pkt / tcp_pkt)
-        new_pkt.time = 0
-
-
-        print(tcp_pkt.getfieldval("sport"))
-"""
-
-
-
 # Uncomment to enable calling by terminal
 if __name__ == '__main__':
     main(sys.argv[1:])
-
-
-

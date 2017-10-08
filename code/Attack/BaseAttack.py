@@ -1,16 +1,13 @@
-# Aidmar
-from scapy.layers.inet import Ether
 import socket
 import sys
-from math import sqrt
-
 import ipaddress
 import os
 import random
 import re
 import tempfile
 from abc import abstractmethod, ABCMeta
-import numpy as np # TO-DO: it needs to be added to required packages
+from scapy.layers.inet import Ether
+import numpy as np
 
 import ID2TLib.libpcapreader as pr
 from scapy.utils import PcapWriter
@@ -20,13 +17,12 @@ from Attack.AttackParameters import Parameter
 from Attack.AttackParameters import ParameterTypes
 
 
-
 class BaseAttack(metaclass=ABCMeta):
     """
     Abstract base class for all attack classes. Provides basic functionalities, like parameter validation.
     """
 
-    def __init__(self, statistics, name, description, attack_type):
+    def __init__(self, name, description, attack_type):
         """
         To be called within the individual attack class to initialize the required parameters.
 
@@ -36,7 +32,7 @@ class BaseAttack(metaclass=ABCMeta):
         :param attack_type: The type the attack belongs to, like probing/scanning, malware.
         """
         # Reference to statistics class
-        self.statistics = statistics
+        self.statistics = None
 
         # Class fields
         self.attack_name = name
@@ -46,6 +42,25 @@ class BaseAttack(metaclass=ABCMeta):
         self.supported_params = {}
         self.attack_start_utime = 0
         self.attack_end_utime = 0
+
+    def set_statistics(self, statistics):
+        """
+        Specify the statistics object that will be used to calculate the parameters of this attack.
+        The statistics are used to calculate default parameters and to process user supplied
+        queries.
+
+        :param statistics: Reference to a statistics object.
+        """
+        self.statistics = statistics
+
+    @abstractmethod
+    def init_params(self):
+        """
+        Initialize all required parameters taking into account user supplied values. If no value is supplied,
+        or if a user defined query is supplied, use a statistics object to do the calculations.
+        A call to this function requires a call to 'set_statistics' first.
+        """
+        pass
 
     @abstractmethod
     def generate_attack_pcap(self):
@@ -237,10 +252,16 @@ class BaseAttack(metaclass=ABCMeta):
         Adds the pair param : value to the dictionary of attack parameters. Prints and error message and skips the
         parameter if the validation fails.
 
-        :param param: The parameter name.
-        :param value: The parameter's value.
+        :param stats: Statistics used to calculate user queries or default values.
+        :param param: Name of the parameter that we wish to modify.
+        :param value: The value we wish to assign to the specifried parameter.
         :return: None.
         """
+        # This function call is valid only if there is a statistics object available.
+        if self.statistics is None:
+            print('Error: Attack parameter added without setting a statistics object first.')
+            exit(1)
+
         # by default no param is valid
         is_valid = False
 
@@ -479,10 +500,10 @@ class BaseAttack(metaclass=ABCMeta):
 
            """
         result = self.statistics.process_db_query(
-            "SELECT AVG(minDelay), AVG(maxDelay) FROM conv_statistics WHERE ipAddressB='" + ip_dst + "';")
-        if result[0][1] and result[0][2]:
-            minDelay = result[0][1]
-            maxDelay = result[0][2]
+            "SELECT AVG(minDelay), AVG(maxDelay) FROM conv_statistics WHERE ipAddressB='6.6.6.6';") #" + ip_dst + "';")
+        if result[0][0] and result[0][1]:
+            minDelay = result[0][0]
+            maxDelay = result[0][1]
         else:
             allMinDelays = self.statistics.process_db_query("SELECT minDelay FROM conv_statistics LIMIT 500;")
             minDelay = np.median(allMinDelays)

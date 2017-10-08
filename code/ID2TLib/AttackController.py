@@ -1,16 +1,13 @@
 import importlib
 import sys
 
-#Aidmar
-import time
-
 from Attack.AttackParameters import Parameter
 from ID2TLib import LabelManager
 from ID2TLib import Statistics
 from ID2TLib.Label import Label
 from ID2TLib.PcapFile import PcapFile
 
- 
+
 class AttackController:
     def __init__(self, pcap_file: PcapFile, statistics_class: Statistics, label_manager: LabelManager):
         """
@@ -24,9 +21,6 @@ class AttackController:
         self.current_attack = None
         self.added_attacks = []
 
-        # The PCAP where the attack should be injected into
-        self.base_pcap = self.statistics.pcap_filepath
-
     def create_attack(self, attack_name: str):
         """
         Creates dynamically a new class instance based on the given attack_name.
@@ -38,8 +32,12 @@ class AttackController:
         attack_module = importlib.import_module("Attack." + attack_name)
         attack_class = getattr(attack_module, attack_name)
 
-        # Set current attack
-        self.current_attack = attack_class(self.statistics, self.base_pcap)
+        # Instantiate the desired attack
+        self.current_attack = attack_class()
+        # Initialize the parameters of the attack with defaults or user supplied values.
+        self.current_attack.set_statistics(self.statistics)
+        self.current_attack.init_params()
+        # Record the attack
         self.added_attacks.append(self.current_attack)
 
     def process_attack(self, attack: str, params: str):
@@ -55,7 +53,7 @@ class AttackController:
         # Add attack parameters if provided
         print("Validating and adding attack parameters.")
         params_dict = []
-        if params is not None:
+        if isinstance(params, list) and params:
             # Convert attack param list into dictionary
             for entry in params:
                 params_dict.append(entry.split('='))
@@ -78,20 +76,13 @@ class AttackController:
             # Pass paramters to attack controller
             self.set_params(params_dict)
         else:
-            attack_note = ""
-
-        # Aidmar
-        start_time = time.clock()
+            attack_note = "This attack used only (random) default parameters."
 
         # Write attack into pcap file
         print("Generating attack packets...", end=" ")
         sys.stdout.flush()  # force python to print text immediately
         total_packets, temp_attack_pcap_path = self.current_attack.generate_attack_pcap()
         print("done. (total: " + str(total_packets) + " pkts.)")
-
-        # Aidmar
-        end_time = time.clock()
-        print("Generated Attack in " + str(end_time-start_time)[:4] + " sec")
 
         # Store label into LabelManager
         l = Label(attack, self.get_attack_start_utime(),

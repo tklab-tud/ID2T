@@ -21,14 +21,13 @@ class SQLiAttack(BaseAttack.BaseAttack):
     minDefaultPort = 30000
     maxDefaultPort = 50000
 
-    def __init__(self, statistics, pcap_file_path):
+    def __init__(self):
         """
         Creates a new instance of the SQLi Attack.
 
-        :param statistics: A reference to the statistics class.
         """
         # Initialize attack
-        super(SQLiAttack, self).__init__(statistics, "SQLi Attack", "Injects a SQLi attack'",
+        super(SQLiAttack, self).__init__("SQLi Attack", "Injects a SQLi attack'",
                                         "Resource Exhaustion")
 
         # Define allowed parameters and their type
@@ -44,6 +43,14 @@ class SQLiAttack(BaseAttack.BaseAttack):
             Param.PACKETS_PER_SECOND: ParameterTypes.TYPE_FLOAT
         }
 
+    def init_params(self):
+        """
+        Initialize the parameters of this attack using the user supplied command line parameters.
+        Use the provided statistics to calculate default parameters and to process user
+        supplied queries.
+
+        :param statistics: Reference to a statistics object.
+        """
         # PARAMETERS: initialize with default utilsvalues
         # (values are overwritten if user specifies them)
         most_used_ip_address = self.statistics.get_most_used_ip_address()
