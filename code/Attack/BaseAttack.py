@@ -319,7 +319,6 @@ class BaseAttack(metaclass=ABCMeta):
                 is_valid = True
                 param_name = Parameter.INJECT_AT_TIMESTAMP
                 value = (ts / 1000000)  # convert microseconds from getTimestampMuSec into seconds
-        # Aidmar
         elif param_type == ParameterTypes.TYPE_DOMAIN:
             is_valid = self._is_domain(value)
 

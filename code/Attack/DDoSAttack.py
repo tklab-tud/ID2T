@@ -1,5 +1,5 @@
 import logging
-from random import randint, uniform, choice #Aidmar choice
+from random import randint, uniform, choice
 
 from lea import Lea
 from scipy.stats import gamma

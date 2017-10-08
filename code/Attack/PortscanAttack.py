@@ -61,7 +61,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.MAC_SOURCE, self.statistics.get_mac_address(most_used_ip_address))
 
         random_ip_address = self.statistics.get_random_ip_address()
-        # Aidmar - ip-dst should be valid and not equal to ip.src
+        # ip-dst should be valid and not equal to ip.src
         while not self.is_valid_ip_address(random_ip_address) or random_ip_address==most_used_ip_address:
             random_ip_address = self.statistics.get_random_ip_address()
 
@@ -269,7 +269,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
                 confirm_ip = request_ip
                 confirm_tcp = TCP(sport=sport, dport=dport, seq=1, window=0, flags='R')
                 confirm = (confirm_ether / confirm_ip / confirm_tcp)
-                # Aidmar - edit name timestamp_confirm
                 timestamp_confirm = update_timestamp(timestamp_reply,pps,minDelay)
                 confirm.time = timestamp_confirm
                 packets.append(confirm)

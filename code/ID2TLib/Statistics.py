@@ -22,8 +22,7 @@ class Statistics:
         # Fields
         self.pcap_filepath = pcap_file.pcap_file_path
         self.pcap_proc = None
-        # Aidmar
-        self.do_tests = False
+        self.do_extra_tests = False
 
         # Create folder for statistics database if required
         self.path_db = pcap_file.get_db_path()
@@ -54,7 +53,7 @@ class Statistics:
 
         # Recalculate statistics if database does not exist OR param -r/--recalculate is provided
         if (not self.stats_db.get_db_exists()) or flag_recalculate_stats:
-            self.pcap_proc = pr.pcap_processor(self.pcap_filepath, str(self.do_tests)) # Aidmar - do_tests
+            self.pcap_proc = pr.pcap_processor(self.pcap_filepath, str(self.do_extra_tests))
             self.pcap_proc.collect_statistics()
             self.pcap_proc.write_to_database(self.path_db)
             outstring_datasource = "by PCAP file processor."
@@ -140,8 +139,14 @@ class Statistics:
         Statistics.write_list(self.get_general_file_statistics(), print, "")
         print("\n")
 
-    #Aidmar
+
     def calculate_entropy(self, frequency:list, normalized:bool = False):
+        """
+        Calculates entropy and normalized entropy of list of elements that have specific frequency
+        :param frequency: The frequency of the elements.
+        :param normalized: Calculate normalized entropy
+        :return: entropy or (entropy, normalized entropy)
+        """
         entropy, normalizedEnt, n = 0, 0, 0
         sumFreq = sum(frequency)
         for i, x in enumerate(frequency):
@@ -156,7 +161,37 @@ class Statistics:
         else:
             return entropy
 
-    # Aidmar
+    def calculate_complement_packet_rates(self, pps):
+        """
+        Calculates the complement packet rates of the background traffic packet rates for each interval.
+        Then normalize it to maximum boundary, which is the input parameter pps
+
+        :return: normalized packet rates for each time interval.
+        """
+        result = self.process_db_query(
+            "SELECT lastPktTimestamp,pktsCount FROM interval_statistics ORDER BY lastPktTimestamp")
+        # print(result)
+        bg_interval_pps = []
+        complement_interval_pps = []
+        intervalsSum = 0
+        if result:
+            # Get the interval in seconds
+            for i, row in enumerate(result):
+                if i < len(result) - 1:
+                    intervalsSum += ceil((int(result[i + 1][0]) * 10 ** -6) - (int(row[0]) * 10 ** -6))
+            interval = intervalsSum / (len(result) - 1)
+            # Convert timestamp from micro to seconds, convert packet rate "per interval" to "per second"
+            for row in result:
+                bg_interval_pps.append((int(row[0]) * 10 ** -6, int(row[1] / interval)))
+            # Find max PPS
+            maxPPS = max(bg_interval_pps, key=itemgetter(1))[1]
+
+            for row in bg_interval_pps:
+                complement_interval_pps.append((row[0], int(pps * (maxPPS - row[1]) / maxPPS)))
+
+        return complement_interval_pps
+
+
     def get_tests_statistics(self):
         """
         Writes the calculated basic defects tests statistics into a file.
@@ -206,19 +241,6 @@ class Statistics:
         newIPCount = self.stats_db._process_user_defined_query("SELECT newIPCount FROM interval_statistics")
         ipNovelsPerInterval, ipNovelsPerIntervalFrequency = count_frequncy(newIPCount)
         ipNoveltyDistEntropy = self.calculate_entropy(ipNovelsPerIntervalFrequency)
-
-        # newIPCount = self.stats_db._process_user_defined_query("SELECT newIPCount FROM interval_statistics")
-        # # Retrieve the last cumulative entropy which is the entropy of the all IPs
-        # result = self.stats_db._process_user_defined_query("SELECT ipSrcCumEntropy FROM interval_statistics")
-        # ipSrcEntropy = result[-1][0]
-        # ipSrcCount = self.stats_db._process_user_defined_query(
-        #     "SELECT COUNT(ipAddress) FROM ip_statistics WHERE pktsSent > 0")
-        # ipSrcNormEntropy = ipSrcEntropy / log(ipSrcCount[0][0],2)
-        # result = self.stats_db._process_user_defined_query("SELECT ipDstCumEntropy FROM interval_statistics")
-        # ipDstEntropy = result[-1][0]
-        # ipDstCount = self.stats_db._process_user_defined_query(
-        #     "SELECT COUNT(ipAddress) FROM ip_statistics WHERE pktsReceived > 0")
-        # ipDstNormEntropy = ipDstEntropy / log(ipDstCount[0][0],2)
 
         ####### Ports Tests #######
         port0Count = self.stats_db._process_user_defined_query("SELECT SUM(portCount) FROM ip_ports WHERE portNumber = 0")
@@ -460,19 +482,16 @@ class Statistics:
         result_dict = {key: value for (key, value) in result}
         return result_dict
 
-    # Aidmar
     def get_mss_distribution(self, ipAddress: str):
         result = self.process_db_query('SELECT mssValue, mssCount from tcp_mss WHERE ipAddress="' + ipAddress + '"')
         result_dict = {key: value for (key, value) in result}
         return result_dict
 
-    # Aidmar
     def get_win_distribution(self, ipAddress: str):
         result = self.process_db_query('SELECT winSize, winCount from tcp_win WHERE ipAddress="' + ipAddress + '"')
         result_dict = {key: value for (key, value) in result}
         return result_dict
 
-    # Aidmar
     def get_tos_distribution(self, ipAddress: str):
         result = self.process_db_query('SELECT tosValue, tosCount from ip_tos WHERE ipAddress="' + ipAddress + '"')
         result_dict = {key: value for (key, value) in result}
@@ -498,7 +517,6 @@ class Statistics:
         """
         return self.process_db_query('macAddress(ipAddress=' + ipAddress + ")")
 
-    # Aidmar
     def get_most_used_mss(self, ipAddress: str):
         """
         :param ipAddress: The IP address whose used MSS should be determined
@@ -543,9 +561,12 @@ class Statistics:
                     any(x in value.lower().strip() for x in self.stats_db.get_all_sql_query_keywords()))
 
 
-    # Aidmar
     def calculate_standard_deviation(self, lst):
-        """Calculates the standard deviation for a list of numbers."""
+        """
+        Calculates the standard deviation of a list of numbers.
+        :param lst: The list of numbers to calculate its SD.
+
+        """
         num_items = len(lst)
         mean = sum(lst) / num_items
         differences = [x - mean for x in lst]
@@ -553,16 +574,10 @@ class Statistics:
         ssd = sum(sq_differences)
         variance = ssd / num_items
         sd = sqrt(variance)
-        #print('The mean of {} is {}.'.format(lst, mean))
-        #print('The differences are {}.'.format(differences))
-        #print('The sum of squared differences is {}.'.format(ssd))
-        #print('The variance is {}.'.format(variance))
-        #print('The standard deviation is {}.'.format(sd))
-        #print('--------------------------')
         return sd
 
 
-    def plot_statistics(self, format: str = 'pdf'): #'png'):
+    def plot_statistics(self, format: str = 'pdf'): #'png'
         """
         Plots the statistics associated with the dataset.
         :param format: The format to be used to save the statistics diagrams.
@@ -588,7 +603,6 @@ class Statistics:
             plt.savefig(out,dpi=500)
             return out
 
-        # Aidmar
         def plot_mss(file_ending: str):
             plt.gcf().clear()
             result = self.stats_db._process_user_defined_query(
@@ -612,7 +626,6 @@ class Statistics:
             else:
                 print("Error plot MSS: No MSS values found!")
 
-        # Aidmar
         def plot_win(file_ending: str):
             plt.gcf().clear()
             result = self.stats_db._process_user_defined_query(
@@ -636,7 +649,6 @@ class Statistics:
             else:
                 print("Error plot WinSize: No WinSize values found!")
 
-        # Aidmar
         def plot_protocol(file_ending: str):
             plt.gcf().clear()
             result = self.stats_db._process_user_defined_query(
@@ -666,7 +678,6 @@ class Statistics:
             else:
                 print("Error plot protocol: No protocol values found!")
 
-        # Aidmar
         def plot_port(file_ending: str):
             plt.gcf().clear()
             result = self.stats_db._process_user_defined_query(
@@ -687,7 +698,7 @@ class Statistics:
             plt.savefig(out,dpi=500)
             return out
 
-        # Aidmar - This distribution is not drawable for big datasets
+        # This distribution is not drawable for big datasets
         def plot_ip_src(file_ending: str):
             plt.gcf().clear()
             result = self.stats_db._process_user_defined_query(
@@ -809,7 +820,6 @@ class Statistics:
             plt.savefig(out, dpi=500)
             return out
 
-        # Aidmar
         def plot_interval_ip_dst_ent(file_ending: str):
             plt.gcf().clear()
             result = self.stats_db._process_user_defined_query(
@@ -840,7 +850,6 @@ class Statistics:
             plt.savefig(out, dpi=500)
             return out
 
-        # Aidmar
         def plot_interval_ip_dst_cum_ent(file_ending: str):
             plt.gcf().clear()
             result = self.stats_db._process_user_defined_query(
@@ -870,7 +879,6 @@ class Statistics:
             plt.savefig(out, dpi=500)
             return out
 
-        # Aidmar
         def plot_interval_ip_src_cum_ent(file_ending: str):
             plt.gcf().clear()
 
@@ -902,7 +910,6 @@ class Statistics:
             plt.savefig(out, dpi=500)
             return out
 
-        # Aidmar
         def plot_interval_new_ip(file_ending: str):
             plt.gcf().clear()
             result = self.stats_db._process_user_defined_query(
@@ -932,12 +939,8 @@ class Statistics:
             plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
             out = self.pcap_filepath.replace('.pcap', '_plot-interval-novel-ip-dist' + file_ending)
             plt.savefig(out, dpi=500)
-
-            #print("IP Standard Deviation:")
-            #self.calculate_standard_deviation(graphy)
             return out
 
-        # Aidmar
         def plot_interval_new_ttl(file_ending: str):
             plt.gcf().clear()
             result = self.stats_db._process_user_defined_query(
@@ -968,14 +971,10 @@ class Statistics:
                 plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
                 out = self.pcap_filepath.replace('.pcap', '_plot-interval-novel-ttl-dist' + file_ending)
                 plt.savefig(out, dpi=500)
-
-                #print("TTL Standard Deviation:")
-                #self.calculate_standard_deviation(graphy)
                 return out
             else:
                 print("Error plot TTL: No TTL values found!")
 
-        # Aidmar
         def plot_interval_new_tos(file_ending: str):
             plt.gcf().clear()
             result = self.stats_db._process_user_defined_query(
@@ -1004,13 +1003,8 @@ class Statistics:
             plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
             out = self.pcap_filepath.replace('.pcap', '_plot-interval-novel-tos-dist' + file_ending)
             plt.savefig(out, dpi=500)
-
-            #print("ToS Standard Deviation:")
-            #self.calculate_standard_deviation(graphy)
-
             return out
 
-        # Aidmar
         def plot_interval_new_win_size(file_ending: str):
             plt.gcf().clear()
             result = self.stats_db._process_user_defined_query(
@@ -1041,15 +1035,10 @@ class Statistics:
                 plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
                 out = self.pcap_filepath.replace('.pcap', '_plot-interval-novel-win-size-dist' + file_ending)
                 plt.savefig(out, dpi=500)
-
-                # Calculate Standart Deviation
-                #print("Window Size Standard Deviation:")
-                #self.calculate_standard_deviation(graphy)
                 return out
             else:
                 print("Error plot new values WinSize: No WinSize values found!")
 
-        # Aidmar
         def plot_interval_new_mss(file_ending: str):
             plt.gcf().clear()
 
@@ -1081,10 +1070,6 @@ class Statistics:
                 plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
                 out = self.pcap_filepath.replace('.pcap', '_plot-interval-novel-mss-dist' + file_ending)
                 plt.savefig(out, dpi=500)
-
-                # Calculate Standart Deviation
-                #print("MSS Standard Deviation:")
-                #self.calculate_standard_deviation(graphy)
                 return out
             else:
                 print("Error plot new values MSS: No MSS values found!")
@@ -1107,38 +1092,4 @@ class Statistics:
         plot_interval_new_win_size = plot_interval_new_win_size('.' + format)
         plot_interval_new_mss = plot_interval_new_mss('.' + format)
 
-        #print("Saved distributions plots at: %s, %s, %s, %s, %s, %s, %s, %s %s" %(ttl_out_path,mss_out_path, win_out_path,
-        #protocol_out_path, port_out_path,ip_src_out_path,ip_dst_out_path, plot_interval_pktCount))
-
-
-     # Aidmar
-    def calculate_complement_packet_rates(self, pps):
-        """
-        Calculates the complement packet rates of the background traffic packet rates for each interval.
-        Then normalize it to maximum boundary, which is the input parameter pps
-
-        :return: normalized packet rates for each time interval.
-        """
-        result = self.process_db_query(
-            "SELECT lastPktTimestamp,pktsCount FROM interval_statistics ORDER BY lastPktTimestamp")
-        # print(result)
-        bg_interval_pps = []
-        complement_interval_pps = []
-        intervalsSum = 0
-        if result:
-            # Get the interval in seconds
-            for i, row in enumerate(result):
-                if i < len(result) - 1:
-                    intervalsSum += ceil((int(result[i + 1][0]) * 10 ** -6) - (int(row[0]) * 10 ** -6))
-            interval = intervalsSum / (len(result) - 1)
-            # Convert timestamp from micro to seconds, convert packet rate "per interval" to "per second"
-            for row in result:
-                bg_interval_pps.append((int(row[0]) * 10 ** -6, int(row[1] / interval)))
-            # Find max PPS
-            maxPPS = max(bg_interval_pps, key=itemgetter(1))[1]
-
-            for row in bg_interval_pps:
-                complement_interval_pps.append((row[0], int(pps * (maxPPS - row[1]) / maxPPS)))
-
-        return complement_interval_pps
-
+        print("Saved plots in the input PCAP directory.")
