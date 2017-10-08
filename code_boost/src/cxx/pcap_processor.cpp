@@ -125,7 +125,7 @@ void pcap_processor::collect_statistics() {
         std::chrono::microseconds intervalStartTimestamp = stats.getTimestampFirstPacket();
         std::chrono::microseconds firstTimestamp = stats.getTimestampFirstPacket();
 
-        // Aidmar - used to know the capture duration, thus choose a suitable interval
+        // An empty loop to know the capture duration, then choose a suitable time interval
         SnifferIterator lastpkt; 
         for (SnifferIterator j = snifferOverview.begin(); j != snifferOverview.end();  snifferIteratorIncrement(j)) {lastpkt = j;}          
 
