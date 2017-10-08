@@ -30,8 +30,6 @@ from scapy.layers.inet import IP, Ether, TCP, RandShort
 
 class SQLiAttack(BaseAttack.BaseAttack):
     template_attack_pcap_path = "resources/ATutorSQLi.pcap"
-    # Metasploit default packet rate
-    minDefaultPPS = 5
     # HTTP port
     http_port = 80
     # Metasploit experiments show this range of ports
@@ -110,9 +108,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
 
         # Timestamp
         timestamp_next_pkt = self.get_param_value(Param.INJECT_AT_TIMESTAMP)
-        # TO-DO: find better pkt rate
         pps = self.get_param_value(Param.PACKETS_PER_SECOND)
-        randomdelay = Lea.fromValFreqsDict({1 / pps: 70, 2 / pps: 30, 5 / pps: 15, 10 / pps: 3})
 
         # Aidmar - calculate complement packet rates of BG traffic per interval
         complement_interval_pps = self.statistics.calculate_complement_packet_rates(pps)
@@ -130,7 +126,6 @@ class SQLiAttack(BaseAttack.BaseAttack):
         self.ip_src_dst_equal_check(ip_source, ip_destination)
 
         path_attack_pcap = None
-        minDelay, maxDelay = self.get_reply_delay(ip_destination)
 
         # Set TTL based on TTL distribution of IP address
         source_ttl_dist = self.statistics.get_ttl_distribution(ip_source)
@@ -150,6 +145,9 @@ class SQLiAttack(BaseAttack.BaseAttack):
         # Inject SQLi Attack
         # Read SQLi Attack pcap file
         orig_ip_dst = None
+        exploit_raw_packets = RawPcapReader(self.template_attack_pcap_path)
+        inter_arrival_time_dist = self.get_inter_arrival_time_dist(exploit_raw_packets)
+        timeSteps = Lea.fromValFreqsDict(inter_arrival_time_dist)
         exploit_raw_packets = RawPcapReader(self.template_attack_pcap_path)
 
         port_source = randint(self.minDefaultPort,self.maxDefaultPort) # experiments show this range of ports
@@ -218,7 +216,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
                     new_pkt.time = timestamp_next_pkt
 
                     pps = max(getIntervalPPS(complement_interval_pps, timestamp_next_pkt), 10)
-                    timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps)
+                    timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps) + float(timeSteps.random())
 
                 # Victim --> attacker
                 else:
@@ -247,7 +245,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
                         victim_seq += max(strLen, 1)
 
                     new_pkt = (eth_frame / ip_pkt / tcp_pkt / str_tcp_seg)
-                    timestamp_next_pkt = timestamp_next_pkt + uniform(minDelay, 2 * maxDelay)
+                    timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps) + float(timeSteps.random())
                     new_pkt.time = timestamp_next_pkt
 
             # The last connection
@@ -289,7 +287,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
                     new_pkt.time = timestamp_next_pkt
 
                     pps = max(getIntervalPPS(complement_interval_pps, timestamp_next_pkt), 10)
-                    timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps)
+                    timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps) + float(timeSteps.random())
 
                 # Victim --> attacker
                 else:
@@ -318,7 +316,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
                         victim_seq += max(strLen, 1)
 
                     new_pkt = (eth_frame / ip_pkt / tcp_pkt / str_tcp_seg)
-                    timestamp_next_pkt = timestamp_next_pkt + uniform(minDelay, 2 * maxDelay)
+                    timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps) + float(timeSteps.random())
                     new_pkt.time = timestamp_next_pkt
 
             packets.append(new_pkt)
