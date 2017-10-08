@@ -4,9 +4,7 @@
 #ifndef CPP_PCAPREADER_STATISTICS_H
 #define CPP_PCAPREADER_STATISTICS_H
 
-// Aidmar
 #include <vector>
-
 #include <unordered_map>
 #include <list>
 #include <tuple>
@@ -39,13 +37,10 @@ struct ip_stats {
     float packetPerSecondOut;
     float AvgPacketSizeSent;
     float AvgPacketSizeRecv;
-    long AvgMaxSegmentSizeTCP;
 };
 
-
-// Aidmar
 /*
- * Struct used to represent a conv by:
+ * Struct used to represent a conversation by:
  * - IP address A
  * - Port A
  * - IP address B
@@ -63,10 +58,8 @@ struct conv{
                &&ipAddressB == other.ipAddressB
                && portB == other.portB;
     }    
-}; 
+};
 
-
-// Aidmar
 /*
  * Struct used to represent:
  * - IP address (IPv4 or IPv6)
@@ -82,7 +75,6 @@ struct ipAddress_mss {
     }
 };
 
-// Aidmar
 /*
  * Struct used to represent:
  * - IP address (IPv4 or IPv6)
@@ -98,7 +90,6 @@ struct ipAddress_tos {
     }
 };
 
-// Aidmar
 /*
  * Struct used to represent:
  * - IP address (IPv4 or IPv6)
@@ -114,7 +105,6 @@ struct ipAddress_win {
     }
 };
 
-
 /*
  * Struct used to represent:
  * - IP address (IPv4 or IPv6)
@@ -129,7 +119,6 @@ struct ipAddress_ttl {
                && ttlValue == other.ttlValue;
     }
 };
-
 
 /*
  * Struct used to represent:
@@ -158,47 +147,44 @@ struct entry_ipStat {
     long pkts_sent;
     float kbytes_received;
     float kbytes_sent;
-    // Aidmar
     std::string ip_class;
+    // Collects statstics over time interval
     std::vector<float> interval_pkt_rate;
-    float max_pkt_rate;
-    float min_pkt_rate;
-    // Aidmar - to calculate Mahoney anomaly score
-    long firstAppearAsSenderPktCount;
-    long firstAppearAsReceiverPktCount;
-    float sourceAnomalyScore;
-    float destinationAnomalyScore;
-    // Aidmar- To collect statstics over time interval
-    std::vector<std::chrono::microseconds> pktsSentTimestamp;
-    std::vector<std::chrono::microseconds> pktsReceivedTimestamp;
+    float max_interval_pkt_rate;
+    float min_interval_pkt_rate;
+    std::vector<std::chrono::microseconds> pkts_sent_timestamp;
+    std::vector<std::chrono::microseconds> pkts_received_timestamp;
 
     bool operator==(const entry_ipStat &other) const {
         return pkts_received == other.pkts_received
                && pkts_sent == other.pkts_sent
                && kbytes_sent == other.kbytes_sent
                && kbytes_received == other.kbytes_received
-                // Aidmar
                && interval_pkt_rate == other.interval_pkt_rate
-               && max_pkt_rate == other.max_pkt_rate
-               && min_pkt_rate == other.min_pkt_rate
+               && max_interval_pkt_rate == other.max_interval_pkt_rate
+               && min_interval_pkt_rate == other.min_interval_pkt_rate
                && ip_class == other.ip_class
-               && firstAppearAsSenderPktCount == other.firstAppearAsSenderPktCount
-               && firstAppearAsReceiverPktCount == other.firstAppearAsReceiverPktCount
-               && sourceAnomalyScore == other.sourceAnomalyScore
-               && destinationAnomalyScore == other.destinationAnomalyScore
-               && pktsSentTimestamp == other.pktsSentTimestamp
-               && pktsReceivedTimestamp == other.pktsReceivedTimestamp;
+               && pkts_sent_timestamp == other.pkts_sent_timestamp
+               && pkts_received_timestamp == other.pkts_received_timestamp;
     }
 };
 
-// Aidmar
 /*
  * Struct used to represent interval statistics:
- * - Number of packets
+ * - # packets
+ * - # bytes
  * - IP source entropy
  * - IP destination entropy
  * - IP source cumulative entropy
  * - IP destination cumulative entropy
+ * - # packets that have payload
+ * - # incorrect TCP checksum
+ * - # correct TCP checksum
+ * - # novel IPs
+ * - # novel TTL
+ * - # novel Window Size
+ * - # novel ToS
+ * - # novel MSS
  */
 struct entry_intervalStat {
     int pkts_count;
@@ -208,15 +194,13 @@ struct entry_intervalStat {
     float ip_src_cum_entropy; 
     float ip_dst_cum_entropy;
     int payload_count;
-    int incorrect_checksum_count;
-    int correct_checksum_count;
-    int invalid_tos_count;
-    int valid_tos_count;
-    int new_ip_count;
-    int new_ttl_count;
-    int new_win_size_count;
-    int new_tos_count;
-    int new_mss_count;
+    int incorrect_tcp_checksum_count;
+    int correct_tcp_checksum_count;
+    int novel_ip_count;
+    int novel_ttl_count;
+    int novel_win_size_count;
+    int novel_tos_count;
+    int novel_mss_count;
 
     bool operator==(const entry_intervalStat &other) const {
         return pkts_count == other.pkts_count
@@ -226,38 +210,36 @@ struct entry_intervalStat {
                && ip_src_cum_entropy == other.ip_src_cum_entropy
                && ip_dst_cum_entropy == other.ip_dst_cum_entropy
                && payload_count == other.payload_count
-               && incorrect_checksum_count == other.incorrect_checksum_count
-               && invalid_tos_count == other.invalid_tos_count
-               && valid_tos_count == other.valid_tos_count
-               && new_ip_count == other.new_ip_count
-               && new_ttl_count == other.new_ttl_count
-               && new_win_size_count == other.new_win_size_count
-               && new_tos_count == other.new_tos_count
-               && new_mss_count == other.new_mss_count;
+               && incorrect_tcp_checksum_count == other.incorrect_tcp_checksum_count
+               && novel_ip_count == other.novel_ip_count
+               && novel_ttl_count == other.novel_ttl_count
+               && novel_win_size_count == other.novel_win_size_count
+               && novel_tos_count == other.novel_tos_count
+               && novel_mss_count == other.novel_mss_count;
     }
 };
 
-// Aidmar
 /*
- * Struct used to represent:
- * - Number of packets from A to B
- * - Number of packets from B to A
+ * Struct used to represent converstaion statistics:
+ * - # packets
+ * - Average packet rate
+ * - Timestamps of packets
+ * - Inter-arrival time
+ * - Average inter-arrival time
  */
 struct entry_convStat {
     long pkts_count;
     float avg_pkt_rate;
     std::vector<std::chrono::microseconds> pkts_timestamp;
-    std::vector<std::chrono::microseconds> pkts_delay;
-    std::chrono::microseconds avg_delay;
-    std::chrono::microseconds standardDeviation_delay;
-    
+    std::vector<std::chrono::microseconds> interarrival_time;
+    std::chrono::microseconds avg_interarrival_time;
+
     bool operator==(const entry_convStat &other) const {
         return pkts_count == other.pkts_count
                && avg_pkt_rate == avg_pkt_rate
                && pkts_timestamp == other.pkts_timestamp
-               && pkts_delay == other.pkts_delay
-               && avg_delay == other.avg_delay
-               && standardDeviation_delay == other.standardDeviation_delay;
+               && interarrival_time == other.interarrival_time
+               && avg_interarrival_time == other.avg_interarrival_time
     }
 };
 
@@ -277,7 +259,6 @@ struct ipAddress_inOut_port {
                && trafficDirection == other.trafficDirection
                && portNumber == other.portNumber;
     }
-
 };
 
 /*
@@ -295,7 +276,6 @@ namespace std {
         }
     };
 
-    // Aidmar
       template<>
     struct hash<ipAddress_mss> {
         std::size_t operator()(const ipAddress_mss &k) const {
@@ -307,7 +287,6 @@ namespace std {
         }
     };
 
-    // Aidmar
     template<>
     struct hash<ipAddress_tos> {
         std::size_t operator()(const ipAddress_tos &k) const {
@@ -319,7 +298,6 @@ namespace std {
         }
     };
 
-    // Aidmar
       template<>
     struct hash<ipAddress_win> {
         std::size_t operator()(const ipAddress_win &k) const {
@@ -331,7 +309,6 @@ namespace std {
         }
     };
     
-    // Aidmar: TO-DO:??
     template<>
     struct hash<conv> {
         std::size_t operator()(const conv &k) const {
@@ -386,17 +363,26 @@ public:
     */
     void incrementPacketCount();
 
-    // Adimar
     void calculateIPIntervalPacketRate(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp);
+
     void incrementMSScount(std::string ipAddress, int mssValue);
-    void incrementWinCount(std::string ipAddress, int winSize);   
+
+    void incrementWinCount(std::string ipAddress, int winSize);
+
     void addConvStat(std::string ipAddressSender,int sport,std::string ipAddressReceiver,int dport, std::chrono::microseconds timestamp);
+
     std::vector<float> calculateIPsCumEntropy();
-    std::vector<float> calculateLastIntervalIPsEntropy(std::chrono::microseconds intervalStartTimestamp);        
+
+    std::vector<float> calculateLastIntervalIPsEntropy(std::chrono::microseconds intervalStartTimestamp);
+
     void addIntervalStat(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp, std::chrono::microseconds lastPktTimestamp);
+
     void checkPayload(const PDU *pdu_l4);
+
     void checkTCPChecksum(std::string ipAddressSender, std::string ipAddressReceiver, TCP tcpPkt);
+
     void checkToS(uint8_t ToS);
+
     void incrementToScount(std::string ipAddress, int tosValue);
 
     void incrementTTLcount(std::string ipAddress, int ttlValue);
@@ -412,15 +398,15 @@ public:
 
     void setTimestampLastPacket(Tins::Timestamp ts);
     
-    // Aidmar
     Tins::Timestamp getTimestampFirstPacket();
     Tins::Timestamp getTimestampLastPacket();
 
     void assignMacAddress(std::string ipAddress, std::string macAddress);
     
-    // Aidmar
     void addIpStat_packetSent(std::string filePath, std::string ipAddressSender, std::string ipAddressReceiver, long bytesSent, std::chrono::microseconds timestamp);
+
     int getPacketCount();
+
     int getSumPacketSize();
 
     void addMSS(std::string ipAddress, int MSSvalue);
@@ -437,14 +423,14 @@ public:
 
     void printStats(std::string ipAddress);
 
+    bool getDoExtraTests();
+
+    void setDoExtraTests(bool var);
+
     /*
      * IP Address-specific statistics
      */
     ip_stats getStatsForIP(std::string ipAddress);
-
-    // Aidmar
-    bool getDoExtraTests();
-    void setDoExtraTests(bool var);
 
 private:
     /*
@@ -467,7 +453,7 @@ private:
     int incorrectTCPChecksumCount = 0;
     int correctTCPChecksumCount = 0;
 
-    // Variables that are used for interval-wise tests
+    // Variables that are used for interval-wise statistics
     int intervalPayloadCount = 0;
     int intervalIncorrectTCPChecksumCount = 0;
     int intervalCorrectTCPChecksumCount = 0;
@@ -494,12 +480,14 @@ private:
     // {IP Address, ToS value, count}
     std::unordered_map<ipAddress_tos, int> tos_distribution;
 
-    // {IP Address A, Port A, IP Address B, Port B,   #packets_A_B, #packets_B_A}
+    // {IP Address A, Port A, IP Address B, Port B,   #packets, packets timestamps, inter-arrival times,
+    // average of inter-arrival times}
     std::unordered_map<conv, entry_convStat> conv_statistics;
 
+    // {Last timestamp in the interval, #packets, #bytes, source IP entropy, destination IP entropy,
+    // source IP cumulative entropy, destination IP cumulative entropy, #payload, #incorrect TCP checksum,
+    // #correct TCP checksum, #novel IP, #novel TTL, #novel Window Size, #novel ToS,#novel MSS}
     std::unordered_map<std::string, entry_intervalStat> interval_statistics;
-
-
 
     // {TTL value, count}
     std::unordered_map<int, int> ttl_values;
@@ -524,10 +512,6 @@ private:
 
     // {IP Address, MAC Address}
     std::unordered_map<std::string, std::string> ip_mac_mapping;
-
-    // Aidmar
-    // {DSCP value, count}
-    std::unordered_map<int, int> dscp_distribution;
 };
 
 

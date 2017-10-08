@@ -45,8 +45,8 @@ void statistics_db::writeStatisticsIP(std::unordered_map<std::string, entry_ipSt
             query.bind(4, e.kbytes_received);
             query.bind(5, e.kbytes_sent);
             // Aidmar
-            query.bind(6, e.max_pkt_rate);
-            query.bind(7, e.min_pkt_rate);
+            query.bind(6, e.max_interval_pkt_rate);
+            query.bind(7, e.min_interval_pkt_rate);
             query.bind(8, e.ip_class);
             query.exec();
             query.reset();
@@ -334,12 +334,11 @@ void statistics_db::writeStatisticsConv(std::unordered_map<conv, entry_convStat>
                 "pktsCount INTEGER,"
                 "avgPktRate REAL,"
                 "avgDelay INTEGER,"
-                "standardDeviationDelay INTEGER,"
                 "minDelay INTEGER,"
                 "maxDelay INTEGER,"
                 "PRIMARY KEY(ipAddressA,portA,ipAddressB,portB));";
         db->exec(createTable);
-        SQLite::Statement query(*db, "INSERT INTO conv_statistics VALUES (?, ?, ?, ?, ?,  ?, ?, ?, ?, ?)");
+        SQLite::Statement query(*db, "INSERT INTO conv_statistics VALUES (?, ?, ?, ?, ?,  ?, ?, ?, ?)");
 
         for (auto it = convStatistics.begin(); it != convStatistics.end(); ++it) {
             conv f = it->first;
@@ -348,26 +347,25 @@ void statistics_db::writeStatisticsConv(std::unordered_map<conv, entry_convStat>
                 int sumDelay = 0;
                 int minDelay = -1;
                 int maxDelay = -1;
-                for (int i = 0; (unsigned) i < e.pkts_delay.size(); i++) {
-                    sumDelay += e.pkts_delay[i].count();
-                    if (maxDelay < e.pkts_delay[i].count())
-                        maxDelay = e.pkts_delay[i].count();
-                    if (minDelay > e.pkts_delay[i].count() || minDelay == -1)
-                        minDelay = e.pkts_delay[i].count();
+                for (int i = 0; (unsigned) i < e.interarrival_time.size(); i++) {
+                    sumDelay += e.interarrival_time[i].count();
+                    if (maxDelay < e.interarrival_time[i].count())
+                        maxDelay = e.interarrival_time[i].count();
+                    if (minDelay > e.interarrival_time[i].count() || minDelay == -1)
+                        minDelay = e.interarrival_time[i].count();
                 }
-                if (e.pkts_delay.size() > 0)
-                    e.avg_delay = (std::chrono::microseconds) sumDelay / e.pkts_delay.size(); // average
-                else e.avg_delay = (std::chrono::microseconds) 0;
+                if (e.interarrival_time.size() > 0)
+                    e.avg_interarrival_time = (std::chrono::microseconds) sumDelay / e.interarrival_time.size(); // average
+                else e.avg_interarrival_time = (std::chrono::microseconds) 0;
 
                 // Calculate the variance
                 long temp = 0;
-                for (int i = 0; (unsigned) i < e.pkts_delay.size(); i++) {
-                    long del = e.pkts_delay[i].count();
-                    long avg = e.avg_delay.count();
+                for (int i = 0; (unsigned) i < e.interarrival_time.size(); i++) {
+                    long del = e.interarrival_time[i].count();
+                    long avg = e.avg_interarrival_time.count();
                     temp += (del - avg) * (del - avg);
                 }
-                long standardDeviation = sqrt(temp / e.pkts_delay.size());
-                e.standardDeviation_delay = (std::chrono::microseconds) standardDeviation;
+                long standardDeviation = sqrt(temp / e.interarrival_time.size());
 
                 std::chrono::microseconds start_timesttamp = e.pkts_timestamp[0];
                 std::chrono::microseconds end_timesttamp = e.pkts_timestamp.back();
@@ -380,10 +378,9 @@ void statistics_db::writeStatisticsConv(std::unordered_map<conv, entry_convStat>
                 query.bind(4, f.portB);
                 query.bind(5, (int) e.pkts_count);
                 query.bind(6, (float) e.avg_pkt_rate);
-                query.bind(7, (int) e.avg_delay.count());
-                query.bind(8, (int) e.standardDeviation_delay.count());
-                query.bind(9, minDelay);
-                query.bind(10, maxDelay);
+                query.bind(7, (int) e.avg_interarrival_time.count());
+                query.bind(8, minDelay);
+                query.bind(9, maxDelay);
                 query.exec();
                 query.reset();
             }
@@ -435,13 +432,13 @@ void statistics_db::writeStatisticsInterval(std::unordered_map<std::string, entr
             query.bind(6, e.ip_src_cum_entropy);
             query.bind(7, e.ip_dst_cum_entropy);
             query.bind(8, e.payload_count);
-            query.bind(9, e.incorrect_checksum_count);
-            query.bind(10, e.correct_checksum_count);
-            query.bind(11, e.new_ip_count);
-            query.bind(12, e.new_ttl_count);
-            query.bind(13, e.new_win_size_count);
-            query.bind(14, e.new_tos_count);
-            query.bind(15, e.new_mss_count);
+            query.bind(9, e.incorrect_tcp_checksum_count);
+            query.bind(10, e.correct_tcp_checksum_count);
+            query.bind(11, e.novel_ip_count);
+            query.bind(12, e.novel_ttl_count);
+            query.bind(13, e.novel_win_size_count);
+            query.bind(14, e.novel_tos_count);
+            query.bind(15, e.novel_mss_count);
             query.exec();
             query.reset();
         }

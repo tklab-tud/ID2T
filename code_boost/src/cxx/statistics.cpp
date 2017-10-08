@@ -55,12 +55,12 @@ std::vector<float> statistics::calculateLastIntervalIPsEntropy(std::chrono::micr
         int pktsSent = 0, pktsReceived = 0;
 
         for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
-            int indexStartSent = getClosestIndex(i->second.pktsSentTimestamp, intervalStartTimestamp);
-            int IPsSrcPktsCount = i->second.pktsSentTimestamp.size() - indexStartSent;
+            int indexStartSent = getClosestIndex(i->second.pkts_sent_timestamp, intervalStartTimestamp);
+            int IPsSrcPktsCount = i->second.pkts_sent_timestamp.size() - indexStartSent;
             IPsSrcPktsCounts.push_back(IPsSrcPktsCount);
             pktsSent += IPsSrcPktsCount;
-            int indexStartReceived = getClosestIndex(i->second.pktsReceivedTimestamp, intervalStartTimestamp);
-            int IPsDstPktsCount = i->second.pktsReceivedTimestamp.size() - indexStartReceived;
+            int indexStartReceived = getClosestIndex(i->second.pkts_received_timestamp, intervalStartTimestamp);
+            int IPsDstPktsCount = i->second.pkts_received_timestamp.size() - indexStartReceived;
             IPsDstPktsCounts.push_back(IPsDstPktsCount);
             pktsReceived += IPsDstPktsCount;
         }
@@ -138,14 +138,14 @@ std::vector<float> statistics::calculateIPsCumEntropy(){
  */
 void statistics::calculateIPIntervalPacketRate(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp){        
         for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
-                int indexStartSent = getClosestIndex(i->second.pktsSentTimestamp, intervalStartTimestamp);     
-                int IPsSrcPktsCount = i->second.pktsSentTimestamp.size() - indexStartSent;
+                int indexStartSent = getClosestIndex(i->second.pkts_sent_timestamp, intervalStartTimestamp);
+                int IPsSrcPktsCount = i->second.pkts_sent_timestamp.size() - indexStartSent;
                 float interval_pkt_rate = (float) IPsSrcPktsCount * 1000000 / interval.count(); // used 10^6 because interval in microseconds
                 i->second.interval_pkt_rate.push_back(interval_pkt_rate);
-                if(interval_pkt_rate > i->second.max_pkt_rate || i->second.max_pkt_rate == 0)
-                    i->second.max_pkt_rate = interval_pkt_rate;
-                if(interval_pkt_rate < i->second.min_pkt_rate || i->second.min_pkt_rate == 0)
-                    i->second.min_pkt_rate = interval_pkt_rate;                    
+                if(interval_pkt_rate > i->second.max_interval_pkt_rate || i->second.max_interval_pkt_rate == 0)
+                    i->second.max_interval_pkt_rate = interval_pkt_rate;
+                if(interval_pkt_rate < i->second.min_interval_pkt_rate || i->second.min_interval_pkt_rate == 0)
+                    i->second.min_interval_pkt_rate = interval_pkt_rate;
         }
 }
 
@@ -169,13 +169,13 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
     interval_statistics[lastPktTimestamp_s].kbytes = (float(sumPacketSize - intervalCumSumPktSize) / 1024);
 
     interval_statistics[lastPktTimestamp_s].payload_count = payloadCount - intervalPayloadCount;
-    interval_statistics[lastPktTimestamp_s].incorrect_checksum_count = incorrectTCPChecksumCount - intervalIncorrectTCPChecksumCount;
-    interval_statistics[lastPktTimestamp_s].correct_checksum_count = correctTCPChecksumCount - intervalCorrectTCPChecksumCount;
-    interval_statistics[lastPktTimestamp_s].new_ip_count = ip_statistics.size() - intervalCumNewIPCount;
-    interval_statistics[lastPktTimestamp_s].new_ttl_count = ttl_values.size() - intervalCumNewTTLCount;
-    interval_statistics[lastPktTimestamp_s].new_win_size_count = win_values.size() - intervalCumNewWinSizeCount;
-    interval_statistics[lastPktTimestamp_s].new_tos_count = tos_values.size() - intervalCumNewToSCount;
-    interval_statistics[lastPktTimestamp_s].new_mss_count = mss_values.size() - intervalCumNewMSSCount;
+    interval_statistics[lastPktTimestamp_s].incorrect_tcp_checksum_count = incorrectTCPChecksumCount - intervalIncorrectTCPChecksumCount;
+    interval_statistics[lastPktTimestamp_s].correct_tcp_checksum_count = correctTCPChecksumCount - intervalCorrectTCPChecksumCount;
+    interval_statistics[lastPktTimestamp_s].novel_ip_count = ip_statistics.size() - intervalCumNewIPCount;
+    interval_statistics[lastPktTimestamp_s].novel_ttl_count = ttl_values.size() - intervalCumNewTTLCount;
+    interval_statistics[lastPktTimestamp_s].novel_win_size_count = win_values.size() - intervalCumNewWinSizeCount;
+    interval_statistics[lastPktTimestamp_s].novel_tos_count = tos_values.size() - intervalCumNewToSCount;
+    interval_statistics[lastPktTimestamp_s].novel_mss_count = mss_values.size() - intervalCumNewMSSCount;
 
     intervalPayloadCount = payloadCount;
     intervalIncorrectTCPChecksumCount = incorrectTCPChecksumCount;
@@ -217,14 +217,14 @@ void statistics::addConvStat(std::string ipAddressSender,int sport,std::string i
     if (conv_statistics.count(f1)>0){
         conv_statistics[f1].pkts_count++;
         if(conv_statistics[f1].pkts_count<=3)
-            conv_statistics[f1].pkts_delay.push_back(std::chrono::duration_cast<std::chrono::microseconds> (timestamp - conv_statistics[f1].pkts_timestamp.back()));
+            conv_statistics[f1].interarrival_time.push_back(std::chrono::duration_cast<std::chrono::microseconds> (timestamp - conv_statistics[f1].pkts_timestamp.back()));
         conv_statistics[f1].pkts_timestamp.push_back(timestamp);
     }
     // Add new conversation A(ipAddressSender, sport), B(ipAddressReceiver, dport)
     else{
         conv_statistics[f2].pkts_count++;
         if(conv_statistics[f2].pkts_timestamp.size()>0 && conv_statistics[f2].pkts_count<=3 )
-            conv_statistics[f2].pkts_delay.push_back(std::chrono::duration_cast<std::chrono::microseconds> (timestamp - conv_statistics[f2].pkts_timestamp.back()));
+            conv_statistics[f2].interarrival_time.push_back(std::chrono::duration_cast<std::chrono::microseconds> (timestamp - conv_statistics[f2].pkts_timestamp.back()));
         conv_statistics[f2].pkts_timestamp.push_back(timestamp);
     }
 }
@@ -343,13 +343,13 @@ void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddres
     ip_statistics[ipAddressSender].kbytes_sent += (float(bytesSent) / 1024);
     ip_statistics[ipAddressSender].pkts_sent++;
     // Aidmar
-    ip_statistics[ipAddressSender].pktsSentTimestamp.push_back(timestamp);
+    ip_statistics[ipAddressSender].pkts_sent_timestamp.push_back(timestamp);
                 
     // Update stats for packet receiver
     ip_statistics[ipAddressReceiver].kbytes_received += (float(bytesSent) / 1024);
     ip_statistics[ipAddressReceiver].pkts_received++;  
      // Aidmar
-    ip_statistics[ipAddressReceiver].pktsReceivedTimestamp.push_back(timestamp);
+    ip_statistics[ipAddressReceiver].pkts_received_timestamp.push_back(timestamp);
 }
 
 /**
