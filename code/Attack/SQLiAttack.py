@@ -10,7 +10,6 @@ https://www.rapid7.com/db/modules/exploit/multi/http/atutor_sqli
 
 """
 
-
 import logging
 import math
 from operator import itemgetter
@@ -30,8 +29,8 @@ from scapy.layers.inet import IP, Ether, TCP, RandShort
 
 
 class SQLiAttack(BaseAttack.BaseAttack):
+    template_attack_pcap_path = "resources/ATutorSQLi.pcap"
     # Metasploit default packet rate
-    maxDefaultPPS = 55
     minDefaultPPS = 5
     # HTTP port
     http_port = 80
@@ -72,8 +71,9 @@ class SQLiAttack(BaseAttack.BaseAttack):
         #self.add_param_value(Param.TARGET_URI, "/")
         self.add_param_value(Param.TARGET_HOST, "www.hackme.com")
         self.add_param_value(Param.INJECT_AFTER_PACKET, randint(0, self.statistics.get_packet_count()))
-        self.add_param_value(Param.PACKETS_PER_SECOND,self.maxDefaultPPS)
-
+        self.add_param_value(Param.PACKETS_PER_SECOND,
+                             (self.statistics.get_pps_sent(most_used_ip_address) +
+                              self.statistics.get_pps_received(most_used_ip_address)) / 2)
         # victim configuration
         # consider that the destination has port 80 opened
         random_ip_address = self.statistics.get_random_ip_address()
@@ -85,13 +85,16 @@ class SQLiAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.MAC_DESTINATION, destination_mac)
 
     def generate_attack_pcap(self):
-        def update_timestamp(timestamp, pps, maxdelay):
+        def update_timestamp(timestamp, pps):
             """
             Calculates the next timestamp to be used based on the packet per second rate (pps) and the maximum delay.
 
             :return: Timestamp to be used for the next packet.
             """
-            return timestamp + uniform(1 / pps, maxdelay)
+            # Calculate the request timestamp
+            # A distribution to imitate the bursty behavior of traffic
+            randomdelay = Lea.fromValFreqsDict({1 / pps: 70, 2 / pps: 20, 5 / pps: 7, 10 / pps: 3})
+            return timestamp + uniform(1 / pps, randomdelay.random())
 
         # Aidmar
         def getIntervalPPS(complement_interval_pps, timestamp):
@@ -123,7 +126,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
         target_host = self.get_param_value(Param.TARGET_HOST)
         target_uri = "/" #self.get_param_value(Param.TARGET_URI)
 
-        # Aidmar - check ip.src == ip.dst
+        # Check ip.src == ip.dst
         self.ip_src_dst_equal_check(ip_source, ip_destination)
 
         path_attack_pcap = None
@@ -147,7 +150,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
         # Inject SQLi Attack
         # Read SQLi Attack pcap file
         orig_ip_dst = None
-        exploit_raw_packets = RawPcapReader("resources/ATutorSQLi.pcap")
+        exploit_raw_packets = RawPcapReader(self.template_attack_pcap_path)
 
         port_source = randint(self.minDefaultPort,self.maxDefaultPort) # experiments show this range of ports
 
@@ -214,9 +217,8 @@ class SQLiAttack(BaseAttack.BaseAttack):
                     new_pkt = (eth_frame / ip_pkt/ tcp_pkt / str_tcp_seg)
                     new_pkt.time = timestamp_next_pkt
 
-                    maxdelay = randomdelay.random()
-                    pps = max(getIntervalPPS(complement_interval_pps, timestamp_next_pkt), self.minDefaultPPS)
-                    timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
+                    pps = max(getIntervalPPS(complement_interval_pps, timestamp_next_pkt), 10)
+                    timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps)
 
                 # Victim --> attacker
                 else:
@@ -286,9 +288,8 @@ class SQLiAttack(BaseAttack.BaseAttack):
                     new_pkt = (eth_frame / ip_pkt / tcp_pkt / str_tcp_seg)
                     new_pkt.time = timestamp_next_pkt
 
-                    maxdelay = randomdelay.random()
-                    pps = max(getIntervalPPS(complement_interval_pps, timestamp_next_pkt), self.minDefaultPPS)
-                    timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
+                    pps = max(getIntervalPPS(complement_interval_pps, timestamp_next_pkt), 10)
+                    timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps)
 
                 # Victim --> attacker
                 else:
