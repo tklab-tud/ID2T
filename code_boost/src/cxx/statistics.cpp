@@ -328,13 +328,13 @@ void statistics::assignMacAddress(std::string ipAddress, std::string macAddress)
  */
 void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddressSender, std::string ipAddressReceiver, long bytesSent, std::chrono::microseconds timestamp) {
 
-    // Aidmar - Adding IP as a sender for first time
+    // Adding IP as a sender for first time
     if(ip_statistics[ipAddressSender].pkts_sent==0){  
         // Add the IP class
         ip_statistics[ipAddressSender].ip_class = getIPv4Class(ipAddressSender);
     }
     
-    // Aidmar - Adding IP as a receiver for first time
+    // Adding IP as a receiver for first time
     if(ip_statistics[ipAddressReceiver].pkts_received==0){
         // Add the IP class
         ip_statistics[ipAddressReceiver].ip_class = getIPv4Class(ipAddressReceiver);
@@ -343,13 +343,11 @@ void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddres
     // Update stats for packet sender
     ip_statistics[ipAddressSender].kbytes_sent += (float(bytesSent) / 1024);
     ip_statistics[ipAddressSender].pkts_sent++;
-    // Aidmar
     ip_statistics[ipAddressSender].pkts_sent_timestamp.push_back(timestamp);
                 
     // Update stats for packet receiver
     ip_statistics[ipAddressReceiver].kbytes_received += (float(bytesSent) / 1024);
-    ip_statistics[ipAddressReceiver].pkts_received++;  
-     // Aidmar
+    ip_statistics[ipAddressReceiver].pkts_received++;
     ip_statistics[ipAddressReceiver].pkts_received_timestamp.push_back(timestamp);
 }
 

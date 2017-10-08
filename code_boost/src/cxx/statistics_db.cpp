@@ -44,7 +44,6 @@ void statistics_db::writeStatisticsIP(std::unordered_map<std::string, entry_ipSt
             query.bind(3, (int) e.pkts_sent);
             query.bind(4, e.kbytes_received);
             query.bind(5, e.kbytes_sent);
-            // Aidmar
             query.bind(6, e.max_interval_pkt_rate);
             query.bind(7, e.min_interval_pkt_rate);
             query.bind(8, e.ip_class);
