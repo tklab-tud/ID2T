@@ -1,9 +1,6 @@
 import logging
 from random import randint, uniform, choice #Aidmar choice
 
-#Aidmar
-import numpy as np
-
 from lea import Lea
 from scipy.stats import gamma
 
@@ -18,13 +15,6 @@ from collections import deque
 
 
 class DDoSAttack(BaseAttack.BaseAttack):
-    # Aidmar - Metasploit DoS default PPS
-    minDefaultPPS = 400
-    maxDefaultPPS = 1400
-    # Arbitrary values
-    minDefaultBuffer = 1000
-    maxDefaultBuffer = 2000
-
     def __init__(self, statistics, pcap_file_path):
         """
         Creates a new instance of the DDoS attack.
@@ -46,33 +36,24 @@ class DDoSAttack(BaseAttack.BaseAttack):
             Param.INJECT_AT_TIMESTAMP: ParameterTypes.TYPE_FLOAT,
             Param.INJECT_AFTER_PACKET: ParameterTypes.TYPE_PACKET_POSITION,
             Param.PACKETS_PER_SECOND: ParameterTypes.TYPE_FLOAT,
-            # Aidmar - use attack duration instead
-            #Param.PACKETS_LIMIT: ParameterTypes.TYPE_INTEGER_POSITIVE,
+            Param.PACKETS_LIMIT: ParameterTypes.TYPE_INTEGER_POSITIVE,
             Param.NUMBER_ATTACKERS: ParameterTypes.TYPE_INTEGER_POSITIVE,
-            # Aidmar
             Param.ATTACK_DURATION: ParameterTypes.TYPE_INTEGER_POSITIVE,
             Param.VICTIM_BUFFER: ParameterTypes.TYPE_INTEGER_POSITIVE
         }
 
         # PARAMETERS: initialize with default values
         # (values are overwritten if user specifies them)
-
         self.add_param_value(Param.INJECT_AFTER_PACKET, randint(0, self.statistics.get_packet_count()))
         # attacker configuration
         num_attackers = randint(1, 16)
-        # Aidmar
         # The most used IP class in background traffic
         most_used_ip_class = self.statistics.process_db_query("most_used(ipClass)")
 
         self.add_param_value(Param.IP_SOURCE, self.generate_random_ipv4_address(most_used_ip_class, num_attackers))
         self.add_param_value(Param.MAC_SOURCE, self.generate_random_mac_address(num_attackers))
         self.add_param_value(Param.PORT_SOURCE, str(RandShort()))
-        # Aidmar
-        #self.add_param_value(Param.PACKETS_PER_SECOND, randint(1, 64))
-        # TO-DO: packet rate
-        # oneAttackerMinPPS = self.statistics.process_db_query("SELECT MAX(maxPktRate) FROM ip_statistics;")
-
-        self.add_param_value(Param.PACKETS_PER_SECOND, randint(self.minDefaultPPS, self.maxDefaultPPS))
+        self.add_param_value(Param.PACKETS_PER_SECOND, 0)
         self.add_param_value(Param.ATTACK_DURATION, randint(5,30))
 
         # victim configuration
@@ -82,28 +63,25 @@ class DDoSAttack(BaseAttack.BaseAttack):
         if isinstance(destination_mac, list) and len(destination_mac) == 0:
             destination_mac = self.generate_random_mac_address()
         self.add_param_value(Param.MAC_DESTINATION, destination_mac)
-
-        # Aidmar
-        self.add_param_value(Param.VICTIM_BUFFER, randint(self.minDefaultBuffer,self.maxDefaultBuffer))
-        # Aidmar - comment out
-        """
-        port_destination = self.statistics.process_db_query(
-            "SELECT portNumber FROM ip_ports WHERE portDirection='in' ORDER BY RANDOM() LIMIT 1;")
-        if port_destination is None:
-            port_destination = str(RandShort())
-        self.add_param_value(Param.PORT_DESTINATION, port_destination)
-        """
-        # Aidmar
-        #self.add_param_value(Param.PACKETS_LIMIT, randint(1000, 5000))
+        self.add_param_value(Param.VICTIM_BUFFER, randint(1000,10000))
+        self.add_param_value(Param.PACKETS_LIMIT, 0)
 
     def generate_attack_pcap(self):
-        def update_timestamp(timestamp, pps, maxdelay):
+        def update_timestamp(timestamp, pps, delay=0):
             """
             Calculates the next timestamp to be used based on the packet per second rate (pps) and the maximum delay.
 
             :return: Timestamp to be used for the next packet.
             """
-            return timestamp + uniform(0.1 / pps, maxdelay)
+            if delay == 0:
+                # Calculate the request timestamp
+                # A distribution to imitate the bursty behavior of traffic
+                randomdelay = Lea.fromValFreqsDict({1 / pps: 70, 2 / pps: 20, 5 / pps: 7, 10 / pps: 3})
+                return timestamp + uniform(1 / pps, randomdelay.random())
+            else:
+                # Calculate the reply timestamp
+                randomdelay = Lea.fromValFreqsDict({2 * delay: 70, 3 * delay: 20, 5 * delay: 7, 10 * delay: 3})
+                return timestamp + uniform(1 / pps + delay, 1 / pps + randomdelay.random())
 
         def get_nth_random_element(*element_list):
             """
@@ -123,6 +101,19 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 return number + 1
             else:
                 return 0
+
+        def getIntervalPPS(complement_interval_pps, timestamp):
+            """
+            Gets the packet rate (pps) for a specific time interval.
+            :param complement_interval_pps: an array of tuples (the last timestamp in the interval, the packet rate in the crresponding interval).
+            :param timestamp: the timestamp at which the packet rate is required.
+            :return: the corresponding packet rate (pps) .
+            """
+            for row in complement_interval_pps:
+                if timestamp <= row[0]:
+                    return row[1]
+            # In case the timestamp > capture max timestamp
+            return complement_interval_pps[-1][1]
 
         def get_attacker_config(ipAddress: str):
             """
@@ -161,11 +152,9 @@ class DDoSAttack(BaseAttack.BaseAttack):
         # Determine source IP and MAC address
         num_attackers = self.get_param_value(Param.NUMBER_ATTACKERS)
         if num_attackers is not None:  # user supplied Param.NUMBER_ATTACKERS
-            # Create random attackers based on user input Param.NUMBER_ATTACKERS
-            # Aidmar
             # The most used IP class in background traffic
             most_used_ip_class = self.statistics.process_db_query("most_used(ipClass)")
-
+            # Create random attackers based on user input Param.NUMBER_ATTACKERS
             ip_source_list = self.generate_random_ipv4_address(most_used_ip_class, num_attackers)
             mac_source_list = self.generate_random_mac_address(num_attackers)
         else:  # user did not supply Param.NUMBER_ATTACKS
@@ -174,22 +163,32 @@ class DDoSAttack(BaseAttack.BaseAttack):
             ip_source_list = self.get_param_value(Param.IP_SOURCE)
             mac_source_list = self.get_param_value(Param.MAC_SOURCE)
 
-        # Timestamp
-        timestamp_next_pkt = self.get_param_value(Param.INJECT_AT_TIMESTAMP)
-        pps = self.get_param_value(Param.PACKETS_PER_SECOND)
-        randomdelay = Lea.fromValFreqsDict({1 / pps: 70, 2 / pps: 30, 5 / pps: 15, 10 / pps: 3})
-
         # Initialize parameters
         packets = deque(maxlen=BUFFER_SIZE)
         port_source_list = self.get_param_value(Param.PORT_SOURCE)
         mac_destination = self.get_param_value(Param.MAC_DESTINATION)
         ip_destination = self.get_param_value(Param.IP_DESTINATION)
-        port_destination = self.get_param_value(Param.PORT_DESTINATION)
 
-        # Aidmar - check ip.src == ip.dst
+
+        most_used_ip_address = self.statistics.get_most_used_ip_address()
+        pps = self.get_param_value(Param.PACKETS_PER_SECOND)
+        if pps == 0:
+            result = self.statistics.process_db_query("SELECT MAX(maxPktRate) FROM ip_statistics WHERE ipAddress='"+ip_destination+"';")
+            if result:
+                pps = num_attackers * result
+            else:
+                result = self.statistics.process_db_query("SELECT MAX(maxPktRate) FROM ip_statistics WHERE ipAddress='"+most_used_ip_address+"';")
+                pps = num_attackers * result
+
+        # Calculate complement packet rates of the background traffic for each interval
+        attacker_pps = pps / num_attackers
+        complement_interval_attacker_pps = self.statistics.calculate_complement_packet_rates(attacker_pps)
+
+        # Check ip.src == ip.dst
         self.ip_src_dst_equal_check(ip_source_list, ip_destination)
 
         # Aidmar
+        port_destination = self.get_param_value(Param.PORT_DESTINATION)
         if not port_destination:  # user did not define port_dest
             port_destination = self.statistics.process_db_query(
                 "SELECT portNumber FROM ip_ports WHERE portDirection='in' AND ipAddress='" + ip_destination + "' ORDER BY portCount DESC LIMIT 1;")
@@ -209,28 +208,38 @@ class DDoSAttack(BaseAttack.BaseAttack):
         path_attack_pcap = None
 
         # Aidmar
-        replies = []
-        minDelay, maxDelay, SDDelay = self.get_reply_delay(ip_destination)
+        timestamp_prv_reply, timestamp_confirm = 0, 0
+        minDelay, maxDelay = self.get_reply_delay(ip_destination)
         victim_buffer = self.get_param_value(Param.VICTIM_BUFFER)
 
         # Aidmar
-        #for pkt_num in range(self.get_param_value(Param.PACKETS_LIMIT)):
-        attack_duration = self.get_param_value(Param.ATTACK_DURATION)
-        pkts_num = int(pps * attack_duration)
-        win_sizes = self.statistics.process_db_query(
-            "SELECT winSize FROM tcp_win ORDER BY RANDOM() LIMIT "+str(pkts_num)+";")
+        pkts_num = self.get_param_value(Param.PACKETS_LIMIT)
+        if pkts_num == 0:
+            attack_duration = self.get_param_value(Param.ATTACK_DURATION)
+            pkts_num = int(pps * attack_duration)
+
+        source_win_sizes = self.statistics.process_db_query(
+                "SELECT DISTINCT winSize FROM tcp_win ORDER BY RANDOM() LIMIT "+str(pkts_num)+";")
+
+        destination_win_dist = self.statistics.get_win_distribution(ip_destination)
+        if len(destination_win_dist) > 0:
+            destination_win_prob_dict = Lea.fromValFreqsDict(destination_win_dist)
+            destination_win_value = destination_win_prob_dict.random()
+        else:
+            destination_win_value = self.statistics.process_db_query("most_used(winSize)")
 
         # MSS that was used by IP destination in background traffic
         mss_dst = self.statistics.get_most_used_mss(ip_destination)
         if mss_dst is None:
             mss_dst = self.statistics.process_db_query("most_used(mssValue)")
 
+        replies_count = 0
+
         # Aidmar
         for attacker in range(num_attackers):
-            maxdelay = randomdelay.random()
-            attacker_pps = pps / num_attackers
+            # Timestamp
             timestamp_next_pkt = self.get_param_value(Param.INJECT_AT_TIMESTAMP)
-            timestamp_next_pkt = update_timestamp(timestamp_next_pkt, attacker_pps, maxdelay)
+            timestamp_next_pkt = update_timestamp(timestamp_next_pkt, attacker_pps)
             attacker_pkts_num = int(pkts_num / num_attackers) + randint(0,100)
             for pkt_num in range(attacker_pkts_num):
                 # Build request package
@@ -238,47 +247,37 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 (ip_source, mac_source) = get_nth_random_element(ip_source_list, mac_source_list)
                 # Determine source port
                 (port_source, ttl_value) = get_attacker_config(ip_source)
-
                 request_ether = Ether(dst=mac_destination, src=mac_source)
                 request_ip = IP(src=ip_source, dst=ip_destination, ttl=ttl_value)
                 # Aidmar - random win size for each packet
                 # request_tcp = TCP(sport=port_source, dport=port_destination, flags='S', ack=0)
-                win_size = choice(win_sizes)
-                request_tcp = TCP(sport=port_source, dport=port_destination, flags='S', ack=0, window=win_size)
+                source_win_size = choice(source_win_sizes)
+                request_tcp = TCP(sport=port_source, dport=port_destination, flags='S', ack=0, window=source_win_size)
 
                 request = (request_ether / request_ip / request_tcp)
                 request.time = timestamp_next_pkt
-
-                # Build reply package
-                # Aidmar
-                if len(replies) <= victim_buffer:
-                    reply_ether = Ether(src=mac_destination, dst=mac_source)
-                    reply_ip = IP(src=ip_destination, dst=ip_source, flags='DF')
-                    reply_tcp = TCP(sport=port_destination, dport=port_source, seq=0, ack=1, flags='SA', window=29200,options=[('MSS', mss_dst)])
-                    reply = (reply_ether / reply_ip / reply_tcp)
-                    timestamp_reply = timestamp_next_pkt + uniform(minDelay, maxDelay)
-
-                    if len(replies) > 0:
-                        last_reply_timestamp = replies[-1].time
-                        while timestamp_reply <= last_reply_timestamp:
-                            timestamp_reply = timestamp_reply + uniform(minDelay, maxDelay)
-
-                    reply.time = timestamp_reply
-                    replies.append(reply)
-
-                # Aidmar
-                # Append reply
-                if replies:
-                    while timestamp_next_pkt >= replies[0].time:
-                        packets.append(replies[0])
-                        replies.remove(replies[0])
-                        if len(replies) == 0:
-                            break
-
                 # Append request
                 packets.append(request)
 
-                timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, maxdelay)
+                # Build reply package
+                # Aidmar
+                if replies_count <= victim_buffer:
+                    reply_ether = Ether(src=mac_destination, dst=mac_source)
+                    reply_ip = IP(src=ip_destination, dst=ip_source, flags='DF')
+                    reply_tcp = TCP(sport=port_destination, dport=port_source, seq=0, ack=1, flags='SA', window=destination_win_value,options=[('MSS', mss_dst)])
+                    reply = (reply_ether / reply_ip / reply_tcp)
+
+                    timestamp_reply = update_timestamp(timestamp_next_pkt, attacker_pps, minDelay)
+                    while (timestamp_reply <= timestamp_prv_reply):
+                        timestamp_reply = update_timestamp(timestamp_prv_reply, attacker_pps, minDelay)
+                    timestamp_prv_reply = timestamp_reply
+
+                    reply.time = timestamp_reply
+                    packets.append(reply)
+                    replies_count+=1
+
+                attacker_pps = max(getIntervalPPS(complement_interval_attacker_pps, timestamp_next_pkt), (pps/num_attackers)/2)
+                timestamp_next_pkt = update_timestamp(timestamp_next_pkt, attacker_pps)
 
                 # Store timestamp of first packet (for attack label)
                 if pkt_num == 1:
@@ -288,11 +287,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
                     packets = sorted(packets, key=lambda pkt: pkt.time)
                     path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
                     packets = []
-
-                # Requests are sent all, send all replies
-                if pkt_num == pkts_num-1:
-                    for reply in replies:
-                        packets.append(reply)
 
         if len(packets) > 0:
             packets = sorted(packets, key=lambda pkt: pkt.time)
