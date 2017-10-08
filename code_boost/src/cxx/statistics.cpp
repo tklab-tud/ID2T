@@ -1,7 +1,11 @@
 #include <iostream>
+<<<<<<< HEAD
 #include <fstream>
 #include <vector>
 #include <math.h>
+=======
+#include "statistics.h"
+>>>>>>> 48c729f6dbfeb1e2670c762729090a48d5f0b490
 #include <sstream>
 #include <SQLiteCpp/SQLiteCpp.h>
 #include "statistics_db.h"

@@ -46,11 +46,7 @@ class BaseAttack(metaclass=ABCMeta):
     def set_statistics(self, statistics):
         """
         Specify the statistics object that will be used to calculate the parameters of this attack.
-<<<<<<< HEAD
         The statistics are used to calculate default parameters and to process user supplied
-=======
-        The statistics are used to calculate default parameters and to process user supplied 
->>>>>>> 48c729f6dbfeb1e2670c762729090a48d5f0b490
         queries.
 
         :param statistics: Reference to a statistics object.

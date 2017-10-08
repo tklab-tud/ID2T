@@ -1,13 +1,9 @@
-import socket
-import sys
 import ipaddress
 import os
 import random
 import re
 import tempfile
 from abc import abstractmethod, ABCMeta
-from scapy.layers.inet import Ether
-import numpy as np
 
 import ID2TLib.libpcapreader as pr
 from scapy.utils import PcapWriter
@@ -22,7 +18,7 @@ class BaseAttack(metaclass=ABCMeta):
     Abstract base class for all attack classes. Provides basic functionalities, like parameter validation.
     """
 
-    def __init__(self, name, description, attack_type):
+    def __init__(self, statistics, name, description, attack_type):
         """
         To be called within the individual attack class to initialize the required parameters.
 
@@ -32,7 +28,7 @@ class BaseAttack(metaclass=ABCMeta):
         :param attack_type: The type the attack belongs to, like probing/scanning, malware.
         """
         # Reference to statistics class
-        self.statistics = None
+        self.statistics = statistics
 
         # Class fields
         self.attack_name = name
@@ -42,29 +38,6 @@ class BaseAttack(metaclass=ABCMeta):
         self.supported_params = {}
         self.attack_start_utime = 0
         self.attack_end_utime = 0
-
-    def set_statistics(self, statistics):
-        """
-        Specify the statistics object that will be used to calculate the parameters of this attack.
-<<<<<<< HEAD
-        The statistics are used to calculate default parameters and to process user supplied
-=======
-        The statistics are used to calculate default parameters and to process user supplied 
->>>>>>> 48c729f6dbfeb1e2670c762729090a48d5f0b490
-        queries.
-
-        :param statistics: Reference to a statistics object.
-        """
-        self.statistics = statistics
-
-    @abstractmethod
-    def init_params(self):
-        """
-        Initialize all required parameters taking into account user supplied values. If no value is supplied,
-        or if a user defined query is supplied, use a statistics object to do the calculations.
-        A call to this function requires a call to 'set_statistics' first.
-        """
-        pass
 
     @abstractmethod
     def generate_attack_pcap(self):
@@ -234,19 +207,6 @@ class BaseAttack(metaclass=ABCMeta):
         except ValueError:
             return False, value
 
-    # Aidmar
-    @staticmethod
-    def _is_domain(val: str):
-        """
-        Verifies that the given string is a valid URI.
-
-        :param uri: The URI as string.
-        :return: True if URI is valid, otherwise False.
-        """
-        domain = re.match('^(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+$', val)
-        return (domain is not None)
-
-
     #########################################
     # HELPER METHODS
     #########################################
@@ -256,16 +216,10 @@ class BaseAttack(metaclass=ABCMeta):
         Adds the pair param : value to the dictionary of attack parameters. Prints and error message and skips the
         parameter if the validation fails.
 
-        :param stats: Statistics used to calculate user queries or default values.
-        :param param: Name of the parameter that we wish to modify.
-        :param value: The value we wish to assign to the specifried parameter.
+        :param param: The parameter name.
+        :param value: The parameter's value.
         :return: None.
         """
-        # This function call is valid only if there is a statistics object available.
-        if self.statistics is None:
-            print('Error: Attack parameter added without setting a statistics object first.')
-            exit(1)
-
         # by default no param is valid
         is_valid = False
 
@@ -319,14 +273,11 @@ class BaseAttack(metaclass=ABCMeta):
         elif param_type == ParameterTypes.TYPE_BOOLEAN:
             is_valid, value = self._is_boolean(value)
         elif param_type == ParameterTypes.TYPE_PACKET_POSITION:
-            ts = pr.pcap_processor(self.statistics.pcap_filepath, "False").get_timestamp_mu_sec(int(value))
+            ts = pr.pcap_processor(self.statistics.pcap_filepath).get_timestamp_mu_sec(int(value))
             if 0 <= int(value) <= self.statistics.get_packet_count() and ts >= 0:
                 is_valid = True
                 param_name = Parameter.INJECT_AT_TIMESTAMP
                 value = (ts / 1000000)  # convert microseconds from getTimestampMuSec into seconds
-        # Aidmar
-        elif param_type == ParameterTypes.TYPE_DOMAIN:
-            is_valid = self._is_domain(value)
 
         # add value iff validation was successful
         if is_valid:
@@ -392,7 +343,7 @@ class BaseAttack(metaclass=ABCMeta):
     #########################################
 
     @staticmethod
-    def generate_random_ipv4_address(ipClass, n: int = 1):
+    def generate_random_ipv4_address(n: int = 1):
         """
         Generates n random IPv4 addresses.
         :param n: The number of IP addresses to be generated
@@ -401,35 +352,16 @@ class BaseAttack(metaclass=ABCMeta):
 
         def is_invalid(ipAddress: ipaddress.IPv4Address):
             return ipAddress.is_multicast or ipAddress.is_unspecified or ipAddress.is_loopback or \
-                   ipAddress.is_link_local or ipAddress.is_reserved or ipAddress.is_private
+                   ipAddress.is_link_local or ipAddress.is_private or ipAddress.is_reserved
 
-        # Aidmar - generate a random IP from specific class
-        def generate_address(ipClass):
-            if ipClass == "Unknown":
-                return ipaddress.IPv4Address(random.randint(0, 2 ** 32 - 1))
-            else:
-                # For DDoS attack, we do not generate private IPs
-                if "private" in ipClass:
-                    ipClass = ipClass[0] # convert A-private to A
-                ipClassesByte1 = {"A": {1,126}, "B": {128,191}, "C":{192, 223}, "D":{224, 239}, "E":{240, 254}}
-                temp = list(ipClassesByte1[ipClass])
-                minB1 = temp[0]
-                maxB1 = temp[1]
-                b1 = random.randint(minB1, maxB1)
-                b2 = random.randint(1, 255)
-                b3 = random.randint(1, 255)
-                b4 = random.randint(1, 255)
-
-                ipAddress = ipaddress.IPv4Address(str(b1) +"."+ str(b2) + "." + str(b3) + "." + str(b4))
-
-            return ipAddress
-
+        def generate_address():
+            return ipaddress.IPv4Address(random.randint(0, 2 ** 32 - 1))
 
         ip_addresses = []
         for i in range(0, n):
-            address = generate_address(ipClass)
+            address = generate_address()
             while is_invalid(address):
-                address = generate_address(ipClass)
+                address = generate_address()
             ip_addresses.append(str(address))
 
         if n == 1:
@@ -493,135 +425,3 @@ class BaseAttack(metaclass=ABCMeta):
             return mac_addresses[0]
         else:
             return mac_addresses
-
-    # Aidmar
-    def get_reply_delay(self, ip_dst):
-        """
-           Gets the minimum and the maximum reply delay for all the connections of a specific IP.
-           :param ip_dst: The IP to reterive its reply delay.
-           :return minDelay: minimum delay
-           :return maxDelay: maximum delay
-
-           """
-        result = self.statistics.process_db_query(
-            "SELECT AVG(minDelay), AVG(maxDelay) FROM conv_statistics WHERE ipAddressB='6.6.6.6';") #" + ip_dst + "';")
-        if result[0][0] and result[0][1]:
-            minDelay = result[0][0]
-            maxDelay = result[0][1]
-        else:
-            allMinDelays = self.statistics.process_db_query("SELECT minDelay FROM conv_statistics LIMIT 500;")
-            minDelay = np.median(allMinDelays)
-            allMaxDelays = self.statistics.process_db_query("SELECT maxDelay FROM conv_statistics LIMIT 500;")
-            maxDelay = np.median(allMaxDelays)
-        minDelay = int(minDelay) * 10 ** -6  # convert from micro to seconds
-        maxDelay = int(maxDelay) * 10 ** -6
-        return minDelay, maxDelay
-
-    # Group the packets in conversations
-    def packetsToConvs(self,exploit_raw_packets):
-        """
-           Classifies a bunch of packets to conversations groups. A conversation is a set of packets go between host A (IP,port)
-           to host B (IP,port)
-           :param exploit_raw_packets: A set of packets contains several conversations.
-           :return conversations: A set of arrays, each array contains the packet of specifc conversation
-           :return orderList_conversations: An array contains the conversations ids (IP_A,port_A, IP_b,port_B) in the order
-           they appeared in the original packets.
-           """
-        conversations = {}
-        orderList_conversations = []
-        for pkt_num, pkt in enumerate(exploit_raw_packets):
-            eth_frame = Ether(pkt[0])
-
-            ip_pkt = eth_frame.payload
-            ip_dst = ip_pkt.getfieldval("dst")
-            ip_src = ip_pkt.getfieldval("src")
-
-            tcp_pkt = ip_pkt.payload
-            port_dst = tcp_pkt.getfieldval("dport")
-            port_src = tcp_pkt.getfieldval("sport")
-
-            conv_req = (ip_src, port_src, ip_dst, port_dst)
-            conv_rep = (ip_dst, port_dst, ip_src, port_src)
-            if conv_req not in conversations and conv_rep not in conversations:
-                pktList = [pkt]
-                conversations[conv_req] = pktList
-                # Order list of conv
-                orderList_conversations.append(conv_req)
-            else:
-                if conv_req in conversations:
-                    pktList = conversations[conv_req]
-                    pktList.append(pkt)
-                    conversations[conv_req] = pktList
-                else:
-                    pktList = conversations[conv_rep]
-                    pktList.append(pkt)
-                    conversations[conv_rep] = pktList
-        return (conversations, orderList_conversations)
-
-
-    def is_valid_ip_address(self,addr):
-        """
-        Checks if the IP address family is supported.
-
-        :param addr: IP address to be checked.
-        :return: Boolean
-        """
-        try:
-            socket.inet_aton(addr)
-            return True
-        except socket.error:
-            return False
-
-    def ip_src_dst_equal_check(self, ip_source, ip_destination):
-        """
-        Checks if the source IP and destination IP are equal.
-
-        :param ip_source: source IP address.
-        :param ip_destination: destination IP address.
-        """
-        equal = False
-        if isinstance(ip_source, list):
-            if ip_destination in ip_source:
-                equal = True
-        else:
-            if ip_source == ip_destination:
-                equal = True
-        if equal:
-            print("\nERROR: Invalid IP addresses; source IP is the same as destination IP: " + ip_source + ".")
-            sys.exit(0)
-
-
-    def get_inter_arrival_time_dist(self, packets):
-        timeSteps = []
-        prvsPktTime = 0
-        for index, pkt in enumerate(packets):
-            eth_frame = Ether(pkt[0])
-            if index == 0:
-                prvsPktTime = eth_frame.time
-            else:
-                timeSteps.append(eth_frame.time - prvsPktTime)
-                prvsPktTime = eth_frame.time
-
-        import numpy as np
-        freq,values = np.histogram(timeSteps,bins=20)
-        dict = {}
-        for i,val in enumerate(values):
-            if i < len(freq):
-                dict[str(val)] = freq[i]
-        return dict
-
-    def clean_white_spaces(self, str):
-        str = str.replace("\\n", "\n")
-        str = str.replace("\\r", "\r")
-        str = str.replace("\\t", "\t")
-        str = str.replace("\\\'", "\'")
-        return str
-
-    def modify_payload(self,str_tcp_seg, orig_target_uri, target_uri, orig_ip_dst, target_host):
-        if len(str_tcp_seg) > 0:
-            # convert payload bytes to str => str = "b'..\\r\\n..'"
-            str_tcp_seg = str_tcp_seg[2:-1]
-            str_tcp_seg = str_tcp_seg.replace(orig_target_uri, target_uri)
-            str_tcp_seg = str_tcp_seg.replace(orig_ip_dst, target_host)
-            str_tcp_seg = self.clean_white_spaces(str_tcp_seg)
-        return str_tcp_seg

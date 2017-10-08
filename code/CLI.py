@@ -36,7 +36,11 @@ class CLI(object):
         # Required arguments
         required_group = parser.add_argument_group('required arguments')
         required_args_group = required_group.add_mutually_exclusive_group(required=True)
+<<<<<<< HEAD
         required_args_group.add_argument('-i', '--input', metavar="PCAP_FILE",
+=======
+        required_args_group.add_argument('-i', '--input', metavar="PCAP_FILE", 
+>>>>>>> 48c729f6dbfeb1e2670c762729090a48d5f0b490
                                          help='path to the input pcap file')
         required_args_group.add_argument('-l', '--list-attacks', action='store_true')
 
@@ -56,9 +60,12 @@ class CLI(object):
         parser.add_argument('-q', '--query', metavar="QUERY",
                             action='append', nargs='?',
                             help='query the statistics database. If no query is provided, the application enters query mode.')
+<<<<<<< HEAD
         parser.add_argument('-t', '--extraTests', help='perform extra tests on the input pcap file, including calculating IP entropy'
                                                        'in interval-wise, TCP checksum, and checking payload availability.', action='store_true')
 
+=======
+>>>>>>> 48c729f6dbfeb1e2670c762729090a48d5f0b490
         # Attack arguments
         parser.add_argument('-a', '--attack', metavar="ATTACK", action='append',
                                        help='injects ATTACK into a PCAP file.', nargs='+')
