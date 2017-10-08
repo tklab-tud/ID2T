@@ -6,12 +6,12 @@ using namespace Tins;
  * Creates a new pcap_processor object.
  * @param path The path where the PCAP to get analyzed is locatated.
  */
-pcap_processor::pcap_processor(std::string path, std::string tests) {
+pcap_processor::pcap_processor(std::string path, std::string extraTests) {
     filePath = path;
     // Aidmar
-    if(tests == "True")
-        stats.setDoTests(true);
-    else  stats.setDoTests(false);;
+    if(extraTests == "True")
+        stats.setDoExtraTests(true);
+    else stats.setDoExtraTests(false);;
 }
 
 /**
@@ -146,7 +146,7 @@ void pcap_processor::collect_statistics() {
             std::chrono::microseconds currentCaptureDuration = lastPktTimestamp - firstTimestamp;
 
             // For each interval
-            if(currentCaptureDuration>barrier && barrier.count() > 0){ // barrier becomes negative in last interval
+            if(currentCaptureDuration>barrier && barrier.count() > 0){ // TO-DO: ensure this case does not happen: barrier becomes negative in last interval
                 stats.addIntervalStat(timeInterval, intervalStartTimestamp, lastPktTimestamp);
                 timeIntervalCounter++;
                 barrier =  barrier+timeInterval;
@@ -237,7 +237,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
         // Protocol distribution - layer 4
         PDU::PDUType p = pdu_l4->pdu_type();  
         
-        // Aidmar - Tests for IPv4: payload
+        // Aidmar - check for IPv4: payload
         if (pdu_l3_type == PDU::PDUType::IP) {
             stats.checkPayload(pdu_l4);
           }
@@ -310,7 +310,7 @@ bool inline pcap_processor::file_exists(const std::string &filePath) {
  */
 //int main() {
 //    std::cout << "Starting application." << std::endl;
-//    pcap_processor pcap = pcap_processor("/home/anonymous/Downloads/ID2T-toolkit/code/20min_iscx_11jun.pcap", "False");
+//    pcap_processor pcap = pcap_processor("/home/anonymous/Downloads/ID2T-toolkit/captures/col/capture_3.pcap", "False");
 //
 //    long double t = pcap.get_timestamp_mu_sec(87);
 //    std::cout << t << std::endl;

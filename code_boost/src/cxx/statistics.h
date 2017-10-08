@@ -218,11 +218,6 @@ struct entry_intervalStat {
     int new_tos_count;
     int new_mss_count;
 
-    // Predictability score
-    //float ip_src_pred_score;
-    //float ip_dst_pred_score;
-
-
     bool operator==(const entry_intervalStat &other) const {
         return pkts_count == other.pkts_count
                && kbytes == other.kbytes
@@ -249,10 +244,6 @@ struct entry_intervalStat {
  * - Number of packets from B to A
  */
 struct entry_convStat {
-//    long pkts_A_B;
-//    long pkts_B_A;
-//    std::vector<std::chrono::microseconds> pkts_A_B_timestamp;
-//    std::vector<std::chrono::microseconds> pkts_B_A_timestamp;
     long pkts_count;
     float avg_pkt_rate;
     std::vector<std::chrono::microseconds> pkts_timestamp;
@@ -452,8 +443,8 @@ public:
     ip_stats getStatsForIP(std::string ipAddress);
 
     // Aidmar
-    bool getDoTests();
-    void setDoTests(bool var);
+    bool getDoExtraTests();
+    void setDoExtraTests(bool var);
 
 private:
     /*
@@ -464,15 +455,19 @@ private:
     float sumPacketSize = 0;
     int packetCount = 0;
 
-    // Aidmar
-    bool doTests = false;
+    /* Extra tests includes:
+     * - calculate IPs entropies for intervals
+     * - calculate IPs cumulative entropies interval-wise
+     * - check payload availability
+     * - chech TCP checksum correctness
+    */
+    bool doExtraTests = false;
 
     int payloadCount = 0;
     int incorrectTCPChecksumCount = 0;
     int correctTCPChecksumCount = 0;
-    int validToSCount = 0;
-    int invalidToSCount = 0;
 
+    // Variables that are used for interval-wise tests
     int lastIntervalPayloadCount = 0;
     int lastIntervalIncorrectTCPChecksumCount = 0;
     int lastIntervalCorrectTCPChecksumCount = 0;
@@ -492,20 +487,32 @@ private:
     // {IP Address, TTL value, count}
     std::unordered_map<ipAddress_ttl, int> ttl_distribution;
 
-    // Aidmar
     // {IP Address, MSS value, count}
     std::unordered_map<ipAddress_mss, int> mss_distribution;
+
     // {IP Address, Win size, count}
     std::unordered_map<ipAddress_win, int> win_distribution;
+
+    // {IP Address, ToS value, count}
+    std::unordered_map<ipAddress_tos, int> tos_distribution;
+
     // {IP Address A, Port A, IP Address B, Port B,   #packets_A_B, #packets_B_A}
     std::unordered_map<conv, entry_convStat> conv_statistics;
+
     std::unordered_map<std::string, entry_intervalStat> interval_statistics;
-    std::unordered_map<ipAddress_tos, int> tos_distribution;
+
+
+
     // {TTL value, count}
     std::unordered_map<int, int> ttl_values;
+
     // {Win size, count}
     std::unordered_map<int, int> win_values;
+
+    // {ToS, count}
     std::unordered_map<int, int> tos_values;
+
+    // {MSS, count}
     std::unordered_map<int, int> mss_values;
 
     // {IP Address, Protocol, count}
@@ -523,10 +530,6 @@ private:
     // Aidmar
     // {DSCP value, count}
     std::unordered_map<int, int> dscp_distribution;
-
-    // Aidmar - comment out
-    // {IP Address, avg MSS}
-    //std::unordered_map<std::string, int> ip_sumMss;
 };
 
 

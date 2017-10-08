@@ -17,7 +17,7 @@ using namespace Tins;
  * @param pdu_l4 The packet that should be checked if it has a payload or not.
  */
 void statistics::checkPayload(const PDU *pdu_l4) {
-    if(this->getDoTests()) {
+    if(this->getDoExtraTests()) {
         // pdu_l4: Tarnsport layer 4
         int pktSize = pdu_l4->size();
         int headerSize = pdu_l4->header_size(); // TCP/UDP header
@@ -35,7 +35,7 @@ void statistics::checkPayload(const PDU *pdu_l4) {
  * @param tcpPkt The packet to get checked.
  */
 void statistics::checkTCPChecksum(std::string ipAddressSender, std::string ipAddressReceiver, TCP tcpPkt) {
-    if(this->getDoTests()) {
+    if(this->getDoExtraTests()) {
         if(check_tcpChecksum(ipAddressSender, ipAddressReceiver, tcpPkt))
             correctTCPChecksumCount++;
         else incorrectTCPChecksumCount++;
@@ -48,7 +48,7 @@ void statistics::checkTCPChecksum(std::string ipAddressSender, std::string ipAdd
  * @param intervalStartTimestamp The timstamp where the interval starts.
  */
 std::vector<float> statistics::calculateLastIntervalIPsEntropy(std::chrono::microseconds intervalStartTimestamp){
-    if(this->getDoTests()) {
+    if(this->getDoExtraTests()) {
         std::vector<int> IPsSrcPktsCounts;
         std::vector<int> IPsDstPktsCounts;
 
@@ -101,7 +101,7 @@ std::vector<float> statistics::calculateLastIntervalIPsEntropy(std::chrono::micr
  * Calculates cumulative entropy of source and destination IPs, i.e., the entropy for packets from the beginning of the pcap file. 
  */
 std::vector<float> statistics::calculateIPsCumEntropy(){
-    if(this->getDoTests()) {
+    if(this->getDoExtraTests()) {
         std::vector <std::string> IPs;
         std::vector <float> IPsSrcProb;
         std::vector <float> IPsDstProb;
@@ -178,21 +178,15 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
     interval_statistics[lastPktTimestamp_s].payload_count = payloadCount - lastIntervalPayloadCount;
     interval_statistics[lastPktTimestamp_s].incorrect_checksum_count = incorrectTCPChecksumCount - lastIntervalIncorrectTCPChecksumCount;
     interval_statistics[lastPktTimestamp_s].correct_checksum_count = correctTCPChecksumCount - lastIntervalCorrectTCPChecksumCount;
-    interval_statistics[lastPktTimestamp_s].invalid_tos_count = invalidToSCount - lastIntervalInvalidToSCount;
-    interval_statistics[lastPktTimestamp_s].valid_tos_count = validToSCount - lastIntervalValidToSCount;
     interval_statistics[lastPktTimestamp_s].new_ip_count = ip_statistics.size() - lastIntervalCumNewIPCount;
     interval_statistics[lastPktTimestamp_s].new_ttl_count = ttl_values.size() - lastIntervalCumNewTTLCount;
     interval_statistics[lastPktTimestamp_s].new_win_size_count = win_values.size() - lastIntervalCumNewWinSizeCount;
     interval_statistics[lastPktTimestamp_s].new_tos_count = tos_values.size() - lastIntervalCumNewToSCount;
     interval_statistics[lastPktTimestamp_s].new_mss_count = mss_values.size() - lastIntervalCumNewMSSCount;
 
-    //std::cout<<invalidToSCount<<","<<validToSCount<<"\n";
-
     lastIntervalPayloadCount = payloadCount;
     lastIntervalIncorrectTCPChecksumCount = incorrectTCPChecksumCount;
     lastIntervalCorrectTCPChecksumCount = correctTCPChecksumCount;
-    lastIntervalInvalidToSCount = invalidToSCount;
-    lastIntervalValidToSCount = validToSCount;
     lastIntervalCumPktCount = packetCount;
     lastIntervalCumSumPktSize = sumPacketSize;
     lastIntervalCumNewIPCount =  ip_statistics.size();
@@ -559,29 +553,37 @@ void statistics::writeToDatabase(std::string database_path) {
 
     float avgPacketRate = (packetCount / duration);
     long avgPacketSize = getAvgPacketSize();
-    long avgPacketsSentPerHost = (sumPacketsSent / senderCountIP);
-    float avgBandwidthInKBits = (sumBandwidthIn / senderCountIP) * 8;
-    float avgBandwidthOutInKBits = (sumBandwidthOut / senderCountIP) * 8;
+    if(senderCountIP>0) {
+        long avgPacketsSentPerHost = (sumPacketsSent / senderCountIP);
+        float avgBandwidthInKBits = (sumBandwidthIn / senderCountIP) * 8;
+        float avgBandwidthOutInKBits = (sumBandwidthOut / senderCountIP) * 8;
 
-    // Create database and write information
-    statistics_db db(database_path);
-    db.writeStatisticsFile(packetCount, getCaptureDurationSeconds(),
-                           getFormattedTimestamp(timestamp_firstPacket.seconds(), timestamp_firstPacket.microseconds()),
-                           getFormattedTimestamp(timestamp_lastPacket.seconds(), timestamp_lastPacket.microseconds()),
-                           avgPacketRate, avgPacketSize, avgPacketsSentPerHost, avgBandwidthInKBits,
-                           avgBandwidthOutInKBits);
-    db.writeStatisticsIP(ip_statistics);
-    db.writeStatisticsTTL(ttl_distribution);
-    db.writeStatisticsIpMac(ip_mac_mapping);
-    //db.writeStatisticsMss(ip_sumMss);
-    db.writeStatisticsPorts(ip_ports);
-    db.writeStatisticsProtocols(protocol_distribution);
-    // Aidmar
-    db.writeStatisticsMss_dist(mss_distribution);
-    db.writeStatisticsTos_dist(tos_distribution);
-    db.writeStatisticsWin(win_distribution);
-    db.writeStatisticsConv(conv_statistics);
-    db.writeStatisticsInterval(interval_statistics);
+        // Create database and write information
+        statistics_db db(database_path);
+        db.writeStatisticsFile(packetCount, getCaptureDurationSeconds(),
+                               getFormattedTimestamp(timestamp_firstPacket.seconds(), timestamp_firstPacket.microseconds()),
+                               getFormattedTimestamp(timestamp_lastPacket.seconds(), timestamp_lastPacket.microseconds()),
+                               avgPacketRate, avgPacketSize, avgPacketsSentPerHost, avgBandwidthInKBits,
+                               avgBandwidthOutInKBits);
+        db.writeStatisticsIP(ip_statistics);
+        db.writeStatisticsTTL(ttl_distribution);
+        db.writeStatisticsIpMac(ip_mac_mapping);
+        //db.writeStatisticsMss(ip_sumMss);
+        db.writeStatisticsPorts(ip_ports);
+        db.writeStatisticsProtocols(protocol_distribution);
+        // Aidmar
+        db.writeStatisticsMss_dist(mss_distribution);
+        db.writeStatisticsTos_dist(tos_distribution);
+        db.writeStatisticsWin(win_distribution);
+        db.writeStatisticsConv(conv_statistics);
+        db.writeStatisticsInterval(interval_statistics);
+    }
+    else {
+        // Tinslib failed to recognize the types of the packets in the input PCAP
+        std::cout<<"ERROR: Statistics could not be collected from the input PCAP!"<<"\n";
+        return;
+    }
+
 }
 
 /**
@@ -602,12 +604,12 @@ void statistics::addPacketSize(uint32_t packetSize) {
 }
 
 // Aidmar
-void statistics::setDoTests(bool var) {
-    doTests = var;
+void statistics::setDoExtraTests(bool var) {
+    doExtraTests = var;
 }
 
-bool statistics::getDoTests() {
-    return doTests;
+bool statistics::getDoExtraTests() {
+    return doExtraTests;
 }
 
 
