@@ -18,8 +18,6 @@ tures/*
 code/*.pcap
 code/*.xml
 code_boost/src/SQLiteCpp/
-code_boost/src/cmake-build-debug
-code_boost/src/cmake-build-debug/
 code_boost/src/cmake-build-debug/*
 test.py
 dbs/
