@@ -1,19 +1,4 @@
-# Created by Aidmar
-"""
-ATutor 2.2.1 SQL Injection / Remote Code Execution
-
-This module exploits a SQL Injection vulnerability and an authentication weakness vulnerability in ATutor. This essentially
-means an attacker can bypass authentication and reach the administrator's interface where they can upload malicious code.
-
-more info:
-https://www.rapid7.com/db/modules/exploit/multi/http/atutor_sqli
-
-"""
-
 import logging
-import math
-from operator import itemgetter
-import operator
 from random import randint, uniform
 
 from lea import Lea
@@ -110,7 +95,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
         timestamp_next_pkt = self.get_param_value(Param.INJECT_AT_TIMESTAMP)
         pps = self.get_param_value(Param.PACKETS_PER_SECOND)
 
-        # Aidmar - calculate complement packet rates of BG traffic per interval
+        # Calculate complement packet rates of BG traffic per interval
         complement_interval_pps = self.statistics.calculate_complement_packet_rates(pps)
 
         # Initialize parameters
@@ -198,12 +183,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
                     # TCP
                     tcp_pkt.setfieldval("sport",port_source)
 
-                    if len(str_tcp_seg) > 0:
-                        # convert payload bytes to str => str = "b'..\\r\\n..'"
-                        str_tcp_seg = str_tcp_seg[2:-1]
-                        str_tcp_seg = str_tcp_seg.replace('/ATutor', target_uri)
-                        str_tcp_seg = str_tcp_seg.replace(orig_ip_dst, target_host)
-                        str_tcp_seg = self.clean_white_spaces(str_tcp_seg)
+                    str_tcp_seg = self.modify_payload(str_tcp_seg, '/ATutor', target_uri, orig_ip_dst, target_host)
 
                     # TCP Seq, Ack
                     if tcp_pkt.getfieldval("ack") != 0:
@@ -230,12 +210,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
                     # TCP
                     tcp_pkt.setfieldval("dport", port_source)
 
-                    if len(str_tcp_seg) > 0:
-                        # convert payload bytes to str => str = "b'..\\r\\n..'"
-                        str_tcp_seg = str_tcp_seg[2:-1]
-                        str_tcp_seg = str_tcp_seg.replace('/ATutor', target_uri)
-                        str_tcp_seg = str_tcp_seg.replace(orig_ip_dst, target_host)
-                        str_tcp_seg = self.clean_white_spaces(str_tcp_seg)
+                    str_tcp_seg = self.modify_payload(str_tcp_seg, '/ATutor', target_uri, orig_ip_dst, target_host)
 
                     # TCP Seq, ACK
                     tcp_pkt.setfieldval("ack", attacker_seq)
@@ -269,12 +244,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
                     # TCP
                     #tcp_pkt.setfieldval("sport", port_source)
 
-                    if len(str_tcp_seg) > 0:
-                        # convert payload bytes to str => str = "b'..\\r\\n..'"
-                        str_tcp_seg = str_tcp_seg[2:-1]
-                        str_tcp_seg = str_tcp_seg.replace('/ATutor', target_uri)
-                        str_tcp_seg = str_tcp_seg.replace(orig_ip_dst, target_host)
-                        str_tcp_seg = self.clean_white_spaces(str_tcp_seg)
+                    str_tcp_seg = self.modify_payload(str_tcp_seg, '/ATutor', target_uri, orig_ip_dst, target_host)
 
                     # TCP Seq, Ack
                     if tcp_pkt.getfieldval("ack") != 0:
@@ -301,12 +271,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
                     # TCP
                     #tcp_pkt.setfieldval("dport", port_source)
 
-                    if len(str_tcp_seg) > 0:
-                        # convert payload bytes to str => str = "b'..\\r\\n..'"
-                        str_tcp_seg = str_tcp_seg[2:-1]
-                        str_tcp_seg = str_tcp_seg.replace('/ATutor', target_uri)
-                        str_tcp_seg = str_tcp_seg.replace(orig_ip_dst, target_host)
-                        str_tcp_seg = self.clean_white_spaces(str_tcp_seg)
+                    str_tcp_seg = self.modify_payload(str_tcp_seg, '/ATutor', target_uri, orig_ip_dst, target_host)
 
                     # TCP Seq, ACK
                     tcp_pkt.setfieldval("ack", attacker_seq)

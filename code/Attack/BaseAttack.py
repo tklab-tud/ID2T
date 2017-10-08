@@ -479,9 +479,8 @@ class BaseAttack(metaclass=ABCMeta):
 
            """
         result = self.statistics.process_db_query(
-            "SELECT standardDeviationDelay, minDelay, maxDelay FROM conv_statistics WHERE ipAddressB='" + ip_dst + "' LIMIT 1;")
-        if result:
-            standardDeviationDelay = result[0][0]
+            "SELECT AVG(minDelay), AVG(maxDelay) FROM conv_statistics WHERE ipAddressB='" + ip_dst + "';")
+        if result[0][1] and result[0][2]:
             minDelay = result[0][1]
             maxDelay = result[0][2]
         else:
@@ -489,12 +488,9 @@ class BaseAttack(metaclass=ABCMeta):
             minDelay = np.median(allMinDelays)
             allMaxDelays = self.statistics.process_db_query("SELECT maxDelay FROM conv_statistics LIMIT 500;")
             maxDelay = np.median(allMaxDelays)
-            allStandardDeviationDelay = self.statistics.process_db_query("SELECT standardDeviationDelay FROM conv_statistics LIMIT 500;")
-            standardDeviationDelay = np.median(allStandardDeviationDelay)
         minDelay = int(minDelay) * 10 ** -6  # convert from micro to seconds
         maxDelay = int(maxDelay) * 10 ** -6
-        standardDeviationDelay = int(standardDeviationDelay) * 10 ** -6
-        return minDelay, maxDelay, standardDeviationDelay
+        return minDelay, maxDelay
 
     # Group the packets in conversations
     def packetsToConvs(self,exploit_raw_packets):
@@ -570,9 +566,37 @@ class BaseAttack(metaclass=ABCMeta):
             sys.exit(0)
 
 
+    def get_inter_arrival_time_dist(self, packets):
+        timeSteps = []
+        prvsPktTime = 0
+        for index, pkt in enumerate(packets):
+            eth_frame = Ether(pkt[0])
+            if index == 0:
+                prvsPktTime = eth_frame.time
+            else:
+                timeSteps.append(eth_frame.time - prvsPktTime)
+                prvsPktTime = eth_frame.time
+
+        import numpy as np
+        freq,values = np.histogram(timeSteps,bins=20)
+        dict = {}
+        for i,val in enumerate(values):
+            if i < len(freq):
+                dict[str(val)] = freq[i]
+        return dict
+
     def clean_white_spaces(self, str):
         str = str.replace("\\n", "\n")
         str = str.replace("\\r", "\r")
         str = str.replace("\\t", "\t")
         str = str.replace("\\\'", "\'")
         return str
+
+    def modify_payload(self,str_tcp_seg, orig_target_uri, target_uri, orig_ip_dst, target_host):
+        if len(str_tcp_seg) > 0:
+            # convert payload bytes to str => str = "b'..\\r\\n..'"
+            str_tcp_seg = str_tcp_seg[2:-1]
+            str_tcp_seg = str_tcp_seg.replace(orig_target_uri, target_uri)
+            str_tcp_seg = str_tcp_seg.replace(orig_ip_dst, target_host)
+            str_tcp_seg = self.clean_white_spaces(str_tcp_seg)
+        return str_tcp_seg
