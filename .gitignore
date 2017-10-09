@@ -23,6 +23,7 @@ code/*.xml
 dbs/
 *.csv
 *.stat
+*pdf
 code_boost/src/cxx/CMakeLists.txt
 code_boost/src/cxx/cmake-build-debug/
 code_boost/src/SQLiteCpp/
