@@ -476,29 +476,38 @@ class BaseAttack(metaclass=ABCMeta):
             sys.exit(0)
 
 
-    def get_inter_arrival_time_dist(self, packets):
+    def get_inter_arrival_time(self, packets, distribution:bool=False):
         """
-        Gets the inter-arrival time distribution of a set of packets.
+        Gets the inter-arrival times array and its distribution of a set of packets.
 
         :param packets: the packets to extract their inter-arrival time.
+        :return inter_arrival_times: array of the inter-arrival times
+        :return dict: the inter-arrival time distribution as a histogram {inter-arrival time:frequency}
         """
-        timeSteps = []
+        inter_arrival_times = []
         prvsPktTime = 0
         for index, pkt in enumerate(packets):
-            eth_frame = Ether(pkt[0])
-            if index == 0:
-                prvsPktTime = eth_frame.time
-            else:
-                timeSteps.append(eth_frame.time - prvsPktTime)
-                prvsPktTime = eth_frame.time
+            timestamp = pkt[1][0] + pkt[1][1]/10**6
 
-        import numpy as np
-        freq,values = np.histogram(timeSteps,bins=20)
-        dict = {}
-        for i,val in enumerate(values):
-            if i < len(freq):
-                dict[str(val)] = freq[i]
-        return dict
+            if index == 0:
+                prvsPktTime = timestamp
+                inter_arrival_times.append(0)
+            else:
+                inter_arrival_times.append(timestamp - prvsPktTime)
+                prvsPktTime = timestamp
+
+        if distribution:
+            # Build a distribution dictionary
+            import numpy as np
+            freq,values = np.histogram(inter_arrival_times,bins=20)
+            dict = {}
+            for i,val in enumerate(values):
+                if i < len(freq):
+                    dict[str(val)] = freq[i]
+            return inter_arrival_times, dict
+        else:
+            return inter_arrival_times
+
 
     def clean_white_spaces(self, str):
         """
