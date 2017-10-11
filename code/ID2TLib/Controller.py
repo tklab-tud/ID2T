@@ -24,6 +24,7 @@ class Controller:
         self.pcap_file = PcapFile(self.pcap_src_path)
         self.label_manager = LabelManager(self.pcap_src_path)
         self.statistics = Statistics(self.pcap_file)
+        self.statistics.do_extra_tests = self.do_extra_tests
         self.statisticsDB = self.statistics.get_statistics_database()
         self.attack_controller = AttackController(self.pcap_file, self.statistics, self.label_manager)
 
