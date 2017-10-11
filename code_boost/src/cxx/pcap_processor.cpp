@@ -144,7 +144,7 @@ void pcap_processor::collect_statistics() {
             std::chrono::microseconds currentCaptureDuration = lastPktTimestamp - firstTimestamp;
 
             // For each interval
-            if(currentCaptureDuration>barrier && barrier.count() > 0){ // TO-DO: ensure this case does not happen: barrier becomes negative in last interval
+            if(currentCaptureDuration>barrier){ 
                 stats.addIntervalStat(timeInterval, intervalStartTimestamp, lastPktTimestamp);
                 timeIntervalCounter++;
                 barrier =  barrier+timeInterval;
