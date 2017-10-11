@@ -114,7 +114,7 @@ void pcap_processor::collect_statistics() {
         FileSniffer snifferOverview(filePath);
         
         SnifferIterator i = sniffer.begin();                
-        Tins::Timestamp lastProcessedPacket;
+        std::chrono::microseconds currentPktTimestamp;
 
         // Save timestamp of first packet
         stats.setTimestampFirstPacket(i->timestamp());
@@ -140,23 +140,24 @@ void pcap_processor::collect_statistics() {
 
         // Iterate over all packets and collect statistics
         for (; i != sniffer.end(); i++) {
-            std::chrono::microseconds lastPktTimestamp = i->timestamp();
-            std::chrono::microseconds currentCaptureDuration = lastPktTimestamp - firstTimestamp;
+            currentPktTimestamp = i->timestamp();
+            std::chrono::microseconds currentDuration = currentPktTimestamp - firstTimestamp;
 
             // For each interval
-            if(currentCaptureDuration>barrier && barrier.count() > 0){ // TO-DO: ensure this case does not happen: barrier becomes negative in last interval
-                stats.addIntervalStat(timeInterval, intervalStartTimestamp, lastPktTimestamp);
+            if(currentDuration>barrier){
+                stats.addIntervalStat(timeInterval, intervalStartTimestamp, currentPktTimestamp);
                 timeIntervalCounter++;
-                barrier =  barrier+timeInterval;
-                intervalStartTimestamp = lastPktTimestamp;
+
+                barrier =  barrier + timeInterval;
+                intervalStartTimestamp = currentPktTimestamp;
             }
+
             stats.incrementPacketCount();
-            this->process_packets(*i);                    
-            lastProcessedPacket = i->timestamp();
+            this->process_packets(*i);
         }
         
         // Save timestamp of last packet into statistics
-        stats.setTimestampLastPacket(lastProcessedPacket);
+        stats.setTimestampLastPacket(currentPktTimestamp);
     }
 }
 

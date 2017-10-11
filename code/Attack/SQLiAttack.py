@@ -137,7 +137,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
         # Read SQLi Attack pcap file
         orig_ip_dst = None
         exploit_raw_packets = RawPcapReader(self.template_attack_pcap_path)
-        inter_arrival_time_dist = self.get_inter_arrival_time_dist(exploit_raw_packets)
+        inter_arrival_times, inter_arrival_time_dist = self.get_inter_arrival_time(exploit_raw_packets,True)
         timeSteps = Lea.fromValFreqsDict(inter_arrival_time_dist)
         exploit_raw_packets = RawPcapReader(self.template_attack_pcap_path)
 
