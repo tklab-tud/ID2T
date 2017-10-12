@@ -529,6 +529,19 @@ class Statistics:
         else:
             return None
 
+    def get_most_used_ttl(self, ipAddress: str):
+        """
+        :param ipAddress: The IP address whose used TTL should be determined
+        :return: The TTL value used by the IP address, or if the IP addresses never specified a TTL,
+        then None is returned
+        """
+        ttl_value = self.process_db_query(
+            'SELECT ttlValue from ip_ttl WHERE ipAddress="' + ipAddress + '" ORDER BY ttlCount DESC LIMIT 1')
+        if isinstance(ttl_value, int):
+            return ttl_value
+        else:
+            return None
+
 
     def get_statistics_database(self):
         """
