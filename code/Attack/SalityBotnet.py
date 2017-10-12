@@ -133,7 +133,7 @@ class SalityBotnet(BaseAttack.BaseAttack):
             if ip_pkt.getfieldval("ttl") not in ttl_map:
                 source_ttl = self.statistics.get_most_used_ttl(ip_pkt.getfieldval("src"))
                 if not source_ttl:
-                    source_ttl = self.statistics.process_db_query("SELECT ttlValue FROM ip_ttl ORDER BY RAND() LIMIT 1;")
+                    source_ttl = self.statistics.process_db_query("SELECT ttlValue FROM ip_ttl ORDER BY RANDOM() LIMIT 1;")
                 ttl_map[ip_pkt.getfieldval("ttl")] = source_ttl
             ip_pkt.setfieldval("ttl", ttl_map[ip_pkt.getfieldval("ttl")])
 
