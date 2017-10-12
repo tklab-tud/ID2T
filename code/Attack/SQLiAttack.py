@@ -28,7 +28,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
         """
         # Initialize attack
         super(SQLiAttack, self).__init__("SQLi Attack", "Injects a SQLi attack'",
-                                        "Resource Exhaustion")
+                                        "Privilege elevation")
 
         # Define allowed parameters and their type
         self.supported_params = {
