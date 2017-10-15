@@ -150,9 +150,12 @@ std::vector<float> statistics::calculateIPsCumEntropy(){
  */
 void statistics::calculateIPIntervalPacketRate(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp){        
         for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
-                int indexStartSent = getClosestIndex(i->second.pkts_sent_timestamp, intervalStartTimestamp);
-                int IPsSrcPktsCount = i->second.pkts_sent_timestamp.size() - indexStartSent;
-                float interval_pkt_rate = (float) IPsSrcPktsCount * 1000000 / interval.count(); // used 10^6 because interval in microseconds
+            int IPsSrcPktsCount = 0;
+            for (auto j = i->second.pkts_sent_timestamp.begin(); j != i->second.pkts_sent_timestamp.end(); j++) {
+                if(*j >= intervalStartTimestamp)
+                    IPsSrcPktsCount++;
+            }
+            float interval_pkt_rate = (float) IPsSrcPktsCount * 1000000 / interval.count(); // used 10^6 because interval in microseconds
                 i->second.interval_pkt_rate.push_back(interval_pkt_rate);
                 if(interval_pkt_rate > i->second.max_interval_pkt_rate || i->second.max_interval_pkt_rate == 0)
                     i->second.max_interval_pkt_rate = interval_pkt_rate;
