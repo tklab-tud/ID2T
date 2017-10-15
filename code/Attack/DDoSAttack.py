@@ -35,7 +35,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
             Param.INJECT_AT_TIMESTAMP: ParameterTypes.TYPE_FLOAT,
             Param.INJECT_AFTER_PACKET: ParameterTypes.TYPE_PACKET_POSITION,
             Param.PACKETS_PER_SECOND: ParameterTypes.TYPE_FLOAT,
-            Param.PACKETS_LIMIT: ParameterTypes.TYPE_INTEGER_POSITIVE,
             Param.NUMBER_ATTACKERS: ParameterTypes.TYPE_INTEGER_POSITIVE,
             Param.ATTACK_DURATION: ParameterTypes.TYPE_INTEGER_POSITIVE,
             Param.VICTIM_BUFFER: ParameterTypes.TYPE_INTEGER_POSITIVE
@@ -71,7 +70,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
             destination_mac = self.generate_random_mac_address()
         self.add_param_value(Param.MAC_DESTINATION, destination_mac)
         self.add_param_value(Param.VICTIM_BUFFER, randint(1000,10000))
-        self.add_param_value(Param.PACKETS_LIMIT, 0)
 
     def generate_attack_pcap(self):
         def update_timestamp(timestamp, pps, delay=0):
@@ -169,6 +167,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
             # if user supplied any values for those params
             ip_source_list = self.get_param_value(Param.IP_SOURCE)
             mac_source_list = self.get_param_value(Param.MAC_SOURCE)
+            num_attackers = len(ip_source_list)
 
         # Initialize parameters
         packets = deque(maxlen=BUFFER_SIZE)
@@ -180,7 +179,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         pps = self.get_param_value(Param.PACKETS_PER_SECOND)
         if pps == 0:
             result = self.statistics.process_db_query("SELECT MAX(maxPktRate) FROM ip_statistics WHERE ipAddress='"+ip_destination+"';")
-            if result:
+            if result is not None and not 0:
                 pps = num_attackers * result
             else:
                 result = self.statistics.process_db_query("SELECT MAX(maxPktRate) FROM ip_statistics WHERE ipAddress='"+most_used_ip_address+"';")
@@ -216,10 +215,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
         minDelay, maxDelay = self.get_reply_delay(ip_destination)
         victim_buffer = self.get_param_value(Param.VICTIM_BUFFER)
 
-        pkts_num = self.get_param_value(Param.PACKETS_LIMIT)
-        if pkts_num == 0:
-            attack_duration = self.get_param_value(Param.ATTACK_DURATION)
-            pkts_num = int(pps * attack_duration)
+        attack_duration = self.get_param_value(Param.ATTACK_DURATION)
+        pkts_num = int(pps * attack_duration)
 
         source_win_sizes = self.statistics.process_db_query(
                 "SELECT DISTINCT winSize FROM tcp_win ORDER BY RANDOM() LIMIT "+str(pkts_num)+";")
@@ -242,9 +239,13 @@ class DDoSAttack(BaseAttack.BaseAttack):
         for attacker in range(num_attackers):
             # Timestamp
             timestamp_next_pkt = self.get_param_value(Param.INJECT_AT_TIMESTAMP)
+            attack_ends_time = timestamp_next_pkt + attack_duration
             timestamp_next_pkt = update_timestamp(timestamp_next_pkt, attacker_pps)
             attacker_pkts_num = int(pkts_num / num_attackers) + randint(0,100)
             for pkt_num in range(attacker_pkts_num):
+                # Stop the attack when it exceeds the duration
+                if timestamp_next_pkt > attack_ends_time:
+                    break
                 # Build request package
                 # Select one IP address and its corresponding MAC address
                 (ip_source, mac_source) = get_nth_random_element(ip_source_list, mac_source_list)
