@@ -36,6 +36,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
             Param.IP_SOURCE: ParameterTypes.TYPE_IP_ADDRESS,
             Param.MAC_DESTINATION: ParameterTypes.TYPE_MAC_ADDRESS,
             Param.IP_DESTINATION: ParameterTypes.TYPE_IP_ADDRESS,
+            Param.PORT_DESTINATION: ParameterTypes.TYPE_PORT,
             Param.TARGET_HOST: ParameterTypes.TYPE_DOMAIN,
             #Param.TARGET_URI: ParameterTypes.TYPE_URI,
             Param.INJECT_AT_TIMESTAMP: ParameterTypes.TYPE_FLOAT,
@@ -53,26 +54,29 @@ class SQLiAttack(BaseAttack.BaseAttack):
         """
         # PARAMETERS: initialize with default utilsvalues
         # (values are overwritten if user specifies them)
+        # Attacker configuration
         most_used_ip_address = self.statistics.get_most_used_ip_address()
         if isinstance(most_used_ip_address, list):
             most_used_ip_address = most_used_ip_address[0]
         self.add_param_value(Param.IP_SOURCE, most_used_ip_address)
         self.add_param_value(Param.MAC_SOURCE, self.statistics.get_mac_address(most_used_ip_address))
-        #self.add_param_value(Param.TARGET_URI, "/")
-        self.add_param_value(Param.TARGET_HOST, "www.hackme.com")
-        self.add_param_value(Param.INJECT_AFTER_PACKET, randint(0, self.statistics.get_packet_count()))
-        self.add_param_value(Param.PACKETS_PER_SECOND,
-                             (self.statistics.get_pps_sent(most_used_ip_address) +
-                              self.statistics.get_pps_received(most_used_ip_address)) / 2)
-        # victim configuration
-        # consider that the destination has port 80 opened
+
+        # Victim configuration
         random_ip_address = self.statistics.get_random_ip_address()
         self.add_param_value(Param.IP_DESTINATION, random_ip_address)
-
         destination_mac = self.statistics.get_mac_address(random_ip_address)
         if isinstance(destination_mac, list) and len(destination_mac) == 0:
             destination_mac = self.generate_random_mac_address()
         self.add_param_value(Param.MAC_DESTINATION, destination_mac)
+        self.add_param_value(Param.PORT_DESTINATION, self.http_port)
+        # self.add_param_value(Param.TARGET_URI, "/")
+        self.add_param_value(Param.TARGET_HOST, "www.hackme.com")
+
+        # Attack configuration
+        self.add_param_value(Param.INJECT_AFTER_PACKET, randint(0, self.statistics.get_packet_count()))
+        self.add_param_value(Param.PACKETS_PER_SECOND,
+                             (self.statistics.get_pps_sent(most_used_ip_address) +
+                              self.statistics.get_pps_received(most_used_ip_address)) / 2)
 
     def generate_attack_pcap(self):
         def update_timestamp(timestamp, pps):
@@ -110,8 +114,10 @@ class SQLiAttack(BaseAttack.BaseAttack):
         ip_source = self.get_param_value(Param.IP_SOURCE)
         mac_destination = self.get_param_value(Param.MAC_DESTINATION)
         ip_destination = self.get_param_value(Param.IP_DESTINATION)
+        port_destination = self.get_param_value(Param.PORT_DESTINATION)
+
         target_host = self.get_param_value(Param.TARGET_HOST)
-        target_uri = "/" #self.get_param_value(Param.TARGET_URI)
+        target_uri = "/"  # self.get_param_value(Param.TARGET_URI)
 
         # Check ip.src == ip.dst
         self.ip_src_dst_equal_check(ip_source, ip_destination)
@@ -188,6 +194,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
                     ip_pkt.setfieldval("ttl", source_ttl_value)
                     # TCP
                     tcp_pkt.setfieldval("sport",port_source)
+                    tcp_pkt.setfieldval("dport", port_destination)
 
                     str_tcp_seg = self.modify_http_header(str_tcp_seg, '/ATutor', target_uri, orig_ip_dst, target_host)
 
@@ -215,6 +222,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
                     ip_pkt.setfieldval("ttl", destination_ttl_value)
                     # TCP
                     tcp_pkt.setfieldval("dport", port_source)
+                    tcp_pkt.setfieldval("sport", port_destination)
 
                     str_tcp_seg = self.modify_http_header(str_tcp_seg, '/ATutor', target_uri, orig_ip_dst, target_host)
 
