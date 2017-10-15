@@ -56,14 +56,25 @@ std::vector<float> statistics::calculateLastIntervalIPsEntropy(std::chrono::micr
         int pktsSent = 0, pktsReceived = 0;
 
         for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
-            int indexStartSent = getClosestIndex(i->second.pkts_sent_timestamp, intervalStartTimestamp);
-            int IPsSrcPktsCount = i->second.pkts_sent_timestamp.size() - indexStartSent;
-            IPsSrcPktsCounts.push_back(IPsSrcPktsCount);
-            pktsSent += IPsSrcPktsCount;
-            int indexStartReceived = getClosestIndex(i->second.pkts_received_timestamp, intervalStartTimestamp);
-            int IPsDstPktsCount = i->second.pkts_received_timestamp.size() - indexStartReceived;
-            IPsDstPktsCounts.push_back(IPsDstPktsCount);
-            pktsReceived += IPsDstPktsCount;
+            int IPsSrcPktsCount = 0;
+            for (auto j = i->second.pkts_sent_timestamp.begin(); j != i->second.pkts_sent_timestamp.end(); j++) {
+                if(*j >= intervalStartTimestamp)
+                    IPsSrcPktsCount++;
+            }
+            if(IPsSrcPktsCount != 0) {
+                IPsSrcPktsCounts.push_back(IPsSrcPktsCount);
+                pktsSent += IPsSrcPktsCount;
+            }
+
+            int IPsDstPktsCount = 0;
+            for (auto j = i->second.pkts_received_timestamp.begin(); j != i->second.pkts_received_timestamp.end(); j++) {
+                if(*j >= intervalStartTimestamp)
+                    IPsDstPktsCount++;
+            }
+            if(IPsDstPktsCount != 0) {
+                IPsDstPktsCounts.push_back(IPsDstPktsCount);
+                pktsReceived += IPsDstPktsCount;
+            }
         }
 
         for (auto i = IPsSrcPktsCounts.begin(); i != IPsSrcPktsCounts.end(); i++) {

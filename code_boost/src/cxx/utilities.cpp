@@ -75,20 +75,6 @@ std::string getIPv4Class(std::string ipAddress){
 }
 
 /**
- * Get closest index for element in a vector.
- * @param v vector.
- * @param refElem element that we search for or for closest element.
- */
-int getClosestIndex(std::vector<std::chrono::microseconds> v, std::chrono::microseconds refElem)
-{
-    auto i = std::min_element(begin(v), end(v), [=] (std::chrono::microseconds x, std::chrono::microseconds y)
-    {
-        return std::abs((x - refElem).count()) < std::abs((y - refElem).count());
-    });
-    return std::distance(begin(v), i);
-}
-
-/**
  * Advance iterator by 10 steps.
  * @param iterator to advance.
  */
