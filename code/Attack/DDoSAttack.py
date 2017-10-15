@@ -234,7 +234,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
             mss_dst = self.statistics.process_db_query("most_used(mssValue)")
 
         replies_count = 0
-
+        total_pkt_num = 0
         # For each attacker, generate his own packets, then merge all packets
         for attacker in range(num_attackers):
             # Timestamp
@@ -261,6 +261,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 request.time = timestamp_next_pkt
                 # Append request
                 packets.append(request)
+                total_pkt_num +=1
 
                 # Build reply package
                 if replies_count <= victim_buffer:
@@ -277,12 +278,13 @@ class DDoSAttack(BaseAttack.BaseAttack):
                     reply.time = timestamp_reply
                     packets.append(reply)
                     replies_count+=1
+                    total_pkt_num += 1
 
                 attacker_pps = max(getIntervalPPS(complement_interval_attacker_pps, timestamp_next_pkt), (pps/num_attackers)/2)
                 timestamp_next_pkt = update_timestamp(timestamp_next_pkt, attacker_pps)
 
                 # Store timestamp of first packet (for attack label)
-                if pkt_num == 1:
+                if total_pkt_num <= 2 :
                     self.attack_start_utime = packets[0].time
                 elif pkt_num % BUFFER_SIZE == 0: # every 1000 packets write them to the pcap file (append)
                     last_packet = packets[-1]
@@ -299,4 +301,4 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         # Return packets sorted by packet time_sec_start
         # pkt_num+1: because pkt_num starts at 0
-        return pkt_num + 1, path_attack_pcap
+        return total_pkt_num , path_attack_pcap
