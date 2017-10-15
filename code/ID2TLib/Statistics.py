@@ -954,6 +954,37 @@ class Statistics:
             plt.savefig(out, dpi=500)
             return out
 
+        def plot_interval_new_port(file_ending: str):
+            plt.gcf().clear()
+            result = self.stats_db._process_user_defined_query(
+                "SELECT lastPktTimestamp, newPortCount FROM interval_statistics ORDER BY lastPktTimestamp")
+            graphx, graphy = [], []
+            for row in result:
+                graphx.append(row[0])
+                graphy.append(row[1])
+
+            plt.autoscale(enable=True, axis='both')
+            plt.title("Port Novelty Distribution")
+            plt.xlabel('Timestamp')
+            plt.ylabel('Novel values count')
+            plt.xlim([0, len(graphx)])
+            plt.grid(True)
+            width = 0.5
+
+            # timestamp on x-axis
+            x = range(0, len(graphx))
+            my_xticks = graphx
+            plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
+            plt.tight_layout()
+
+            # limit the number of xticks
+            plt.locator_params(axis='x', nbins=20)
+
+            plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
+            out = self.pcap_filepath.replace('.pcap', '_plot-interval-novel-port-dist' + file_ending)
+            plt.savefig(out, dpi=500)
+            return out
+
         def plot_interval_new_ttl(file_ending: str):
             plt.gcf().clear()
             result = self.stats_db._process_user_defined_query(
@@ -1100,6 +1131,7 @@ class Statistics:
         plot_interval_ip_src_cum_ent = plot_interval_ip_src_cum_ent('.' + format)
         plot_interval_ip_dst_cum_ent = plot_interval_ip_dst_cum_ent('.' + format)
         plot_interval_new_ip = plot_interval_new_ip('.' + format)
+        plot_interval_new_port = plot_interval_new_port('.' + format)
         plot_interval_new_ttl = plot_interval_new_ttl('.' + format)
         plot_interval_new_tos = plot_interval_new_tos('.' + format)
         plot_interval_new_win_size = plot_interval_new_win_size('.' + format)

@@ -186,22 +186,25 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
     interval_statistics[lastPktTimestamp_s].payload_count = payloadCount - intervalPayloadCount;
     interval_statistics[lastPktTimestamp_s].incorrect_tcp_checksum_count = incorrectTCPChecksumCount - intervalIncorrectTCPChecksumCount;
     interval_statistics[lastPktTimestamp_s].correct_tcp_checksum_count = correctTCPChecksumCount - intervalCorrectTCPChecksumCount;
-    interval_statistics[lastPktTimestamp_s].novel_ip_count = ip_statistics.size() - intervalCumNewIPCount;
-    interval_statistics[lastPktTimestamp_s].novel_ttl_count = ttl_values.size() - intervalCumNewTTLCount;
-    interval_statistics[lastPktTimestamp_s].novel_win_size_count = win_values.size() - intervalCumNewWinSizeCount;
-    interval_statistics[lastPktTimestamp_s].novel_tos_count = tos_values.size() - intervalCumNewToSCount;
-    interval_statistics[lastPktTimestamp_s].novel_mss_count = mss_values.size() - intervalCumNewMSSCount;
+    interval_statistics[lastPktTimestamp_s].novel_ip_count = ip_statistics.size() - intervalCumNovelIPCount;
+    interval_statistics[lastPktTimestamp_s].novel_ttl_count = ttl_values.size() - intervalCumNovelTTLCount;
+    interval_statistics[lastPktTimestamp_s].novel_win_size_count = win_values.size() - intervalCumNovelWinSizeCount;
+    interval_statistics[lastPktTimestamp_s].novel_tos_count = tos_values.size() - intervalCumNovelToSCount;
+    interval_statistics[lastPktTimestamp_s].novel_mss_count = mss_values.size() - intervalCumNovelMSSCount;
+    interval_statistics[lastPktTimestamp_s].novel_port_count = port_values.size() - intervalCumNovelPortCount;
+
 
     intervalPayloadCount = payloadCount;
     intervalIncorrectTCPChecksumCount = incorrectTCPChecksumCount;
     intervalCorrectTCPChecksumCount = correctTCPChecksumCount;
     intervalCumPktCount = packetCount;
     intervalCumSumPktSize = sumPacketSize;
-    intervalCumNewIPCount =  ip_statistics.size();
-    intervalCumNewTTLCount = ttl_values.size();
-    intervalCumNewWinSizeCount = win_values.size();
-    intervalCumNewToSCount = tos_values.size();
-    intervalCumNewMSSCount = mss_values.size();
+    intervalCumNovelIPCount =  ip_statistics.size();
+    intervalCumNovelTTLCount = ttl_values.size();
+    intervalCumNovelWinSizeCount = win_values.size();
+    intervalCumNovelToSCount = tos_values.size();
+    intervalCumNovelMSSCount = mss_values.size();
+    intervalCumNovelPortCount = port_values.size();
 
     if(ipEntopies.size()>1){
         interval_statistics[lastPktTimestamp_s].ip_src_entropy = ipEntopies[0];
@@ -314,8 +317,11 @@ int statistics::getProtocolCount(std::string ipAddress, std::string protocol) {
  */
 void statistics::incrementPortCount(std::string ipAddressSender, int outgoingPort, std::string ipAddressReceiver,
                                     int incomingPort) {
+    port_values[outgoingPort]++;
+    port_values[incomingPort]++;
     ip_ports[{ipAddressSender, "out", outgoingPort}]++;
     ip_ports[{ipAddressReceiver, "in", incomingPort}]++;
+
 }
 
 /**

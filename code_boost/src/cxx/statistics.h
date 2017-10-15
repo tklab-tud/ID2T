@@ -201,6 +201,7 @@ struct entry_intervalStat {
     int novel_win_size_count;
     int novel_tos_count;
     int novel_mss_count;
+    int novel_port_count;
 
     bool operator==(const entry_intervalStat &other) const {
         return pkts_count == other.pkts_count
@@ -215,7 +216,8 @@ struct entry_intervalStat {
                && novel_ttl_count == other.novel_ttl_count
                && novel_win_size_count == other.novel_win_size_count
                && novel_tos_count == other.novel_tos_count
-               && novel_mss_count == other.novel_mss_count;
+               && novel_mss_count == other.novel_mss_count
+               && novel_port_count == other.novel_port_count;
     }
 };
 
@@ -459,11 +461,12 @@ private:
     int intervalCorrectTCPChecksumCount = 0;
     int intervalCumPktCount = 0;
     float intervalCumSumPktSize = 0;
-    int intervalCumNewIPCount = 0;
-    int intervalCumNewTTLCount = 0;
-    int intervalCumNewWinSizeCount = 0;
-    int intervalCumNewToSCount = 0;
-    int intervalCumNewMSSCount = 0;
+    int intervalCumNovelIPCount = 0;
+    int intervalCumNovelTTLCount = 0;
+    int intervalCumNovelWinSizeCount = 0;
+    int intervalCumNovelToSCount = 0;
+    int intervalCumNovelMSSCount = 0;
+    int intervalCumNovelPortCount = 0;
 
     /*
      * Data containers
@@ -500,6 +503,9 @@ private:
 
     // {MSS, count}
     std::unordered_map<int, int> mss_values;
+
+    // {Port, count}
+    std::unordered_map<int, int> port_values;
 
     // {IP Address, Protocol, count}
     std::unordered_map<ipAddress_protocol, int> protocol_distribution;
