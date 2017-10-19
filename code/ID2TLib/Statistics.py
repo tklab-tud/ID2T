@@ -228,7 +228,7 @@ class Statistics:
         else:
             incorrectChecksumRatio = -1
 
-        ####### IP Src Tests #######
+        ####### IP Src & Dst Tests #######
         result = self.stats_db._process_user_defined_query("SELECT ipAddress,pktsSent,pktsReceived FROM ip_statistics")
         data, srcFrequency, dstFrequency = [], [], []
         if result:
@@ -305,9 +305,12 @@ class Statistics:
             result = result[0][0]
         bigMSS = (result / sum(frequency)) * 100
 
-        output = [("Payload ratio", payloadRatio, "%"),
-                ("Incorrect TCP checksum ratio", incorrectChecksumRatio, "%"),
-                ("# IP addresses", sum([x[0] for x in newIPCount]), ""),
+        output = []
+        if self.do_extra_tests:
+            output = [("Payload ratio", payloadRatio, "%"),
+                ("Incorrect TCP checksum ratio", incorrectChecksumRatio, "%")]
+
+        output = output + [("# IP addresses", sum([x[0] for x in newIPCount]), ""),
                 ("IP Src Entropy", ipSrcEntropy, ""),
                 ("IP Src Normalized Entropy", ipSrcNormEntropy, ""),
                 ("IP Dst Entropy", ipDstEntropy, ""),
@@ -331,15 +334,15 @@ class Statistics:
                 ("MSS Distribution Entropy", mssNoveltyDistEntropy, ""),
                 ("======================","","")]
 
-
         # Reasoning the statistics values
-        if payloadRatio > 80:
-            output.append(("WARNING: Too high payload ratio", payloadRatio, "%."))
-        if payloadRatio < 30:
-            output.append(("WARNING: Too low payload ratio", payloadRatio, "% (Injecting attacks that are carried out in the packet payloads is not recommmanded)."))
+        if self.do_extra_tests:
+            if payloadRatio > 80:
+                output.append(("WARNING: Too high payload ratio", payloadRatio, "%."))
+            if payloadRatio < 30:
+                output.append(("WARNING: Too low payload ratio", payloadRatio, "% (Injecting attacks that are carried out in the packet payloads is not recommmanded)."))
 
-        if incorrectChecksumRatio > 5:
-            output.append(("WARNING: High incorrect TCP checksum ratio",incorrectChecksumRatio,"%."))
+            if incorrectChecksumRatio > 5:
+                output.append(("WARNING: High incorrect TCP checksum ratio",incorrectChecksumRatio,"%."))
 
         if ipSrcNormEntropy > 0.65:
             output.append(("WARNING: High IP source normalized entropy",ipSrcNormEntropy,"."))
