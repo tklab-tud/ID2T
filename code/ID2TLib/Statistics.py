@@ -783,7 +783,8 @@ class Statistics:
                 graphy.append(row[1])
             plt.autoscale(enable=True, axis='both')
             plt.title("Packet Rate")
-            plt.xlabel('Timestamp')
+            # plt.xlabel('Timestamp')
+            plt.xlabel('Time Interval')
             plt.ylabel('Number of Packets')
             width = 0.5
             plt.xlim([0, len(graphx)])
@@ -791,9 +792,9 @@ class Statistics:
 
             # timestamp on x-axis
             x = range(0, len(graphx))
-            my_xticks = graphx
-            plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
-            plt.tight_layout()
+            # my_xticks = graphx
+            # plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
+            # plt.tight_layout()
 
             # limit the number of xticks
             plt.locator_params(axis='x', nbins=20)
@@ -811,27 +812,30 @@ class Statistics:
             for row in result:
                 graphx.append(row[0])
                 graphy.append(row[1])
-            plt.autoscale(enable=True, axis='both')
-            plt.title("Source IP Entropy")
-            plt.xlabel('Timestamp')
-            plt.ylabel('Entropy')
-            width = 0.5
-            plt.xlim([0, len(graphx)])
-            plt.grid(True)
+            # If entropy was not calculated do not plot the graph
+            if graphy[0] != -1:
+                plt.autoscale(enable=True, axis='both')
+                plt.title("Source IP Entropy")
+                # plt.xlabel('Timestamp')
+                plt.xlabel('Time Interval')
+                plt.ylabel('Entropy')
+                width = 0.5
+                plt.xlim([0, len(graphx)])
+                plt.grid(True)
 
-            # timestamp on x-axis
-            x = range(0, len(graphx))
-            my_xticks = graphx
-            plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
-            plt.tight_layout()
+                # timestamp on x-axis
+                x = range(0, len(graphx))
+                # my_xticks = graphx
+                # plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
+                # plt.tight_layout()
 
-            # limit the number of xticks
-            plt.locator_params(axis='x', nbins=20)
+                # limit the number of xticks
+                plt.locator_params(axis='x', nbins=20)
 
-            plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
-            out = self.pcap_filepath.replace('.pcap', '_plot-interval-ip-src-ent' + file_ending)
-            plt.savefig(out, dpi=500)
-            return out
+                plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
+                out = self.pcap_filepath.replace('.pcap', '_plot-interval-ip-src-ent' + file_ending)
+                plt.savefig(out, dpi=500)
+                return out
 
         def plot_interval_ip_dst_ent(file_ending: str):
             plt.gcf().clear()
@@ -841,27 +845,30 @@ class Statistics:
             for row in result:
                 graphx.append(row[0])
                 graphy.append(row[1])
-            plt.autoscale(enable=True, axis='both')
-            plt.title("Destination IP Entropy")
-            plt.xlabel('Timestamp')
-            plt.ylabel('Entropy')
-            width = 0.5
-            plt.xlim([0, len(graphx)])
-            plt.grid(True)
+            # If entropy was not calculated do not plot the graph
+            if graphy[0] != -1:
+                plt.autoscale(enable=True, axis='both')
+                plt.title("Destination IP Entropy")
+                # plt.xlabel('Timestamp')
+                plt.xlabel('Time Interval')
+                plt.ylabel('Entropy')
+                width = 0.5
+                plt.xlim([0, len(graphx)])
+                plt.grid(True)
 
-            # timestamp on x-axis
-            x = range(0, len(graphx))
-            my_xticks = graphx
-            plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
-            plt.tight_layout()
+                # timestamp on x-axis
+                x = range(0, len(graphx))
+                # my_xticks = graphx
+                # plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
+                # plt.tight_layout()
 
-            # limit the number of xticks
-            plt.locator_params(axis='x', nbins=20)
+                # limit the number of xticks
+                plt.locator_params(axis='x', nbins=20)
 
-            plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
-            out = self.pcap_filepath.replace('.pcap', '_plot-interval-ip-dst-ent' + file_ending)
-            plt.savefig(out, dpi=500)
-            return out
+                plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
+                out = self.pcap_filepath.replace('.pcap', '_plot-interval-ip-dst-ent' + file_ending)
+                plt.savefig(out, dpi=500)
+                return out
 
         def plot_interval_ip_dst_cum_ent(file_ending: str):
             plt.gcf().clear()
@@ -871,26 +878,29 @@ class Statistics:
             for row in result:
                 graphx.append(row[0])
                 graphy.append(row[1])
-            plt.autoscale(enable=True, axis='both')
-            plt.title("Destination IP Cumulative Entropy")
-            plt.xlabel('Timestamp')
-            plt.ylabel('Entropy')
-            plt.xlim([0, len(graphx)])
-            plt.grid(True)
+            # If entropy was not calculated do not plot the graph
+            if graphy[0] != -1:
+                plt.autoscale(enable=True, axis='both')
+                plt.title("Destination IP Cumulative Entropy")
+                # plt.xlabel('Timestamp')
+                plt.xlabel('Time Interval')
+                plt.ylabel('Entropy')
+                plt.xlim([0, len(graphx)])
+                plt.grid(True)
 
-            # timestamp on x-axis
-            x = range(0, len(graphx))
-            my_xticks = graphx
-            plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
-            plt.tight_layout()
+                # timestamp on x-axis
+                x = range(0, len(graphx))
+                # my_xticks = graphx
+                # plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
+                # plt.tight_layout()
 
-            # limit the number of xticks
-            plt.locator_params(axis='x', nbins=20)
+                # limit the number of xticks
+                plt.locator_params(axis='x', nbins=20)
 
-            plt.plot(x, graphy, 'r')
-            out = self.pcap_filepath.replace('.pcap', '_plot-interval-ip-dst-cum-ent' + file_ending)
-            plt.savefig(out, dpi=500)
-            return out
+                plt.plot(x, graphy, 'r')
+                out = self.pcap_filepath.replace('.pcap', '_plot-interval-ip-dst-cum-ent' + file_ending)
+                plt.savefig(out, dpi=500)
+                return out
 
         def plot_interval_ip_src_cum_ent(file_ending: str):
             plt.gcf().clear()
@@ -901,27 +911,29 @@ class Statistics:
             for row in result:
                 graphx.append(row[0])
                 graphy.append(row[1])
+            # If entropy was not calculated do not plot the graph
+            if graphy[0] != -1:
+                plt.autoscale(enable=True, axis='both')
+                plt.title("Source IP Cumulative Entropy")
+                # plt.xlabel('Timestamp')
+                plt.xlabel('Time Interval')
+                plt.ylabel('Entropy')
+                plt.xlim([0, len(graphx)])
+                plt.grid(True)
 
-            plt.autoscale(enable=True, axis='both')
-            plt.title("Source IP Cumulative Entropy")
-            plt.xlabel('Timestamp')
-            plt.ylabel('Entropy')
-            plt.xlim([0, len(graphx)])
-            plt.grid(True)
+                # timestamp on x-axis
+                x = range(0, len(graphx))
+                # my_xticks = graphx
+                # plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
+                # plt.tight_layout()
 
-            # timestamp on x-axis
-            x = range(0, len(graphx))
-            my_xticks = graphx
-            plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
-            plt.tight_layout()
+                # limit the number of xticks
+                plt.locator_params(axis='x',nbins=20)
 
-            # limit the number of xticks
-            plt.locator_params(axis='x',nbins=20)
-
-            plt.plot(x, graphy, 'r')
-            out = self.pcap_filepath.replace('.pcap', '_plot-interval-ip-src-cum-ent' + file_ending)
-            plt.savefig(out, dpi=500)
-            return out
+                plt.plot(x, graphy, 'r')
+                out = self.pcap_filepath.replace('.pcap', '_plot-interval-ip-src-cum-ent' + file_ending)
+                plt.savefig(out, dpi=500)
+                return out
 
         def plot_interval_new_ip(file_ending: str):
             plt.gcf().clear()
@@ -934,7 +946,8 @@ class Statistics:
 
             plt.autoscale(enable=True, axis='both')
             plt.title("IP Novelty Distribution")
-            plt.xlabel('Timestamp')
+            # plt.xlabel('Timestamp')
+            plt.xlabel('Time Interval')
             plt.ylabel('Novel values count')
             plt.xlim([0, len(graphx)])
             plt.grid(True)
@@ -942,9 +955,9 @@ class Statistics:
 
             # timestamp on x-axis
             x = range(0, len(graphx))
-            my_xticks = graphx
-            plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
-            plt.tight_layout()
+            # my_xticks = graphx
+            # plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
+            # plt.tight_layout()
 
             # limit the number of xticks
             plt.locator_params(axis='x', nbins=20)
@@ -965,7 +978,8 @@ class Statistics:
 
             plt.autoscale(enable=True, axis='both')
             plt.title("Port Novelty Distribution")
-            plt.xlabel('Timestamp')
+            # plt.xlabel('Timestamp')
+            plt.xlabel('Time Interval')
             plt.ylabel('Novel values count')
             plt.xlim([0, len(graphx)])
             plt.grid(True)
@@ -973,9 +987,9 @@ class Statistics:
 
             # timestamp on x-axis
             x = range(0, len(graphx))
-            my_xticks = graphx
-            plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
-            plt.tight_layout()
+            # my_xticks = graphx
+            # plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
+            # plt.tight_layout()
 
             # limit the number of xticks
             plt.locator_params(axis='x', nbins=20)
@@ -997,7 +1011,8 @@ class Statistics:
 
                 plt.autoscale(enable=True, axis='both')
                 plt.title("TTL Novelty Distribution")
-                plt.xlabel('Timestamp')
+                # plt.xlabel('Timestamp')
+                plt.xlabel('Time Interval')
                 plt.ylabel('Novel values count')
                 plt.xlim([0, len(graphx)])
                 plt.grid(True)
@@ -1005,9 +1020,9 @@ class Statistics:
 
                 # timestamp on x-axis
                 x = range(0, len(graphx))
-                my_xticks = graphx
-                plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
-                plt.tight_layout()
+                # my_xticks = graphx
+                # plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
+                # plt.tight_layout()
 
                 # limit the number of xticks
                 plt.locator_params(axis='x', nbins=20)
@@ -1030,16 +1045,17 @@ class Statistics:
 
             plt.autoscale(enable=True, axis='both')
             plt.title("ToS Novelty Distribution")
-            plt.xlabel('Timestamp')
+            # plt.xlabel('Timestamp')
+            plt.xlabel('Time Interval')
             plt.ylabel('Novel values count')
             plt.xlim([0, len(graphx)])
             plt.grid(True)
             width = 0.5
             # timestamp on x-axis
             x = range(0, len(graphx))
-            my_xticks = graphx
-            plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
-            plt.tight_layout()
+            # my_xticks = graphx
+            # plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
+            # plt.tight_layout()
 
             # limit the number of xticks
             plt.locator_params(axis='x', nbins=20)
@@ -1061,7 +1077,8 @@ class Statistics:
 
                 plt.autoscale(enable=True, axis='both')
                 plt.title("Window Size Novelty Distribution")
-                plt.xlabel('Timestamp')
+                # plt.xlabel('Timestamp')
+                plt.xlabel('Time Interval')
                 plt.ylabel('Novel values count')
                 plt.xlim([0, len(graphx)])
                 plt.grid(True)
@@ -1069,9 +1086,9 @@ class Statistics:
 
                 # timestamp on x-axis
                 x = range(0, len(graphx))
-                my_xticks = graphx
-                plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
-                plt.tight_layout()
+                # my_xticks = graphx
+                # plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
+                # plt.tight_layout()
 
                 # limit the number of xticks
                 plt.locator_params(axis='x', nbins=20)
@@ -1096,7 +1113,8 @@ class Statistics:
 
                 plt.autoscale(enable=True, axis='both')
                 plt.title("MSS Novelty Distribution")
-                plt.xlabel('Timestamp')
+                # plt.xlabel('Timestamp')
+                plt.xlabel('Time Interval')
                 plt.ylabel('Novel values count')
                 plt.xlim([0, len(graphx)])
                 plt.grid(True)
@@ -1104,9 +1122,9 @@ class Statistics:
 
                 # timestamp on x-axis
                 x = range(0, len(graphx))
-                my_xticks = graphx
-                plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
-                plt.tight_layout()
+                # my_xticks = graphx
+                # plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
+                # plt.tight_layout()
 
                 # limit the number of xticks
                 plt.locator_params(axis='x', nbins=20)
