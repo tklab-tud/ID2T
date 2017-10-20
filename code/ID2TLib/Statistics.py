@@ -1143,9 +1143,14 @@ class Statistics:
         mss_out_path = plot_mss('.' + format)
         win_out_path = plot_win('.' + format)
         protocol_out_path = plot_protocol('.' + format)
-        port_out_path = plot_port('.' + format)
+        
+        # Time consuming
+        #port_out_path = plot_port('.' + format)
+
+        # Not drawable for too many IPs
         #ip_src_out_path = plot_ip_src('.' + format)
         #ip_dst_out_path = plot_ip_dst('.' + format)
+
         plot_interval_pktCount = plot_interval_pktCount('.' + format)
         plot_interval_ip_src_ent = plot_interval_ip_src_ent('.' + format)
         plot_interval_ip_dst_ent = plot_interval_ip_dst_ent('.' + format)
