@@ -1,7 +1,0 @@
-#!/bin/sh
-# Find the executable
-ID2T_DIR=$(readlink -f $0)
-SCRIPT_PATH=${ID2T_DIR%/*}
-cd $SCRIPT_PATH
-# Execute ID2T
-exec ./code/CLI.py "$@"
