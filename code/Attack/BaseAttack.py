@@ -390,7 +390,7 @@ class BaseAttack(metaclass=ABCMeta):
 
            """
         result = self.statistics.process_db_query(
-            "SELECT AVG(minDelay), AVG(maxDelay) FROM conv_statistics WHERE ipAddressB='6.6.6.6';") #" + ip_dst + "';")
+            "SELECT AVG(minDelay), AVG(maxDelay) FROM conv_statistics WHERE ipAddressB='" + ip_dst + "';")
         if result[0][0] and result[0][1]:
             minDelay = result[0][0]
             maxDelay = result[0][1]
