@@ -43,6 +43,7 @@ The following packages/libraries are required to compile the ID2T C++ modules
 The following python packages are required to run ID2T. Install the packages with your preferred package manager. For example, you can use pip3 (pip for python 3). Install pip3 in ubuntu with ``apt install python3-pip`` and install the packages with ``sudo pip3 install <packagename>``.
 * ``scapy`` (make sure its the python3 version)
 * ``lea``
+* ``numpy``
 * ``matplotlib``
 * ``SciPy Stack`` (see [installation instructions](https://www.scipy.org/install.html))
 
