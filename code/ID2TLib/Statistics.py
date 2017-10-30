@@ -315,23 +315,23 @@ class Statistics:
                 ("IP Src Normalized Entropy", ipSrcNormEntropy, ""),
                 ("IP Dst Entropy", ipDstEntropy, ""),
                 ("IP Dst Normalized Entropy", ipDstNormEntropy, ""),
+                ("IP Novelty Distribution Entropy", ipNoveltyDistEntropy, ""),
                 ("# TTL values", sum([x[0] for x in newTTLCount]), ""),
-                ("TTL Distribution Entropy", ipNoveltyDistEntropy, ""),
                 ("TTL Entropy", ttlEntropy, ""),
                 ("TTL Normalized Entropy", ttlNormEntropy, ""),
-                ("TTL Distribution Entropy", ttlNoveltyDistEntropy, ""),
+                ("TTL Novelty Distribution Entropy", ttlNoveltyDistEntropy, ""),
                 ("# WinSize values", sum([x[0] for x in newWinSizeCount]), ""),
                 ("WinSize Entropy", winEntropy, ""),
                 ("WinSize Normalized Entropy", winNormEntropy, ""),
-                ("WinSize Distribution Entropy", winNoveltyDistEntropy, ""),
+                ("WinSize Novelty Distribution Entropy", winNoveltyDistEntropy, ""),
                 ("# ToS values",  sum([x[0] for x in newToSCount]), ""),
                 ("ToS Entropy", tosEntropy, ""),
                 ("ToS Normalized Entropy", tosNormEntropy, ""),
-                ("ToS Distribution Entropy", tosNoveltyDistEntropy, ""),
+                ("ToS Novelty Distribution Entropy", tosNoveltyDistEntropy, ""),
                 ("# MSS values", sum([x[0] for x in newMSSCount]), ""),
                 ("MSS Entropy", mssEntropy, ""),
                 ("MSS Normalized Entropy", mssNormEntropy, ""),
-                ("MSS Distribution Entropy", mssNoveltyDistEntropy, ""),
+                ("MSS Novelty Distribution Entropy", mssNoveltyDistEntropy, ""),
                 ("======================","","")]
 
         # Reasoning the statistics values
@@ -392,7 +392,6 @@ class Statistics:
             output.append(("WARNING: Port number 0 is used in ",port0Count,"packets (awkward-looking port)."))
         if reservedPortCount > 0:
             output.append(("WARNING: Reserved port numbers are used in ",reservedPortCount,"packets (uncommonly-used ports)."))
-
 
         return output
 
@@ -599,71 +598,50 @@ class Statistics:
         :param format: The format to be used to save the statistics diagrams.
         """
 
-        def plot_ttl(file_ending: str):
+        def plot_distribution(queryOutput, title,  xLabel, yLabel, file_ending: str):
             plt.gcf().clear()
-            result = self.stats_db._process_user_defined_query(
-                "SELECT ttlValue, SUM(ttlCount) FROM ip_ttl GROUP BY ttlValue")
             graphx, graphy = [], []
-            for row in result:
+            for row in queryOutput:
                 graphx.append(row[0])
                 graphy.append(row[1])
             plt.autoscale(enable=True, axis='both')
-            plt.title("TTL Distribution")
-            plt.xlabel('TTL Value')
-            plt.ylabel('Number of Packets')
+            plt.title(title)
+            plt.xlabel(xLabel)
+            plt.ylabel(yLabel)
             width = 0.1
             plt.xlim([0, max(graphx)])
             plt.grid(True)
             plt.bar(graphx, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
-            out = self.pcap_filepath.replace('.pcap', '_plot-ttl' + file_ending)
+            out = self.pcap_filepath.replace('.pcap', '_plot-' + title + file_ending)
             plt.savefig(out,dpi=500)
             return out
 
+        def plot_ttl(file_ending: str):
+            queryOutput = self.stats_db._process_user_defined_query(
+                "SELECT ttlValue, SUM(ttlCount) FROM ip_ttl GROUP BY ttlValue")
+            title = "TTL Distribution"
+            xLabel = "TTL Value"
+            yLabel = "Number of Packets"
+            if queryOutput:
+                return plot_distribution(queryOutput, title, xLabel, yLabel, file_ending)
+
         def plot_mss(file_ending: str):
-            plt.gcf().clear()
-            result = self.stats_db._process_user_defined_query(
+            queryOutput = self.stats_db._process_user_defined_query(
                 "SELECT mssValue, SUM(mssCount) FROM tcp_mss GROUP BY mssValue")
-            if(result):
-                graphx, graphy = [], []
-                for row in result:
-                    graphx.append(row[0])
-                    graphy.append(row[1])
-                plt.autoscale(enable=True, axis='both')
-                plt.title("MSS Distribution")
-                plt.xlabel('MSS Value')
-                plt.ylabel('Number of Packets')
-                width = 0.1
-                plt.xlim([0, max(graphx)])
-                plt.grid(True)
-                plt.bar(graphx, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
-                out = self.pcap_filepath.replace('.pcap', '_plot-mss' + file_ending)
-                plt.savefig(out,dpi=500)
-                return out
-            else:
-                print("Error plot MSS: No MSS values found!")
+            title = "MSS Distribution"
+            xLabel = "MSS Value"
+            yLabel = "Number of Packets"
+            if queryOutput:
+                return plot_distribution(queryOutput, title, xLabel, yLabel, file_ending)
 
         def plot_win(file_ending: str):
-            plt.gcf().clear()
-            result = self.stats_db._process_user_defined_query(
+            queryOutput = self.stats_db._process_user_defined_query(
                 "SELECT winSize, SUM(winCount) FROM tcp_win GROUP BY winSize")
-            if (result):
-                graphx, graphy = [], []
-                for row in result:
-                    graphx.append(row[0])
-                    graphy.append(row[1])
-                plt.autoscale(enable=True, axis='both')
-                plt.title("Window Size Distribution")
-                plt.xlabel('Window Size')
-                plt.ylabel('Number of Packets')
-                width = 0.1
-                plt.xlim([0, max(graphx)])
-                plt.grid(True)
-                plt.bar(graphx, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
-                out = self.pcap_filepath.replace('.pcap', '_plot-win' + file_ending)
-                plt.savefig(out,dpi=500)
-                return out
-            else:
-                print("Error plot WinSize: No WinSize values found!")
+            title = "Window Size Distribution"
+            xLabel = "Window Size"
+            yLabel = "Number of Packets"
+            if queryOutput:
+                return plot_distribution(queryOutput, title, xLabel, yLabel, file_ending)
 
         def plot_protocol(file_ending: str):
             plt.gcf().clear()
@@ -776,102 +754,111 @@ class Statistics:
             plt.savefig(out, dpi=500)
             return out
 
-        def plot_interval_pktCount(file_ending: str):
+        def plot_interval_statistics(queryOutput, title,  xLabel, yLabel, file_ending: str):
             plt.gcf().clear()
-            result = self.stats_db._process_user_defined_query(
-                "SELECT lastPktTimestamp, pktsCount FROM interval_statistics ORDER BY lastPktTimestamp")
             graphx, graphy = [], []
-            for row in result:
+            for row in queryOutput:
                 graphx.append(row[0])
                 graphy.append(row[1])
             plt.autoscale(enable=True, axis='both')
-            plt.title("Packet Rate")
-            # plt.xlabel('Timestamp')
-            plt.xlabel('Time Interval')
-            plt.ylabel('Number of Packets')
+            plt.title(title)
+            plt.xlabel(xLabel)
+            plt.ylabel(yLabel)
             width = 0.5
             plt.xlim([0, len(graphx)])
             plt.grid(True)
 
             # timestamp on x-axis
             x = range(0, len(graphx))
-            # my_xticks = graphx
-            # plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
-            # plt.tight_layout()
 
             # limit the number of xticks
             plt.locator_params(axis='x', nbins=20)
 
             plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
-            out = self.pcap_filepath.replace('.pcap', '_plot-interval-pkt-count' + file_ending)
+            out = self.pcap_filepath.replace('.pcap', '_plot-' + title + file_ending)
             plt.savefig(out, dpi=500)
             return out
 
+        def plot_interval_pktCount(file_ending: str):
+            queryOutput = self.stats_db._process_user_defined_query(
+                "SELECT lastPktTimestamp, pktsCount FROM interval_statistics ORDER BY lastPktTimestamp")
+            title = "Packet Rate"
+            xLabel = "Time Interval"
+            yLabel = "Number of Packets"
+            if queryOutput:
+                return plot_interval_statistics(queryOutput, title, xLabel, yLabel, file_ending)
+
         def plot_interval_ip_src_ent(file_ending: str):
-            plt.gcf().clear()
-            result = self.stats_db._process_user_defined_query(
+            queryOutput = self.stats_db._process_user_defined_query(
                 "SELECT lastPktTimestamp, ipSrcEntropy FROM interval_statistics ORDER BY lastPktTimestamp")
-            graphx, graphy = [], []
-            for row in result:
-                graphx.append(row[0])
-                graphy.append(row[1])
-            # If entropy was not calculated do not plot the graph
-            if graphy[0] != -1:
-                plt.autoscale(enable=True, axis='both')
-                plt.title("Source IP Entropy")
-                # plt.xlabel('Timestamp')
-                plt.xlabel('Time Interval')
-                plt.ylabel('Entropy')
-                width = 0.5
-                plt.xlim([0, len(graphx)])
-                plt.grid(True)
-
-                # timestamp on x-axis
-                x = range(0, len(graphx))
-                # my_xticks = graphx
-                # plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
-                # plt.tight_layout()
-
-                # limit the number of xticks
-                plt.locator_params(axis='x', nbins=20)
-
-                plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
-                out = self.pcap_filepath.replace('.pcap', '_plot-interval-ip-src-ent' + file_ending)
-                plt.savefig(out, dpi=500)
-                return out
+            title = "Source IP Entropy"
+            xLabel = "Time Interval"
+            yLabel = "Entropy"
+            if queryOutput:
+                return plot_interval_statistics(queryOutput, title, xLabel, yLabel, file_ending)
 
         def plot_interval_ip_dst_ent(file_ending: str):
-            plt.gcf().clear()
-            result = self.stats_db._process_user_defined_query(
+            queryOutput = self.stats_db._process_user_defined_query(
                 "SELECT lastPktTimestamp, ipDstEntropy FROM interval_statistics ORDER BY lastPktTimestamp")
-            graphx, graphy = [], []
-            for row in result:
-                graphx.append(row[0])
-                graphy.append(row[1])
-            # If entropy was not calculated do not plot the graph
-            if graphy[0] != -1:
-                plt.autoscale(enable=True, axis='both')
-                plt.title("Destination IP Entropy")
-                # plt.xlabel('Timestamp')
-                plt.xlabel('Time Interval')
-                plt.ylabel('Entropy')
-                width = 0.5
-                plt.xlim([0, len(graphx)])
-                plt.grid(True)
+            title = "Destination IP Entropy"
+            xLabel = "Time Interval"
+            yLabel = "Entropy"
+            if queryOutput:
+                return plot_interval_statistics(queryOutput, title, xLabel, yLabel, file_ending)
 
-                # timestamp on x-axis
-                x = range(0, len(graphx))
-                # my_xticks = graphx
-                # plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
-                # plt.tight_layout()
+        def plot_interval_new_ip(file_ending: str):
+            queryOutput = self.stats_db._process_user_defined_query(
+                "SELECT lastPktTimestamp, newIPCount FROM interval_statistics ORDER BY lastPktTimestamp")
+            title = "IP Novelty Distribution"
+            xLabel = "Time Interval"
+            yLabel = "Novel values count"
+            if queryOutput:
+                return plot_interval_statistics(queryOutput, title, xLabel, yLabel, file_ending)
 
-                # limit the number of xticks
-                plt.locator_params(axis='x', nbins=20)
+        def plot_interval_new_port(file_ending: str):
+            queryOutput = self.stats_db._process_user_defined_query(
+                "SELECT lastPktTimestamp, newPortCount FROM interval_statistics ORDER BY lastPktTimestamp")
+            title = "Port Novelty Distribution"
+            xLabel = "Time Interval"
+            yLabel = "Novel values count"
+            if queryOutput:
+                return plot_interval_statistics(queryOutput, title, xLabel, yLabel, file_ending)
 
-                plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
-                out = self.pcap_filepath.replace('.pcap', '_plot-interval-ip-dst-ent' + file_ending)
-                plt.savefig(out, dpi=500)
-                return out
+        def plot_interval_new_ttl(file_ending: str):
+            queryOutput = self.stats_db._process_user_defined_query(
+                "SELECT lastPktTimestamp, newTTLCount FROM interval_statistics ORDER BY lastPktTimestamp")
+            title = "TTL Novelty Distribution"
+            xLabel = "Time Interval"
+            yLabel = "Novel values count"
+            if queryOutput:
+                return plot_interval_statistics(queryOutput, title, xLabel, yLabel, file_ending)
+
+        def plot_interval_new_tos(file_ending: str):
+            queryOutput = self.stats_db._process_user_defined_query(
+                "SELECT lastPktTimestamp, newToSCount FROM interval_statistics ORDER BY lastPktTimestamp")
+            title = "ToS Novelty Distribution"
+            xLabel = "Time Interval"
+            yLabel = "Novel values count"
+            if queryOutput:
+                return plot_interval_statistics(queryOutput, title, xLabel, yLabel, file_ending)
+
+        def plot_interval_new_win_size(file_ending: str):
+            queryOutput = self.stats_db._process_user_defined_query(
+                "SELECT lastPktTimestamp, newWinSizeCount FROM interval_statistics ORDER BY lastPktTimestamp")
+            title = "Window Size Novelty Distribution"
+            xLabel = "Time Interval"
+            yLabel = "Novel values count"
+            if queryOutput:
+                return plot_interval_statistics(queryOutput, title, xLabel, yLabel, file_ending)
+
+        def plot_interval_new_mss(file_ending: str):
+            queryOutput = self.stats_db._process_user_defined_query(
+                "SELECT lastPktTimestamp, newMSSCount FROM interval_statistics ORDER BY lastPktTimestamp")
+            title = "MSS Novelty Distribution"
+            xLabel = "Time Interval"
+            yLabel = "Novel values count"
+            if queryOutput:
+                return plot_interval_statistics(queryOutput, title, xLabel, yLabel, file_ending)
 
         def plot_interval_ip_dst_cum_ent(file_ending: str):
             plt.gcf().clear()
@@ -931,226 +918,17 @@ class Statistics:
                 # plt.tight_layout()
 
                 # limit the number of xticks
-                plt.locator_params(axis='x',nbins=20)
+                plt.locator_params(axis='x', nbins=20)
 
                 plt.plot(x, graphy, 'r')
                 out = self.pcap_filepath.replace('.pcap', '_plot-interval-ip-src-cum-ent' + file_ending)
                 plt.savefig(out, dpi=500)
                 return out
 
-        def plot_interval_new_ip(file_ending: str):
-            plt.gcf().clear()
-            result = self.stats_db._process_user_defined_query(
-                "SELECT lastPktTimestamp, newIPCount FROM interval_statistics ORDER BY lastPktTimestamp")
-            graphx, graphy = [], []
-            for row in result:
-                graphx.append(row[0])
-                graphy.append(row[1])
-
-            plt.autoscale(enable=True, axis='both')
-            plt.title("IP Novelty Distribution")
-            # plt.xlabel('Timestamp')
-            plt.xlabel('Time Interval')
-            plt.ylabel('Novel values count')
-            plt.xlim([0, len(graphx)])
-            plt.grid(True)
-            width = 0.5
-
-            # timestamp on x-axis
-            x = range(0, len(graphx))
-            # my_xticks = graphx
-            # plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
-            # plt.tight_layout()
-
-            # limit the number of xticks
-            plt.locator_params(axis='x', nbins=20)
-
-            plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
-            out = self.pcap_filepath.replace('.pcap', '_plot-interval-novel-ip-dist' + file_ending)
-            plt.savefig(out, dpi=500)
-            return out
-
-        def plot_interval_new_port(file_ending: str):
-            plt.gcf().clear()
-            result = self.stats_db._process_user_defined_query(
-                "SELECT lastPktTimestamp, newPortCount FROM interval_statistics ORDER BY lastPktTimestamp")
-            graphx, graphy = [], []
-            for row in result:
-                graphx.append(row[0])
-                graphy.append(row[1])
-
-            plt.autoscale(enable=True, axis='both')
-            plt.title("Port Novelty Distribution")
-            # plt.xlabel('Timestamp')
-            plt.xlabel('Time Interval')
-            plt.ylabel('Novel values count')
-            plt.xlim([0, len(graphx)])
-            plt.grid(True)
-            width = 0.5
-
-            # timestamp on x-axis
-            x = range(0, len(graphx))
-            # my_xticks = graphx
-            # plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
-            # plt.tight_layout()
-
-            # limit the number of xticks
-            plt.locator_params(axis='x', nbins=20)
-
-            plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
-            out = self.pcap_filepath.replace('.pcap', '_plot-interval-novel-port-dist' + file_ending)
-            plt.savefig(out, dpi=500)
-            return out
-
-        def plot_interval_new_ttl(file_ending: str):
-            plt.gcf().clear()
-            result = self.stats_db._process_user_defined_query(
-                "SELECT lastPktTimestamp, newTTLCount FROM interval_statistics ORDER BY lastPktTimestamp")
-            if(result):
-                graphx, graphy = [], []
-                for row in result:
-                    graphx.append(row[0])
-                    graphy.append(row[1])
-
-                plt.autoscale(enable=True, axis='both')
-                plt.title("TTL Novelty Distribution")
-                # plt.xlabel('Timestamp')
-                plt.xlabel('Time Interval')
-                plt.ylabel('Novel values count')
-                plt.xlim([0, len(graphx)])
-                plt.grid(True)
-                width = 0.5
-
-                # timestamp on x-axis
-                x = range(0, len(graphx))
-                # my_xticks = graphx
-                # plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
-                # plt.tight_layout()
-
-                # limit the number of xticks
-                plt.locator_params(axis='x', nbins=20)
-
-                plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
-                out = self.pcap_filepath.replace('.pcap', '_plot-interval-novel-ttl-dist' + file_ending)
-                plt.savefig(out, dpi=500)
-                return out
-            else:
-                print("Error plot TTL: No TTL values found!")
-
-        def plot_interval_new_tos(file_ending: str):
-            plt.gcf().clear()
-            result = self.stats_db._process_user_defined_query(
-                "SELECT lastPktTimestamp, newToSCount FROM interval_statistics ORDER BY lastPktTimestamp")
-            graphx, graphy = [], []
-            for row in result:
-                graphx.append(row[0])
-                graphy.append(row[1])
-
-            plt.autoscale(enable=True, axis='both')
-            plt.title("ToS Novelty Distribution")
-            # plt.xlabel('Timestamp')
-            plt.xlabel('Time Interval')
-            plt.ylabel('Novel values count')
-            plt.xlim([0, len(graphx)])
-            plt.grid(True)
-            width = 0.5
-            # timestamp on x-axis
-            x = range(0, len(graphx))
-            # my_xticks = graphx
-            # plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
-            # plt.tight_layout()
-
-            # limit the number of xticks
-            plt.locator_params(axis='x', nbins=20)
-
-            plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
-            out = self.pcap_filepath.replace('.pcap', '_plot-interval-novel-tos-dist' + file_ending)
-            plt.savefig(out, dpi=500)
-            return out
-
-        def plot_interval_new_win_size(file_ending: str):
-            plt.gcf().clear()
-            result = self.stats_db._process_user_defined_query(
-                "SELECT lastPktTimestamp, newWinSizeCount FROM interval_statistics ORDER BY lastPktTimestamp")
-            if(result):
-                graphx, graphy = [], []
-                for row in result:
-                    graphx.append(row[0])
-                    graphy.append(row[1])
-
-                plt.autoscale(enable=True, axis='both')
-                plt.title("Window Size Novelty Distribution")
-                # plt.xlabel('Timestamp')
-                plt.xlabel('Time Interval')
-                plt.ylabel('Novel values count')
-                plt.xlim([0, len(graphx)])
-                plt.grid(True)
-                width = 0.5
-
-                # timestamp on x-axis
-                x = range(0, len(graphx))
-                # my_xticks = graphx
-                # plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
-                # plt.tight_layout()
-
-                # limit the number of xticks
-                plt.locator_params(axis='x', nbins=20)
-
-                plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
-                out = self.pcap_filepath.replace('.pcap', '_plot-interval-novel-win-size-dist' + file_ending)
-                plt.savefig(out, dpi=500)
-                return out
-            else:
-                print("Error plot new values WinSize: No WinSize values found!")
-
-        def plot_interval_new_mss(file_ending: str):
-            plt.gcf().clear()
-
-            result = self.stats_db._process_user_defined_query(
-                "SELECT lastPktTimestamp, newMSSCount FROM interval_statistics ORDER BY lastPktTimestamp")
-            if(result):
-                graphx, graphy = [], []
-                for row in result:
-                    graphx.append(row[0])
-                    graphy.append(row[1])
-
-                plt.autoscale(enable=True, axis='both')
-                plt.title("MSS Novelty Distribution")
-                # plt.xlabel('Timestamp')
-                plt.xlabel('Time Interval')
-                plt.ylabel('Novel values count')
-                plt.xlim([0, len(graphx)])
-                plt.grid(True)
-                width = 0.5
-
-                # timestamp on x-axis
-                x = range(0, len(graphx))
-                # my_xticks = graphx
-                # plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
-                # plt.tight_layout()
-
-                # limit the number of xticks
-                plt.locator_params(axis='x', nbins=20)
-
-                plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
-                out = self.pcap_filepath.replace('.pcap', '_plot-interval-novel-mss-dist' + file_ending)
-                plt.savefig(out, dpi=500)
-                return out
-            else:
-                print("Error plot new values MSS: No MSS values found!")
-
         ttl_out_path = plot_ttl('.' + format)
         mss_out_path = plot_mss('.' + format)
         win_out_path = plot_win('.' + format)
         protocol_out_path = plot_protocol('.' + format)
-        
-        # Time consuming
-        #port_out_path = plot_port('.' + format)
-
-        # Not drawable for too many IPs
-        #ip_src_out_path = plot_ip_src('.' + format)
-        #ip_dst_out_path = plot_ip_dst('.' + format)
-
         plot_interval_pktCount = plot_interval_pktCount('.' + format)
         plot_interval_ip_src_ent = plot_interval_ip_src_ent('.' + format)
         plot_interval_ip_dst_ent = plot_interval_ip_dst_ent('.' + format)
@@ -1162,5 +940,11 @@ class Statistics:
         plot_interval_new_tos = plot_interval_new_tos('.' + format)
         plot_interval_new_win_size = plot_interval_new_win_size('.' + format)
         plot_interval_new_mss = plot_interval_new_mss('.' + format)
+
+        ## Time consuming plot
+        # port_out_path = plot_port('.' + format)
+        ## Not drawable for too many IPs
+        # ip_src_out_path = plot_ip_src('.' + format)
+        # ip_dst_out_path = plot_ip_dst('.' + format)
 
         print("Saved plots in the input PCAP directory.")
