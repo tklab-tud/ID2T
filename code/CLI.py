@@ -52,7 +52,9 @@ class CLI(object):
                             action='store_true', default=False)
         parser.add_argument('-s', '--statistics', help='print file statistics to stdout.', action='store_true',
                             default=False)
-        parser.add_argument('-p', '--plot', help='creates statistics plots.', action='append',
+        parser.add_argument('-p', '--plot', help='creates the following plots: the values distributions of TTL, MSS, Window Size, '
+                                                 'protocol, and the novelty distributions of IP, port, TTL, MSS, Window Size,'
+                                                 ' and ToS. In addition to packets count in interval-wise.', action='append',
                             nargs='?')
         parser.add_argument('-q', '--query', metavar="QUERY",
                             action='append', nargs='?',
