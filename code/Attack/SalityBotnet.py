@@ -92,7 +92,10 @@ class SalityBotnet(BaseAttack.BaseAttack):
         mac_source = self.get_param_value(Param.MAC_SOURCE)
         ip_source = self.get_param_value(Param.IP_SOURCE)
 
-        ip_dns_server = self.statistics.get_random_ip_address()
+        # Pick a DNS server from the background traffic
+        ip_dns_server = self.statistics.process_db_query("SELECT ipAddress FROM ip_protocols WHERE protocolName='DNS' ORDER BY protocolCount DESC LIMIT 1;")
+        if not ip_dns_server or ip_source == ip_dns_server:
+            ip_dns_server = self.statistics.get_random_ip_address()
         mac_dns_server = self.statistics.get_mac_address(ip_dns_server)
 
         # Bot original config in the template PCAP
