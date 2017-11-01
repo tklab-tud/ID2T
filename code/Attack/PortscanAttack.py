@@ -178,6 +178,10 @@ class PortscanAttack(BaseAttack.BaseAttack):
             if ports_used_by_ip_dst:
                 ports_open = ports_used_by_ip_dst
             else: # if no ports were retrieved from database
+                # Take open ports from nmap-service file
+                #ports_temp = self.get_ports_from_nmap_service_dst(100)
+                #ports_open = ports_temp[0:randint(1,10)]
+                # OR take open ports from the most used ports in traffic statistics
                 ports_open = self.statistics.process_db_query(
                     "SELECT portNumber FROM ip_ports GROUP BY portNumber ORDER BY SUM(portCount) DESC LIMIT "+str(randint(1,10)))
         # in case of one open port, convert ports_open to array
