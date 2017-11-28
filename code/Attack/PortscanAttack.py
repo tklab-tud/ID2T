@@ -98,8 +98,8 @@ class PortscanAttack(BaseAttack.BaseAttack):
         if (ports_num == 1000):  # used for port.dst
             temp_array = [[0 for i in range(10)] for i in range(100)]
             port_dst_shuffled = []
-            for count in range(0, 9):
-                temp_array[count] = ports_dst[count * 100:count * 100 + 99]
+            for count in range(0, 10):
+                temp_array[count] = ports_dst[count * 100:(count + 1) * 100]
                 shuffle(temp_array[count])
                 port_dst_shuffled += temp_array[count]
         else:  # used for port.open
