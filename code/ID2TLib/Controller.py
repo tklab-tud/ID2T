@@ -61,6 +61,7 @@ class Controller:
                 attacks_pcap = PcapFile(self.written_pcaps[i])
                 attacks_pcap_path = attacks_pcap.merge_attack(self.written_pcaps[i + 1])
                 os.remove(self.written_pcaps[i + 1])  # remove merged pcap
+                self.written_pcaps[i + 1] = attacks_pcap_path
             print("done.")
         else:
             attacks_pcap_path = self.written_pcaps[0]
