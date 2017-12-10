@@ -10,6 +10,7 @@ class Parameter(Enum):
     IP_SOURCE = 'ip.src'  # source IP address
     IP_DESTINATION = 'ip.dst'  # destination IP address
     IP_DNS = 'ip.dns'  # IP address of DNS server
+    IP_HOSTING = 'ip.hosting'
     # recommended type: MAC address ------------------------------
     MAC_SOURCE = 'mac.src'  # MAC address of source
     MAC_DESTINATION = 'mac.dst'  # MAC address of destination
@@ -37,6 +38,8 @@ class Parameter(Enum):
     IP_SOURCE_RANDOMIZE = 'ip.src.shuffle'  # randomizes the sources IP address if a list of IP addresses is given
     PORT_SOURCE_RANDOMIZE = 'port.src.shuffle'  # randomizes the source port if a list of sources ports is given
 
+    PROTOCOL_VERSION = 'protocol.version'
+
 
 class ParameterTypes(Enum):
     """
@@ -52,3 +55,4 @@ class ParameterTypes(Enum):
     TYPE_FLOAT = 6
     TYPE_PACKET_POSITION = 7  # used to derive timestamp from parameter INJECT_AFTER_PACKET
     TYPE_DOMAIN = 8
+    TYPE_STRING = 9

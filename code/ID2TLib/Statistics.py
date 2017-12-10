@@ -499,6 +499,12 @@ class Statistics:
         result_dict = {key: value for (key, value) in result}
         return result_dict
 
+    def get_ip_address_count(self):
+        return self.process_db_query("SELECT COUNT(*) FROM ip_statistics")
+
+    def get_ip_addresses(self):
+        return self.process_db_query("SELECT ipAddress FROM ip_statistics")
+
     def get_random_ip_address(self, count: int = 1):
         """
         :param count: The number of IP addreses to return

@@ -301,6 +301,9 @@ class BaseAttack(metaclass=ABCMeta):
             elif isinstance(value, str) and value.isdigit() and int(value) >= 0:
                 is_valid = True
                 value = int(value)
+        elif param_type == ParameterTypes.TYPE_STRING:
+            if isinstance(value, str):
+                is_valid = True
         elif param_type == ParameterTypes.TYPE_FLOAT:
             is_valid, value = self._is_float(value)
             # this is required to avoid that the timestamp's microseconds of the first attack packet is '000000'
