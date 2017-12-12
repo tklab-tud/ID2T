@@ -31,7 +31,7 @@ cd ../../../
 cat >./id2t  <<EOF
 #!/bin/sh
 # Find the executable
-if [ $(uname) == 'Darwin' ]; then
+if [ $(uname) = 'Darwin' ]; then
     alias readlink='greadlink'
 fi
 ID2T_DIR=\$(readlink -f \$0)
