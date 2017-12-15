@@ -519,6 +519,13 @@ class Statistics:
                 ip_address_list.append(self.process_db_query("random(all(ipAddress))"))
             return ip_address_list
 
+    def get_ip_address_from_mac(self, macAddress: str):
+        """
+        :param macAddress: the MAC address of which the IP shall be returned, if existing in DB
+        :return: the IP address used in the dataset by a given MAC address
+        """
+        return self.process_db_query('ipAddress(macAddress=' + macAddress + ")")
+
     def get_mac_address(self, ipAddress: str):
         """
         :return: The MAC address used in the dataset for the given IP address.

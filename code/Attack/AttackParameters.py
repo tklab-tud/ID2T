@@ -39,6 +39,7 @@ class Parameter(Enum):
     PORT_SOURCE_RANDOMIZE = 'port.src.shuffle'  # randomizes the source port if a list of sources ports is given
 
     PROTOCOL_VERSION = 'protocol.version'
+    SOURCE_PLATFORM = 'src.platform'
 
 
 class ParameterTypes(Enum):

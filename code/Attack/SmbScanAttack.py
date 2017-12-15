@@ -7,6 +7,8 @@ from lea import Lea
 from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes
+from ID2TLib.smb2 import *
+
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 # noinspection PyPep8
@@ -40,7 +42,8 @@ class SmbScanAttack(BaseAttack.BaseAttack):
             Param.PACKETS_PER_SECOND: ParameterTypes.TYPE_FLOAT,
             Param.PORT_SOURCE_RANDOMIZE: ParameterTypes.TYPE_BOOLEAN,
             Param.IP_HOSTING: ParameterTypes.TYPE_IP_ADDRESS,
-            Param.PROTOCOL_VERSION: ParameterTypes.TYPE_STRING
+            Param.PROTOCOL_VERSION: ParameterTypes.TYPE_STRING,
+            Param.SOURCE_PLATFORM: ParameterTypes.TYPE_STRING
         }
 
     def init_params(self):
@@ -79,7 +82,7 @@ class SmbScanAttack(BaseAttack.BaseAttack):
         #
         #
         self.add_param_value(Param.PORT_SOURCE, randint(1024, 65535))
-        self.add_param_value(Param.PORT_SOURCE_RANDOMIZE, 'False')
+        self.add_param_value(Param.PORT_SOURCE_RANDOMIZE, 'True')
         self.add_param_value(Param.PACKETS_PER_SECOND,
                              (self.statistics.get_pps_sent(most_used_ip_address) +
                               self.statistics.get_pps_received(most_used_ip_address)) / 2)
@@ -89,6 +92,7 @@ class SmbScanAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.IP_HOSTING, self.statistics.get_random_ip_address(rnd_ip_count))
         # maybe change to version 1 as default
         self.add_param_value(Param.PROTOCOL_VERSION, "2.1")
+        self.add_param_value(Param.SOURCE_PLATFORM, "Windows")
 
     @property
     def generate_attack_pcap(self):
@@ -121,18 +125,42 @@ class SmbScanAttack(BaseAttack.BaseAttack):
                     return row[1]
             return complement_interval_pps[-1][1] # in case the timstamp > capture max timestamp
 
+        def getIpData(ip_address: str):
+            """
+            :param ip_address: the ip of which (packet-)data shall be returned
+            :return: MSS, TTL and Window Size values of the given IP
+            """
+            # Set MSS (Maximum Segment Size) based on MSS distribution of IP address
+            mss_dist = self.statistics.get_mss_distribution(ip_address)
+            if len(mss_dist) > 0:
+                mss_prob_dict = Lea.fromValFreqsDict(mss_dist)
+                mss_value = mss_prob_dict.random()
+            else:
+                mss_value = self.statistics.process_db_query("most_used(mssValue)")
 
-        mac_source = self.get_param_value(Param.MAC_SOURCE)
-        mac_dest = self.get_param_value(Param.MAC_DESTINATION)
+            # Set TTL based on TTL distribution of IP address
+            ttl_dist = self.statistics.get_ttl_distribution(ip_address)
+            if len(ttl_dist) > 0:
+                ttl_prob_dict = Lea.fromValFreqsDict(ttl_dist)
+                ttl_value = ttl_prob_dict.random()
+            else:
+                ttl_value = self.statistics.process_db_query("most_used(ttlValue)")
+
+            # Set Window Size based on Window Size distribution of IP address
+            win_dist = self.statistics.get_win_distribution(ip_address)
+            if len(win_dist) > 0:
+                win_prob_dict = Lea.fromValFreqsDict(win_dist)
+                win_value = win_prob_dict.random()
+            else:
+                win_value = self.statistics.process_db_query("most_used(winSize)")
+
+            return mss_value, ttl_value, win_value
+
         pps = self.get_param_value(Param.PACKETS_PER_SECOND)
 
         # Calculate complement packet rates of the background traffic for each interval
         complement_interval_pps = self.statistics.calculate_complement_packet_rates(pps)
 
-        if self.get_param_value(Param.PORT_SOURCE_RANDOMIZE):
-            sport = randint(1, 65535)
-        else:
-            sport = self.get_param_value(Param.PORT_SOURCE)
 
         # Timestamp
         timestamp_next_pkt = self.get_param_value(Param.INJECT_AT_TIMESTAMP)
@@ -144,38 +172,35 @@ class SmbScanAttack(BaseAttack.BaseAttack):
         ip_source = self.get_param_value(Param.IP_SOURCE)
         ip_destinations = self.get_param_value(Param.IP_DESTINATION)
         ip_hosting = self.get_param_value(Param.IP_HOSTING)
+        mac_source = self.get_param_value(Param.MAC_SOURCE)
+        mac_dest = self.get_param_value(Param.MAC_DESTINATION)
+        # Check source platform
+        src_platform = self.get_param_value(Param.SOURCE_PLATFORM)
+        if (src_platform != "Windows") and (src_platform != "Linux"):
+            print("Invalid source platform: " + src_platform + ". Selecting Windows as default source platform.")
+            src_platform = "Windows"
         packets = []
 
-        # Check ip.src == ip.dst
-        #self.ip_src_dst_equal_check(ip_source, ip_destination)
-
-        # Set MSS (Maximum Segment Size) based on MSS distribution of IP address
-        source_mss_dist = self.statistics.get_mss_distribution(ip_source)
-        if len(source_mss_dist) > 0:
-            source_mss_prob_dict = Lea.fromValFreqsDict(source_mss_dist)
-            source_mss_value = source_mss_prob_dict.random()
+        if self.get_param_value(Param.PORT_SOURCE_RANDOMIZE):
+            if src_platform == "Windows":
+                sport = randint(1024, 5000)
+            else:
+                pass
+            # LINUX HERE
         else:
-            source_mss_value = self.statistics.process_db_query("most_used(mssValue)")
+            sport = self.get_param_value(Param.PORT_SOURCE)
 
+        # No destination IP was specified, but a destination MAC was specified, generate IP that fits MAC
+        if isinstance(ip_destinations, list) and isinstance(mac_dest, str):
+            ip_destinations = self.statistics.get_ip_address_from_mac(mac_dest)
+            if len(ip_destinations) == 0:
+                ip_destinations = self.generate_random_ipv4_address("Unknown", 1)
+            # Check ip.src == ip.dst
+            self.ip_src_dst_equal_check(ip_source, ip_destinations)
 
-        # Set TTL based on TTL distribution of IP address
-        source_ttl_dist = self.statistics.get_ttl_distribution(ip_source)
-        if len(source_ttl_dist) > 0:
-            source_ttl_prob_dict = Lea.fromValFreqsDict(source_ttl_dist)
-            source_ttl_value = source_ttl_prob_dict.random()
-        else:
-            source_ttl_value = self.statistics.process_db_query("most_used(ttlValue)")
-
-
-        # Set Window Size based on Window Size distribution of IP address
-        source_win_dist = self.statistics.get_win_distribution(ip_source)
-        if len(source_win_dist) > 0:
-            source_win_prob_dict = Lea.fromValFreqsDict(source_win_dist)
-            source_win_value = source_win_prob_dict.random()
-        else:
-            source_win_value = self.statistics.process_db_query("most_used(winSize)")
-
-
+        # Get MSS, TTL and Window size value for source IP
+        source_mss_value, source_ttl_value, source_win_value = getIpData(ip_source)
+        #print(source_mss_value, source_ttl_value, source_win_value)
 
         # ACTUAL ATTACK GOES HERE
         #print(len(mac_dest))
@@ -193,6 +218,15 @@ class SmbScanAttack(BaseAttack.BaseAttack):
 
         for ip in ip_dests:
 
+            # Randomize source IP for each connection, if specified
+            if self.get_param_value(Param.IP_SOURCE_RANDOMIZE):
+                ip_source = self.generate_random_ipv4_address("Unknown", 1)
+                while ip_source == ip:
+                    ip_source = self.generate_random_ipv4_address("Unknown", 1)
+                mac_source = self.statistics.get_mac_address(str(ip_source))
+                if len(mac_source) == 0:
+                    mac_source = self.generate_random_mac_address()
+
             if ip != ip_source:
 
                 # Get destination Mac Address
@@ -201,44 +235,38 @@ class SmbScanAttack(BaseAttack.BaseAttack):
                 mac_destination = self.statistics.get_mac_address(str(ip))
                 if len(mac_destination) == 0:
                     if isinstance(mac_dest, str):
+                        if len(self.statistics.get_ip_address_from_mac(mac_dest)) != 0:
+                            ip = self.statistics.get_ip_address_from_mac(mac_dest)
+                            self.ip_src_dst_equal_check(ip_source, ip)
+
                         mac_destination = mac_dest
+
                     else:
                         mac_destination = self.generate_random_mac_address()
                 #print(len(mac_destination))
                 #print(mac_destination)
                 #print(ip)
 
-                # Set MSS (Maximum Segment Size) based on MSS distribution of IP address
-                destination_mss_dist = self.statistics.get_mss_distribution(ip)
-                if len(destination_mss_dist) > 0:
-                    destination_mss_prob_dict = Lea.fromValFreqsDict(destination_mss_dist)
-                    destination_mss_value = destination_mss_prob_dict.random()
-                else:
-                    destination_mss_value = self.statistics.process_db_query("most_used(mssValue)")
-
-
-                # Set TTL based on TTL distribution of IP address
-                destination_ttl_dist = self.statistics.get_ttl_distribution(ip)
-                if len(destination_ttl_dist) > 0:
-                    destination_ttl_prob_dict = Lea.fromValFreqsDict(destination_ttl_dist)
-                    destination_ttl_value = destination_ttl_prob_dict.random()
-                else:
-                    destination_ttl_value = self.statistics.process_db_query("most_used(ttlValue)")
-
-
-                # Set Window Size based on Window Size distribution of IP address
-                destination_win_dist = self.statistics.get_win_distribution(ip)
-                if len(destination_win_dist) > 0:
-                    destination_win_prob_dict = Lea.fromValFreqsDict(destination_win_dist)
-                    destination_win_value = destination_win_prob_dict.random()
-                else:
-                    destination_win_value = self.statistics.process_db_query("most_used(winSize)")
+                # Get MSS, TTL and Window size value for destination IP
+                destination_mss_value, destination_ttl_value, destination_win_value = getIpData(ip)
+                #print(destination_mss_value, destination_ttl_value, destination_win_value)
 
                 minDelay, maxDelay = self.get_reply_delay(ip)
 
                 # New connection, new random TCP sequence numbers
                 attacker_seq = randint(1000, 50000)
                 victim_seq = randint(1000, 50000)
+
+                # Randomize source port for each connection if specified
+                if self.get_param_value(Param.PORT_SOURCE_RANDOMIZE):
+                    if src_platform == "Windows":
+                        if self.get_param_value(Param.IP_SOURCE_RANDOMIZE):
+                            sport = randint(1024, 5000)
+                        else:
+                            sport = sport+1
+                    else:
+                        pass
+                        #INSERT LINUX HERE
 
                 # 1) Build request package
                 request_ether = Ether(src=mac_source, dst=mac_destination)
@@ -285,18 +313,32 @@ class SmbScanAttack(BaseAttack.BaseAttack):
                     # CHECK FOR PROTOCOL VERSION?
                     smb_MID = randint(1, 65535)
                     smb_PID = randint(1, 65535)
+                    smb_req_tail_arr = []
+                    smb_req_tail_size = 0
 
-                    smb_req_tail = SMBNegociate_Protocol_Request_Tail()
-                    smb_req_head = SMBNegociate_Protocol_Request_Header(Flags2=0x2801, PID=smb_PID, MID=smb_MID)
-                    smb_req_length = len(smb_req_head) + len(smb_req_tail)
+                    #Dialects are saved in this array
+                    smb_req_dialects = ["SMB 2.000"]
+                    if (len(smb_req_dialects) == 0):
+                        smb_req_tail_arr.append(SMBNegociate_Protocol_Request_Tail())
+                        smb_req_tail_size = len(SMBNegociate_Protocol_Request_Tail())
+                    else:
+                        for i in range(0,len(smb_req_dialects)):
+                            smb_req_tail_arr.append(SMBNegociate_Protocol_Request_Tail(BufferData = smb_req_dialects[i]))
+                            smb_req_tail_size += len(SMBNegociate_Protocol_Request_Tail(BufferData = smb_req_dialects[i]))
+
+                    smb_req_head = SMBNegociate_Protocol_Request_Header(Flags2=0x2801, PID=smb_PID, MID=smb_MID , ByteCount = smb_req_tail_size)
+                    smb_req_length = len(smb_req_head) + smb_req_tail_size
                     smb_req_net_bio = NBTSession(TYPE=0x00, LENGTH=smb_req_length)
                     smb_req_tcp = TCP(sport=sport, dport=self.smb_port, flags='PA', seq=attacker_seq, ack=victim_seq)
                     smb_req_ip = IP(src=ip_source, dst=ip, ttl=source_ttl_value)
                     smb_req_ether = Ether(src=mac_source, dst=mac_destination)
-                    attacker_seq += len(smb_req_net_bio) + len(smb_req_head) + len(smb_req_tail)
+                    attacker_seq += len(smb_req_net_bio) + len(smb_req_head) + smb_req_tail_size
 
-                    smb_req_combined = (
-                            smb_req_ether / smb_req_ip / smb_req_tcp / smb_req_net_bio / smb_req_head / smb_req_tail)
+                    smb_req_combined = (smb_req_ether / smb_req_ip / smb_req_tcp / smb_req_net_bio / smb_req_head  )
+
+                    for i in range(0 , len(smb_req_tail_arr)):
+                        smb_req_combined = smb_req_combined / smb_req_tail_arr[i]
+
                     timestamp_smb_req = update_timestamp(timestamp_confirm, pps, minDelay)
                     smb_req_combined.time = timestamp_smb_req
                     packets.append(smb_req_combined)
@@ -311,15 +353,32 @@ class SmbScanAttack(BaseAttack.BaseAttack):
                     # INSERT SMB-RESPONSE PACKAGE HERE
                     # CHECK FOR PROTOCOL VERSION?
 
-                    smb_rsp_paket = SMBNegociate_Protocol_Response_No_Security_No_Key()
-                    smb_rsp_length = len(smb_rsp_paket)
+                    #Add here relevant dialects for smb2
+                    if("SMB 2.000" , "SMB 2.???"  in smb_req_dialects):
+                        smb2 = 1
+                    else:
+                        smb2 = 0
+
+
+                    if(smb2 == 1):
+                        smb_rsp_paket = SMB2_SYNC_Header()
+                        smb_rsp_negotiate_body = SMB2_Negotiate_Protocol_Response()
+                        smb_rsp_length = len(smb_rsp_paket) + len(smb_rsp_negotiate_body)
+                    else:
+                        smb_rsp_paket = SMBNegociate_Protocol_Response_No_Security_No_Key(Start = "\xffSMB" , PID=smb_PID, MID=smb_MID)
+                        smb_rsp_length = len(smb_rsp_paket)
                     smb_rsp_net_bio = NBTSession(TYPE=0x00, LENGTH=smb_rsp_length)
                     smb_rsp_tcp = TCP(sport=self.smb_port, dport=sport, flags='PA', seq=victim_seq, ack=attacker_seq)
                     smb_rsp_ip = IP(src=ip, dst=ip_source, ttl=destination_ttl_value)
                     smb_rsp_ether = Ether(src=mac_destination, dst=mac_source)
                     victim_seq += len(smb_rsp_net_bio) + len(smb_rsp_paket)
+                    if(smb2 == 1):
+                        victim_seq += len(smb_rsp_negotiate_body)
 
                     smb_rsp_combined = (smb_rsp_ether / smb_rsp_ip / smb_rsp_tcp / smb_rsp_net_bio / smb_rsp_paket)
+                    if (smb2 == 1):
+                        smb_rsp_combined = (smb_rsp_combined / smb_rsp_negotiate_body)
+
                     timestamp_smb_rsp = update_timestamp(timestamp_reply, pps, minDelay)
                     smb_rsp_combined.time = timestamp_smb_rsp
                     packets.append(smb_rsp_combined)
