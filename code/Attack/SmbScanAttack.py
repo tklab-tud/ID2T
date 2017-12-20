@@ -17,13 +17,17 @@ from scapy.layers.smb import *
 from scapy.layers.netbios import *
 
 class SmbScanAttack(BaseAttack.BaseAttack):
+    platforms = {"win7", "win10", "winxp", "win8.1", "macos", "linux", "win8", "winvista", "winnt", "win2000"}
     # SMB port
     smb_port = 445
     # SMB versions
-    smb_versions = {"1", "2.0", "2.1", "3.0", "3.0.2", "3.1.1", "mac", "samba"}
-    smb_versions_per_win = {'Win7': "2.1", 'Win10': "3.1.1", 'WinXP': "1", 'Win8.1': "3.0.2", 'Win8': "3.0",
-                            'WinVista': "2.0", 'WinNT': "1"}
-    smb_versions_per_samba = {'3.6': "2.0", '4.1': "3.0", '4.3': "3.1.1"}
+    smb_versions = {"1", "2.0", "2.1", "3.0", "3.0.2", "3.1.1"}
+    smb_versions_per_win = {'win7': "2.1", 'win10': "3.1.1", 'winxp': "1", 'win8.1': "3.0.2", 'win8': "3.0",
+                            'winvista': "2.0", 'winnt': "1", "win2000": "1"}
+    smb_versions_per_samba = {'3.6': "2.0", '4.0': "2.1", '4.1': "3.0", '4.3': "3.1.1"}
+    # SMB dialects
+    smb_dialects = ["PC NETWORK PROGRAM 1.0", "LANMAN1.0", "Windows for Workgroups 3.1a", "LM1.2X002", "LANMAN2.1",
+                    "NT LM 0.12", "SMB 2.002", "SMB 2.???"]
 
     def __init__(self):
         """
@@ -46,9 +50,11 @@ class SmbScanAttack(BaseAttack.BaseAttack):
             Param.IP_SOURCE_RANDOMIZE: ParameterTypes.TYPE_BOOLEAN,
             Param.PACKETS_PER_SECOND: ParameterTypes.TYPE_FLOAT,
             Param.PORT_SOURCE_RANDOMIZE: ParameterTypes.TYPE_BOOLEAN,
-            Param.IP_HOSTING: ParameterTypes.TYPE_IP_ADDRESS,
+            Param.HOSTING_IP: ParameterTypes.TYPE_IP_ADDRESS,
+            Param.HOSTING_VERSION: ParameterTypes.TYPE_STRING,
+            Param.SOURCE_PLATFORM: ParameterTypes.TYPE_STRING,
             Param.PROTOCOL_VERSION: ParameterTypes.TYPE_STRING,
-            Param.SOURCE_PLATFORM: ParameterTypes.TYPE_STRING
+            Param.IP_DESTINATION_END: ParameterTypes.TYPE_IP_ADDRESS
         }
 
     def init_params(self):
@@ -76,16 +82,13 @@ class SmbScanAttack(BaseAttack.BaseAttack):
         else:
             ip_destinations = all_ips
         self.add_param_value(Param.IP_DESTINATION, ip_destinations)
-        # MAYBE REMOVE/CHANGE THIS MAC STUFF
-        #
+        # FIXME: MAYBE REMOVE/CHANGE THIS MAC STUFF
         destination_mac = []
         for ip in ip_destinations:
             destination_mac.append(self.statistics.get_mac_address(str(ip)))
         if isinstance(destination_mac, list) and len(destination_mac) == 0:
             destination_mac = self.generate_random_mac_address()
         self.add_param_value(Param.MAC_DESTINATION, destination_mac)
-        #
-        #
         self.add_param_value(Param.PORT_SOURCE, randint(1024, 65535))
         self.add_param_value(Param.PORT_SOURCE_RANDOMIZE, 'True')
         self.add_param_value(Param.PACKETS_PER_SECOND,
@@ -94,24 +97,24 @@ class SmbScanAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.INJECT_AFTER_PACKET, randint(0, self.statistics.get_packet_count()))
 
         rnd_ip_count = self.statistics.get_ip_address_count()/2
-        self.add_param_value(Param.IP_HOSTING, self.statistics.get_random_ip_address(rnd_ip_count))
-        # maybe change to version 1 as default
-        self.add_param_value(Param.PROTOCOL_VERSION, self.get_rnd_smb_version())
-        self.add_param_value(Param.SOURCE_PLATFORM, "Windows")
+        self.add_param_value(Param.HOSTING_IP, self.statistics.get_random_ip_address(rnd_ip_count))
+        self.add_param_value(Param.HOSTING_VERSION, self.get_rnd_smb_version())
+        self.add_param_value(Param.SOURCE_PLATFORM, self.get_rnd_os())
+        self.add_param_value(Param.PROTOCOL_VERSION, "1")
+        self.add_param_value(Param.IP_DESTINATION_END, "0.0.0.0")
 
     def get_rnd_os(self):
-        os_dist = Lea.fromValFreqsDict({"Win7": 48.43, "Win10": 27.99, "WinXP": 6.07, "Win8.1": 6.07, "macOS": 5.94,
-                                       "Linux": 3.38, "Win8": 1.35, "WinVista": 0.46, "WinNT": 0.31})
+        os_dist = Lea.fromValFreqsDict({"win7": 48.43, "win10": 27.99, "winxp": 6.07, "win8.1": 6.07, "macos": 5.94,
+                                       "linux": 3.38, "win8": 1.35, "winvista": 0.46, "winnt": 0.31})
         return os_dist.random()
 
     def get_rnd_smb_version(self):
         os = self.get_rnd_os()
-        if os is "Linux":
-            # FIXME: doublecheck samba releases
-            return random.choice(self.smb_versions_per_samba.values())
-        elif os is "macOS":
+        if os is "linux":
+            return random.choice(list(self.smb_versions_per_samba.values()))
+        elif os is "macos":
             # TODO: figure out macOS smb version(s)
-            return random.choice(self.smb_versions)
+            return random.choice(list(self.smb_versions))
         else:
             return self.smb_versions_per_win[os]
 
@@ -177,6 +180,24 @@ class SmbScanAttack(BaseAttack.BaseAttack):
 
             return mss_value, ttl_value, win_value
 
+        def getIpRange(start_ip: str, end_ip: str):
+            start = ipaddress.ip_address(start_ip)
+            end = ipaddress.ip_address(end_ip)
+            ips = []
+
+            if start < end:
+                while start <= end:
+                    ips.append(start.exploded)
+                    start = start+1
+            elif start > end:
+                while start >= end:
+                    ips.append(start.exploded)
+                    start = start-1
+            else:
+                ips.append(start_ip)
+
+            return ips
+
         pps = self.get_param_value(Param.PACKETS_PER_SECOND)
 
         # Calculate complement packet rates of the background traffic for each interval
@@ -192,22 +213,38 @@ class SmbScanAttack(BaseAttack.BaseAttack):
         # Initialize parameters
         ip_source = self.get_param_value(Param.IP_SOURCE)
         ip_destinations = self.get_param_value(Param.IP_DESTINATION)
-        ip_hosting = self.get_param_value(Param.IP_HOSTING)
+        hosting_ip = self.get_param_value(Param.HOSTING_IP)
+        ip_range_end = self.get_param_value(Param.IP_DESTINATION_END)
         mac_source = self.get_param_value(Param.MAC_SOURCE)
         mac_dest = self.get_param_value(Param.MAC_DESTINATION)
+        # Check smb version
+        def invalid_verison(version: str):
+            print("\nInvalid smb version: " + version +
+                  "\nPlease select one of the following versions: 1, 2.0, 2.1, 3.0, 3.0.2, 3.1.1")
+            # FIXME: useful error code
+            exit(-1)
+        smb_version = self.get_param_value(Param.PROTOCOL_VERSION)
+        if smb_version not in self.smb_versions:
+            invalid_verison(smb_version)
+        hosting_version = self.get_param_value(Param.HOSTING_VERSION)
+        if hosting_version not in self.smb_versions:
+            invalid_verison(hosting_version)
         # Check source platform
-        src_platform = self.get_param_value(Param.SOURCE_PLATFORM)
-        if (src_platform != "Windows") and (src_platform != "Linux"):
-            print("Invalid source platform: " + src_platform + ". Selecting Windows as default source platform.")
-            src_platform = "Windows"
+        src_platform = self.get_param_value(Param.SOURCE_PLATFORM).lower()
+        if src_platform not in self.platforms:
+            print("\nInvalid source platform: " + src_platform + ". Selecting random platform as source platform.")
+            src_platform = self.get_rnd_os()
         packets = []
 
+        # randomize source ports according to platform, if specified
         if self.get_param_value(Param.PORT_SOURCE_RANDOMIZE):
-            if src_platform == "Windows":
+            if src_platform in {"winnt", "winxp", "win2000"}:
                 sport = randint(1024, 5000)
+            elif src_platform == "linux":
+                sport = randint(32768, 61000)
             else:
-                pass
-            # LINUX HERE
+                sport = randint(49152, 65535)
+
         else:
             sport = self.get_param_value(Param.PORT_SOURCE)
 
@@ -219,40 +256,34 @@ class SmbScanAttack(BaseAttack.BaseAttack):
             # Check ip.src == ip.dst
             self.ip_src_dst_equal_check(ip_source, ip_destinations)
 
-        # Get MSS, TTL and Window size value for source IP
-        source_mss_value, source_ttl_value, source_win_value = getIpData(ip_source)
-        #print(source_mss_value, source_ttl_value, source_win_value)
-
-        # ACTUAL ATTACK GOES HERE
-        #print(len(mac_dest))
-        #print(mac_destination)
-        #print(len(ip_destinations))
-        #print(ip_destinations)
-        #print(ip_source)
         ip_dests = []
         if isinstance(ip_destinations, list):
             ip_dests = ip_destinations
         else:
             ip_dests.append(ip_destinations)
 
-        #print(ip_dests)
+        # Generate IPs of destination IP range, if specified
+        if ip_range_end != "0.0.0.0":
+            ip_dests = getIpRange(ip_dests[0], ip_range_end)
+            shuffle(ip_dests)
+
+        # Randomize source IP, if specified
+        if self.get_param_value(Param.IP_SOURCE_RANDOMIZE):
+            ip_source = self.generate_random_ipv4_address("Unknown", 1)
+            while ip_source in ip_dests:
+                ip_source = self.generate_random_ipv4_address("Unknown", 1)
+            mac_source = self.statistics.get_mac_address(str(ip_source))
+            if len(mac_source) == 0:
+                mac_source = self.generate_random_mac_address()
+
+        # Get MSS, TTL and Window size value for source IP
+        source_mss_value, source_ttl_value, source_win_value = getIpData(ip_source)
 
         for ip in ip_dests:
-
-            # Randomize source IP for each connection, if specified
-            if self.get_param_value(Param.IP_SOURCE_RANDOMIZE):
-                ip_source = self.generate_random_ipv4_address("Unknown", 1)
-                while ip_source == ip:
-                    ip_source = self.generate_random_ipv4_address("Unknown", 1)
-                mac_source = self.statistics.get_mac_address(str(ip_source))
-                if len(mac_source) == 0:
-                    mac_source = self.generate_random_mac_address()
 
             if ip != ip_source:
 
                 # Get destination Mac Address
-                #print(ip)
-
                 mac_destination = self.statistics.get_mac_address(str(ip))
                 if len(mac_destination) == 0:
                     if isinstance(mac_dest, str):
@@ -264,13 +295,9 @@ class SmbScanAttack(BaseAttack.BaseAttack):
 
                     else:
                         mac_destination = self.generate_random_mac_address()
-                #print(len(mac_destination))
-                #print(mac_destination)
-                #print(ip)
 
                 # Get MSS, TTL and Window size value for destination IP
                 destination_mss_value, destination_ttl_value, destination_win_value = getIpData(ip)
-                #print(destination_mss_value, destination_ttl_value, destination_win_value)
 
                 minDelay, maxDelay = self.get_reply_delay(ip)
 
@@ -280,14 +307,10 @@ class SmbScanAttack(BaseAttack.BaseAttack):
 
                 # Randomize source port for each connection if specified
                 if self.get_param_value(Param.PORT_SOURCE_RANDOMIZE):
-                    if src_platform == "Windows":
-                        if self.get_param_value(Param.IP_SOURCE_RANDOMIZE):
-                            sport = randint(1024, 5000)
-                        else:
-                            sport = sport+1
+                    if src_platform == "linux":
+                        sport = randint(32768, 61000)
                     else:
-                        pass
-                        #INSERT LINUX HERE
+                        sport = sport+1
 
                 # 1) Build request package
                 request_ether = Ether(src=mac_source, dst=mac_destination)
@@ -307,14 +330,15 @@ class SmbScanAttack(BaseAttack.BaseAttack):
                     timestamp_reply = update_timestamp(timestamp_prv_reply, pps, minDelay)
                 timestamp_prv_reply = timestamp_reply
 
-                if ip in ip_hosting:
+                if ip in hosting_ip:
 
                     # 2) Build TCP packages for ip that hosts SMB
 
                     # destination sends SYN, ACK
                     reply_ether = Ether(src=mac_destination, dst=mac_source)
                     reply_ip = IP(src=ip, dst=ip_source, ttl=destination_ttl_value, flags='DF')
-                    reply_tcp = TCP(sport=self.smb_port, dport=sport, seq=victim_seq, ack=attacker_seq, flags='SA', window=destination_win_value,
+                    reply_tcp = TCP(sport=self.smb_port, dport=sport, seq=victim_seq, ack=attacker_seq, flags='SA',
+                                    window=destination_win_value,
                                     options=[('MSS', destination_mss_value)])
                     victim_seq += 1
                     reply = (reply_ether / reply_ip / reply_tcp)
@@ -324,30 +348,35 @@ class SmbScanAttack(BaseAttack.BaseAttack):
                     # requester confirms, ACK
                     confirm_ether = request_ether
                     confirm_ip = request_ip
-                    confirm_tcp = TCP(sport=sport, dport=self.smb_port, seq=attacker_seq, ack=victim_seq, window=source_win_value, flags='A')
+                    confirm_tcp = TCP(sport=sport, dport=self.smb_port, seq=attacker_seq, ack=victim_seq,
+                                      window=source_win_value, flags='A')
                     confirm = (confirm_ether / confirm_ip / confirm_tcp)
                     timestamp_confirm = update_timestamp(timestamp_reply, pps, minDelay)
                     confirm.time = timestamp_confirm
                     packets.append(confirm)
 
                     # INSERT SMB-REQUEST PACKAGE HERE
-                    # CHECK FOR PROTOCOL VERSION?
+                    # FIXME: CHECK FOR PROTOCOL VERSION?
                     smb_MID = randint(1, 65535)
                     smb_PID = randint(1, 65535)
                     smb_req_tail_arr = []
                     smb_req_tail_size = 0
 
-                    #Dialects are saved in this array
-                    smb_req_dialects = ["SMB 2.000"]
-                    if (len(smb_req_dialects) == 0):
+                    # select dialects based on smb version
+                    if smb_version is "1":
+                        smb_req_dialects = self.smb_dialects[0:6]
+                    else:
+                        smb_req_dialects = self.smb_dialects
+                    if len(smb_req_dialects) == 0:
                         smb_req_tail_arr.append(SMBNegociate_Protocol_Request_Tail())
                         smb_req_tail_size = len(SMBNegociate_Protocol_Request_Tail())
                     else:
-                        for i in range(0,len(smb_req_dialects)):
-                            smb_req_tail_arr.append(SMBNegociate_Protocol_Request_Tail(BufferData = smb_req_dialects[i]))
-                            smb_req_tail_size += len(SMBNegociate_Protocol_Request_Tail(BufferData = smb_req_dialects[i]))
+                        for dia in smb_req_dialects:
+                            smb_req_tail_arr.append(SMBNegociate_Protocol_Request_Tail(BufferData = dia))
+                            smb_req_tail_size += len(SMBNegociate_Protocol_Request_Tail(BufferData = dia))
 
-                    smb_req_head = SMBNegociate_Protocol_Request_Header(Flags2=0x2801, PID=smb_PID, MID=smb_MID , ByteCount = smb_req_tail_size)
+                    smb_req_head = SMBNegociate_Protocol_Request_Header(Flags2=0x2801, PID=smb_PID, MID=smb_MID,
+                                                                        ByteCount=smb_req_tail_size)
                     smb_req_length = len(smb_req_head) + smb_req_tail_size
                     smb_req_net_bio = NBTSession(TYPE=0x00, LENGTH=smb_req_length)
                     smb_req_tcp = TCP(sport=sport, dport=self.smb_port, flags='PA', seq=attacker_seq, ack=victim_seq)
@@ -355,7 +384,7 @@ class SmbScanAttack(BaseAttack.BaseAttack):
                     smb_req_ether = Ether(src=mac_source, dst=mac_destination)
                     attacker_seq += len(smb_req_net_bio) + len(smb_req_head) + smb_req_tail_size
 
-                    smb_req_combined = (smb_req_ether / smb_req_ip / smb_req_tcp / smb_req_net_bio / smb_req_head  )
+                    smb_req_combined = (smb_req_ether / smb_req_ip / smb_req_tcp / smb_req_net_bio / smb_req_head)
 
                     for i in range(0 , len(smb_req_tail_arr)):
                         smb_req_combined = smb_req_combined / smb_req_tail_arr[i]
@@ -365,39 +394,32 @@ class SmbScanAttack(BaseAttack.BaseAttack):
                     packets.append(smb_req_combined)
 
                     # destination confirms SMB request package
-                    reply_tcp = TCP(sport=self.smb_port, dport=sport, seq=victim_seq, ack=attacker_seq, window=destination_win_value, flags='A')
+                    reply_tcp = TCP(sport=self.smb_port, dport=sport, seq=victim_seq, ack=attacker_seq,
+                                    window=destination_win_value, flags='A')
                     confirm_smb_req = (reply_ether / reply_ip / reply_tcp)
                     timestamp_reply = update_timestamp(timestamp_smb_req, pps, minDelay)
                     confirm_smb_req.time = timestamp_reply
                     packets.append(confirm_smb_req)
 
-                    # INSERT SMB-RESPONSE PACKAGE HERE
-                    # CHECK FOR PROTOCOL VERSION?
-
-                    #Add here relevant dialects for smb2
-                    if("SMB 2.000" , "SMB 2.???"  in smb_req_dialects):
-                        smb2 = 1
-                    else:
-                        smb2 = 0
-
-
-                    if(smb2 == 1):
-                        smb_rsp_paket = SMB2_SYNC_Header()
-                        smb_rsp_negotiate_body = SMB2_Negotiate_Protocol_Response()
+                    # smb response package
+                    if smb_version is not "1" and hosting_version is not "1":
+                        smb_rsp_paket = SMB2_SYNC_Header(Flags = 1)
+                        smb_rsp_negotiate_body = SMB2_Negotiate_Protocol_Response(DialectRevision=0x02ff)
                         smb_rsp_length = len(smb_rsp_paket) + len(smb_rsp_negotiate_body)
                     else:
-                        smb_rsp_paket = SMBNegociate_Protocol_Response_No_Security_No_Key(Start = "\xffSMB" , PID=smb_PID, MID=smb_MID)
+                        smb_rsp_paket = SMBNegociate_Protocol_Response_No_Security_No_Key(Start="\xffSMB" , PID=smb_PID,
+                                                                                          MID=smb_MID, DialectIndex=5)
                         smb_rsp_length = len(smb_rsp_paket)
                     smb_rsp_net_bio = NBTSession(TYPE=0x00, LENGTH=smb_rsp_length)
                     smb_rsp_tcp = TCP(sport=self.smb_port, dport=sport, flags='PA', seq=victim_seq, ack=attacker_seq)
                     smb_rsp_ip = IP(src=ip, dst=ip_source, ttl=destination_ttl_value)
                     smb_rsp_ether = Ether(src=mac_destination, dst=mac_source)
                     victim_seq += len(smb_rsp_net_bio) + len(smb_rsp_paket)
-                    if(smb2 == 1):
+                    if smb_version is not "1"and hosting_version is not "1":
                         victim_seq += len(smb_rsp_negotiate_body)
 
                     smb_rsp_combined = (smb_rsp_ether / smb_rsp_ip / smb_rsp_tcp / smb_rsp_net_bio / smb_rsp_paket)
-                    if (smb2 == 1):
+                    if smb_version is not "1"and hosting_version is not "1":
                         smb_rsp_combined = (smb_rsp_combined / smb_rsp_negotiate_body)
 
                     timestamp_smb_rsp = update_timestamp(timestamp_reply, pps, minDelay)
@@ -406,14 +428,16 @@ class SmbScanAttack(BaseAttack.BaseAttack):
 
 
                     # source confirms SMB response package
-                    confirm_tcp = TCP(sport=sport, dport=self.smb_port, seq=attacker_seq, ack=victim_seq, window=source_win_value, flags='A')
+                    confirm_tcp = TCP(sport=sport, dport=self.smb_port, seq=attacker_seq, ack=victim_seq,
+                                      window=source_win_value, flags='A')
                     confirm_smb_res = (confirm_ether / confirm_ip / confirm_tcp)
                     timestamp_confirm = update_timestamp(timestamp_smb_rsp, pps, minDelay)
                     confirm_smb_res.time = timestamp_confirm
                     packets.append(confirm_smb_res)
 
                     # attacker sends FIN ACK
-                    confirm_tcp = TCP(sport=sport, dport=self.smb_port, seq=attacker_seq, ack=victim_seq, window=source_win_value, flags='FA')
+                    confirm_tcp = TCP(sport=sport, dport=self.smb_port, seq=attacker_seq, ack=victim_seq,
+                                      window=source_win_value, flags='FA')
                     source_fin_ack = (confirm_ether / confirm_ip / confirm_tcp)
                     timestamp_src_fin_ack = update_timestamp(timestamp_confirm, pps, minDelay)
                     source_fin_ack.time = timestamp_src_fin_ack
@@ -421,7 +445,8 @@ class SmbScanAttack(BaseAttack.BaseAttack):
                     packets.append(source_fin_ack)
 
                     # victim sends FIN ACK
-                    reply_tcp = TCP(sport=self.smb_port, dport=sport, seq=victim_seq, ack=attacker_seq, window=destination_win_value, flags='FA')
+                    reply_tcp = TCP(sport=self.smb_port, dport=sport, seq=victim_seq, ack=attacker_seq,
+                                    window=destination_win_value, flags='FA')
                     destination_fin_ack = (reply_ether / reply_ip / reply_tcp)
                     timestamp_dest_fin_ack = update_timestamp(timestamp_src_fin_ack, pps, minDelay)
                     victim_seq += 1
@@ -429,7 +454,8 @@ class SmbScanAttack(BaseAttack.BaseAttack):
                     packets.append(destination_fin_ack)
 
                     # source sends final ACK
-                    confirm_tcp = TCP(sport=sport, dport=self.smb_port, seq=attacker_seq, ack=victim_seq, window=source_win_value, flags='A')
+                    confirm_tcp = TCP(sport=sport, dport=self.smb_port, seq=attacker_seq, ack=victim_seq,
+                                      window=source_win_value, flags='A')
                     final_ack = (confirm_ether / confirm_ip / confirm_tcp)
                     timestamp_final_ack = update_timestamp(timestamp_dest_fin_ack, pps, minDelay)
                     final_ack.time = timestamp_final_ack
@@ -439,8 +465,8 @@ class SmbScanAttack(BaseAttack.BaseAttack):
                     # Build RST package
                     reply_ether = Ether(src=mac_destination, dst=mac_source)
                     reply_ip = IP(src=ip, dst=ip_source, ttl=destination_ttl_value, flags='DF')
-                    reply_tcp = TCP(sport=self.smb_port, dport=sport, seq=0, ack=attacker_seq, flags='RA', window=destination_win_value,
-                                    options=[('MSS', destination_mss_value)])
+                    reply_tcp = TCP(sport=self.smb_port, dport=sport, seq=0, ack=attacker_seq, flags='RA',
+                                    window=destination_win_value, options=[('MSS', destination_mss_value)])
                     reply = (reply_ether / reply_ip / reply_tcp)
                     reply.time = timestamp_reply
                     packets.append(reply)

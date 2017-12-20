@@ -12,14 +12,14 @@ class SMB2_SYNC_Header(Packet):
                    LEIntField("Status",0),
                    LEShortField("Command",0),
                    LEShortField("CreditResponse",0),
-                   LEIntField("Flags",1),
+                   LEIntField("Flags",0),
                    LEIntField("NextCommand",0),
                    LELongField("MessageID",0),
                    LEIntField("Reserved",0),
                    LEIntField("TreeID",0x0),
-                   LELongField("SessionID",1),
+                   LELongField("SessionID",0),
                    LELongField("Signature1",0),
-                   LELongField("Signature2",1)]
+                   LELongField("Signature2",0)]
 
 #No Support of Security Buffer , Padding or Dialect Revision 0x0311
 class SMB2_Negotiate_Protocol_Response(Packet):
