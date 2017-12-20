@@ -19,6 +19,11 @@ from scapy.layers.netbios import *
 class SmbScanAttack(BaseAttack.BaseAttack):
     # SMB port
     smb_port = 445
+    # SMB versions
+    smb_versions = {"1", "2.0", "2.1", "3.0", "3.0.2", "3.1.1", "mac", "samba"}
+    smb_versions_per_win = {'Win7': "2.1", 'Win10': "3.1.1", 'WinXP': "1", 'Win8.1': "3.0.2", 'Win8': "3.0",
+                            'WinVista': "2.0", 'WinNT': "1"}
+    smb_versions_per_samba = {'3.6': "2.0", '4.1': "3.0", '4.3': "3.1.1"}
 
     def __init__(self):
         """
@@ -91,8 +96,24 @@ class SmbScanAttack(BaseAttack.BaseAttack):
         rnd_ip_count = self.statistics.get_ip_address_count()/2
         self.add_param_value(Param.IP_HOSTING, self.statistics.get_random_ip_address(rnd_ip_count))
         # maybe change to version 1 as default
-        self.add_param_value(Param.PROTOCOL_VERSION, "2.1")
+        self.add_param_value(Param.PROTOCOL_VERSION, self.get_rnd_smb_version())
         self.add_param_value(Param.SOURCE_PLATFORM, "Windows")
+
+    def get_rnd_os(self):
+        os_dist = Lea.fromValFreqsDict({"Win7": 48.43, "Win10": 27.99, "WinXP": 6.07, "Win8.1": 6.07, "macOS": 5.94,
+                                       "Linux": 3.38, "Win8": 1.35, "WinVista": 0.46, "WinNT": 0.31})
+        return os_dist.random()
+
+    def get_rnd_smb_version(self):
+        os = self.get_rnd_os()
+        if os is "Linux":
+            # FIXME: doublecheck samba releases
+            return random.choice(self.smb_versions_per_samba.values())
+        elif os is "macOS":
+            # TODO: figure out macOS smb version(s)
+            return random.choice(self.smb_versions)
+        else:
+            return self.smb_versions_per_win[os]
 
     @property
     def generate_attack_pcap(self):
