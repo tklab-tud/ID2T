@@ -37,6 +37,7 @@ class SMB2_Negotiate_Protocol_Response(Packet):
                    LELongField("ServerStartTime",0),
                    LEShortField("SecurityBufferOffset",0),
                    LEShortField("SecurityBufferLength",0),
+                   StrLenField("SecurityBlob", "", length_from=lambda x: x.ByteCount + 16),
                    LEIntField("NegotiateContextOffset/Reserved2",0)]
 
 

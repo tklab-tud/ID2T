@@ -1,7 +1,8 @@
 import logging
 
 from random import shuffle, randint, choice, uniform
-
+from datetime import datetime, timedelta, tzinfo
+from calendar import timegm
 from lea import Lea
 
 from Attack import BaseAttack
@@ -28,6 +29,41 @@ class SmbScanAttack(BaseAttack.BaseAttack):
     # SMB dialects
     smb_dialects = ["PC NETWORK PROGRAM 1.0", "LANMAN1.0", "Windows for Workgroups 3.1a", "LM1.2X002", "LANMAN2.1",
                     "NT LM 0.12", "SMB 2.002", "SMB 2.???"]
+    # SMB security blobs
+    security_blob_windows = "\x60\x82\x01\x3c\x06\x06\x2b\x06\x01\x05\x05\x02\xa0\x82\x01\x30" \
+                            "\x30\x82\x01\x2c\xa0\x1a\x30\x18\x06\x0a\x2b\x06\x01\x04\x01\x82" \
+                            "\x37\x02\x02\x1e\x06\x0a\x2b\x06\x01\x04\x01\x82\x37\x02\x02\x0a" \
+                            "\xa2\x82\x01\x0c\x04\x82\x01\x08\x4e\x45\x47\x4f\x45\x58\x54\x53" \
+                            "\x01\x00\x00\x00\x00\x00\x00\x00\x60\x00\x00\x00\x70\x00\x00\x00" \
+                            "\xbc\x84\x03\x97\x6f\x80\x3b\x81\xa6\x45\x1b\x05\x92\x39\xde\x3d" \
+                            "\xd6\x91\x85\x49\x8a\xd0\x3b\x58\x87\x99\xb4\x98\xdf\xa6\x1d\x73" \
+                            "\x3b\x57\xbf\x05\x63\x5e\x30\xea\xa8\xd8\xd8\x45\xba\x80\x52\xa5" \
+                            "\x00\x00\x00\x00\x00\x00\x00\x00\x60\x00\x00\x00\x01\x00\x00\x00" \
+                            "\x00\x00\x00\x00\x00\x00\x00\x00\x5c\x33\x53\x0d\xea\xf9\x0d\x4d" \
+                            "\xb2\xec\x4a\xe3\x78\x6e\xc3\x08\x4e\x45\x47\x4f\x45\x58\x54\x53" \
+                            "\x03\x00\x00\x00\x01\x00\x00\x00\x40\x00\x00\x00\x98\x00\x00\x00" \
+                            "\xbc\x84\x03\x97\x6f\x80\x3b\x81\xa6\x45\x1b\x05\x92\x39\xde\x3d" \
+                            "\x5c\x33\x53\x0d\xea\xf9\x0d\x4d\xb2\xec\x4a\xe3\x78\x6e\xc3\x08" \
+                            "\x40\x00\x00\x00\x58\x00\x00\x00\x30\x56\xa0\x54\x30\x52\x30\x27" \
+                            "\x80\x25\x30\x23\x31\x21\x30\x1f\x06\x03\x55\x04\x03\x13\x18\x54" \
+                            "\x6f\x6b\x65\x6e\x20\x53\x69\x67\x6e\x69\x6e\x67\x20\x50\x75\x62" \
+                            "\x6c\x69\x63\x20\x4b\x65\x79\x30\x27\x80\x25\x30\x23\x31\x21\x30" \
+                            "\x1f\x06\x03\x55\x04\x03\x13\x18\x54\x6f\x6b\x65\x6e\x20\x53\x69" \
+                            "\x67\x6e\x69\x6e\x67\x20\x50\x75\x62\x6c\x69\x63\x20\x4b\x65\x79"
+    security_blob_ubuntu = "\x60\x48\x06\x06\x2b\x06\x01\x05\x05\x02\xa0\x3e\x30\x3c\xa0\x0e" \
+                           "\x30\x0c\x06\x0a\x2b\x06\x01\x04\x01\x82\x37\x02\x02\x0a\xa3\x2a" \
+                           "\x30\x28\xa0\x26\x1b\x24\x6e\x6f\x74\x5f\x64\x65\x66\x69\x6e\x65" \
+                           "\x64\x5f\x69\x6e\x5f\x52\x46\x43\x34\x31\x37\x38\x40\x70\x6c\x65" \
+                           "\x61\x73\x65\x5f\x69\x67\x6e\x6f\x72\x65"
+    security_blob_macos =   "\x60\x7e\x06\x06\x2b\x06\x01\x05\x05\x02\xa0\x74\x30\x72\xa0\x44" \
+                            "\x30\x42\x06\x09\x2a\x86\x48\x82\xf7\x12\x01\x02\x02\x06\x09\x2a" \
+                            "\x86\x48\x86\xf7\x12\x01\x02\x02\x06\x06\x2a\x85\x70\x2b\x0e\x03" \
+                            "\x06\x06\x2b\x06\x01\x05\x05\x0e\x06\x0a\x2b\x06\x01\x04\x01\x82" \
+                            "\x37\x02\x02\x0a\x06\x06\x2b\x05\x01\x05\x02\x07\x06\x06\x2b\x06" \
+                            "\x01\x05\x02\x05\xa3\x2a\x30\x28\xa0\x26\x1b\x24\x6e\x6f\x74\x5f" \
+                            "\x64\x65\x66\x69\x6e\x65\x64\x5f\x69\x6e\x5f\x52\x46\x43\x34\x31" \
+                            "\x37\x38\x40\x70\x6c\x65\x61\x73\x65\x5f\x69\x67\x6e\x6f\x72\x65"
+
 
     def __init__(self):
         """
@@ -98,7 +134,8 @@ class SmbScanAttack(BaseAttack.BaseAttack):
 
         rnd_ip_count = self.statistics.get_ip_address_count()/2
         self.add_param_value(Param.HOSTING_IP, self.statistics.get_random_ip_address(rnd_ip_count))
-        self.add_param_value(Param.HOSTING_VERSION, self.get_rnd_smb_version())
+        self.host_os = self.get_rnd_os()
+        self.add_param_value(Param.HOSTING_VERSION, self.get_smb_version(self.host_os))
         self.add_param_value(Param.SOURCE_PLATFORM, self.get_rnd_os())
         self.add_param_value(Param.PROTOCOL_VERSION, "1")
         self.add_param_value(Param.IP_DESTINATION_END, "0.0.0.0")
@@ -108,8 +145,7 @@ class SmbScanAttack(BaseAttack.BaseAttack):
                                        "linux": 3.38, "win8": 1.35, "winvista": 0.46, "winnt": 0.31})
         return os_dist.random()
 
-    def get_rnd_smb_version(self):
-        os = self.get_rnd_os()
+    def get_smb_version(self, os: str):
         if os is "linux":
             return random.choice(list(self.smb_versions_per_samba.values()))
         elif os is "macos":
@@ -118,7 +154,10 @@ class SmbScanAttack(BaseAttack.BaseAttack):
         else:
             return self.smb_versions_per_win[os]
 
-    @property
+    def get_rnd_smb_version(self):
+        os = self.get_rnd_os()
+        return self.get_smb_version(os)
+
     def generate_attack_pcap(self):
         def update_timestamp(timestamp, pps, delay=0):
             """
@@ -198,6 +237,73 @@ class SmbScanAttack(BaseAttack.BaseAttack):
 
             return ips
 
+        def checkPlatform(platform: str):
+            if platform not in self.platforms:
+                print("\nERROR: Invalid platform: " + platform + "." +
+                      "\n Please select one of the following platforms: ", self.platforms)
+                exit(1)
+
+        def generateSourcePortFromPlatform(platform: str, previousPort=0):
+            checkPlatform(platform)
+            if platform in {"winnt", "winxp", "win2000"}:
+                if (previousPort == 0) or (previousPort+1 > 5000):
+                    return randint(1024, 5000)
+                else:
+                    return previousPort+1
+            elif platform == "linux":
+                return randint(32768, 61000)
+            else:
+                if (previousPort == 0) or (previousPort+1 > 65535):
+                    return randint(49152, 65535)
+                else:
+                    return previousPort+1
+
+        # FIXME: rework copy-pasted code
+        # source: http://reliablybroken.com/b/2009/09/working-with-active-directory-filetime-values-in-python/
+        # WORK IN PROGRESS
+        def get_filetime_format(timestamp):
+            EPOCH_AS_FILETIME = 116444736000000000  # January 1, 1970 as MS file time
+            HUNDREDS_OF_NANOSECONDS = 10000000
+            boot_datetime = datetime.fromtimestamp(timestamp)
+            if (boot_datetime.tzinfo is None) or (boot_datetime.tzinfo.utcoffset(boot_datetime) is None):
+                boot_datetime = boot_datetime.replace(tzinfo=boot_datetime.tzname())
+            boot_filetime = EPOCH_AS_FILETIME + (timegm(boot_datetime.timetuple()) * HUNDREDS_OF_NANOSECONDS)
+            return boot_filetime + (boot_datetime.microsecond * 10)
+
+        def get_rnd_boot_time(timestamp, platform="winxp"):
+            checkPlatform(platform)
+            # FIXME: create probability distribution for each OS
+            if platform is "linux":
+                # four years
+                timestamp -= randint(0, 126144000)
+            if platform is "macOS":
+                # three months
+                timestamp -= randint(0, 7884000)
+            else:
+                # one month
+                timestamp -= randint(0, 2678400)
+            return get_filetime_format(timestamp)
+
+        def getSmbPlatformData(platform: str, timestamp=time.time()):
+            checkPlatform(platform)
+            if platform == "linux":
+                blob = self.security_blob_ubuntu
+                capabilities = 0x5
+                dataSize = 0x800000
+                serverStartTime = 0
+            elif platform == "macos":
+                blob = self.security_blob_macos
+                capabilities = 0x6
+                dataSize = 0x400000
+                serverStartTime = 0
+            else:
+                blob = self.security_blob_windows
+                capabilities = 0x7
+                dataSize = 0x100000
+                serverStartTime = get_rnd_boot_time(timestamp)
+            return blob, capabilities, dataSize, serverStartTime
+
+
         pps = self.get_param_value(Param.PACKETS_PER_SECOND)
 
         # Calculate complement packet rates of the background traffic for each interval
@@ -218,33 +324,23 @@ class SmbScanAttack(BaseAttack.BaseAttack):
         mac_source = self.get_param_value(Param.MAC_SOURCE)
         mac_dest = self.get_param_value(Param.MAC_DESTINATION)
         # Check smb version
-        def invalid_verison(version: str):
+        def invalid_version(version: str):
             print("\nInvalid smb version: " + version +
-                  "\nPlease select one of the following versions: 1, 2.0, 2.1, 3.0, 3.0.2, 3.1.1")
-            # FIXME: useful error code
-            exit(-1)
+                  "\nPlease select one of the following versions: ", self.smb_versions)
+            exit(1)
         smb_version = self.get_param_value(Param.PROTOCOL_VERSION)
         if smb_version not in self.smb_versions:
-            invalid_verison(smb_version)
+            invalid_version(smb_version)
         hosting_version = self.get_param_value(Param.HOSTING_VERSION)
         if hosting_version not in self.smb_versions:
-            invalid_verison(hosting_version)
+            invalid_version(hosting_version)
         # Check source platform
         src_platform = self.get_param_value(Param.SOURCE_PLATFORM).lower()
-        if src_platform not in self.platforms:
-            print("\nInvalid source platform: " + src_platform + ". Selecting random platform as source platform.")
-            src_platform = self.get_rnd_os()
         packets = []
 
         # randomize source ports according to platform, if specified
         if self.get_param_value(Param.PORT_SOURCE_RANDOMIZE):
-            if src_platform in {"winnt", "winxp", "win2000"}:
-                sport = randint(1024, 5000)
-            elif src_platform == "linux":
-                sport = randint(32768, 61000)
-            else:
-                sport = randint(49152, 65535)
-
+            sport = generateSourcePortFromPlatform(src_platform)
         else:
             sport = self.get_param_value(Param.PORT_SOURCE)
 
@@ -307,10 +403,7 @@ class SmbScanAttack(BaseAttack.BaseAttack):
 
                 # Randomize source port for each connection if specified
                 if self.get_param_value(Param.PORT_SOURCE_RANDOMIZE):
-                    if src_platform == "linux":
-                        sport = randint(32768, 61000)
-                    else:
-                        sport = sport+1
+                    sport = generateSourcePortFromPlatform(src_platform, sport)
 
                 # 1) Build request package
                 request_ether = Ether(src=mac_source, dst=mac_destination)
@@ -338,8 +431,7 @@ class SmbScanAttack(BaseAttack.BaseAttack):
                     reply_ether = Ether(src=mac_destination, dst=mac_source)
                     reply_ip = IP(src=ip, dst=ip_source, ttl=destination_ttl_value, flags='DF')
                     reply_tcp = TCP(sport=self.smb_port, dport=sport, seq=victim_seq, ack=attacker_seq, flags='SA',
-                                    window=destination_win_value,
-                                    options=[('MSS', destination_mss_value)])
+                                    window=destination_win_value, options=[('MSS', destination_mss_value)])
                     victim_seq += 1
                     reply = (reply_ether / reply_ip / reply_tcp)
                     reply.time = timestamp_reply
@@ -355,8 +447,6 @@ class SmbScanAttack(BaseAttack.BaseAttack):
                     confirm.time = timestamp_confirm
                     packets.append(confirm)
 
-                    # INSERT SMB-REQUEST PACKAGE HERE
-                    # FIXME: CHECK FOR PROTOCOL VERSION?
                     smb_MID = randint(1, 65535)
                     smb_PID = randint(1, 65535)
                     smb_req_tail_arr = []
@@ -375,8 +465,8 @@ class SmbScanAttack(BaseAttack.BaseAttack):
                             smb_req_tail_arr.append(SMBNegociate_Protocol_Request_Tail(BufferData = dia))
                             smb_req_tail_size += len(SMBNegociate_Protocol_Request_Tail(BufferData = dia))
 
-                    smb_req_head = SMBNegociate_Protocol_Request_Header(Flags2=0x2801, PID=smb_PID, MID=smb_MID,
-                                                                        ByteCount=smb_req_tail_size)
+                    smb_req_head = SMBNegociate_Protocol_Request_Header\
+                        (Flags2=0x2801, PID=smb_PID, MID=smb_MID, ByteCount=smb_req_tail_size)
                     smb_req_length = len(smb_req_head) + smb_req_tail_size
                     smb_req_net_bio = NBTSession(TYPE=0x00, LENGTH=smb_req_length)
                     smb_req_tcp = TCP(sport=sport, dport=self.smb_port, flags='PA', seq=attacker_seq, ack=victim_seq)
@@ -402,13 +492,27 @@ class SmbScanAttack(BaseAttack.BaseAttack):
                     packets.append(confirm_smb_req)
 
                     # smb response package
+                    timestamp_smb_rsp = update_timestamp(timestamp_reply, pps, minDelay)
+
+                    security_blob, capabilities, dataSize, serverStartTime = getSmbPlatformData\
+                        (self.host_os, time.mktime(time.strptime(self.statistics.get_pcap_timestamp_start()[:19],
+                                                                 "%Y-%m-%d %H:%M:%S")))
+                    diff = timestamp_smb_rsp - timestamp_smb_req
+                    begin = get_filetime_format(timestamp_smb_req+diff*0.1)
+                    end = get_filetime_format(timestamp_smb_rsp-diff*0.1)
+                    systemtime = randint(begin, end)
+
                     if smb_version is not "1" and hosting_version is not "1":
                         smb_rsp_paket = SMB2_SYNC_Header(Flags = 1)
-                        smb_rsp_negotiate_body = SMB2_Negotiate_Protocol_Response(DialectRevision=0x02ff)
+                        smb_rsp_negotiate_body = SMB2_Negotiate_Protocol_Response\
+                            (DialectRevision=0x02ff, SecurityBufferOffset=124, SecurityBufferLength=len(security_blob),
+                             SecurityBlob=security_blob, Capabilities=capabilities, MaxTransactSize=dataSize,
+                             MaxReadSize=dataSize, MaxWriteSize=dataSize, SystemTime=systemtime,
+                             ServerStartTime=serverStartTime)
                         smb_rsp_length = len(smb_rsp_paket) + len(smb_rsp_negotiate_body)
                     else:
-                        smb_rsp_paket = SMBNegociate_Protocol_Response_No_Security_No_Key(Start="\xffSMB" , PID=smb_PID,
-                                                                                          MID=smb_MID, DialectIndex=5)
+                        smb_rsp_paket = SMBNegociate_Protocol_Response_Advanced_Security\
+                            (Start="\xffSMB", PID=smb_PID, MID=smb_MID, DialectIndex=5, SecurityBlob=security_blob)
                         smb_rsp_length = len(smb_rsp_paket)
                     smb_rsp_net_bio = NBTSession(TYPE=0x00, LENGTH=smb_rsp_length)
                     smb_rsp_tcp = TCP(sport=self.smb_port, dport=sport, flags='PA', seq=victim_seq, ack=attacker_seq)
@@ -422,7 +526,6 @@ class SmbScanAttack(BaseAttack.BaseAttack):
                     if smb_version is not "1"and hosting_version is not "1":
                         smb_rsp_combined = (smb_rsp_combined / smb_rsp_negotiate_body)
 
-                    timestamp_smb_rsp = update_timestamp(timestamp_reply, pps, minDelay)
                     smb_rsp_combined.time = timestamp_smb_rsp
                     packets.append(smb_rsp_combined)
 
