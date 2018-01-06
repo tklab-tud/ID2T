@@ -12,6 +12,7 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 # noinspection PyPep8
 from scapy.layers.inet import IP, Ether, TCP, RandShort
 from collections import deque
+from ID2TLib.Utility import *
 
 
 class DDoSAttack(BaseAttack.BaseAttack):
@@ -72,54 +73,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.VICTIM_BUFFER, randint(1000,10000))
 
     def generate_attack_pcap(self):
-        def update_timestamp(timestamp, pps, delay=0):
-            """
-            Calculates the next timestamp to be used based on the packet per second rate (pps) and the maximum delay.
-
-            :return: Timestamp to be used for the next packet.
-            """
-            if delay == 0:
-                # Calculate the request timestamp
-                # A distribution to imitate the bursty behavior of traffic
-                randomdelay = Lea.fromValFreqsDict({1 / pps: 70, 2 / pps: 20, 5 / pps: 7, 10 / pps: 3})
-                return timestamp + uniform(1 / pps, randomdelay.random())
-            else:
-                # Calculate the reply timestamp
-                randomdelay = Lea.fromValFreqsDict({2 * delay: 70, 3 * delay: 20, 5 * delay: 7, 10 * delay: 3})
-                return timestamp + uniform(1 / pps + delay, 1 / pps + randomdelay.random())
-
-        def get_nth_random_element(*element_list):
-            """
-            Returns the n-th element of every list from an arbitrary number of given lists.
-            For example, list1 contains IP addresses, list 2 contains MAC addresses. Use of this function ensures that
-            the n-th IP address uses always the n-th MAC address.
-            :param element_list: An arbitrary number of lists.
-            :return: A tuple of the n-th element of every list.
-            """
-            range_max = min([len(x) for x in element_list])
-            if range_max > 0: range_max -= 1
-            n = randint(0, range_max)
-            return tuple(x[n] for x in element_list)
-
-        def index_increment(number: int, max: int):
-            if number + 1 < max:
-                return number + 1
-            else:
-                return 0
-
-        def getIntervalPPS(complement_interval_pps, timestamp):
-            """
-            Gets the packet rate (pps) for a specific time interval.
-            :param complement_interval_pps: an array of tuples (the last timestamp in the interval, the packet rate in the crresponding interval).
-            :param timestamp: the timestamp at which the packet rate is required.
-            :return: the corresponding packet rate (pps) .
-            """
-            for row in complement_interval_pps:
-                if timestamp <= row[0]:
-                    return row[1]
-            # In case the timestamp > capture max timestamp
-            return complement_interval_pps[-1][1]
-
         def get_attacker_config(ipAddress: str):
             """
             Returns the attacker configuration depending on the IP address, this includes the port for the next
@@ -151,7 +104,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 attacker_ttl_mapping[ipAddress] = ttl
             # return port and TTL
             return next_port, ttl
-
         BUFFER_SIZE = 1000
 
         # Determine source IP and MAC address
