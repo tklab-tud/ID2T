@@ -53,6 +53,13 @@ security_blob_macos = "\x60\x7e\x06\x06\x2b\x06\x01\x05\x05\x02\xa0\x74\x30\x72\
 
 
 def get_smb_version(platform: str):
+    """
+    Returns SMB version based on given platform
+
+    :param platform: the platform as string
+    :return: SMB version as string
+    """
+    check_platform(platform)
     if platform is "linux":
         return random.choice(list(smb_versions_per_samba.values()))
     elif platform is "macos":
@@ -61,12 +68,14 @@ def get_smb_version(platform: str):
         return smb_versions_per_win[platform]
 
 
-def get_rnd_smb_version():
-    platform = get_rnd_os()
-    return get_smb_version(platform)
+def get_smb_platform_data(platform: str, timestamp: float):
+    """
+    Gets platform-dependent data for SMB 2 packets
 
-
-def get_smb_platform_data(platform: str, timestamp=time.time()):
+    :param platform: the platform for which to get SMB 2 packet data
+    :param timestamp: a timestamp for calculating the boot-time
+    :return: server_guid, security_blob, capabilities, data_size and server_start_time of the given platform
+    """
     check_platform(platform)
     if platform == "linux":
         server_guid = "ubuntu"
@@ -85,12 +94,16 @@ def get_smb_platform_data(platform: str, timestamp=time.time()):
         security_blob = security_blob_windows
         capabilities = 0x7
         data_size = 0x100000
-        server_start_time = get_rnd_boot_time(timestamp)
+        server_start_time = get_filetime_format(get_rnd_boot_time(timestamp))
     return server_guid, security_blob, capabilities, data_size, server_start_time
 
 
-# Check smb version
-def invalid_version(version: str):
+def invalid_smb_version(version: str):
+    """
+    Prints an error and exits
+
+    :param version: the invalid SMB
+    """
     print("\nInvalid smb version: " + version +
           "\nPlease select one of the following versions: ", smb_versions)
     exit(1)

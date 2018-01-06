@@ -72,7 +72,6 @@ class SMBScanAttack(BaseAttack.BaseAttack):
         else:
             ip_destinations = all_ips
         self.add_param_value(Param.IP_DESTINATION, ip_destinations)
-        # FIXME: MAYBE REMOVE/CHANGE THIS MAC STUFF
         destination_mac = []
         for ip in ip_destinations:
             destination_mac.append(self.statistics.get_mac_address(str(ip)))
@@ -126,6 +125,8 @@ class SMBScanAttack(BaseAttack.BaseAttack):
 
         def get_ip_data(ip_address: str):
             """
+            Gets the MSS, TTL and Windows Size values of a given IP
+
             :param ip_address: the ip of which (packet-)data shall be returned
             :return: MSS, TTL and Window Size values of the given IP
             """
@@ -178,10 +179,10 @@ class SMBScanAttack(BaseAttack.BaseAttack):
         # Check smb version
         smb_version = self.get_param_value(Param.PROTOCOL_VERSION)
         if smb_version not in smb_versions:
-            invalid_version(smb_version)
+            invalid_smb_version(smb_version)
         hosting_version = self.get_param_value(Param.HOSTING_VERSION)
         if hosting_version not in smb_versions:
-            invalid_version(hosting_version)
+            invalid_smb_version(hosting_version)
         # Check source platform
         src_platform = self.get_param_value(Param.SOURCE_PLATFORM).lower()
         packets = []
