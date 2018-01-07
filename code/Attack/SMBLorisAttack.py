@@ -42,7 +42,8 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
             Param.INJECT_AT_TIMESTAMP: ParameterTypes.TYPE_FLOAT,
             Param.INJECT_AFTER_PACKET: ParameterTypes.TYPE_PACKET_POSITION,
             Param.PACKETS_PER_SECOND: ParameterTypes.TYPE_FLOAT,
-            Param.ATTACK_DURATION: ParameterTypes.TYPE_INTEGER_POSITIVE
+            Param.ATTACK_DURATION: ParameterTypes.TYPE_INTEGER_POSITIVE,
+            Param.NUMBER_ATTACKERS: ParameterTypes.TYPE_INTEGER_POSITIVE
         }
 
     def init_params(self):
@@ -59,12 +60,17 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
         if isinstance(most_used_ip_address, list):
             most_used_ip_address = most_used_ip_address[0]
 
-        self.add_param_value(Param.IP_SOURCE, most_used_ip_address)
-        self.add_param_value(Param.MAC_SOURCE, self.statistics.get_mac_address(most_used_ip_address))
+        # The most used IP class in background traffic
+        most_used_ip_class = self.statistics.process_db_query("most_used(ipClass)")
+        num_attackers = randint(1, 16)
+        source_ip = self.generate_random_ipv4_address(most_used_ip_class, num_attackers)
+
+        self.add_param_value(Param.IP_SOURCE, source_ip)
+        self.add_param_value(Param.MAC_SOURCE, self.generate_random_mac_address(num_attackers))
 
         random_ip_address = self.statistics.get_random_ip_address()
         # ip-dst should be valid and not equal to ip.src
-        while not self.is_valid_ip_address(random_ip_address) or random_ip_address==most_used_ip_address:
+        while not self.is_valid_ip_address(random_ip_address) or random_ip_address == source_ip:
             random_ip_address = self.statistics.get_random_ip_address()
 
         self.add_param_value(Param.IP_DESTINATION, random_ip_address)
@@ -139,101 +145,130 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
 
             return mss_value, ttl_value, win_value
 
-        mac_source = self.get_param_value(Param.MAC_SOURCE)
-        mac_destination = self.get_param_value(Param.MAC_DESTINATION)
         pps = self.get_param_value(Param.PACKETS_PER_SECOND)
 
-        # Calculate complement packet rates of the background traffic for each interval
-        complement_interval_pps = self.statistics.calculate_complement_packet_rates(pps)
-
         # Timestamp
-        timestamp_next_pkt = self.get_param_value(Param.INJECT_AT_TIMESTAMP)
+        first_timestamp = self.get_param_value(Param.INJECT_AT_TIMESTAMP)
         # store start time of attack
-        self.attack_start_utime = timestamp_next_pkt
-        timestamp_prv_reply, timestamp_confirm = 0,0
+        self.attack_start_utime = first_timestamp
 
         # Initialize parameters
         packets = []
-        ip_source = self.get_param_value(Param.IP_SOURCE)
         ip_destination = self.get_param_value(Param.IP_DESTINATION)
+        mac_destination = self.get_param_value(Param.MAC_DESTINATION)
+
+        # Determine source IP and MAC address
+        num_attackers = self.get_param_value(Param.NUMBER_ATTACKERS)
+        if (num_attackers is not None) and (num_attackers is not 0):  # user supplied Param.NUMBER_ATTACKERS
+            # The most used IP class in background traffic
+            most_used_ip_class = self.statistics.process_db_query("most_used(ipClass)")
+            # Create random attackers based on user input Param.NUMBER_ATTACKERS
+            ip_source = self.generate_random_ipv4_address(most_used_ip_class, num_attackers)
+            mac_source = self.generate_random_mac_address(num_attackers)
+        else:  # user did not supply Param.NUMBER_ATTACKS
+            # use default values for IP_SOURCE/MAC_SOURCE or overwritten values
+            # if user supplied any values for those params
+            ip_source = self.get_param_value(Param.IP_SOURCE)
+            mac_source = self.get_param_value(Param.MAC_SOURCE)
+
+        ip_source_list = []
+        mac_source_list = []
+
+        if isinstance(ip_source, list):
+            ip_source_list = ip_source
+        else:
+            ip_source_list.append(ip_source)
+
+        if isinstance(mac_source, list):
+            mac_source_list = mac_source
+        else:
+            mac_source_list.append(mac_source)
+
+        if (num_attackers is None) or (num_attackers is 0):
+            num_attackers = min(len(ip_source_list), len(mac_source_list))
 
         # Check ip.src == ip.dst
-        self.ip_src_dst_equal_check(ip_source, ip_destination)
+        self.ip_src_dst_equal_check(ip_source_list, ip_destination)
 
-        # Get MSS, TTL and Window size value for source and destination IP
-        source_mss_value, source_ttl_value, source_win_value = getIpData(ip_source)
+        # Get MSS, TTL and Window size value for destination IP
         destination_mss_value, destination_ttl_value, destination_win_value = getIpData(ip_destination)
 
         minDelay,maxDelay = self.get_reply_delay(ip_destination)
 
         attack_duration = self.get_param_value(Param.ATTACK_DURATION)
-        attack_ends_time = timestamp_next_pkt + attack_duration
+        attack_ends_time = first_timestamp + attack_duration
 
-        sport = 1025
+        victim_pps = pps*num_attackers
 
-        attacker_seq = randint(1000, 50000)
-        victim_seq = randint(1000, 50000)
+        for attacker in range(num_attackers):
+            # Get MSS, TTL and Window size value for source IP(attacker)
+            source_mss_value, source_ttl_value, source_win_value = getIpData(ip_source_list[attacker])
 
-        # FIXME: Improve timestamp generation
-        while timestamp_next_pkt <= attack_ends_time:
-            # Establish TCP connection
-            if sport > 65535:
-                sport = 1025
+            attacker_seq = randint(1000, 50000)
+            victim_seq = randint(1000, 50000)
 
-            # prepare reusable Ethernet- and IP-headers
-            attacker_ether = Ether(src=mac_source, dst=mac_destination)
-            attacker_ip = IP(src=ip_source, dst=ip_destination, ttl=source_ttl_value, flags='DF')
-            victim_ether = Ether(src=mac_destination, dst=mac_source)
-            victim_ip = IP(src=ip_destination, dst=ip_source, ttl=destination_ttl_value, flags='DF')
+            sport = 1025
 
-            # connection request from attacker (client)
-            syn_tcp = TCP(sport=sport, dport=self.smb_port, window=source_win_value, flags='S',
-                          seq=attacker_seq, options=[('MSS', source_mss_value)])
-            attacker_seq += 1
-            syn = (attacker_ether / attacker_ip / syn_tcp)
-            syn.time = timestamp_next_pkt
-            timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, minDelay)
-            packets.append(syn)
+            # Timestamps of first packets shouldn't be exactly the same to look more realistic
+            timestamp_next_pkt = uniform(first_timestamp, first_timestamp+0.010)
 
-            # response from victim (server)
-            synack_tcp = TCP(sport=self.smb_port, dport=sport, seq=victim_seq, ack=attacker_seq, flags='SA',
-                             window=destination_win_value, options=[('MSS', destination_mss_value)])
-            victim_seq += 1
-            synack = (victim_ether / victim_ip / synack_tcp)
-            synack.time = timestamp_next_pkt
-            timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, minDelay)
-            packets.append(synack)
+            while timestamp_next_pkt <= attack_ends_time:
+                # Establish TCP connection
+                if sport > 65535:
+                    sport = 1025
 
-            # acknowledgement from attacker (client)
-            ack_tcp = TCP(sport=sport, dport=self.smb_port, seq=attacker_seq, ack=victim_seq, flags='A',
-                          window=source_win_value, options=[('MSS', source_mss_value)])
-            ack = (attacker_ether / attacker_ip / ack_tcp)
-            ack.time = timestamp_next_pkt
-            timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, minDelay)
-            packets.append(ack)
+                # prepare reusable Ethernet- and IP-headers
+                attacker_ether = Ether(src=mac_source_list[attacker], dst=mac_destination)
+                attacker_ip = IP(src=ip_source_list[attacker], dst=ip_destination, ttl=source_ttl_value, flags='DF')
+                victim_ether = Ether(src=mac_destination, dst=mac_source_list[attacker])
+                victim_ip = IP(src=ip_destination, dst=ip_source_list[attacker], ttl=destination_ttl_value, flags='DF')
 
-            # send NBT session header paket with maximum LENGTH-field
-            req_tcp = TCP(sport=sport, dport=self.smb_port, seq=attacker_seq, ack=victim_seq, flags='AP',
-                          window=source_win_value, options=[('MSS', source_mss_value)])
-            req_payload = NBTSession(TYPE=0x00, LENGTH=0x1FFFF)
+                # connection request from attacker (client)
+                syn_tcp = TCP(sport=sport, dport=self.smb_port, window=source_win_value, flags='S',
+                              seq=attacker_seq, options=[('MSS', source_mss_value)])
+                attacker_seq += 1
+                syn = (attacker_ether / attacker_ip / syn_tcp)
+                syn.time = timestamp_next_pkt
+                timestamp_next_pkt = update_timestamp(timestamp_next_pkt, victim_pps, minDelay)
+                packets.append(syn)
 
-            attacker_seq += len(req_payload)
-            req = (attacker_ether / attacker_ip / req_tcp / req_payload)
-            req.time = timestamp_next_pkt
-            timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, minDelay)
-            packets.append(req)
+                # response from victim (server)
+                synack_tcp = TCP(sport=self.smb_port, dport=sport, seq=victim_seq, ack=attacker_seq, flags='SA',
+                                 window=destination_win_value, options=[('MSS', destination_mss_value)])
+                victim_seq += 1
+                synack = (victim_ether / victim_ip / synack_tcp)
+                synack.time = timestamp_next_pkt
+                timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, minDelay)
+                packets.append(synack)
 
-            # final ack from victim (server)
-            last_ack_tcp = TCP(sport=self.smb_port, dport=sport, seq=victim_seq, ack=attacker_seq, flags='A',
-                               window=destination_win_value, options=[('MSS', destination_mss_value)])
-            last_ack = (victim_ether / victim_ip / last_ack_tcp)
-            last_ack.time = timestamp_next_pkt
-            timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, minDelay)
-            packets.append(last_ack)
+                # acknowledgement from attacker (client)
+                ack_tcp = TCP(sport=sport, dport=self.smb_port, seq=attacker_seq, ack=victim_seq, flags='A',
+                              window=source_win_value, options=[('MSS', source_mss_value)])
+                ack = (attacker_ether / attacker_ip / ack_tcp)
+                ack.time = timestamp_next_pkt
+                timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps)
+                packets.append(ack)
 
-            sport += 1
+                # send NBT session header paket with maximum LENGTH-field
+                req_tcp = TCP(sport=sport, dport=self.smb_port, seq=attacker_seq, ack=victim_seq, flags='AP',
+                              window=source_win_value, options=[('MSS', source_mss_value)])
+                req_payload = NBTSession(TYPE=0x00, LENGTH=0x1FFFF)
 
-            # FIXME: RST?
+                attacker_seq += len(req_payload)
+                req = (attacker_ether / attacker_ip / req_tcp / req_payload)
+                req.time = timestamp_next_pkt
+                timestamp_next_pkt = update_timestamp(timestamp_next_pkt, victim_pps, minDelay)
+                packets.append(req)
+
+                # final ack from victim (server)
+                last_ack_tcp = TCP(sport=self.smb_port, dport=sport, seq=victim_seq, ack=attacker_seq, flags='A',
+                                   window=destination_win_value, options=[('MSS', destination_mss_value)])
+                last_ack = (victim_ether / victim_ip / last_ack_tcp)
+                last_ack.time = timestamp_next_pkt
+                timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, minDelay)
+                packets.append(last_ack)
+
+                sport += 1
 
         # store end time of attack
         self.attack_end_utime = packets[-1].time
