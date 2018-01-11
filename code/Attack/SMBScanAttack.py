@@ -1,21 +1,23 @@
 import logging
 
-from random import shuffle, randint, choice, uniform
+from random import shuffle, randint
 from lea import Lea
+from scapy.layers.inet import IP, Ether, TCP
+from scapy.layers.smb import *
+from scapy.layers.netbios import *
 
 from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes
 from ID2TLib.SMB2 import *
-from ID2TLib.Utility import *
-from ID2TLib.SMBLib import *
-
+from ID2TLib.Utility import update_timestamp, get_interval_pps, get_rnd_os, get_ip_range,\
+    generate_source_port_from_platform, get_filetime_format
+from ID2TLib.SMBLib import smb_port, smb_versions, smb_dialects, get_smb_version, get_smb_platform_data,\
+    invalid_smb_version
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 # noinspection PyPep8
-from scapy.layers.inet import IP, Ether, TCP
-from scapy.layers.smb import *
-from scapy.layers.netbios import *
+
 
 class SMBScanAttack(BaseAttack.BaseAttack):
 
@@ -395,7 +397,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     reply.time = timestamp_reply
                     packets.append(reply)
 
-            pps = max(getIntervalPPS(complement_interval_pps, timestamp_next_pkt), 10)
+            pps = max(get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
             timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps)
 
         # store end time of attack

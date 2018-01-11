@@ -1,18 +1,18 @@
 import logging
-from random import randint, uniform, choice
 
+from random import randint, choice
 from lea import Lea
+from collections import deque
 from scipy.stats import gamma
+from scapy.layers.inet import IP, Ether, TCP, RandShort
 
 from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes
+from ID2TLib.Utility import update_timestamp, get_interval_pps, get_nth_random_element, index_increment
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 # noinspection PyPep8
-from scapy.layers.inet import IP, Ether, TCP, RandShort
-from collections import deque
-from ID2TLib.Utility import *
 
 
 class DDoSAttack(BaseAttack.BaseAttack):
@@ -232,7 +232,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
                     replies_count+=1
                     total_pkt_num += 1
 
-                attacker_pps = max(getIntervalPPS(complement_interval_attacker_pps, timestamp_next_pkt), (pps/num_attackers)/2)
+                attacker_pps = max(get_interval_pps(complement_interval_attacker_pps, timestamp_next_pkt), (pps / num_attackers) / 2)
                 timestamp_next_pkt = update_timestamp(timestamp_next_pkt, attacker_pps)
 
                 # Store timestamp of first packet (for attack label)

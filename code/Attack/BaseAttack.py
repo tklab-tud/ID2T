@@ -5,16 +5,16 @@ import os
 import random
 import re
 import tempfile
-from abc import abstractmethod, ABCMeta
-from scapy.layers.inet import Ether
 import numpy as np
 
-import ID2TLib.libpcapreader as pr
+from abc import abstractmethod, ABCMeta
+from scapy.layers.inet import Ether
 from scapy.utils import PcapWriter
 
 from Attack import AttackParameters
 from Attack.AttackParameters import Parameter
 from Attack.AttackParameters import ParameterTypes
+import ID2TLib.libpcapreader as pr
 
 
 class BaseAttack(metaclass=ABCMeta):

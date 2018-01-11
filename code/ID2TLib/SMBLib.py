@@ -1,9 +1,8 @@
 from os import urandom
 from binascii import b2a_hex
+from random import random
 
-from ID2TLib.Utility import *
-
-from scapy.layers.netbios import *
+from ID2TLib.Utility import check_platform, get_filetime_format, get_rnd_boot_time
 
 # SMB port
 smb_port = 445

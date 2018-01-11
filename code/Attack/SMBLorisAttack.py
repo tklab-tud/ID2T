@@ -1,26 +1,25 @@
 import logging
-import csv
 
-from random import shuffle, randint, choice, uniform
-
+from random import randint, uniform
 from lea import Lea
+from scapy.layers.inet import IP, Ether, TCP
+from scapy.layers.netbios import NBTSession
 
 from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes
-from ID2TLib.Utility import *
-from ID2TLib.SMBLib import *
+from ID2TLib.Utility import update_timestamp
+from ID2TLib.SMBLib import smb_port
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 # noinspection PyPep8
-from scapy.layers.inet import IP, Ether, TCP
-from scapy.layers.netbios import NBTSession
 
 # Resources:
 # https://github.com/rapid7/metasploit-framework/blob/master/modules/auxiliary/dos/smb/smb_loris.rb
 # https://samsclass.info/124/proj14/smbl.htm
 # https://gist.githubusercontent.com/marcan/6a2d14b0e3eaa5de1795a763fb58641e/raw/565befecf4d9a4a27248d027a90b6e3e5994b5b6/smbloris.c
 # http://smbloris.com/
+
 
 class SMBLorisAttack(BaseAttack.BaseAttack):
 

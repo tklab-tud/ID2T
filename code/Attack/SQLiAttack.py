@@ -1,7 +1,10 @@
 import logging
-from random import randint, uniform
 
+from random import randint
 from lea import Lea
+from scapy.utils import RawPcapReader
+from scapy.layers.inet import Ether
+from ID2TLib.Utility import update_timestamp, get_interval_pps
 
 from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
@@ -9,9 +12,6 @@ from Attack.AttackParameters import ParameterTypes
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 # noinspection PyPep8
-from scapy.utils import RawPcapReader
-from scapy.layers.inet import IP, Ether, TCP, RandShort
-from ID2TLib.Utility import *
 
 
 class SQLiAttack(BaseAttack.BaseAttack):
@@ -187,7 +187,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
                     new_pkt = (eth_frame / ip_pkt/ tcp_pkt / str_tcp_seg)
                     new_pkt.time = timestamp_next_pkt
 
-                    pps = max(getIntervalPPS(complement_interval_pps, timestamp_next_pkt), 10)
+                    pps = max(get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
                     timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps) + float(timeSteps.random())
 
                 # Victim --> attacker
@@ -249,7 +249,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
                     new_pkt = (eth_frame / ip_pkt / tcp_pkt / str_tcp_seg)
                     new_pkt.time = timestamp_next_pkt
 
-                    pps = max(getIntervalPPS(complement_interval_pps, timestamp_next_pkt), 10)
+                    pps = max(get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
                     timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps) + float(timeSteps.random())
 
                 # Victim --> attacker

@@ -1,14 +1,13 @@
-import logging
+import ipaddress
 
 from random import randint, uniform
-from datetime import datetime, timedelta, tzinfo
+from datetime import datetime
 from calendar import timegm
-
 from lea import Lea
 
-from scapy.layers.netbios import *
-
 platforms = {"win7", "win10", "winxp", "win8.1", "macos", "linux", "win8", "winvista", "winnt", "win2000"}
+platform_probability = {"win7": 48.43, "win10": 27.99, "winxp": 6.07, "win8.1": 6.07, "macos": 5.94, "linux": 3.38,
+                        "win8": 1.35, "winvista": 0.46, "winnt": 0.31}
 
 
 def update_timestamp(timestamp, pps, delay=0):
@@ -28,32 +27,33 @@ def update_timestamp(timestamp, pps, delay=0):
         return timestamp + uniform(1 / pps + delay, 1 / pps + randomdelay.random())
 
 
-def getIntervalPPS(complement_interval_pps, timestamp):
-            """
-            Gets the packet rate (pps) for a specific time interval.
+def get_interval_pps(complement_interval_pps, timestamp):
+    """
+    Gets the packet rate (pps) for a specific time interval.
 
-            :param complement_interval_pps: an array of tuples (the last timestamp in the interval, the packet rate in the crresponding interval).
-            :param timestamp: the timestamp at which the packet rate is required.
-            :return: the corresponding packet rate (pps) .
-            """
-            for row in complement_interval_pps:
-                if timestamp<=row[0]:
-                    return row[1]
-            return complement_interval_pps[-1][1] # in case the timstamp > capture max timestamp
+    :param complement_interval_pps: an array of tuples (the last timestamp in the interval, the packet rate in the
+    corresponding interval).
+    :param timestamp: the timestamp at which the packet rate is required.
+    :return: the corresponding packet rate (pps) .
+    """
+    for row in complement_interval_pps:
+        if timestamp<=row[0]:
+            return row[1]
+    return complement_interval_pps[-1][1] # in case the timstamp > capture max timestamp
 
 
 def get_nth_random_element(*element_list):
-            """
-            Returns the n-th element of every list from an arbitrary number of given lists.
-            For example, list1 contains IP addresses, list 2 contains MAC addresses. Use of this function ensures that
-            the n-th IP address uses always the n-th MAC address.
-            :param element_list: An arbitrary number of lists.
-            :return: A tuple of the n-th element of every list.
-            """
-            range_max = min([len(x) for x in element_list])
-            if range_max > 0: range_max -= 1
-            n = randint(0, range_max)
-            return tuple(x[n] for x in element_list)
+    """
+    Returns the n-th element of every list from an arbitrary number of given lists.
+    For example, list1 contains IP addresses, list 2 contains MAC addresses. Use of this function ensures that
+    the n-th IP address uses always the n-th MAC address.
+    :param element_list: An arbitrary number of lists.
+    :return: A tuple of the n-th element of every list.
+    """
+    range_max = min([len(x) for x in element_list])
+    if range_max > 0: range_max -= 1
+    n = randint(0, range_max)
+    return tuple(x[n] for x in element_list)
 
 
 def index_increment(number: int, max: int):
@@ -69,8 +69,7 @@ def get_rnd_os():
 
     :return: random platform as string
     """
-    os_dist = Lea.fromValFreqsDict({"win7": 48.43, "win10": 27.99, "winxp": 6.07, "win8.1": 6.07, "macos": 5.94,
-                                    "linux": 3.38, "win8": 1.35, "winvista": 0.46, "winnt": 0.31})
+    os_dist = Lea.fromValFreqsDict(platform_probability)
     return os_dist.random()
 
 

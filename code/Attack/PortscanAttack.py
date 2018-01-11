@@ -1,17 +1,18 @@
 import logging
 import csv
 
-from random import shuffle, randint, choice, uniform
-
+from random import shuffle, randint, choice
 from lea import Lea
+from scapy.layers.inet import IP, Ether, TCP
 
 from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes
-from ID2TLib.Utility import *
+from ID2TLib.Utility import update_timestamp, get_interval_pps
+
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 # noinspection PyPep8
-from scapy.layers.inet import IP, Ether, TCP
+
 
 class PortscanAttack(BaseAttack.BaseAttack):
 
@@ -254,7 +255,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
 
                 # else: destination port is NOT OPEN -> no reply is sent by target
 
-            pps = max(getIntervalPPS(complement_interval_pps, timestamp_next_pkt),10)
+            pps = max(get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
             timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps)
 
         # store end time of attack

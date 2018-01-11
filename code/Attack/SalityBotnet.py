@@ -1,17 +1,16 @@
 import logging
-from random import randint, uniform
 
-from lea import Lea
+from random import randint
+from scapy.utils import RawPcapReader
+from scapy.layers.inet import Ether
 
 from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes
+from ID2TLib.Utility import update_timestamp, get_interval_pps
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 # noinspection PyPep8
-from scapy.utils import RawPcapReader
-from scapy.layers.inet import IP, Ether, TCP, RandShort
-from ID2TLib.Utility import *
 
 
 class SalityBotnet(BaseAttack.BaseAttack):
@@ -123,7 +122,7 @@ class SalityBotnet(BaseAttack.BaseAttack):
             new_pkt = (eth_frame / ip_pkt)
             new_pkt.time = timestamp_next_pkt
 
-            pps = max(getIntervalPPS(complement_interval_pps, timestamp_next_pkt), 10)
+            pps = max(get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
             timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps)
 
             packets.append(new_pkt)
