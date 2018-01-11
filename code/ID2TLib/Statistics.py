@@ -499,6 +499,12 @@ class Statistics:
         result_dict = {key: value for (key, value) in result}
         return result_dict
 
+    def get_ip_address_count(self):
+        return self.process_db_query("SELECT COUNT(*) FROM ip_statistics")
+
+    def get_ip_addresses(self):
+        return self.process_db_query("SELECT ipAddress FROM ip_statistics")
+
     def get_random_ip_address(self, count: int = 1):
         """
         :param count: The number of IP addreses to return
@@ -512,6 +518,13 @@ class Statistics:
             for i in range(0, count):
                 ip_address_list.append(self.process_db_query("random(all(ipAddress))"))
             return ip_address_list
+
+    def get_ip_address_from_mac(self, macAddress: str):
+        """
+        :param macAddress: the MAC address of which the IP shall be returned, if existing in DB
+        :return: the IP address used in the dataset by a given MAC address
+        """
+        return self.process_db_query('ipAddress(macAddress=' + macAddress + ")")
 
     def get_mac_address(self, ipAddress: str):
         """
