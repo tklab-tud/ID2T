@@ -1,5 +1,10 @@
 #!/bin/bash
 
+# Install required packages
+if [ "$1" != '--non-interactive' ]; then
+    ./resources/install_dependencies.sh
+fi
+
 # Create the Makefile using cmake, from a clean build directory
 cd code_boost/src/build/
 if [ ${PWD##*/} = 'build' ]; then
