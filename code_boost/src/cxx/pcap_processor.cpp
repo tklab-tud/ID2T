@@ -52,10 +52,18 @@ std::string pcap_processor::merge_pcaps(const std::string pcap_path) {
     std::string new_filepath = filePath;
     const std::string &newExt = "_" + tstmp + ".pcap";
     std::string::size_type h = new_filepath.rfind('.', new_filepath.length());
-    if (h != std::string::npos) {
-        new_filepath.replace(h, newExt.length(), newExt);
-    } else {
-        new_filepath.append(newExt);
+
+    if ((filePath.length() + newExt.length()) < 250) {
+
+        if (h != std::string::npos) {
+            new_filepath.replace(h, newExt.length(), newExt);
+        } else {
+            new_filepath.append(newExt);
+        }
+    }
+
+    else {
+        new_filepath = (new_filepath.substr(0, new_filepath.find('_'))).append(newExt);
     }
 
     FileSniffer sniffer_base(filePath);
