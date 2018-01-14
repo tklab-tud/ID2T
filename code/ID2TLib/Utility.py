@@ -218,3 +218,52 @@ def get_rnd_bytes(count=1, ignore=None):
             char = urandom(1)
         result += char
     return result
+
+
+def get_bytes_from_file(filepath):
+    """
+    Converts the content of a file into its byte representation
+    The content of the file can either be a string or hexadecimal numbers/bytes (e.g. shellcode)
+    The file must have the keyword "str" or "hex" in its first line to specify the rest of the content
+    If the content is hex, whitespaces, backslashes, "x", quotation marks and "+" are removed
+    Example for a hexadecimal input file:
+
+        hex
+        "abcd ef \xff10\ff 'xaa' x \ ab"
+
+    Output: b'\xab\xcd\xef\xff\x10\xff\xaa\xab'
+
+    :param filepath: The path of the file from which to get the bytes
+    :return: The bytes of the file (either a byte representation of a string or the bytes contained in the file)
+    """
+    try:
+        file = open(filepath)
+        result_bytes = b''
+        header = file.readline().strip()
+        content = file.read()
+
+        if header == "hex":
+            content = content.replace(" ", "").replace("\n", "").replace("\\", "").replace("x", "").replace("\"", "")\
+                .replace("'", "").replace("+", "").replace("\r", "")
+            try:
+                result_bytes = bytes.fromhex(content)
+            except ValueError:
+                print("\nERROR: Content of file is not all hexadecimal.")
+                exit(1)
+        elif header == "str":
+            result_bytes = content.encode()
+        else:
+            print("\nERROR: Invalid header found: " + header + ". Try 'hex' or 'str' followed by endline instead.")
+            exit(1)
+
+        for forbidden_char in forbidden_chars:
+            if forbidden_char in result_bytes:
+                print("\nERROR: Forbidden character found in payload: ", forbidden_char)
+                exit(1)
+
+        file.close()
+        return result_bytes
+
+    except FileNotFoundError:
+        print("\nERROR: File not found: ", filepath)
+        exit(1)

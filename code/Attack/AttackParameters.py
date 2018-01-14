@@ -42,6 +42,8 @@ class Parameter(Enum):
     PROTOCOL_VERSION = 'protocol.version'
     HOSTING_VERSION = 'hosting.version'
     SOURCE_PLATFORM = 'src.platform'
+    CUSTOM_PAYLOAD = 'custom.payload'  # custom payload for ftp exploits
+    CUSTOM_PAYLOAD_FILE = 'custom.payload.file'  # file that contains custom payload for ftp exploits
 
 
 class ParameterTypes(Enum):
