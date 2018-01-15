@@ -1,17 +1,18 @@
 import logging
 import csv
 
-from random import shuffle, randint, choice, uniform
-
+from random import shuffle, randint, choice
 from lea import Lea
+from scapy.layers.inet import IP, Ether, TCP
 
 from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes
+from ID2TLib.Utility import update_timestamp, get_interval_pps
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 # noinspection PyPep8
-from scapy.layers.inet import IP, Ether, TCP
+
 
 class PortscanAttack(BaseAttack.BaseAttack):
 
@@ -108,34 +109,9 @@ class PortscanAttack(BaseAttack.BaseAttack):
         return port_dst_shuffled
 
     def generate_attack_pcap(self):
-        def update_timestamp(timestamp, pps, delay=0):
-            """
-            Calculates the next timestamp to be used based on the packet per second rate (pps) and the maximum delay.
 
-            :return: Timestamp to be used for the next packet.
-            """
-            if delay == 0:
-                # Calculate request timestamp
-                # To imitate the bursty behavior of traffic
-                randomdelay = Lea.fromValFreqsDict({1 / pps: 70, 2 / pps: 20, 5 / pps: 7, 10 / pps: 3})
-                return timestamp + uniform(1/pps ,  randomdelay.random())
-            else:
-                # Calculate reply timestamp
-                randomdelay = Lea.fromValFreqsDict({2*delay: 70, 3*delay: 20, 5*delay: 7, 10*delay: 3})
-                return timestamp + uniform(1 / pps + delay,  1 / pps + randomdelay.random())
 
-        def getIntervalPPS(complement_interval_pps, timestamp):
-            """
-            Gets the packet rate (pps) for a specific time interval.
 
-            :param complement_interval_pps: an array of tuples (the last timestamp in the interval, the packet rate in the crresponding interval).
-            :param timestamp: the timestamp at which the packet rate is required.
-            :return: the corresponding packet rate (pps) .
-            """
-            for row in complement_interval_pps:
-                if timestamp<=row[0]:
-                    return row[1]
-            return complement_interval_pps[-1][1] # in case the timstamp > capture max timestamp
 
         mac_source = self.get_param_value(Param.MAC_SOURCE)
         mac_destination = self.get_param_value(Param.MAC_DESTINATION)
@@ -279,7 +255,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
 
                 # else: destination port is NOT OPEN -> no reply is sent by target
 
-            pps = max(getIntervalPPS(complement_interval_pps, timestamp_next_pkt),10)
+            pps = max(get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
             timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps)
 
         # store end time of attack

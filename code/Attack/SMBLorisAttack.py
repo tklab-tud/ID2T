@@ -1,18 +1,18 @@
 import logging
-import csv
 
-from random import shuffle, randint, choice, uniform
-
+from random import randint, uniform
 from lea import Lea
+from scapy.layers.inet import IP, Ether, TCP
+from scapy.layers.netbios import NBTSession
 
 from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes
+from ID2TLib.Utility import update_timestamp
+from ID2TLib.SMBLib import smb_port
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 # noinspection PyPep8
-from scapy.layers.inet import IP, Ether, TCP
-from scapy.layers.netbios import NBTSession
 
 # Resources:
 # https://github.com/rapid7/metasploit-framework/blob/master/modules/auxiliary/dos/smb/smb_loris.rb
@@ -20,9 +20,8 @@ from scapy.layers.netbios import NBTSession
 # https://gist.githubusercontent.com/marcan/6a2d14b0e3eaa5de1795a763fb58641e/raw/565befecf4d9a4a27248d027a90b6e3e5994b5b6/smbloris.c
 # http://smbloris.com/
 
+
 class SMBLorisAttack(BaseAttack.BaseAttack):
-    # SMB port
-    smb_port = 445
 
     def __init__(self):
         """
@@ -85,35 +84,6 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.ATTACK_DURATION, 30)
 
     def generate_attack_pcap(self):
-        def update_timestamp(timestamp, pps, delay=0):
-            """
-            Calculates the next timestamp to be used based on the packet per second rate (pps) and the maximum delay.
-
-            :return: Timestamp to be used for the next packet.
-            """
-            if delay == 0:
-                # Calculate request timestamp
-                # To imitate the bursty behavior of traffic
-                randomdelay = Lea.fromValFreqsDict({1 / pps: 70, 2 / pps: 20, 5 / pps: 7, 10 / pps: 3})
-                return timestamp + uniform(1/pps ,  randomdelay.random())
-            else:
-                # Calculate reply timestamp
-                randomdelay = Lea.fromValFreqsDict({2*delay: 70, 3*delay: 20, 5*delay: 7, 10*delay: 3})
-                return timestamp + uniform(1 / pps + delay,  1 / pps + randomdelay.random())
-
-        def getIntervalPPS(complement_interval_pps, timestamp):
-            """
-            Gets the packet rate (pps) for a specific time interval.
-
-            :param complement_interval_pps: an array of tuples (the last timestamp in the interval, the packet rate in the crresponding interval).
-            :param timestamp: the timestamp at which the packet rate is required.
-            :return: the corresponding packet rate (pps) .
-            """
-            for row in complement_interval_pps:
-                if timestamp<=row[0]:
-                    return row[1]
-            return complement_interval_pps[-1][1] # in case the timstamp > capture max timestamp
-
         def getIpData(ip_address: str):
             """
             :param ip_address: the ip of which (packet-)data shall be returned
@@ -224,7 +194,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
                 victim_ip = IP(src=ip_destination, dst=ip_source_list[attacker], ttl=destination_ttl_value, flags='DF')
 
                 # connection request from attacker (client)
-                syn_tcp = TCP(sport=sport, dport=self.smb_port, window=source_win_value, flags='S',
+                syn_tcp = TCP(sport=sport, dport=smb_port, window=source_win_value, flags='S',
                               seq=attacker_seq, options=[('MSS', source_mss_value)])
                 attacker_seq += 1
                 syn = (attacker_ether / attacker_ip / syn_tcp)
@@ -233,7 +203,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
                 packets.append(syn)
 
                 # response from victim (server)
-                synack_tcp = TCP(sport=self.smb_port, dport=sport, seq=victim_seq, ack=attacker_seq, flags='SA',
+                synack_tcp = TCP(sport=smb_port, dport=sport, seq=victim_seq, ack=attacker_seq, flags='SA',
                                  window=destination_win_value, options=[('MSS', destination_mss_value)])
                 victim_seq += 1
                 synack = (victim_ether / victim_ip / synack_tcp)
@@ -242,7 +212,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
                 packets.append(synack)
 
                 # acknowledgement from attacker (client)
-                ack_tcp = TCP(sport=sport, dport=self.smb_port, seq=attacker_seq, ack=victim_seq, flags='A',
+                ack_tcp = TCP(sport=sport, dport=smb_port, seq=attacker_seq, ack=victim_seq, flags='A',
                               window=source_win_value, options=[('MSS', source_mss_value)])
                 ack = (attacker_ether / attacker_ip / ack_tcp)
                 ack.time = timestamp_next_pkt
@@ -250,7 +220,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
                 packets.append(ack)
 
                 # send NBT session header paket with maximum LENGTH-field
-                req_tcp = TCP(sport=sport, dport=self.smb_port, seq=attacker_seq, ack=victim_seq, flags='AP',
+                req_tcp = TCP(sport=sport, dport=smb_port, seq=attacker_seq, ack=victim_seq, flags='AP',
                               window=source_win_value, options=[('MSS', source_mss_value)])
                 req_payload = NBTSession(TYPE=0x00, LENGTH=0x1FFFF)
 
@@ -261,7 +231,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
                 packets.append(req)
 
                 # final ack from victim (server)
-                last_ack_tcp = TCP(sport=self.smb_port, dport=sport, seq=victim_seq, ack=attacker_seq, flags='A',
+                last_ack_tcp = TCP(sport=smb_port, dport=sport, seq=victim_seq, ack=attacker_seq, flags='A',
                                    window=destination_win_value, options=[('MSS', destination_mss_value)])
                 last_ack = (victim_ether / victim_ip / last_ack_tcp)
                 last_ack.time = timestamp_next_pkt

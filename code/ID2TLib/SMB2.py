@@ -3,7 +3,6 @@ from scapy.fields import *
 from scapy.layers.netbios import NBTSession
 
 
-
 class SMB2_SYNC_Header(Packet):
     namez = "SMB2Negociate Protocol Response Header"
     fields_desc = [StrFixedLenField("Start","\xfeSMB", 4),
@@ -20,6 +19,7 @@ class SMB2_SYNC_Header(Packet):
                    LELongField("SessionID", 0),
                    LELongField("Signature1", 0),
                    LELongField("Signature2", 0)]
+
 
 #No Support of Security Buffer , Padding or Dialect Revision 0x0311
 class SMB2_Negotiate_Protocol_Response(Packet):
@@ -39,7 +39,6 @@ class SMB2_Negotiate_Protocol_Response(Packet):
                    LEShortField("SecurityBufferLength", 0),
                    StrLenField("SecurityBlob", "", length_from=lambda x: x.ByteCount + 16),
                    LEIntField("NegotiateContextOffset/Reserved2", 0)]
-
 
 
 bind_layers(NBTSession, SMB2_SYNC_Header,)
