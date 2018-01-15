@@ -1,6 +1,7 @@
 import ipaddress
 
 from random import randint, uniform
+from os import urandom
 from datetime import datetime
 from calendar import timegm
 from lea import Lea
@@ -8,6 +9,14 @@ from lea import Lea
 platforms = {"win7", "win10", "winxp", "win8.1", "macos", "linux", "win8", "winvista", "winnt", "win2000"}
 platform_probability = {"win7": 48.43, "win10": 27.99, "winxp": 6.07, "win8.1": 6.07, "macos": 5.94, "linux": 3.38,
                         "win8": 1.35, "winvista": 0.46, "winnt": 0.31}
+
+x86_nops = {b'\x90', b'\xfc', b'\xfd', b'\xf8', b'\xf9', b'\xf5', b'\x9b'}
+x86_pseudo_nops = {b'\x97', b'\x96', b'\x95', b'\x93', b'\x92', b'\x91', b'\x99', b'\x4d', b'\x48', b'\x47', b'\x4f',
+                   b'\x40', b'\x41', b'\x37', b'\x3f', b'\x27', b'\x2f', b'\x46', b'\x4e', b'\x98', b'\x9f', b'\x4a',
+                   b'\x44', b'\x42', b'\x43', b'\x49', b'\x4b', b'\x45', b'\x4c', b'\x60', b'\x0e', b'\x1e', b'\x50',
+                   b'\x55', b'\x53', b'\x51', b'\x57', b'\x52', b'\x06', b'\x56', b'\x54', b'\x16', b'\x58', b'\x5d',
+                   b'\x5b', b'\x59', b'\x5f', b'\x5a', b'\x5e', b'\xd6'}
+forbidden_chars = [b'\x00', b'\x0a', b'\x0d']
 
 
 def update_timestamp(timestamp, pps, delay=0):
@@ -167,3 +176,94 @@ def get_rnd_boot_time(timestamp, platform="winxp"):
                                                365: 0.78125, 1461: 0.78125})
     timestamp -= randint(0, uptime_in_days.random()*86400)
     return timestamp
+
+
+def get_rnd_x86_nop(count=1, side_effect_free=False, char_filter=set()):
+    """
+    Generates a specified number of x86 single-byte (pseudo-)NOPs
+
+    :param count: The number of bytes to generate
+    :param side_effect_free: Determines whether NOPs with side-effects (to registers or the stack) are allowed
+    :param char_filter: A set of bytes which are forbidden to generate
+    :return: Random x86 NOP bytestring
+    """
+    result = b''
+    nops = x86_nops
+    if not side_effect_free:
+        nops |= x86_pseudo_nops
+
+    if not isinstance(char_filter, set):
+        char_filter = set(char_filter)
+    nops = list(nops-char_filter)
+
+    for i in range(0, count):
+        result += nops[randint(0, len(nops) - 1)]
+    return result
+
+
+def get_rnd_bytes(count=1, ignore=None):
+    """
+    Generates a specified number of random bytes while excluding unwanted bytes
+
+    :param count: Number of wanted bytes
+    :param ignore: The bytes, which should be ignored, as an array
+    :return: Random bytestring
+    """
+    if ignore is None:
+        ignore = []
+    result = b''
+    for i in range(0, count):
+        char = urandom(1)
+        while char in ignore:
+            char = urandom(1)
+        result += char
+    return result
+
+
+def get_bytes_from_file(filepath):
+    """
+    Converts the content of a file into its byte representation
+    The content of the file can either be a string or hexadecimal numbers/bytes (e.g. shellcode)
+    The file must have the keyword "str" or "hex" in its first line to specify the rest of the content
+    If the content is hex, whitespaces, backslashes, "x", quotation marks and "+" are removed
+    Example for a hexadecimal input file:
+
+        hex
+        "abcd ef \xff10\ff 'xaa' x \ ab"
+
+    Output: b'\xab\xcd\xef\xff\x10\xff\xaa\xab'
+
+    :param filepath: The path of the file from which to get the bytes
+    :return: The bytes of the file (either a byte representation of a string or the bytes contained in the file)
+    """
+    try:
+        file = open(filepath)
+        result_bytes = b''
+        header = file.readline().strip()
+        content = file.read()
+
+        if header == "hex":
+            content = content.replace(" ", "").replace("\n", "").replace("\\", "").replace("x", "").replace("\"", "")\
+                .replace("'", "").replace("+", "").replace("\r", "")
+            try:
+                result_bytes = bytes.fromhex(content)
+            except ValueError:
+                print("\nERROR: Content of file is not all hexadecimal.")
+                exit(1)
+        elif header == "str":
+            result_bytes = content.encode()
+        else:
+            print("\nERROR: Invalid header found: " + header + ". Try 'hex' or 'str' followed by endline instead.")
+            exit(1)
+
+        for forbidden_char in forbidden_chars:
+            if forbidden_char in result_bytes:
+                print("\nERROR: Forbidden character found in payload: ", forbidden_char)
+                exit(1)
+
+        file.close()
+        return result_bytes
+
+    except FileNotFoundError:
+        print("\nERROR: File not found: ", filepath)
+        exit(1)
