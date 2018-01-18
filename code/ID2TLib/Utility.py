@@ -188,9 +188,9 @@ def get_rnd_x86_nop(count=1, side_effect_free=False, char_filter=set()):
     :return: Random x86 NOP bytestring
     """
     result = b''
-    nops = x86_nops
+    nops = x86_nops.copy()
     if not side_effect_free:
-        nops |= x86_pseudo_nops
+        nops |= x86_pseudo_nops.copy()
 
     if not isinstance(char_filter, set):
         char_filter = set(char_filter)
@@ -249,16 +249,19 @@ def get_bytes_from_file(filepath):
                 result_bytes = bytes.fromhex(content)
             except ValueError:
                 print("\nERROR: Content of file is not all hexadecimal.")
+                file.close()
                 exit(1)
         elif header == "str":
-            result_bytes = content.encode()
+            result_bytes = content.strip().encode()
         else:
             print("\nERROR: Invalid header found: " + header + ". Try 'hex' or 'str' followed by endline instead.")
+            file.close()
             exit(1)
 
         for forbidden_char in forbidden_chars:
             if forbidden_char in result_bytes:
                 print("\nERROR: Forbidden character found in payload: ", forbidden_char)
+                file.close()
                 exit(1)
 
         file.close()

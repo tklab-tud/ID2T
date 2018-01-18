@@ -1,0 +1,2 @@
+hex
+"abcd ef \xff10\ff 'xaa' x \ ab"
