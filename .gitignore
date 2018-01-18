@@ -20,6 +20,8 @@ tures/*
 
 code/*.pcap
 code/*.xml
+code/.coverage
+code/htmlcov/
 dbs/
 *.csv
 *.stat
@@ -28,3 +30,6 @@ code_boost/src/cxx/CMakeLists.txt
 code_boost/src/cxx/cmake-build-debug/
 code_boost/src/SQLiteCpp/
 code_boost/src/cmake-build-debug/
+
+run_tests
+run_coverage
