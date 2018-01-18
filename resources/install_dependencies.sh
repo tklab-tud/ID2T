@@ -84,6 +84,10 @@ install_pip()
     fi
 }
 
+# Make sure the SQLiteCpp submodule is there
+echo -e "Updating SQLiteCpp"
+git submodule update --init
+
 KERNEL=$(uname)
 
 if [ $KERNEL = 'Darwin' ]; then
