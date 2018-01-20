@@ -1,5 +1,6 @@
 from unittest import TestCase
 from ID2TLib.Utility import *
+from Test.Lib import test_resource_dir
 
 
 class TestUtility(TestCase):
@@ -154,20 +155,20 @@ class TestUtility(TestCase):
 
     def test_get_bytes_from_file_invalid_path(self):
         with self.assertRaises(SystemExit):
-            get_bytes_from_file("resources/NonExistingFile.txt")
+            get_bytes_from_file(test_resource_dir+"/NonExistingFile.txt")
 
     def test_get_bytes_from_file_invalid_header(self):
         with self.assertRaises(SystemExit):
-            get_bytes_from_file("resources/InvalidHeader.txt")
+            get_bytes_from_file(test_resource_dir+"/InvalidHeader.txt")
 
     def test_get_bytes_from_file_invalid_hexfile(self):
         with self.assertRaises(SystemExit):
-            get_bytes_from_file("resources/InvalidHexFile.txt")
+            get_bytes_from_file(test_resource_dir+"/InvalidHexFile.txt")
 
     def test_get_bytes_from_file_str(self):
-        result = get_bytes_from_file("resources/StringTestFile.txt")
+        result = get_bytes_from_file(test_resource_dir+"/StringTestFile.txt")
         self.assertEqual(result, b'This is a string-test')
 
     def test_get_bytes_from_file_hex(self):
-        result = get_bytes_from_file("resources/HexTestFile.txt")
+        result = get_bytes_from_file(test_resource_dir+"/HexTestFile.txt")
         self.assertEqual(result, b'\xab\xcd\xef\xff\x10\xff\xaa\xab')

@@ -4,6 +4,7 @@ import hashlib
 from definitions import ROOT_DIR
 
 # TODO: generate better test pcap (1000-2000 packets)
+test_resource_dir = ROOT_DIR + "/../resources/test"
 test_pcap = ROOT_DIR + "/../resources/test/test.pcap"
 test_pcap_ips = ["192.168.189.143", "192.168.189.1"]
 
