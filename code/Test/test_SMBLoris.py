@@ -5,10 +5,10 @@ from Test.GenericTest import GenericTest
 from Test.Lib import test_pcap_ips
 
 # FIXME: create new hashes if new test.pcap is used
-sha_default = 'cd02bcc6376f4701d13384cbec6e210ea99308dca5d08f58edd3ab190cd50bf2'
-sha_one_attacker = '887226f047456608c5c8746c91d387ffa35777650f083564e0104e381155c58e'
-sha_one_hundred_attackers = '3cab29e73bc048ea7cbffde51f5637fe00256d896a6788db27fbec3804f19cc9'
-sha_ips_in_pcap = '4a072c57bf97c8543305964c4df4de5f010df7da22fc8f414ccbbf88b962ae86'
+sha_default = 'e6201c4a6b42fb86304b935ee522d4c1f655bc19a4646c4df45a64bb504a0b5c'
+sha_one_attacker = '538f584a7a12488269cb22a2986cd0e6f32f0c243c7cce72c5deb5230167897c'
+sha_one_hundred_attackers = '57109467aa427f9d385e54b8faab332859a1d86f00eb762b27adc0b167d201ff'
+sha_ips_in_pcap = 'bb54c042f870467021958d5f6947d21876b1fa5cda5f27da41adebac8cd44b74'
 
 """
 CURRENT COVERAGE
