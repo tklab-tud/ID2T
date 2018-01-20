@@ -73,6 +73,12 @@ class TestUtility(TestCase):
         result = ["192.168.179.1", "192.168.179.0", "192.168.178.255", "192.168.178.254"]
         self.assertEqual(get_ip_range(start, end), result)
 
+    def test_get_ip_range_equal(self):
+        end = "192.168.178.254"
+        start = "192.168.178.254"
+        result = ["192.168.178.254"]
+        self.assertEqual(get_ip_range(start, end), result)
+
     def test_generate_source_port_from_platform_invalid(self):
         with self.assertRaises(SystemExit):
             generate_source_port_from_platform("abc")
@@ -141,6 +147,14 @@ class TestUtility(TestCase):
                 correct = False
         self.assertTrue(correct)
 
+    def test_get_rnd_x86_nop_single_filter(self):
+        result = get_rnd_x86_nop(1000, False, b'\x20')
+        correct = True
+        for byte in result:
+            if byte.to_bytes(1, "little") == b'\x20':
+                correct = False
+        self.assertTrue(correct)
+
     def test_get_rnd_bytes_number(self):
         result = get_rnd_bytes(1000)
         self.assertEqual(len(result), 1000)
@@ -164,6 +178,10 @@ class TestUtility(TestCase):
     def test_get_bytes_from_file_invalid_hexfile(self):
         with self.assertRaises(SystemExit):
             get_bytes_from_file(test_resource_dir+"/InvalidHexFile.txt")
+
+    def test_get_bytes_from_file_invalid_strfile(self):
+        with self.assertRaises(SystemExit):
+            get_bytes_from_file(test_resource_dir+"/InvalidStringFile.txt")
 
     def test_get_bytes_from_file_str(self):
         result = get_bytes_from_file(test_resource_dir+"/StringTestFile.txt")
