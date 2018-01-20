@@ -26,6 +26,7 @@ def get_sha256(file):
             if not data:
                 break
             sha.update(data)
+    f.close()
     return sha.hexdigest()
 
 
