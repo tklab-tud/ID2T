@@ -22,3 +22,11 @@ def get_sha256(file):
 def clean_up(controller):
     os.remove(controller.pcap_dest_path)
     os.remove(controller.label_manager.label_file_path)
+
+
+def get_bytes(count, ignore):
+    return b'A' * count
+
+
+def get_x86_nop(count, side_effect_free, char_filter):
+    return b'\x90' * count
