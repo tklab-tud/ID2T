@@ -20,8 +20,8 @@ tures/*
 
 code/*.pcap
 code/*.xml
-code/.coverage
-code/htmlcov/
+.coverage
+htmlcov/
 dbs/
 *.csv
 *.stat
@@ -32,4 +32,3 @@ code_boost/src/SQLiteCpp/
 code_boost/src/cmake-build-debug/
 
 run_tests
-run_coverage

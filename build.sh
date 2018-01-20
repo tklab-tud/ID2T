@@ -57,7 +57,7 @@ ID2T_DIR=\$(readlink -f \$0)
 SCRIPT_PATH=\${ID2T_DIR%/*}
 cd \$SCRIPT_PATH/code
 # Execute tests
-coverage run --source=. -m unittest discover -s Test/
+PYTHONWARNINGS="ignore" coverage run --source=. -m unittest discover -s Test/ >/dev/null
 coverage html
 coverage report -m
 EOF
