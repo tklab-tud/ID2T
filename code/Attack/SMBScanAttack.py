@@ -10,8 +10,9 @@ from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes
 from ID2TLib.SMB2 import *
-from ID2TLib.Utility import update_timestamp, get_interval_pps, get_rnd_os, get_ip_range,\
+from ID2TLib.Utility import update_timestamp, get_interval_pps, get_ip_range,\
     generate_source_port_from_platform, get_filetime_format
+import ID2TLib.Utility
 from ID2TLib.SMBLib import smb_port, smb_versions, smb_dialects, get_smb_version, get_smb_platform_data,\
     invalid_smb_version
 
@@ -89,9 +90,9 @@ class SMBScanAttack(BaseAttack.BaseAttack):
 
         rnd_ip_count = self.statistics.get_ip_address_count()/2
         self.add_param_value(Param.HOSTING_IP, self.statistics.get_random_ip_address(rnd_ip_count))
-        self.host_os = get_rnd_os()
+        self.host_os = ID2TLib.Utility.get_rnd_os()
         self.add_param_value(Param.HOSTING_VERSION, get_smb_version(platform=self.host_os))
-        self.add_param_value(Param.SOURCE_PLATFORM, get_rnd_os())
+        self.add_param_value(Param.SOURCE_PLATFORM, ID2TLib.Utility.get_rnd_os())
         self.add_param_value(Param.PROTOCOL_VERSION, "1")
         self.add_param_value(Param.IP_DESTINATION_END, "0.0.0.0")
 
