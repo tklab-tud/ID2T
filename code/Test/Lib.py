@@ -67,3 +67,14 @@ def get_x86_nop(count, side_effect_free, char_filter):
     :return: a count of \x90
     """
     return b'\x90' * count
+
+
+def get_win_size(pkts_num):
+    result = []
+    for i in range(0, pkts_num):
+        result.append(10)
+    return result
+
+
+def get_rnd_short():
+    return 10

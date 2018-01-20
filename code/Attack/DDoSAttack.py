@@ -170,8 +170,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         attack_duration = self.get_param_value(Param.ATTACK_DURATION)
         pkts_num = int(pps * attack_duration)
 
-        source_win_sizes = self.statistics.process_db_query(
-                "SELECT DISTINCT winSize FROM tcp_win ORDER BY RANDOM() LIMIT "+str(pkts_num)+";")
+        source_win_sizes = self.statistics.get_rnd_win_size(pkts_num)
 
         destination_win_dist = self.statistics.get_win_distribution(ip_destination)
         if len(destination_win_dist) > 0:
