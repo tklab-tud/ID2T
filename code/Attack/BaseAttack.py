@@ -475,7 +475,7 @@ class BaseAttack(metaclass=ABCMeta):
             if ip_source == ip_destination:
                 equal = True
         if equal:
-            print("\nERROR: Invalid IP addresses; source IP is the same as destination IP: " + ip_source + ".")
+            print("\nERROR: Invalid IP addresses; source IP is the same as destination IP: " + ip_destination + ".")
             sys.exit(0)
 
 

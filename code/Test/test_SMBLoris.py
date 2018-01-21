@@ -14,7 +14,7 @@ sha_ips_in_pcap = 'bb54c042f870467021958d5f6947d21876b1fa5cda5f27da41adebac8cd44
 CURRENT COVERAGE
 Name                             Stmts   Miss  Cover   Missing (lines)
 ---------------------------------------------------------------------------
-Attack/SMBLorisAttack.py           128      5    96%   60, 73, 78, 155, 188
+Attack/SMBLorisAttack.py           128      4    97%   67, 72, 149, 182
 """
 # TODO: get 100% coverage
 
@@ -35,6 +35,15 @@ class UnitTestSMBLoris(GenericTest):
 
     def test_sixteen_attackers(self):
         self.generic_test([['SMBLorisAttack', 'ip.dst=192.168.1.210', 'attackers.count=16']], sha_sixteen_attackers)
+
+    @mock.patch('ID2TLib.Statistics.Statistics.get_most_used_ip_address')
+    def test_two_most_used_ips(self, mock_most_used_ip_address):
+        mock_most_used_ip_address.return_value = test_pcap_ips
+        self.generic_test([['SMBLorisAttack']], sha_default)
+
+    def test_same_ip_src_dst(self):
+        with self.assertRaises(SystemExit):
+            self.generic_test([['SMBLorisAttack', 'ip.src=192.168.1.240', 'ip.dst=192.168.1.240']], sha_default)
 
 
 if __name__ == '__main__':
