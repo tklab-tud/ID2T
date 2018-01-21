@@ -5,6 +5,7 @@ from random import shuffle, randint, choice
 from lea import Lea
 from scapy.layers.inet import IP, Ether, TCP
 
+from definitions import ROOT_DIR
 from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes
@@ -89,7 +90,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
         :return: Ports numbers to be used as default destination ports or default open ports in the port scan.
         """
         ports_dst = []
-        spamreader = csv.reader(open('resources/nmap-services-tcp.csv', 'rt'), delimiter=',')
+        spamreader = csv.reader(open(ROOT_DIR + '/../resources/nmap-services-tcp.csv', 'rt'), delimiter=',')
         for count in range(ports_num):
             # escape first row (header)
             next(spamreader)
@@ -109,10 +110,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
         return port_dst_shuffled
 
     def generate_attack_pcap(self):
-
-
-
-
         mac_source = self.get_param_value(Param.MAC_SOURCE)
         mac_destination = self.get_param_value(Param.MAC_DESTINATION)
         pps = self.get_param_value(Param.PACKETS_PER_SECOND)
