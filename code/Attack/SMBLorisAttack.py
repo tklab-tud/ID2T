@@ -14,12 +14,6 @@ from ID2TLib.SMBLib import smb_port
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 # noinspection PyPep8
 
-# Resources:
-# https://github.com/rapid7/metasploit-framework/blob/master/modules/auxiliary/dos/smb/smb_loris.rb
-# https://samsclass.info/124/proj14/smbl.htm
-# https://gist.githubusercontent.com/marcan/6a2d14b0e3eaa5de1795a763fb58641e/raw/565befecf4d9a4a27248d027a90b6e3e5994b5b6/smbloris.c
-# http://smbloris.com/
-
 
 class SMBLorisAttack(BaseAttack.BaseAttack):
 
@@ -29,7 +23,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
 
         """
         # Initialize attack
-        super(SMBLorisAttack, self).__init__("SMBLoris Attack", "Injects an SMBLoris DoS Attack",
+        super(SMBLorisAttack, self).__init__("SMBLoris Attack", "Injects an SMBLoris (D)DoS Attack",
                                              "Resource Exhaustion")
 
         # Define allowed parameters and their type
@@ -84,7 +78,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.ATTACK_DURATION, 30)
 
     def generate_attack_pcap(self):
-        def getIpData(ip_address: str):
+        def get_ip_data(ip_address: str):
             """
             :param ip_address: the ip of which (packet-)data shall be returned
             :return: MSS, TTL and Window Size values of the given IP
@@ -161,7 +155,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
         self.ip_src_dst_equal_check(ip_source_list, ip_destination)
 
         # Get MSS, TTL and Window size value for destination IP
-        destination_mss_value, destination_ttl_value, destination_win_value = getIpData(ip_destination)
+        destination_mss_value, destination_ttl_value, destination_win_value = get_ip_data(ip_destination)
 
         minDelay,maxDelay = self.get_reply_delay(ip_destination)
 
@@ -172,7 +166,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
 
         for attacker in range(num_attackers):
             # Get MSS, TTL and Window size value for source IP(attacker)
-            source_mss_value, source_ttl_value, source_win_value = getIpData(ip_source_list[attacker])
+            source_mss_value, source_ttl_value, source_win_value = get_ip_data(ip_source_list[attacker])
 
             attacker_seq = randint(1000, 50000)
             victim_seq = randint(1000, 50000)
@@ -180,7 +174,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
             sport = 1025
 
             # Timestamps of first packets shouldn't be exactly the same to look more realistic
-            timestamp_next_pkt = uniform(first_timestamp, first_timestamp+0.010)
+            timestamp_next_pkt = uniform(first_timestamp, update_timestamp(first_timestamp, pps))
 
             while timestamp_next_pkt <= attack_ends_time:
                 # Establish TCP connection
