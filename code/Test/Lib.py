@@ -2,6 +2,7 @@ import os
 import hashlib
 
 from definitions import ROOT_DIR
+from random import randint
 
 # TODO: generate better test pcap (1000-2000 packets)
 test_resource_dir = ROOT_DIR + "/../resources/test"
@@ -75,6 +76,8 @@ def get_win_size(pkts_num):
         result.append(10)
     return result
 
+def get_attacker_config(ipAddress: str):
+    next_port = randint(0, 2 ** 16 - 1)
+    ttl = randint(1, 255)
 
-def get_rnd_short():
-    return 10
+    return next_port,

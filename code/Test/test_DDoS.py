@@ -1,21 +1,21 @@
 import unittest
 import unittest.mock as mock
-from scapy.layers.inet import RandShort
+from random import randint
 
 from ID2TLib.Statistics import Statistics
 from Test.GenericTest import GenericTest
-from Test.Lib import get_win_size, get_rnd_short
+from Test.Lib import get_win_size, get_attacker_config
 
 # FIXME: create new hashes
-sha_two_attackers = '77da7d909d7f2c86922fc663a2834e8de6c565943d307e9a1146b8cf656b5164'
+sha_two_attackers = 'c0a494e8553ebd937941bdfb0529b699ca00b7150af92d1152cf1c8ddaebe426'
 
 
 # seeds: for 5, 23 for 10, 27 for 16, 31 for 1
 class UnitTestDDoS(GenericTest):
 
     @mock.patch.object(Statistics, 'get_rnd_win_size', side_effect=get_win_size)
-    #@mock.patch.object(RandShort, '__init__', side_effect=get_rnd_short)
-    def test_two_attackers(self, mock_get_rnd_win_size):
+    @mock.patch('Attack.DDoSAttack.get_attacker_config', side_effect=get_attacker_config)
+    def test_two_attackers(self, mock_get_attacker_config, mock_get_rnd_win_size):
         self.generic_test([['DDoSAttack',
                             'attack.duration=10',
                             'inject.after-pkt=1',
@@ -25,7 +25,6 @@ class UnitTestDDoS(GenericTest):
                             'victim.buffer=1000'
                             ]],
                           sha_two_attackers)
-
 
 if __name__ == '__main__':
     unittest.main()
