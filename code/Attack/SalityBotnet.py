@@ -4,6 +4,7 @@ from random import randint
 from scapy.utils import RawPcapReader
 from scapy.layers.inet import Ether
 
+from definitions import ROOT_DIR
 from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes
@@ -14,7 +15,7 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 
 class SalityBotnet(BaseAttack.BaseAttack):
-    template_attack_pcap_path = "resources/sality_botnet.pcap"
+    template_attack_pcap_path = ROOT_DIR + "/../resources/sality_botnet.pcap"
 
     def __init__(self):
         """
