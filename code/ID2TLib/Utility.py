@@ -220,6 +220,17 @@ def get_rnd_bytes(count=1, ignore=None):
     return result
 
 
+def check_payload_len(payload_len: int, limit: int):
+    """
+    Checks if the len of the payload exceeds a given limit
+    :param payload_len: The length of the payload
+    :param limit: The limit of the length of the payload which is allowed
+    """
+
+    if payload_len > limit:
+        print("\nCustom payload too long: ", payload_len, " bytes. Should be a maximum of ", limit, " bytes.")
+        exit(1)
+
 def get_bytes_from_file(filepath):
     """
     Converts the content of a file into its byte representation

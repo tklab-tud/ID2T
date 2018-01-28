@@ -7,6 +7,7 @@ from definitions import ROOT_DIR
 test_resource_dir = ROOT_DIR + "/../resources/test"
 test_pcap = ROOT_DIR + "/../resources/test/test.pcap"
 test_pcap_ips = ["192.168.189.143", "192.168.189.1"]
+test_pcap_empty = []
 
 """
 helper functions for generic_test
