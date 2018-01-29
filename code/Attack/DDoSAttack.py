@@ -3,13 +3,12 @@ import logging
 from random import randint, choice
 from lea import Lea
 from collections import deque
-from scipy.stats import gamma
 from scapy.layers.inet import IP, Ether, TCP, RandShort
 
 from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes
-from ID2TLib.Utility import update_timestamp, get_interval_pps, get_nth_random_element, index_increment
+from ID2TLib.Utility import update_timestamp, get_interval_pps, get_nth_random_element, get_attacker_config
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 # noinspection PyPep8
@@ -73,37 +72,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.VICTIM_BUFFER, randint(1000,10000))
 
     def generate_attack_pcap(self):
-        def get_attacker_config(ipAddress: str):
-            """
-            Returns the attacker configuration depending on the IP address, this includes the port for the next
-            attacking packet and the previously used (fixed) TTL value.
-            :param ipAddress: The IP address of the attacker
-            :return: A tuple consisting of (port, ttlValue)
-            """
-            # Determine port
-            port = attacker_port_mapping.get(ipAddress)
-            if port is not None:  # use next port
-                next_port = attacker_port_mapping.get(ipAddress) + 1
-                if next_port > (2 ** 16 - 1):
-                    next_port = 1
-            else:  # generate starting port
-                next_port = RandShort()
-            attacker_port_mapping[ipAddress] = next_port
-            # Determine TTL value
-            ttl = attacker_ttl_mapping.get(ipAddress)
-            if ttl is None:  # determine TTL value
-                is_invalid = True
-                pos = ip_source_list.index(ipAddress)
-                pos_max = len(gd)
-                while is_invalid:
-                    ttl = int(round(gd[pos]))
-                    if 0 < ttl < 256:  # validity check
-                        is_invalid = False
-                    else:
-                        pos = index_increment(pos, pos_max)
-                attacker_ttl_mapping[ipAddress] = ttl
-            # return port and TTL
-            return next_port, ttl
         BUFFER_SIZE = 1000
 
         # Determine source IP and MAC address
@@ -154,13 +122,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
         if not port_destination:
             port_destination = max(1, str(RandShort()))
 
-        attacker_port_mapping = {}
-        attacker_ttl_mapping = {}
-
-        # Gamma distribution parameters derived from MAWI 13.8G dataset
-        alpha, loc, beta = (2.3261710235, -0.188306914406, 44.4853123884)
-        gd = gamma.rvs(alpha, loc=loc, scale=beta, size=len(ip_source_list))
-
         path_attack_pcap = None
 
         timestamp_prv_reply, timestamp_confirm = 0, 0
@@ -201,7 +162,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 # Select one IP address and its corresponding MAC address
                 (ip_source, mac_source) = get_nth_random_element(ip_source_list, mac_source_list)
                 # Determine source port
-                (port_source, ttl_value) = get_attacker_config(ip_source)
+                (port_source, ttl_value) = get_attacker_config(ip_source_list ,ip_source)
                 request_ether = Ether(dst=mac_destination, src=mac_source)
                 request_ip = IP(src=ip_source, dst=ip_destination, ttl=ttl_value)
                 # Random win size for each packet

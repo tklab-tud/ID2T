@@ -5,6 +5,8 @@ from os import urandom
 from datetime import datetime
 from calendar import timegm
 from lea import Lea
+from scipy.stats import gamma
+from scapy.layers.inet import RandShort
 
 platforms = {"win7", "win10", "winxp", "win8.1", "macos", "linux", "win8", "winvista", "winnt", "win2000"}
 platform_probability = {"win7": 48.43, "win10": 27.99, "winxp": 6.07, "win8.1": 6.07, "macos": 5.94, "linux": 3.38,
@@ -17,6 +19,9 @@ x86_pseudo_nops = {b'\x97', b'\x96', b'\x95', b'\x93', b'\x92', b'\x91', b'\x99'
                    b'\x55', b'\x53', b'\x51', b'\x57', b'\x52', b'\x06', b'\x56', b'\x54', b'\x16', b'\x58', b'\x5d',
                    b'\x5b', b'\x59', b'\x5f', b'\x5a', b'\x5e', b'\xd6'}
 forbidden_chars = [b'\x00', b'\x0a', b'\x0d']
+
+attacker_port_mapping = {}
+attacker_ttl_mapping = {}
 
 
 def update_timestamp(timestamp, pps, delay=0):
@@ -270,3 +275,40 @@ def get_bytes_from_file(filepath):
     except FileNotFoundError:
         print("\nERROR: File not found: ", filepath)
         exit(1)
+
+def get_attacker_config(ip_source_list, ipAddress: str):
+    """
+    Returns the attacker configuration depending on the IP address, this includes the port for the next
+    attacking packet and the previously used (fixed) TTL value.
+    :param ip_source_list: List of source IPs
+    :param ipAddress: The IP address of the attacker
+    :return: A tuple consisting of (port, ttlValue)
+    """
+    # Gamma distribution parameters derived from MAWI 13.8G dataset
+    alpha, loc, beta = (2.3261710235, -0.188306914406, 44.4853123884)
+    gd = gamma.rvs(alpha, loc=loc, scale=beta, size=len(ip_source_list))
+
+    # Determine port
+    port = attacker_port_mapping.get(ipAddress)
+    if port is not None:  # use next port
+        next_port = attacker_port_mapping.get(ipAddress) + 1
+        if next_port > (2 ** 16 - 1):
+            next_port = 1
+    else:  # generate starting port
+        next_port = RandShort()
+    attacker_port_mapping[ipAddress] = next_port
+    # Determine TTL value
+    ttl = attacker_ttl_mapping.get(ipAddress)
+    if ttl is None:  # determine TTL value
+        is_invalid = True
+        pos = ip_source_list.index(ipAddress)
+        pos_max = len(gd)
+        while is_invalid:
+            ttl = int(round(gd[pos]))
+            if 0 < ttl < 256:  # validity check
+                is_invalid = False
+            else:
+                pos = index_increment(pos, pos_max)
+        attacker_ttl_mapping[ipAddress] = ttl
+    # return port and TTL
+    return next_port, ttl
