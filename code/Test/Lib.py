@@ -76,8 +76,9 @@ def get_win_size(pkts_num):
         result.append(10)
     return result
 
-def get_attacker_config(ipAddress: str):
+
+def get_attacker_config(ip_source_list, ipAddress: str):
     next_port = randint(0, 2 ** 16 - 1)
     ttl = randint(1, 255)
 
-    return next_port,
+    return next_port, ttl
