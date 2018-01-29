@@ -6,6 +6,7 @@ from scapy.utils import RawPcapReader
 from scapy.layers.inet import Ether
 from ID2TLib.Utility import update_timestamp, get_interval_pps
 
+from definitions import ROOT_DIR
 from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes
@@ -15,7 +16,7 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 
 class SQLiAttack(BaseAttack.BaseAttack):
-    template_attack_pcap_path = "resources/ATutorSQLi.pcap"
+    template_attack_pcap_path = ROOT_DIR + "/../resources/ATutorSQLi.pcap"
     # HTTP port
     http_port = 80
     # Metasploit experiments show this range of ports
