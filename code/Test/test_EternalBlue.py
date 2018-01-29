@@ -4,8 +4,7 @@ import unittest.mock as mock
 from Test.GenericTest import GenericTest
 from Test.Lib import test_pcap_ips
 
-# FIXME: create new hashes if new test.pcap is used
-sha_default = 'c115719657b597730ae46b42a05ac979e9d30dcfccfead1424321b1e3288e8b6'
+sha_default = 'c707492a0493efcf46a569c91fe77685286402ddfdff3c79e64157b3324dc9f6'
 
 """
 CURRENT COVERAGE
@@ -19,7 +18,6 @@ Attack/EternalBlueExploit.py       246     10    96%   62, 72, 112, 119, 126-127
 class UnitTestEternalBlue(GenericTest):
 
     def test_default(self):
-        # FIXME: maybe use another seed
         self.generic_test([['EternalBlueExploit']], sha_default)
 
 

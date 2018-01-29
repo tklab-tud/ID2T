@@ -3,16 +3,14 @@ import unittest.mock as mock
 
 from Test.GenericTest import GenericTest
 
-# FIXME: create new hashes if new test.pcap is used
-sha_default = '6650602f7ac54b0032504bba24c05a99ed09dcf094a0b6ea3172b95d805807f4'
-sha_one_victim_linux = '9da7ca3fe34f7a4f8d93d67b297afd198f0a4eb628171fbd25e15dc3d9bc97b5'
-sha_victim_range_winxp_hosting = '5d58804c68e1d94e12150283e4013c678f22fb819eb2207100f0341dacba88ec'
-sha_multiple_victims_macos = 'd39cd3dbdb85304d2629884118df070a78f9689ab7b3fd3a046c3706c3cd0f7e'
-sha_port_shuffle = 'd32d557c65c01f46ec3de769dc15d223ec13234016898f5ec7aaab1b9549801a'
-sha_dest_mac_only = 'af0140c0a2883927d429da82409f6bc091c9743e984111bda7c27d2bf99992ab'
-sha_ip_src_shuffle = 'c6ed7baf850ccc3f53551e9a93c0a397629eb064abae7deeafb05d84b2633b05'
-sha_smb2 = '8407a3316ba8dfb4ae610cedeeddfe4a7c0be1d420c2cad1c2750a213893618e'
-
+sha_default = '264b243c9b67978f3c892327352f4b293c9a79f6023b06b53d0af7628d171c0b'
+sha_one_victim_linux = '4928d421caaec8f2c4e5c5bb835b5521b705478779cbc8f343b77143a5a66995'
+sha_victim_range_winxp_hosting = '4c6cb5cb4f838e75b41af4feb2fd9a6fe7e1b226a38b3e8759ce3d31e5a2535e'
+sha_multiple_victims_macos = '0be79b9ad7346562f392e07a5156de978e02f4f25ae8d409b81cc6e0d726012c'
+sha_port_shuffle = '8ef501fa31135b8fea845a2be6a9605e0c3f9c4895b717f9206d485a669c2a73'
+sha_dest_mac_only = '0814dadb666e0056ef5b3a572a4971f333376b61e602acb84cb99c851845f016'
+sha_ip_src_shuffle = '6c0c9ccbedb631e4965ec36932276a1bd73b8a4aca5a5c46f01fd0a2800a064f'
+sha_smb2 = '8755a901295a90362d8041ecf1243a31fff582f5fe64555205625263c253476e'
 
 """
 CURRENT COVERAGE

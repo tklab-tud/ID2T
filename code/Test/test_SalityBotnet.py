@@ -4,8 +4,8 @@ import unittest.mock as mock
 from Test.GenericTest import GenericTest
 from Test.Lib import test_pcap_ips
 
-sha_botnet_basic = 'bbe75f917933a9f7727d99137920a70a5f720cabc773da9e24acfd6cba45a87a'
-sha_botnet_most_used_ip_in_list ='8583e2563d2756347449aec4b1c7cf7bfc7c0a96db4885627dcf0afc9e59feff'
+sha_botnet_basic = '8ff1e400dcf01d2d2cb97312cecdb71473ea140f6406ea935f74970aecdd7305'
+sha_botnet_most_used_ip_in_list = '8ff1e400dcf01d2d2cb97312cecdb71473ea140f6406ea935f74970aecdd7305'
 
 """
 CURRENT COVERAGE
@@ -13,6 +13,7 @@ Name                             Stmts   Miss  Cover   Missing (lines)
 ---------------------------------------------------------------------------
 Attack/SalityBotnet.py           77      0    100%
 """
+# TODO: get 100% coverage
 
 
 class UnitTestSalityBotnet(GenericTest):

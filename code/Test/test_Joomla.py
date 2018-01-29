@@ -4,8 +4,7 @@ import unittest.mock as mock
 from Test.GenericTest import GenericTest
 from Test.Lib import test_pcap_ips
 
-# FIXME: create new hashes if new test.pcap is used
-sha_default = '27eb51f0b0bb417eb121a874174b09cf65240bf8895d984f3158817e48f9aba2'
+sha_default = 'a45bd543ae7416cdc5fd76c886f48990b43075753931683407686aac2cfbc111'
 
 """
 CURRENT COVERAGE
@@ -19,7 +18,6 @@ Attack/JoomlaRegPrivExploit.py     127      4    97%   62, 71, 116, 123
 class UnitTestJoomla(GenericTest):
 
     def test_default(self):
-        # FIXME: maybe use another seed
         self.generic_test([['JoomlaRegPrivExploit']], sha_default)
 
 

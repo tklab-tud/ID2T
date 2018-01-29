@@ -4,11 +4,10 @@ import unittest.mock as mock
 from Test.GenericTest import GenericTest
 from Test.Lib import test_pcap_ips
 
-# FIXME: create new hashes if new test.pcap is used
-sha_default = 'e6201c4a6b42fb86304b935ee522d4c1f655bc19a4646c4df45a64bb504a0b5c'
-sha_one_attacker = '538f584a7a12488269cb22a2986cd0e6f32f0c243c7cce72c5deb5230167897c'
-sha_sixteen_attackers = 'ca3cb549a213832e238a25eaadfc8e6c55c0b37b595ca1fc16cfca7c0990d675'
-sha_ips_in_pcap = 'bb54c042f870467021958d5f6947d21876b1fa5cda5f27da41adebac8cd44b74'
+sha_default = 'cbfb154a80546ebcf0a0d5128bcc42e4d69228c1d97ea4dda49ba156703b78c2'
+sha_one_attacker = 'a316ba1a667318ef4b8d1bf5ffee3f58dfcd0221b0cc3ab62dd967379217eb27'
+sha_sixteen_attackers = '08b17b360ee9be1657e7c437e5aef354dac374ceca3b4ee437c45c0d9d03a2ef'
+sha_ips_in_pcap = 'f299e4139780869d9f02c25ba00f1cad483a4f215d6aef4079b93f7f7e1de22a'
 
 """
 CURRENT COVERAGE
@@ -22,7 +21,6 @@ Attack/SMBLorisAttack.py           128      4    97%   67, 72, 149, 182
 class UnitTestSMBLoris(GenericTest):
 
     def test_default(self):
-        # FIXME: maybe use another seed
         self.generic_test([['SMBLorisAttack']], sha_default)
 
     def test_one_attacker(self):

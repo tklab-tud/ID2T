@@ -88,7 +88,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                               self.statistics.get_pps_received(most_used_ip_address)) / 2)
         self.add_param_value(Param.INJECT_AFTER_PACKET, randint(0, self.statistics.get_packet_count()))
 
-        rnd_ip_count = self.statistics.get_ip_address_count()/2
+        rnd_ip_count = self.statistics.get_ip_address_count()//2
         self.add_param_value(Param.HOSTING_IP, self.statistics.get_random_ip_address(rnd_ip_count))
         self.host_os = ID2TLib.Utility.get_rnd_os()
         self.add_param_value(Param.HOSTING_VERSION, get_smb_version(platform=self.host_os))

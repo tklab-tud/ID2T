@@ -4,15 +4,16 @@ import unittest.mock as mock
 from Test.GenericTest import GenericTest
 from Test.Lib import *
 
-sha_portscan_default = 'dd28509dcc55a722c57d6b462741581d7b48024cddb8b8c89fe138661fac2b07'
-sha_portscan_reverse_ports = '04f5cdab7ade15bde00f0fcf42278508da7104ac76eab543d9c4b1cbab4f67c7'
-sha_portscan_shuffle_dst_ports = 'a6ef8a714da52d7608a84f50fe9dc71a3714e8b78a62be07c4e3d5509fa03d95'
-sha_portscan_shuffle_src_ports = '218382e8feabea3c5a35834c9962034cdff6e0c90fafee899883a9a54bb38371'
-sha_portscan_mss_value_zero = 'c3847e0a3a5abf886506dc5402fbc9a3096db2fd1df16d276d6c60c6b4b4ca5f'
-sha_portscan_ttl_value_zero = 'c3847e0a3a5abf886506dc5402fbc9a3096db2fd1df16d276d6c60c6b4b4ca5f'
-sha_portscan_win_value_zero = 'c3847e0a3a5abf886506dc5402fbc9a3096db2fd1df16d276d6c60c6b4b4ca5f'
+sha_portscan_default = '6af539fb9f9a28f84a5c337a07dbdc1a11885c5c6de8f9a682bd74b89edc5130'
+sha_portscan_reverse_ports = '1c03342b7b94fdd1c9903d07237bc5239ebb7bd77a3dd137c9c378fa216c5382'
+sha_portscan_shuffle_dst_ports = '40485e47766438425900b787c4cda4ad1b5cd0d233b80f38bd45b5a88b70a797'
+sha_portscan_shuffle_src_ports = '48578b45e18bdbdc0a9f3f4cec160ccb58839250348ec4d3ec44c1b15da248de'
+sha_portscan_mss_value_zero = '8d32476a89262b78118a68867fff1d45c81f8ffb4970201f9d5ee3dfd94ba58a'
+sha_portscan_ttl_value_zero = 'ff8cf15d8e59856e0c6e43d81fa40180ebf2127042f376217cc2a20e4f21726e'
+sha_portscan_win_value_zero = 'b2fcbf72190ac3bf12192d0d7ee8c09ef87adb0d94a2610615ca76d8b577bbfb'
 sha_portscan_ip_src_random = 'c3939f30a40fa6e2164cc91dc4a7e823ca409492d44508e3edfc9d24748af0e5'
-sha_portscan_most_used_ip_in_list = 'c3939f30a40fa6e2164cc91dc4a7e823ca409492d44508e3edfc9d24748af0e5'
+sha_portscan_most_used_ip_in_list = '6af539fb9f9a28f84a5c337a07dbdc1a11885c5c6de8f9a682bd74b89edc5130'
+
 """
 CURRENT COVERAGE
 Name                             Stmts   Miss  Cover   Missing (lines)
