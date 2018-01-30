@@ -128,7 +128,7 @@ class TestUtility(unittest.TestCase):
         result = Utility.get_rnd_x86_nop(1000, False)
         correct = True
         for byte in result:
-            if byte.to_bytes(1, "little") not in TestLibrary.x86_nops and byte.to_bytes(1, "little") not in TestLibrary.x86_pseudo_nops:
+            if byte.to_bytes(1, "little") not in Utility.x86_nops and byte.to_bytes(1, "little") not in Utility.x86_pseudo_nops:
                 correct = False
         self.assertTrue(correct)
 
