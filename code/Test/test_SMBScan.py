@@ -1,7 +1,7 @@
 import unittest
 import unittest.mock as mock
 
-from Test.GenericTest import GenericTest
+import Test.GenericTest as GenericTest
 
 sha_default = '264b243c9b67978f3c892327352f4b293c9a79f6023b06b53d0af7628d171c0b'
 sha_one_victim_linux = '4928d421caaec8f2c4e5c5bb835b5521b705478779cbc8f343b77143a5a66995'
@@ -21,7 +21,7 @@ Attack/SMBScanAttack.py            239      9    96%   65, 73-74, 82, 193, 210-2
 # TODO: get 100% coverage
 
 
-class UnitTestSMBScan(GenericTest):
+class UnitTestSMBScan(GenericTest.GenericTest):
 
     def test_default(self):
         with mock.patch("ID2TLib.Utility.get_rnd_os", return_value="win7"):

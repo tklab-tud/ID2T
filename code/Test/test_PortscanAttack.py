@@ -1,8 +1,8 @@
 import unittest
 import unittest.mock as mock
 
+import ID2TLib.TestLibrary as Lib
 from Test.GenericTest import GenericTest
-from Test.Lib import *
 
 sha_portscan_default = '6af539fb9f9a28f84a5c337a07dbdc1a11885c5c6de8f9a682bd74b89edc5130'
 sha_portscan_reverse_ports = '1c03342b7b94fdd1c9903d07237bc5239ebb7bd77a3dd137c9c378fa216c5382'
@@ -51,7 +51,7 @@ class UnitTestPortscanAttack(GenericTest):
 
     @mock.patch('ID2TLib.Statistics.Statistics.get_most_used_ip_address')
     def test_portscan_most_used_ips(self, mock_most_used_ip_address):
-        mock_most_used_ip_address.return_value = test_pcap_ips
+        mock_most_used_ip_address.return_value = Lib.test_pcap_ips
         self.generic_test([['PortscanAttack']], sha_portscan_most_used_ip_in_list)
 
 

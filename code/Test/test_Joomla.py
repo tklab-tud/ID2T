@@ -1,8 +1,6 @@
 import unittest
-import unittest.mock as mock
 
-from Test.GenericTest import GenericTest
-from Test.Lib import test_pcap_ips
+import Test.GenericTest as GenericTest
 
 sha_default = 'a45bd543ae7416cdc5fd76c886f48990b43075753931683407686aac2cfbc111'
 
@@ -15,7 +13,7 @@ Attack/JoomlaRegPrivExploit.py     127      4    97%   62, 71, 116, 123
 # TODO: get 100% coverage
 
 
-class UnitTestJoomla(GenericTest):
+class UnitTestJoomla(GenericTest.GenericTest):
 
     def test_default(self):
         self.generic_test([['JoomlaRegPrivExploit']], sha_default)
