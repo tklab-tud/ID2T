@@ -15,7 +15,7 @@ Attack/JoomlaRegPrivExploit.py     127      4    97%   62, 71, 116, 123
 
 class UnitTestJoomla(GenericTest.GenericTest):
 
-    def test_default(self):
+    def test_joomla_default(self):
         self.generic_test([['JoomlaRegPrivExploit']], sha_default)
 
 

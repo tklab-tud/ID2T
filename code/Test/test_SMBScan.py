@@ -23,53 +23,53 @@ Attack/SMBScanAttack.py            239      9    96%   65, 73-74, 82, 193, 210-2
 
 class UnitTestSMBScan(GenericTest.GenericTest):
 
-    def test_default(self):
+    def test_smbscan_default(self):
         with mock.patch("ID2TLib.Utility.get_rnd_os", return_value="win7"):
             self.generic_test([['SMBScanAttack']], sha_default)
 
-    def test_one_victim_linux(self):
+    def test_smbscan_one_victim_linux(self):
         with mock.patch("ID2TLib.Utility.get_rnd_os", return_value="linux"):
             self.generic_test([['SMBScanAttack', 'ip.src=192.168.178.1', 'ip.dst=192.168.178.10']],
                               sha_one_victim_linux)
 
-    def test_victim_range_winxp_hosting(self):
+    def test_smbscan_victim_range_winxp_hosting(self):
         with mock.patch("ID2TLib.Utility.get_rnd_os", return_value="winxp"):
             self.generic_test([['SMBScanAttack', 'ip.src=192.168.178.1', 'ip.dst=192.168.178.5',
                                 'ip.dst.end=192.168.178.10', 'hosting.ip=192.168.178.5']],
                               sha_victim_range_winxp_hosting)
 
-    def test_multiple_victims_macos(self):
+    def test_smbscan_multiple_victims_macos(self):
         with mock.patch("ID2TLib.Utility.get_rnd_os", return_value="macos"):
             self.generic_test([['SMBScanAttack', 'ip.src=192.168.178.1',
                                 'ip.dst=192.168.178.10,192.168.178.15,192.168.178.20',
                                 'hosting.ip=192.168.178.15,192.168.178.20']], sha_multiple_victims_macos)
 
-    def test_invalid_smb_version(self):
+    def test_smbscan_invalid_smb_version(self):
         with self.assertRaises(SystemExit):
             self.generic_test([['SMBScanAttack', 'protocol.version=42']], 'somehash')
 
-    def test_invalid_smb_platform(self):
+    def test_smbscan_invalid_smb_platform(self):
         with self.assertRaises(SystemExit):
             self.generic_test([['SMBScanAttack', 'hosting.version=1337']], 'somehash')
 
-    def test_port_shuffle(self):
+    def test_smbscan_port_shuffle(self):
         with mock.patch("ID2TLib.Utility.get_rnd_os", return_value="win7"):
             self.generic_test([['SMBScanAttack', 'ip.src=192.168.178.1', 'ip.dst=192.168.178.5',
                                 'ip.dst.end=192.168.178.10', 'hosting.ip=192.168.178.5', 'port.src.shuffle=false']],
                               sha_port_shuffle)
 
-    def test_dest_mac_only(self):
+    def test_smbscan_dest_mac_only(self):
         with mock.patch("ID2TLib.Utility.get_rnd_os", return_value="win7"):
             self.generic_test([['SMBScanAttack', 'ip.src=192.168.178.1',
                                 'mac.dst=00:0C:29:9C:70:64']], sha_dest_mac_only)
 
-    def test_src_ip_shuffle(self):
+    def test_smbscan_src_ip_shuffle(self):
         with mock.patch("ID2TLib.Utility.get_rnd_os", return_value="win7"):
             self.generic_test([['SMBScanAttack', 'ip.src=192.168.178.1', 'ip.dst=192.168.178.5',
                                 'ip.dst.end=192.168.178.10', 'hosting.ip=192.168.178.5', 'ip.src.shuffle=True']],
                               sha_ip_src_shuffle)
 
-    def test_smb2(self):
+    def test_smbscan_smb2(self):
 
         with mock.patch("ID2TLib.Utility.get_rnd_os", return_value="linux"):
             self.generic_test([['SMBScanAttack', 'ip.src=192.168.178.1', 'ip.dst=192.168.178.5',

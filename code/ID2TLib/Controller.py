@@ -70,6 +70,15 @@ class Controller:
         print("Merging base pcap with single attack pcap...", end=" ")
         sys.stdout.flush()  # force python to print text immediately
         self.pcap_dest_path = self.pcap_file.merge_attack(attacks_pcap_path)
+
+        tmp_path_tuple = self.pcap_dest_path.rpartition("/")
+        result_dir = tmp_path_tuple[0] + tmp_path_tuple[1] + "ID2T_results/"
+        result_path = result_dir + tmp_path_tuple[2]
+
+        os.makedirs(result_dir, exist_ok=True)
+        os.rename(self.pcap_dest_path, result_path)
+        self.pcap_dest_path = result_path
+
         print("done.")
 
         # delete intermediate PCAP files

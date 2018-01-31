@@ -15,7 +15,7 @@ Attack/EternalBlueExploit.py       246     10    96%   62, 72, 112, 119, 126-127
 
 class UnitTestEternalBlue(GenTest.GenericTest):
 
-    def test_default(self):
+    def test_eternalblue_default(self):
         self.generic_test([['EternalBlueExploit']], sha_default)
 
 

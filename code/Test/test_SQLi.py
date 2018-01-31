@@ -15,7 +15,7 @@ Attack/SQLiAttack.py               159      5    97%   62, 71, 113, 120, 245
 
 class UnitTestSQLi(GenericTest.GenericTest):
 
-    def test_default(self):
+    def test_sqli_default(self):
         self.generic_test([['SQLiAttack']], sha_default)
 
 

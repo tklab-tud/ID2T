@@ -67,3 +67,44 @@ def get_x86_nop(count, side_effect_free, char_filter):
     :return: a count of \x90
     """
     return b'\x90' * count
+
+
+def rename_test_result_files(controller, caller_function: str, attack_sub_dir=False, test_sub_dir=False):
+    """
+    :param controller: controller which created output files
+    :param caller_function: the name of the function which called the generic test
+    :param attack_sub_dir: create sub-directory for each attack-class if True
+    :param test_sub_dir: create sub-directory for each test-function/case if True
+    """
+    tmp_path_tuple = controller.pcap_dest_path.rpartition("_")
+    result_pcap_path = tmp_path_tuple[0] + tmp_path_tuple[1] + caller_function + "_" + tmp_path_tuple[2]
+
+    tmp_label_path_tuple = controller.label_manager.label_file_path.rpartition("_")
+    tmp_path_tuple = tmp_label_path_tuple[0].rpartition("_")
+    result_labels_path = tmp_path_tuple[0] + tmp_path_tuple[1] + caller_function + "_" + tmp_path_tuple[2]
+    result_labels_path = result_labels_path + tmp_label_path_tuple[1] + tmp_label_path_tuple[2]
+
+    if attack_sub_dir:
+        caller_attack = caller_function.replace("test_", "").partition("_")[0]
+        tmp_dir_tuple = result_pcap_path.rpartition("/")
+        result_dir = tmp_dir_tuple[0] + tmp_dir_tuple[1] + caller_attack + "/"
+        result_pcap_path = result_dir + tmp_dir_tuple[2]
+        os.makedirs(result_dir, exist_ok=True)
+
+        tmp_dir_tuple = result_labels_path.rpartition("/")
+        result_labels_path = result_dir + tmp_dir_tuple[2]
+
+    if test_sub_dir:
+        tmp_dir_tuple = result_pcap_path.rpartition("/")
+        result_dir = tmp_dir_tuple[0] + tmp_dir_tuple[1] + (caller_function.replace("test_", "")) + "/"
+        result_pcap_path = result_dir + tmp_dir_tuple[2]
+        os.makedirs(result_dir, exist_ok=True)
+
+        tmp_dir_tuple = result_labels_path.rpartition("/")
+        result_labels_path = result_dir + tmp_dir_tuple[2]
+
+    os.rename(controller.pcap_dest_path, result_pcap_path)
+    controller.pcap_dest_path = result_pcap_path
+
+    os.rename(controller.label_manager.label_file_path, result_labels_path)
+    controller.label_manager.label_file_path = result_labels_path
