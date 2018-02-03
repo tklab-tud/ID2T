@@ -1,5 +1,6 @@
 import os
 import sys
+import readline
 
 from ID2TLib.AttackController import AttackController
 from ID2TLib.LabelManager import LabelManager
