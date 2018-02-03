@@ -113,6 +113,11 @@ class Controller:
 
         readline.parse_and_bind('tab: complete')
         readline.set_completer(make_completer(self.statisticsDB.get_all_named_query_keywords()+self.statisticsDB.get_all_sql_query_keywords()))
+        history_file = os.path.join(os.path.expanduser('~'), 'ID2T_data', 'query_history')
+        try:
+            readline.read_history_file(history_file)
+        except IOError:
+            pass
         print("Entering into query mode...")
         print("Enter statement ending by ';' and press ENTER to send query. Exit by sending an empty query..")
         buffer = ""
@@ -129,6 +134,9 @@ class Controller:
                 except sqlite3.Error as e:
                     print("An error occurred:", e.args[0])
                 buffer = ""
+
+        readline.set_history_length(1000)
+        readline.write_history_file(history_file)
 
     def create_statistics_plot(self, params: str):
         """
