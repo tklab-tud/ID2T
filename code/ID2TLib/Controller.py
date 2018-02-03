@@ -104,6 +104,15 @@ class Controller:
         Enters into the query mode. This is a read-eval-print-loop, where the user can input named queries or SQL
         queries and the results are printed.
         """
+
+        def make_completer(vocabulary):
+            def custom_template(text, state):
+                results = [x for x in vocabulary if x.startswith(text)] + [None]
+                return results[state]
+            return custom_template
+
+        readline.parse_and_bind('tab: complete')
+        readline.set_completer(make_completer(self.statisticsDB.get_all_named_query_keywords()+self.statisticsDB.get_all_sql_query_keywords()))
         print("Entering into query mode...")
         print("Enter statement ending by ';' and press ENTER to send query. Exit by sending an empty query..")
         buffer = ""
