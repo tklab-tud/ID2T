@@ -3,7 +3,7 @@ import unittest.mock as mock
 
 import Test.GenericTest as GenericTest
 
-sha_default = '264b243c9b67978f3c892327352f4b293c9a79f6023b06b53d0af7628d171c0b'
+sha_default = '213e194da7bc952cc093868c7450901b0fb93c7255d694eb37ea0b9b48bca65d'
 sha_one_victim_linux = '4928d421caaec8f2c4e5c5bb835b5521b705478779cbc8f343b77143a5a66995'
 sha_victim_range_winxp_hosting = '4c6cb5cb4f838e75b41af4feb2fd9a6fe7e1b226a38b3e8759ce3d31e5a2535e'
 sha_multiple_victims_macos = '0be79b9ad7346562f392e07a5156de978e02f4f25ae8d409b81cc6e0d726012c'
