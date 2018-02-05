@@ -56,6 +56,9 @@ class DDoSAttack(BaseAttack.BaseAttack):
         num_attackers = randint(1, 16)
         # The most used IP class in background traffic
         most_used_ip_class = self.statistics.process_db_query("most_used(ipClass)")
+        if isinstance(most_used_ip_class, list):
+            most_used_ip_class.sort()
+            most_used_ip_class = most_used_ip_class[0]
 
         self.add_param_value(Param.IP_SOURCE, self.generate_random_ipv4_address(most_used_ip_class, num_attackers))
         self.add_param_value(Param.MAC_SOURCE, self.generate_random_mac_address(num_attackers))
@@ -111,6 +114,9 @@ class DDoSAttack(BaseAttack.BaseAttack):
         if num_attackers is not None:  # user supplied Param.NUMBER_ATTACKERS
             # The most used IP class in background traffic
             most_used_ip_class = self.statistics.process_db_query("most_used(ipClass)")
+            if isinstance(most_used_ip_class, list):
+                most_used_ip_class.sort()
+                most_used_ip_class = most_used_ip_class[0]
             # Create random attackers based on user input Param.NUMBER_ATTACKERS
             ip_source_list = self.generate_random_ipv4_address(most_used_ip_class, num_attackers)
             mac_source_list = self.generate_random_mac_address(num_attackers)
@@ -147,12 +153,16 @@ class DDoSAttack(BaseAttack.BaseAttack):
         port_destination = self.get_param_value(Param.PORT_DESTINATION)
         if not port_destination:  # user did not define port_dest
             port_destination = self.statistics.process_db_query(
-                "SELECT portNumber FROM ip_ports WHERE portDirection='in' AND ipAddress='" + ip_destination + "' ORDER BY portCount DESC LIMIT 1;")
+                "SELECT portNumber FROM ip_ports WHERE portDirection='in' AND ipAddress='" + ip_destination + "' AND portCount==(SELECT MAX(portCount) FROM ip_ports WHERE portDirection='in' AND ipAddress='" + ip_destination + "');")
         if not port_destination:  # no port was retrieved
             port_destination = self.statistics.process_db_query(
-                "SELECT portNumber FROM ip_ports WHERE portDirection='in' GROUP BY portNumber ORDER BY SUM(portCount) DESC LIMIT 1;")
+                "SELECT portNumber FROM (SELECT portNumber, SUM(portCount) as occ FROM ip_ports WHERE portDirection='in' GROUP BY portNumber ORDER BY occ DESC) WHERE occ=(SELECT SUM(portCount) FROM ip_ports WHERE portDirection='in' GROUP BY portNumber ORDER BY SUM(portCount) DESC LIMIT 1);")
         if not port_destination:
             port_destination = max(1, str(RandShort()))
+
+        if isinstance(port_destination, list):
+            port_destination.sort()
+            port_destination = port_destination[0]
 
         attacker_port_mapping = {}
         attacker_ttl_mapping = {}
