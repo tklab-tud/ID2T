@@ -11,7 +11,7 @@ from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes
 from ID2TLib.SMB2 import *
 from ID2TLib.Utility import update_timestamp, get_interval_pps, get_ip_range,\
-    generate_source_port_from_platform, get_filetime_format
+    generate_source_port_from_platform, get_filetime_format, handle_most_used_outputs
 import ID2TLib.Utility
 from ID2TLib.SMBLib import smb_port, smb_versions, smb_dialects, get_smb_version, get_smb_platform_data,\
     invalid_smb_version
@@ -61,8 +61,6 @@ class SMBScanAttack(BaseAttack.BaseAttack):
         # PARAMETERS: initialize with default values
         # (values are overwritten if user specifies them)
         most_used_ip_address = self.statistics.get_most_used_ip_address()
-        if isinstance(most_used_ip_address, list):
-            most_used_ip_address = most_used_ip_address[0]
 
         self.add_param_value(Param.IP_SOURCE, most_used_ip_address)
         self.add_param_value(Param.IP_SOURCE_RANDOMIZE, 'False')
@@ -110,7 +108,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                 mss_prob_dict = Lea.fromValFreqsDict(mss_dist)
                 mss_value = mss_prob_dict.random()
             else:
-                mss_value = self.statistics.process_db_query("most_used(mssValue)")
+                mss_value = handle_most_used_outputs(self.statistics.process_db_query("most_used(mssValue)"))
 
             # Set TTL based on TTL distribution of IP address
             ttl_dist = self.statistics.get_ttl_distribution(ip_address)
@@ -118,7 +116,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                 ttl_prob_dict = Lea.fromValFreqsDict(ttl_dist)
                 ttl_value = ttl_prob_dict.random()
             else:
-                ttl_value = self.statistics.process_db_query("most_used(ttlValue)")
+                ttl_value = handle_most_used_outputs(self.statistics.process_db_query("most_used(ttlValue)"))
 
             # Set Window Size based on Window Size distribution of IP address
             win_dist = self.statistics.get_win_distribution(ip_address)
@@ -126,7 +124,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                 win_prob_dict = Lea.fromValFreqsDict(win_dist)
                 win_value = win_prob_dict.random()
             else:
-                win_value = self.statistics.process_db_query("most_used(winSize)")
+                win_value = handle_most_used_outputs(self.statistics.process_db_query("most_used(winSize)"))
 
             return mss_value, ttl_value, win_value
 
