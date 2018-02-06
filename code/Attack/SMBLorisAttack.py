@@ -8,7 +8,7 @@ from scapy.layers.netbios import NBTSession
 from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes
-from ID2TLib.Utility import update_timestamp
+from ID2TLib.Utility import update_timestamp, handle_most_used_outputs
 from ID2TLib.SMBLib import smb_port
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
@@ -50,11 +50,9 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
         # PARAMETERS: initialize with default values
         # (values are overwritten if user specifies them)
         most_used_ip_address = self.statistics.get_most_used_ip_address()
-        if isinstance(most_used_ip_address, list):
-            most_used_ip_address = most_used_ip_address[0]
 
         # The most used IP class in background traffic
-        most_used_ip_class = self.statistics.process_db_query("most_used(ipClass)")
+        most_used_ip_class = handle_most_used_outputs(self.statistics.process_db_query("most_used(ipClass)"))
         num_attackers = randint(1, 16)
         source_ip = self.generate_random_ipv4_address(most_used_ip_class, num_attackers)
 
@@ -89,7 +87,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
                 mss_prob_dict = Lea.fromValFreqsDict(mss_dist)
                 mss_value = mss_prob_dict.random()
             else:
-                mss_value = self.statistics.process_db_query("most_used(mssValue)")
+                mss_value = handle_most_used_outputs(self.statistics.process_db_query("most_used(mssValue)"))
 
             # Set TTL based on TTL distribution of IP address
             ttl_dist = self.statistics.get_ttl_distribution(ip_address)
@@ -97,7 +95,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
                 ttl_prob_dict = Lea.fromValFreqsDict(ttl_dist)
                 ttl_value = ttl_prob_dict.random()
             else:
-                ttl_value = self.statistics.process_db_query("most_used(ttlValue)")
+                ttl_value = handle_most_used_outputs(self.statistics.process_db_query("most_used(ttlValue)"))
 
             # Set Window Size based on Window Size distribution of IP address
             win_dist = self.statistics.get_win_distribution(ip_address)
@@ -105,7 +103,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
                 win_prob_dict = Lea.fromValFreqsDict(win_dist)
                 win_value = win_prob_dict.random()
             else:
-                win_value = self.statistics.process_db_query("most_used(winSize)")
+                win_value = handle_most_used_outputs(self.statistics.process_db_query("most_used(winSize)"))
 
             return mss_value, ttl_value, win_value
 
@@ -125,7 +123,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
         num_attackers = self.get_param_value(Param.NUMBER_ATTACKERS)
         if (num_attackers is not None) and (num_attackers is not 0):  # user supplied Param.NUMBER_ATTACKERS
             # The most used IP class in background traffic
-            most_used_ip_class = self.statistics.process_db_query("most_used(ipClass)")
+            most_used_ip_class = handle_most_used_outputs(self.statistics.process_db_query("most_used(ipClass)"))
             # Create random attackers based on user input Param.NUMBER_ATTACKERS
             ip_source = self.generate_random_ipv4_address(most_used_ip_class, num_attackers)
             mac_source = self.generate_random_mac_address(num_attackers)

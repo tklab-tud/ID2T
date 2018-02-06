@@ -34,11 +34,6 @@ class UnitTestSMBLoris(GenericTest):
     def test_smbloris_sixteen_attackers(self):
         self.generic_test([['SMBLorisAttack', 'ip.dst=192.168.1.210', 'attackers.count=16']], sha_sixteen_attackers)
 
-    @mock.patch('ID2TLib.Statistics.Statistics.get_most_used_ip_address')
-    def test_smbloris_two_most_used_ips(self, mock_most_used_ip_address):
-        mock_most_used_ip_address.return_value = Lib.test_pcap_ips
-        self.generic_test([['SMBLorisAttack']], sha_default)
-
     def test_smbloris_same_ip_src_dst(self):
         with self.assertRaises(SystemExit):
             self.generic_test([['SMBLorisAttack', 'ip.src=192.168.1.240', 'ip.dst=192.168.1.240']], sha_default)
