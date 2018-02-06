@@ -11,6 +11,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from ID2TLib.PcapFile import PcapFile
 from ID2TLib.StatsDatabase import StatsDatabase
+from ID2TLib.Utility import handle_most_used_outputs
 
 
 class Statistics:
@@ -478,7 +479,7 @@ class Statistics:
         """
         :return: The IP address/addresses with the highest sum of packets sent and received
         """
-        return self.process_db_query("most_used(ipAddress)")
+        return handle_most_used_outputs(self.process_db_query("most_used(ipAddress)"))
 
     def get_ttl_distribution(self, ipAddress: str):
         result = self.process_db_query('SELECT ttlValue, ttlCount from ip_ttl WHERE ipAddress="' + ipAddress + '"')

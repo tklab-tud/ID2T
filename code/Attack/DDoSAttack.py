@@ -114,8 +114,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         num_attackers = self.get_param_value(Param.NUMBER_ATTACKERS)
         if num_attackers is not None:  # user supplied Param.NUMBER_ATTACKERS
             # The most used IP class in background traffic
-            most_used_ip_class = self.statistics.process_db_query("most_used(ipClass)")
-            most_used_ip_class = handle_most_used_outputs(most_used_ip_class)
+            most_used_ip_class = handle_most_used_outputs(self.statistics.process_db_query("most_used(ipClass)"))
             # Create random attackers based on user input Param.NUMBER_ATTACKERS
             ip_source_list = self.generate_random_ipv4_address(most_used_ip_class, num_attackers)
             mac_source_list = self.generate_random_mac_address(num_attackers)
