@@ -1,15 +1,16 @@
 import unittest
 
+from definitions import ROOT_DIR
 import ID2TLib.Controller as Ctrl
 
 # TODO: change to generic path
-pcap = "/home/jones/Desktop/ID2T-toolkit/resources/test/reference_1998.pcap"
+pcap = ROOT_DIR + "/../resources/test/reference_1998.pcap"
 
 controller = Ctrl.Controller(pcap_file_path=pcap, do_extra_tests=False)
 controller.load_pcap_statistics(flag_write_file=False, flag_recalculate_stats=True, flag_print_statistics=False)
 
 #TODO: also change path
-file_information = [('Pcap file', '/home/jones/Desktop/ID2T-toolkit/resources/test/reference_1998.pcap'),
+file_information = [('Pcap file', ROOT_DIR + '/../resources/test/reference_1998.pcap'),
                     ('Packets', 1998, 'packets'), ('Capture length', '25.4294414520264', 'seconds'),
                     ('Capture start', '1970-01-01 01:01:45.647675'), ('Capture end', '1970-01-01 01:08:10.102034')]
 
