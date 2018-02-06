@@ -76,36 +76,6 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.ATTACK_DURATION, 30)
 
     def generate_attack_pcap(self):
-        def get_ip_data(ip_address: str):
-            """
-            :param ip_address: the ip of which (packet-)data shall be returned
-            :return: MSS, TTL and Window Size values of the given IP
-            """
-            # Set MSS (Maximum Segment Size) based on MSS distribution of IP address
-            mss_dist = self.statistics.get_mss_distribution(ip_address)
-            if len(mss_dist) > 0:
-                mss_prob_dict = Lea.fromValFreqsDict(mss_dist)
-                mss_value = mss_prob_dict.random()
-            else:
-                mss_value = handle_most_used_outputs(self.statistics.process_db_query("most_used(mssValue)"))
-
-            # Set TTL based on TTL distribution of IP address
-            ttl_dist = self.statistics.get_ttl_distribution(ip_address)
-            if len(ttl_dist) > 0:
-                ttl_prob_dict = Lea.fromValFreqsDict(ttl_dist)
-                ttl_value = ttl_prob_dict.random()
-            else:
-                ttl_value = handle_most_used_outputs(self.statistics.process_db_query("most_used(ttlValue)"))
-
-            # Set Window Size based on Window Size distribution of IP address
-            win_dist = self.statistics.get_win_distribution(ip_address)
-            if len(win_dist) > 0:
-                win_prob_dict = Lea.fromValFreqsDict(win_dist)
-                win_value = win_prob_dict.random()
-            else:
-                win_value = handle_most_used_outputs(self.statistics.process_db_query("most_used(winSize)"))
-
-            return mss_value, ttl_value, win_value
 
         pps = self.get_param_value(Param.PACKETS_PER_SECOND)
 
@@ -153,7 +123,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
         self.ip_src_dst_equal_check(ip_source_list, ip_destination)
 
         # Get MSS, TTL and Window size value for destination IP
-        destination_mss_value, destination_ttl_value, destination_win_value = get_ip_data(ip_destination)
+        destination_mss_value, destination_ttl_value, destination_win_value = self.get_ip_data(ip_destination)
 
         minDelay,maxDelay = self.get_reply_delay(ip_destination)
 
@@ -164,7 +134,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
 
         for attacker in range(num_attackers):
             # Get MSS, TTL and Window size value for source IP(attacker)
-            source_mss_value, source_ttl_value, source_win_value = get_ip_data(ip_source_list[attacker])
+            source_mss_value, source_ttl_value, source_win_value = self.get_ip_data(ip_source_list[attacker])
 
             attacker_seq = randint(1000, 50000)
             victim_seq = randint(1000, 50000)
