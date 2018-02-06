@@ -9,7 +9,8 @@ from scapy.layers.inet import IP, Ether, TCP, RandShort
 from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes
-from ID2TLib.Utility import update_timestamp, get_interval_pps, get_nth_random_element, index_increment
+from ID2TLib.Utility import update_timestamp, get_interval_pps, get_nth_random_element, index_increment, \
+    handle_most_used_outputs
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 # noinspection PyPep8
@@ -114,9 +115,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         if num_attackers is not None:  # user supplied Param.NUMBER_ATTACKERS
             # The most used IP class in background traffic
             most_used_ip_class = self.statistics.process_db_query("most_used(ipClass)")
-            if isinstance(most_used_ip_class, list):
-                most_used_ip_class.sort()
-                most_used_ip_class = most_used_ip_class[0]
+            most_used_ip_class = handle_most_used_outputs(most_used_ip_class)
             # Create random attackers based on user input Param.NUMBER_ATTACKERS
             ip_source_list = self.generate_random_ipv4_address(most_used_ip_class, num_attackers)
             mac_source_list = self.generate_random_mac_address(num_attackers)
@@ -160,9 +159,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         if not port_destination:
             port_destination = max(1, str(RandShort()))
 
-        if isinstance(port_destination, list):
-            port_destination.sort()
-            port_destination = port_destination[0]
+        port_destination = handle_most_used_outputs(port_destination)
 
         attacker_port_mapping = {}
         attacker_ttl_mapping = {}
@@ -190,10 +187,14 @@ class DDoSAttack(BaseAttack.BaseAttack):
         else:
             destination_win_value = self.statistics.process_db_query("most_used(winSize)")
 
+        destination_win_value = handle_most_used_outputs(destination_win_value)
+
         # MSS that was used by IP destination in background traffic
         mss_dst = self.statistics.get_most_used_mss(ip_destination)
         if mss_dst is None:
             mss_dst = self.statistics.process_db_query("most_used(mssValue)")
+
+        mss_dst = handle_most_used_outputs(mss_dst)
 
         replies_count = 0
         total_pkt_num = 0
