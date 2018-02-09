@@ -3,13 +3,13 @@ import unittest
 from definitions import ROOT_DIR
 import ID2TLib.Controller as Ctrl
 
-# TODO: change to generic path
+
 pcap = ROOT_DIR + "/../resources/test/reference_1998.pcap"
 
 controller = Ctrl.Controller(pcap_file_path=pcap, do_extra_tests=False)
 controller.load_pcap_statistics(flag_write_file=False, flag_recalculate_stats=True, flag_print_statistics=False)
 
-#TODO: also change path
+
 file_information = [('Pcap file', ROOT_DIR + '/../resources/test/reference_1998.pcap'),
                     ('Packets', 1998, 'packets'), ('Capture length', '25.4294414520264', 'seconds'),
                     ('Capture start', '1970-01-01 01:01:45.647675'), ('Capture end', '1970-01-01 01:08:10.102034')]
@@ -129,6 +129,85 @@ class TestQueries(unittest.TestCase):
     #TODO: get complement packet rates and a reasonable pps
     #def test_calculate_complement_packet_rates(self):
     #    self.assertEqual(controller.statistics.calculate_complement_packet_rates(42), '')
+
+    # NAMED QUERY TESTS
+    def test_most_used_ipaddress(self):
+        self.assertEqual(controller.statistics.process_db_query('most_used(ipaddress)'), '10.0.2.15')
+
+    def test_most_used_macaddress(self):
+        self.assertEqual(controller.statistics.process_db_query('most_used(macaddress)'), [('52:54:00:12:35:02', 21)])
+
+    def test_most_used_portnumber(self):
+        self.assertEqual(controller.statistics.process_db_query('most_used(portnumber)'), [(443, 28)])
+
+    def test_most_used_protocolname(self):
+        self.assertEqual(controller.statistics.process_db_query('most_used(protocolname)'), [('IPv4', 22)])
+
+    def test_most_used_ttlvalue(self):
+        self.assertEqual(controller.statistics.process_db_query('most_used(ttlvalue)'), 64)
+
+    def test_most_used_mssvalue(self):
+        self.assertEqual(controller.statistics.process_db_query('most_used(mssvalue)'), 1460)
+
+    def test_most_used_winsize(self):
+        self.assertEqual(controller.statistics.process_db_query('most_used(winsize)'), 65535)
+
+    def test_most_used_ipclass(self):
+        self.assertEqual(controller.statistics.process_db_query('most_used(ipclass)'), 'A')
+
+    def test_least_used_ipaddress(self):
+        self.assertEqual(controller.statistics.process_db_query('least_used(ipaddress)'), '72.247.178.113')
+
+    def test_least_used_macaddress(self):
+        self.assertEqual(controller.statistics.process_db_query('least_used(macaddress)'), [('08:00:27:a3:83:43', 1)])
+
+    def test_least_used_portnumber(self):
+        self.assertEqual(controller.statistics.process_db_query('least_used(portnumber)'), [(58645, 1), (59844, 1)])
+
+    def test_least_used_protocolname(self):
+        self.assertEqual(controller.statistics.process_db_query('least_used(protocolname)'), [('UDP', 2)])
+
+    def test_least_used_ttlvalue(self):
+        self.assertEqual(controller.statistics.process_db_query('least_used(ttlvalue)'), 255)
+
+    def test_avg_pktsreceived(self):
+        self.assertEqual(controller.statistics.process_db_query('avg(pktsreceived)'), 90.36363636363636)
+
+    def test_avg_pktssent(self):
+        self.assertEqual(controller.statistics.process_db_query('avg(pktssent)'), 90.36363636363636)
+
+    def test_avg_kbytesreceived(self):
+        self.assertEqual(controller.statistics.process_db_query('avg(kbytesreceived)'), 30.289683948863637)
+
+    def test_avg_kbytessent(self):
+        self.assertEqual(controller.statistics.process_db_query('avg(kbytessent)'), 30.289683948863637)
+
+    def test_avg_ttlvalue(self):
+        self.assertEqual(controller.statistics.process_db_query('avg(ttlvalue)'), 75.08695652173913)
+
+    def test_avg_mss(self):
+        self.assertEqual(controller.statistics.process_db_query('avg(mss)'), 1460.0)
+
+    def test_all_ipaddress(self):
+        self.assertEqual(controller.statistics.process_db_query('all(ipaddress)'), ip_addresses)
+
+    def test_all_ttlvalue(self):
+        self.assertEqual(controller.statistics.process_db_query('all(ttlvalue)'), [64, 128, 255])
+
+    def test_all_mss(self):
+        self.assertEqual(controller.statistics.process_db_query('all(mss)'), 1460)
+
+    def test_all_macaddress(self):
+        self.assertEqual(controller.statistics.process_db_query('all(macaddress)'), ['52:54:00:12:35:02', '08:00:27:a3:83:43'])
+
+    # TODO: get list of ports
+    #def test_all_portnumber(self):
+    #    self.assertEqual(controller.statistics.process_db_query('all(portnumber)'), '')
+
+    def test_all_protocolname(self):
+        self.assertEqual(controller.statistics.process_db_query('all(protocolname)'), ['IPv4', 'TCP', 'UDP'])
+
+
 
 
 if __name__ == '__main__':
