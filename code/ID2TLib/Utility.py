@@ -281,3 +281,18 @@ def get_bytes_from_file(filepath):
     except FileNotFoundError:
         print("\nERROR: File not found: ", filepath)
         exit(1)
+
+
+def handle_most_used_outputs(most_used_x):
+    """
+    :param most_used_x: Element or list (e.g. from SQL-query output) which should only be one element
+    :return: most_used_x if it's not a list. The first element of most_used_x after being sorted if it's a list.
+    None if that list is empty.
+    """
+    if isinstance(most_used_x, list):
+        if len(most_used_x) == 0:
+            return None
+        most_used_x.sort()
+        return most_used_x[0]
+    else:
+        return most_used_x

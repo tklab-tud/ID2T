@@ -8,7 +8,7 @@ import ID2TLib.TestLibrary as Lib
 
 class GenericTest(unittest.TestCase):
 
-    def generic_test(self, attack_args, sha_checksum, seed=5, cleanup=False, pcap=Lib.test_pcap, flag_write_file=False,
+    def generic_test(self, attack_args, sha_checksum, seed=5, cleanup=True, pcap=Lib.test_pcap, flag_write_file=False,
                      flag_recalculate_stats=False, flag_print_statistics=False, attack_sub_dir=True, test_sub_dir=True):
         # TODO: move seed to attacks
         random.seed(seed)
@@ -19,7 +19,7 @@ class GenericTest(unittest.TestCase):
         caller_function = inspect.stack()[1].function
 
         try:
-            self.assertEqual(Lib.get_sha256(controller.pcap_dest_path), sha_checksum)
+            self.assertEqual(sha_checksum, Lib.get_sha256(controller.pcap_dest_path))
         except self.failureException:
             Lib.rename_test_result_files(controller, caller_function, attack_sub_dir, test_sub_dir)
             raise

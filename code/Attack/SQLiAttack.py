@@ -4,7 +4,7 @@ from random import randint
 from lea import Lea
 from scapy.utils import RawPcapReader
 from scapy.layers.inet import Ether
-from ID2TLib.Utility import update_timestamp, get_interval_pps
+from ID2TLib.Utility import update_timestamp, get_interval_pps, handle_most_used_outputs
 
 from definitions import ROOT_DIR
 from Attack import BaseAttack
@@ -58,8 +58,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
         # (values are overwritten if user specifies them)
         # Attacker configuration
         most_used_ip_address = self.statistics.get_most_used_ip_address()
-        if isinstance(most_used_ip_address, list):
-            most_used_ip_address = most_used_ip_address[0]
+
         self.add_param_value(Param.IP_SOURCE, most_used_ip_address)
         self.add_param_value(Param.MAC_SOURCE, self.statistics.get_mac_address(most_used_ip_address))
 
@@ -110,14 +109,14 @@ class SQLiAttack(BaseAttack.BaseAttack):
             source_ttl_prob_dict = Lea.fromValFreqsDict(source_ttl_dist)
             source_ttl_value = source_ttl_prob_dict.random()
         else:
-            source_ttl_value = self.statistics.process_db_query("most_used(ttlValue)")
+            source_ttl_value = handle_most_used_outputs(self.statistics.process_db_query("most_used(ttlValue)"))
 
         destination_ttl_dist = self.statistics.get_ttl_distribution(ip_destination)
         if len(destination_ttl_dist) > 0:
             destination_ttl_prob_dict = Lea.fromValFreqsDict(destination_ttl_dist)
             destination_ttl_value = destination_ttl_prob_dict.random()
         else:
-            destination_ttl_value = self.statistics.process_db_query("most_used(ttlValue)")
+            destination_ttl_value = handle_most_used_outputs(self.statistics.process_db_query("most_used(ttlValue)"))
 
         # Inject SQLi Attack
         # Read SQLi Attack pcap file

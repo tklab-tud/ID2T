@@ -3,6 +3,7 @@ from math import sqrt, ceil, log
 
 import os
 import time
+import random
 import ID2TLib.libpcapreader as pr
 import matplotlib
 
@@ -10,6 +11,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from ID2TLib.PcapFile import PcapFile
 from ID2TLib.StatsDatabase import StatsDatabase
+from ID2TLib.Utility import handle_most_used_outputs
 
 
 class Statistics:
@@ -477,7 +479,7 @@ class Statistics:
         """
         :return: The IP address/addresses with the highest sum of packets sent and received
         """
-        return self.process_db_query("most_used(ipAddress)")
+        return handle_most_used_outputs(self.process_db_query("most_used(ipAddress)"))
 
     def get_ttl_distribution(self, ipAddress: str):
         result = self.process_db_query('SELECT ttlValue, ttlCount from ip_ttl WHERE ipAddress="' + ipAddress + '"')
@@ -514,10 +516,13 @@ class Statistics:
         if count == 1:
             return self.process_db_query("random(all(ipAddress))")
         else:
-            ip_address_list = []
+            ip_address_list = self.process_db_query("all(ipAddress)")
+            result_list = []
             for i in range(0, count):
-                ip_address_list.append(self.process_db_query("random(all(ipAddress))"))
-            return ip_address_list
+                random_ip = random.choice(ip_address_list)
+                result_list.append(random_ip)
+                ip_address_list.remove(random_ip)
+            return result_list
 
     def get_ip_address_from_mac(self, macAddress: str):
         """
@@ -538,9 +543,15 @@ class Statistics:
         :return: The TCP MSS value used by the IP address, or if the IP addresses never specified a MSS,
         then None is returned
         """
-        mss_value = self.process_db_query('SELECT mssValue from tcp_mss WHERE ipAddress="' + ipAddress + '" ORDER BY mssCount DESC LIMIT 1')
+        mss_value = self.process_db_query('SELECT mssValue from tcp_mss WHERE ipAddress="' + ipAddress + '" AND mssCount == (SELECT MAX(mssCount) from tcp_mss WHERE ipAddress="' + ipAddress + '")')
         if isinstance(mss_value, int):
             return mss_value
+        elif isinstance(mss_value, list):
+            if len(mss_value) == 0:
+                return None
+            else:
+                mss_value.sort()
+                return mss_value[0]
         else:
             return None
 
@@ -551,12 +562,17 @@ class Statistics:
         then None is returned
         """
         ttl_value = self.process_db_query(
-            'SELECT ttlValue from ip_ttl WHERE ipAddress="' + ipAddress + '" ORDER BY ttlCount DESC LIMIT 1')
+            'SELECT ttlValue from ip_ttl WHERE ipAddress="' + ipAddress + '" AND ttlCount == (SELECT MAX(ttlCount) from ip_ttl WHERE ipAddress="' + ipAddress + '")')
         if isinstance(ttl_value, int):
             return ttl_value
+        elif isinstance(ttl_value, list):
+            if len(ttl_value) == 0:
+                return None
+            else:
+                ttl_value.sort()
+                return ttl_value[0]
         else:
             return None
-
 
     def get_statistics_database(self):
         """
