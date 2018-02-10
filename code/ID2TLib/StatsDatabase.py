@@ -191,12 +191,12 @@ class StatsDatabase:
             "avg.kbytessent": "SELECT avg(kbytesSent) from ip_statistics",
             "avg.ttlvalue": "SELECT avg(ttlValue) from ip_ttl",
             "avg.mss": "SELECT avg(mssValue) from tcp_mss",
-            "all.ipaddress": "SELECT ipAddress from ip_statistics",
-            "all.ttlvalue": "SELECT DISTINCT ttlValue from ip_ttl",
-            "all.mss": "SELECT DISTINCT mssValue from tcp_mss",
-            "all.macaddress": "SELECT DISTINCT macAddress from ip_mac",
-            "all.portnumber": "SELECT DISTINCT portNumber from ip_ports",
-            "all.protocolname": "SELECT DISTINCT protocolName from ip_protocols"}
+            "all.ipaddress": "SELECT ipAddress from ip_statistics ORDER BY ipAddress ASC",
+            "all.ttlvalue": "SELECT DISTINCT ttlValue from ip_ttl ORDER BY ttlValue ASC",
+            "all.mss": "SELECT DISTINCT mssValue from tcp_mss ORDER BY mssValue ASC",
+            "all.macaddress": "SELECT DISTINCT macAddress from ip_mac ORDER BY macAddress ASC",
+            "all.portnumber": "SELECT DISTINCT portNumber from ip_ports ORDER BY portNumber ASC",
+            "all.protocolname": "SELECT DISTINCT protocolName from ip_protocols ORDER BY protocolName ASC"}
 
         # Retrieve values by selectors, if given, reduce results by extractor
         last_result = 0
