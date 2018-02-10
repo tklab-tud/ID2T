@@ -10,7 +10,8 @@ from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes
 from ID2TLib.Utility import update_timestamp, get_interval_pps, get_nth_random_element, index_increment, \
-    handle_most_used_outputs
+    handle_most_used_outputs, get_attacker_config
+from ID2TLib.Utility import update_timestamp, get_interval_pps, get_nth_random_element
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 # noinspection PyPep8
@@ -77,37 +78,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.VICTIM_BUFFER, randint(1000,10000))
 
     def generate_attack_pcap(self):
-        def get_attacker_config(ipAddress: str):
-            """
-            Returns the attacker configuration depending on the IP address, this includes the port for the next
-            attacking packet and the previously used (fixed) TTL value.
-            :param ipAddress: The IP address of the attacker
-            :return: A tuple consisting of (port, ttlValue)
-            """
-            # Determine port
-            port = attacker_port_mapping.get(ipAddress)
-            if port is not None:  # use next port
-                next_port = attacker_port_mapping.get(ipAddress) + 1
-                if next_port > (2 ** 16 - 1):
-                    next_port = 1
-            else:  # generate starting port
-                next_port = RandShort()
-            attacker_port_mapping[ipAddress] = next_port
-            # Determine TTL value
-            ttl = attacker_ttl_mapping.get(ipAddress)
-            if ttl is None:  # determine TTL value
-                is_invalid = True
-                pos = ip_source_list.index(ipAddress)
-                pos_max = len(gd)
-                while is_invalid:
-                    ttl = int(round(gd[pos]))
-                    if 0 < ttl < 256:  # validity check
-                        is_invalid = False
-                    else:
-                        pos = index_increment(pos, pos_max)
-                attacker_ttl_mapping[ipAddress] = ttl
-            # return port and TTL
-            return next_port, ttl
         BUFFER_SIZE = 1000
 
         # Determine source IP and MAC address
@@ -176,8 +146,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         attack_duration = self.get_param_value(Param.ATTACK_DURATION)
         pkts_num = int(pps * attack_duration)
 
-        source_win_sizes = self.statistics.process_db_query(
-                "SELECT DISTINCT winSize FROM tcp_win ORDER BY RANDOM() LIMIT "+str(pkts_num)+";")
+        source_win_sizes = self.statistics.get_rnd_win_size(pkts_num)
 
         destination_win_dist = self.statistics.get_win_distribution(ip_destination)
         if len(destination_win_dist) > 0:
@@ -212,7 +181,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 # Select one IP address and its corresponding MAC address
                 (ip_source, mac_source) = get_nth_random_element(ip_source_list, mac_source_list)
                 # Determine source port
-                (port_source, ttl_value) = get_attacker_config(ip_source)
+                (port_source, ttl_value) = get_attacker_config(ip_source_list ,ip_source)
                 request_ether = Ether(dst=mac_destination, src=mac_source)
                 request_ip = IP(src=ip_source, dst=ip_destination, ttl=ttl_value)
                 # Random win size for each packet

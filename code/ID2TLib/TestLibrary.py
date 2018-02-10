@@ -1,5 +1,6 @@
 import os
 import hashlib
+import random
 
 from definitions import ROOT_DIR
 
@@ -108,3 +109,18 @@ def rename_test_result_files(controller, caller_function: str, attack_sub_dir=Fa
 
     os.rename(controller.label_manager.label_file_path, result_labels_path)
     controller.label_manager.label_file_path = result_labels_path
+
+
+def get_win_size(pkts_num):
+    result = []
+    for i in range(0, pkts_num):
+        result.append(10)
+    return result
+
+
+def get_attacker_config(ip_source_list, ipAddress: str):
+    next_port = random.randint(0, 2 ** 16 - 1)
+    ttl = random.randint(1, 255)
+
+    return next_port, ttl
+

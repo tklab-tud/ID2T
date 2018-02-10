@@ -574,6 +574,10 @@ class Statistics:
         else:
             return None
 
+    def get_rnd_win_size(self, pkts_num):
+        return self.process_db_query(
+            "SELECT DISTINCT winSize FROM tcp_win ORDER BY RANDOM() LIMIT "+str(pkts_num)+";")
+
     def get_statistics_database(self):
         """
         :return: A reference to the statistics database object
