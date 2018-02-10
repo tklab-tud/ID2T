@@ -84,9 +84,13 @@ install_pip()
     fi
 }
 
+# Make sure the SQLiteCpp submodule is there
+echo -e "Updating SQLiteCpp"
+git submodule update --init
+
 KERNEL=$(uname)
 
-if [ $KERNEL = 'Darwin' ]; then
+if [ "$KERNEL" = 'Darwin' ]; then
     echo -e "Detected OS:  macOS"
 
     which brew
@@ -98,16 +102,16 @@ if [ $KERNEL = 'Darwin' ]; then
     install_pkg_darwin
     install_pip
     exit 0
-elif [ $KERNEL = 'Linux' ]; then
+elif [ "$KERNEL" = 'Linux' ]; then
     # Kernel is Linux, check for supported distributions
     OS=$(awk '/DISTRIB_ID=/' /etc/*-release | sed 's/DISTRIB_ID=//' | tr '[:upper:]' '[:lower:]')
 
-    if [ $OS = 'arch' ]; then
+    if [ "$OS" = 'arch' ]; then
         echo -e "Detected OS: Arch Linux"
         install_pkg_arch
         install_pip
         exit 0
-    elif [ $OS = 'ubuntu' ]; then
+    elif [ "$OS" = 'ubuntu' ]; then
         echo -e "Detected OS: Ubuntu"
         install_pkg_ubuntu
         install_pip
