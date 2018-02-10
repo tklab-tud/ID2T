@@ -15,10 +15,10 @@ file_information = [('Pcap file', ROOT_DIR + '/../resources/test/reference_1998.
                     ('Capture start', '1970-01-01 01:01:45.647675'), ('Capture end', '1970-01-01 01:08:10.102034')]
 
 file_statistics = [('Avg. packet rate', 78.57034301757812, 'packets/sec'), ('Avg. packet size', 0.0, 'kbytes'),
-                   ('Avg. packets sent', 90.0, 'packets'), ('Avg. bandwidth in', 9.529012680053711, 'kbit/s'),
-                   ('Avg. bandwidth out', 9.529012680053711, 'kbit/s')]
+                   ('Avg. packets sent', 90.0, 'packets'), ('Avg. bandwidth in', 9.5290, 'kbit/s'),
+                   ('Avg. bandwidth out', 9.5290, 'kbit/s')]
 
-#FIXME: currently sorted ascending
+# FIXME: currently sorted ascending
 ip_addresses = ["10.0.2.15", "104.83.103.45", "13.107.21.200", "131.253.61.100","172.217.23.142",
                 "172.217.23.174", "192.168.33.254", "204.79.197.200", "23.51.123.27", "35.161.3.50",
                 "52.11.17.245", "52.34.37.177", "52.39.210.199", "52.41.250.141", "52.85.173.182",
@@ -31,10 +31,13 @@ class TestQueries(unittest.TestCase):
         self.assertEqual(controller.statistics.get_file_information(), file_information)
 
     def test_get_general_file_statistics(self):
-        self.assertEqual(controller.statistics.get_general_file_statistics(), file_statistics)
+        file_stats = controller.statistics.get_general_file_statistics()
+        file_stats[3] = ('Avg. bandwidth in', round(file_stats[3][1], 4), 'kbit/s')
+        file_stats[4] = ('Avg. bandwidth out', round(file_stats[4][1], 4), 'kbit/s')
+        self.assertEqual(file_stats, file_statistics)
 
     def test_get_capture_duration(self):
-        self.assertEqual(controller.statistics.get_capture_duration(),'25.4294414520264')
+        self.assertEqual(controller.statistics.get_capture_duration(), '25.4294414520264')
 
     def test_get_pcap_timestamp_start(self):
         self.assertEqual(controller.statistics.get_pcap_timestamp_start(), '1970-01-01 01:01:45.647675')
@@ -91,7 +94,7 @@ class TestQueries(unittest.TestCase):
     def test_get_ip_addresses(self):
         self.assertEqual(controller.statistics.get_ip_addresses(), ip_addresses)
 
-    #TODO: move random outside of query and use seed to test
+    # TODO: move random outside of query and use seed to test
     #def test_get_random_ip_address(self):
     #    self.assertEqual(controller.statistics.get_random_ip_address(), '')
 
@@ -117,16 +120,17 @@ class TestQueries(unittest.TestCase):
         self.assertTrue(controller.statistics.is_query('SELECT * from ip_statistics'))
 
     def test_calculate_standard_deviation(self):
-        self.assertEqual(controller.statistics.calculate_standard_deviation([1,1,2,3,5,8,13,21]), 6.609652033201143)
+        self.assertEqual(controller.statistics.calculate_standard_deviation([1, 1, 2, 3, 5, 8, 13, 21]),
+                         6.609652033201143)
 
     def test_calculate_entropy_unnormalized(self):
-        self.assertEqual(controller.statistics.calculate_entropy([1,1,2,3,5,8,13,21]), 2.371389165297016)
+        self.assertEqual(controller.statistics.calculate_entropy([1, 1, 2, 3, 5, 8, 13, 21]), 2.371389165297016)
 
     def test_calculate_entropy_normalized(self):
         self.assertEqual(controller.statistics.calculate_entropy([1, 1, 2, 3, 5, 8, 13, 21], normalized=True),
                                                                 (2.371389165297016, 0.7904630550990053))
 
-    #TODO: get complement packet rates and a reasonable pps
+    # TODO: get complement packet rates and a reasonable pps
     #def test_calculate_complement_packet_rates(self):
     #    self.assertEqual(controller.statistics.calculate_complement_packet_rates(42), '')
 
@@ -135,13 +139,13 @@ class TestQueries(unittest.TestCase):
         self.assertEqual(controller.statistics.process_db_query('most_used(ipaddress)'), '10.0.2.15')
 
     def test_most_used_macaddress(self):
-        self.assertEqual(controller.statistics.process_db_query('most_used(macaddress)'), [('52:54:00:12:35:02', 21)])
+        self.assertEqual(controller.statistics.process_db_query('most_used(macaddress)'), '52:54:00:12:35:02')
 
     def test_most_used_portnumber(self):
-        self.assertEqual(controller.statistics.process_db_query('most_used(portnumber)'), [(443, 28)])
+        self.assertEqual(controller.statistics.process_db_query('most_used(portnumber)'), 443)
 
     def test_most_used_protocolname(self):
-        self.assertEqual(controller.statistics.process_db_query('most_used(protocolname)'), [('IPv4', 22)])
+        self.assertEqual(controller.statistics.process_db_query('most_used(protocolname)'), 'IPv4')
 
     def test_most_used_ttlvalue(self):
         self.assertEqual(controller.statistics.process_db_query('most_used(ttlvalue)'), 64)
@@ -159,13 +163,13 @@ class TestQueries(unittest.TestCase):
         self.assertEqual(controller.statistics.process_db_query('least_used(ipaddress)'), '72.247.178.113')
 
     def test_least_used_macaddress(self):
-        self.assertEqual(controller.statistics.process_db_query('least_used(macaddress)'), [('08:00:27:a3:83:43', 1)])
+        self.assertEqual(controller.statistics.process_db_query('least_used(macaddress)'), '08:00:27:a3:83:43')
 
     def test_least_used_portnumber(self):
-        self.assertEqual(controller.statistics.process_db_query('least_used(portnumber)'), [(58645, 1), (59844, 1)])
+        self.assertEqual(controller.statistics.process_db_query('least_used(portnumber)'), [58645, 59844])
 
     def test_least_used_protocolname(self):
-        self.assertEqual(controller.statistics.process_db_query('least_used(protocolname)'), [('UDP', 2)])
+        self.assertEqual(controller.statistics.process_db_query('least_used(protocolname)'), 'UDP')
 
     def test_least_used_ttlvalue(self):
         self.assertEqual(controller.statistics.process_db_query('least_used(ttlvalue)'), 255)
@@ -198,7 +202,8 @@ class TestQueries(unittest.TestCase):
         self.assertEqual(controller.statistics.process_db_query('all(mss)'), 1460)
 
     def test_all_macaddress(self):
-        self.assertEqual(controller.statistics.process_db_query('all(macaddress)'), ['52:54:00:12:35:02', '08:00:27:a3:83:43'])
+        self.assertEqual(controller.statistics.process_db_query('all(macaddress)'), ['08:00:27:a3:83:43',
+                                                                                     '52:54:00:12:35:02'])
 
     # TODO: get list of ports
     #def test_all_portnumber(self):
@@ -206,8 +211,6 @@ class TestQueries(unittest.TestCase):
 
     def test_all_protocolname(self):
         self.assertEqual(controller.statistics.process_db_query('all(protocolname)'), ['IPv4', 'TCP', 'UDP'])
-
-
 
 
 if __name__ == '__main__':
