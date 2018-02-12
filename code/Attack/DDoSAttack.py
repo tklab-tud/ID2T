@@ -28,7 +28,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
                                         "Resource Exhaustion")
 
         # Define allowed parameters and their type
-        self.supported_params = {
+        self.supported_params.update({
             Param.IP_SOURCE: ParameterTypes.TYPE_IP_ADDRESS,
             Param.MAC_SOURCE: ParameterTypes.TYPE_MAC_ADDRESS,
             Param.PORT_SOURCE: ParameterTypes.TYPE_PORT,
@@ -41,7 +41,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
             Param.NUMBER_ATTACKERS: ParameterTypes.TYPE_INTEGER_POSITIVE,
             Param.ATTACK_DURATION: ParameterTypes.TYPE_INTEGER_POSITIVE,
             Param.VICTIM_BUFFER: ParameterTypes.TYPE_INTEGER_POSITIVE
-        }
+        })
 
     def init_params(self):
         """

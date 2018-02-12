@@ -27,7 +27,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
                                              "Scanning/Probing")
 
         # Define allowed parameters and their type
-        self.supported_params = {
+        self.supported_params.update({
             Param.IP_SOURCE: ParameterTypes.TYPE_IP_ADDRESS,
             Param.IP_DESTINATION: ParameterTypes.TYPE_IP_ADDRESS,
             Param.PORT_SOURCE: ParameterTypes.TYPE_PORT,
@@ -42,7 +42,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
             Param.IP_SOURCE_RANDOMIZE: ParameterTypes.TYPE_BOOLEAN,
             Param.PACKETS_PER_SECOND: ParameterTypes.TYPE_FLOAT,
             Param.PORT_SOURCE_RANDOMIZE: ParameterTypes.TYPE_BOOLEAN
-        }
+        })
 
     def init_params(self):
         """

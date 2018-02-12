@@ -21,10 +21,11 @@ class AttackController:
         self.current_attack = None
         self.added_attacks = []
 
-    def create_attack(self, attack_name: str):
+    def create_attack(self, attack_name: str, seed: int):
         """
         Creates dynamically a new class instance based on the given attack_name.
         :param attack_name: The name of the attack, must correspond to the attack's class name.
+        :param seed: random seed for param generation
         :return: None
         """
         print("\nCreating attack instance of \033[1m" + attack_name + "\033[0m")
@@ -36,6 +37,7 @@ class AttackController:
         self.current_attack = attack_class()
         # Initialize the parameters of the attack with defaults or user supplied values.
         self.current_attack.set_statistics(self.statistics)
+        self.current_attack.set_seed(seed=seed)
         self.current_attack.init_params()
         # Record the attack
         self.added_attacks.append(self.current_attack)
@@ -48,9 +50,6 @@ class AttackController:
         :param params: The parameters for attack customization, see attack class for supported params.
         :return: The file path to the created pcap file.
         """
-        self.create_attack(attack)
-
-        # Add attack parameters if provided
         print("Validating and adding attack parameters.")
         params_dict = []
         if isinstance(params, list) and params:
@@ -58,6 +57,13 @@ class AttackController:
             for entry in params:
                 params_dict.append(entry.split('='))
             params_dict = dict(params_dict)
+
+        seed = params_dict['seed']
+
+        self.create_attack(attack, seed)
+
+        # Add attack parameters if provided
+        if params_dict is not []:
             # Check if Parameter.INJECT_AT_TIMESTAMP and Parameter.INJECT_AFTER_PACKET are provided at the same time
             # if TRUE: delete Paramter.INJECT_AT_TIMESTAMP (lower priority) and use Parameter.INJECT_AFTER_PACKET
             if (Parameter.INJECT_AFTER_PACKET.value in params_dict) and (

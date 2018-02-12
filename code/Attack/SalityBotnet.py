@@ -26,13 +26,13 @@ class SalityBotnet(BaseAttack.BaseAttack):
                                         "Botnet")
 
         # Define allowed parameters and their type
-        self.supported_params = {
+        self.supported_params.update({
             Param.MAC_SOURCE: ParameterTypes.TYPE_MAC_ADDRESS,
             Param.IP_SOURCE: ParameterTypes.TYPE_IP_ADDRESS,
             Param.INJECT_AT_TIMESTAMP: ParameterTypes.TYPE_FLOAT,
             Param.INJECT_AFTER_PACKET: ParameterTypes.TYPE_PACKET_POSITION,
             Param.PACKETS_PER_SECOND: ParameterTypes.TYPE_FLOAT
-        }
+        })
 
     def init_params(self):
         """

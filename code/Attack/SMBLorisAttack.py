@@ -1,6 +1,6 @@
 import logging
 
-from random import randint, uniform
+import random
 from lea import Lea
 from scapy.layers.inet import IP, Ether, TCP
 from scapy.layers.netbios import NBTSession
@@ -27,7 +27,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
                                              "Resource Exhaustion")
 
         # Define allowed parameters and their type
-        self.supported_params = {
+        self.supported_params.update({
             Param.IP_SOURCE: ParameterTypes.TYPE_IP_ADDRESS,
             Param.IP_DESTINATION: ParameterTypes.TYPE_IP_ADDRESS,
             Param.MAC_SOURCE: ParameterTypes.TYPE_MAC_ADDRESS,
@@ -37,23 +37,22 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
             Param.PACKETS_PER_SECOND: ParameterTypes.TYPE_FLOAT,
             Param.ATTACK_DURATION: ParameterTypes.TYPE_INTEGER_POSITIVE,
             Param.NUMBER_ATTACKERS: ParameterTypes.TYPE_INTEGER_POSITIVE
-        }
+        })
 
     def init_params(self):
         """
         Initialize the parameters of this attack using the user supplied command line parameters.
         Use the provided statistics to calculate default parameters and to process user
         supplied queries.
-
-        :param statistics: Reference to a statistics object.
         """
+
         # PARAMETERS: initialize with default values
         # (values are overwritten if user specifies them)
         most_used_ip_address = self.statistics.get_most_used_ip_address()
 
         # The most used IP class in background traffic
         most_used_ip_class = handle_most_used_outputs(self.statistics.process_db_query("most_used(ipClass)"))
-        num_attackers = randint(1, 16)
+        num_attackers = random.randint(1, 16)
         source_ip = self.generate_random_ipv4_address(most_used_ip_class, num_attackers)
 
         self.add_param_value(Param.IP_SOURCE, source_ip)
@@ -72,7 +71,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.PACKETS_PER_SECOND,
                              (self.statistics.get_pps_sent(most_used_ip_address) +
                               self.statistics.get_pps_received(most_used_ip_address)) / 2)
-        self.add_param_value(Param.INJECT_AFTER_PACKET, randint(0, self.statistics.get_packet_count()))
+        self.add_param_value(Param.INJECT_AFTER_PACKET, random.randint(0, self.statistics.get_packet_count()))
         self.add_param_value(Param.ATTACK_DURATION, 30)
 
     def generate_attack_pcap(self):
@@ -136,13 +135,13 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
             # Get MSS, TTL and Window size value for source IP(attacker)
             source_mss_value, source_ttl_value, source_win_value = self.get_ip_data(ip_source_list[attacker])
 
-            attacker_seq = randint(1000, 50000)
-            victim_seq = randint(1000, 50000)
+            attacker_seq = random.randint(1000, 50000)
+            victim_seq = random.randint(1000, 50000)
 
             sport = 1025
 
             # Timestamps of first packets shouldn't be exactly the same to look more realistic
-            timestamp_next_pkt = uniform(first_timestamp, update_timestamp(first_timestamp, pps))
+            timestamp_next_pkt = random.uniform(first_timestamp, update_timestamp(first_timestamp, pps))
 
             while timestamp_next_pkt <= attack_ends_time:
                 # Establish TCP connection

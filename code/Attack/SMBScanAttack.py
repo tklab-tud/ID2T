@@ -32,7 +32,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                                              "Scanning/Probing")
 
         # Define allowed parameters and their type
-        self.supported_params = {
+        self.supported_params.update({
             Param.IP_SOURCE: ParameterTypes.TYPE_IP_ADDRESS,
             Param.IP_DESTINATION: ParameterTypes.TYPE_IP_ADDRESS,
             Param.PORT_SOURCE: ParameterTypes.TYPE_PORT,
@@ -48,16 +48,15 @@ class SMBScanAttack(BaseAttack.BaseAttack):
             Param.SOURCE_PLATFORM: ParameterTypes.TYPE_STRING,
             Param.PROTOCOL_VERSION: ParameterTypes.TYPE_STRING,
             Param.IP_DESTINATION_END: ParameterTypes.TYPE_IP_ADDRESS
-        }
+        })
 
     def init_params(self):
         """
         Initialize the parameters of this attack using the user supplied command line parameters.
         Use the provided statistics to calculate default parameters and to process user
         supplied queries.
-
-        :param statistics: Reference to a statistics object.
         """
+
         # PARAMETERS: initialize with default values
         # (values are overwritten if user specifies them)
         most_used_ip_address = self.statistics.get_most_used_ip_address()
