@@ -341,3 +341,14 @@ def get_attacker_config(ip_source_list, ipAddress: str):
     # return port and TTL
     return next_port, ttl
 
+
+def rreplace(s, old, new, maxreplace):
+    """
+    Replaces occurences of a sub-string with a new sub-string, but, unlike replace(), it starts at the end
+    :param s: The string to search and replace from.
+    :param old: The old sub-string you wish to replace.
+    :param new: The new sub-string you wish to put in-place of the old one.
+    :param maxreplace: The maximum number of times you wish to replace the sub-string.
+    :return: The result of the reverse replace operation.
+    """
+    return new.join(s.rsplit(old, maxreplace))

@@ -3,6 +3,7 @@ from datetime import datetime
 from xml.dom.minidom import *
 
 import ID2TLib.Label as Label
+import ID2TLib.Utility as Utility
 
 
 class LabelManager:
@@ -28,7 +29,7 @@ class LabelManager:
         self.labels = list()
 
         if filepath_pcap is not None:
-            self.label_file_path = filepath_pcap.replace('.pcap', '_labels.xml')
+            self.label_file_path = Utility.rreplace(filepath_pcap, '.pcap', '_labels.xml', 1)
             # only load labels if label file is existing
             if os.path.exists(self.label_file_path):
                 self.load_labels()
@@ -83,7 +84,7 @@ class LabelManager:
             return timestamp_root
 
         if filepath is not None:
-            self.label_file_path = filepath.replace('.pcap', '_labels.xml')
+            self.label_file_path = Utility.rreplace(filepath, '.pcap', '_labels.xml', 1)
 
         # Generate XML
         doc = Document()
