@@ -298,7 +298,7 @@ class StatsDatabase:
 
         # Print results if option print_results is True
         if print_results:
-            if len(result) == 1 and isinstance(result, list):
+            if isinstance(result, list) and len(result) == 1:
                 result = result[0]
                 print("Query returned 1 record:\n")
                 for i in range(0, len(result)):
