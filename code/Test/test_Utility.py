@@ -56,7 +56,10 @@ class TestUtility(unittest.TestCase):
         self.assertIn(Utility.get_rnd_os(), Utility.platforms)
 
     def test_check_platform_valid(self):
-        Utility.check_platform("linux")
+        try:
+            Utility.check_platform("linux")
+        except SystemExit:
+            self.fail()
 
     def test_check_platform_invalid(self):
         with self.assertRaises(SystemExit):
@@ -191,3 +194,44 @@ class TestUtility(unittest.TestCase):
     def test_get_bytes_from_file_hex(self):
         result = Utility.get_bytes_from_file(TestLibrary.test_resource_dir+"/HexTestFile.txt")
         self.assertEqual(result, b'\xab\xcd\xef\xff\x10\xff\xaa\xab')
+
+    def test_handle_most_used_outputs_empty(self):
+        self.assertIsNone(Utility.handle_most_used_outputs([]))
+
+    def test_handle_most_used_outputs_one(self):
+        test_input = "SomeTest"
+        self.assertEqual(Utility.handle_most_used_outputs(test_input), test_input)
+
+    def test_handle_most_used_outputs_one_list(self):
+        test_input = ["SomeTest"]
+        self.assertEqual(Utility.handle_most_used_outputs(test_input), test_input[0])
+
+    def test_handle_most_used_outputs_list_sorted(self):
+        test_input = [0, 1, 2, 3, 4]
+        self.assertEqual(Utility.handle_most_used_outputs(test_input), 0)
+
+    def test_handle_most_used_outputs_list_unsorted(self):
+        test_input = [2, 4, 0, 1, 3]
+        self.assertEqual(Utility.handle_most_used_outputs(test_input), 0)
+
+    def test_rreplace_not_in_string(self):
+        self.assertEqual(Utility.rreplace("testateststring", "nonexisting", "correct", 1), "testateststring")
+
+    def test_rreplace_zero(self):
+        self.assertEqual(Utility.rreplace("testateststring", "test", "correct", 0), "testateststring")
+
+    def test_rreplace_one(self):
+        self.assertEqual(Utility.rreplace("testateststring", "test", "correct", 1), "testacorrectstring")
+
+    def test_rreplace_two(self):
+        self.assertEqual(Utility.rreplace("testateststring", "test", "correct", 2), "correctacorrectstring")
+
+    def test_check_payload_len_exceeded(self):
+        with self.assertRaises(SystemExit):
+            Utility.check_payload_len(10, 5)
+
+    def test_check_payload_len_valid(self):
+        try:
+            Utility.check_payload_len(5, 10)
+        except SystemExit:
+            self.fail()
