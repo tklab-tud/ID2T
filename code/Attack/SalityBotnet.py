@@ -127,6 +127,7 @@ class SalityBotnet(BaseAttack.BaseAttack):
 
             packets.append(new_pkt)
 
+        exploit_raw_packets.close()
         # Store timestamp of first packet (for attack label)
         self.attack_start_utime = packets[0].time
         self.attack_end_utime = packets[-1].time

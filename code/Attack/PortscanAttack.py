@@ -88,12 +88,14 @@ class PortscanAttack(BaseAttack.BaseAttack):
         :return: Ports numbers to be used as default destination ports or default open ports in the port scan.
         """
         ports_dst = []
-        spamreader = csv.reader(open(ROOT_DIR + '/../resources/nmap-services-tcp.csv', 'rt'), delimiter=',')
+        file = open(ROOT_DIR + '/../resources/nmap-services-tcp.csv', 'rt')
+        spamreader = csv.reader(file, delimiter=',')
         for count in range(ports_num):
             # escape first row (header)
             next(spamreader)
             # save ports numbers
             ports_dst.append(next(spamreader)[0])
+        file.close()
         # shuffle ports numbers partially
         if (ports_num == 1000):  # used for port.dst
             temp_array = [[0 for i in range(10)] for i in range(100)]

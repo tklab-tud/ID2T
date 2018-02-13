@@ -123,6 +123,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
         exploit_raw_packets = RawPcapReader(self.template_attack_pcap_path)
         inter_arrival_times, inter_arrival_time_dist = self.get_inter_arrival_time(exploit_raw_packets,True)
         timeSteps = Lea.fromValFreqsDict(inter_arrival_time_dist)
+        exploit_raw_packets.close()
         exploit_raw_packets = RawPcapReader(self.template_attack_pcap_path)
 
         port_source = random.randint(self.minDefaultPort,self.maxDefaultPort) # experiments show this range of ports
@@ -278,6 +279,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
 
             packets.append(new_pkt)
 
+        exploit_raw_packets.close()
         # Store timestamp of first packet (for attack label)
         self.attack_start_utime = packets[0].time
         self.attack_end_utime = packets[-1].time
