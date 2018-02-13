@@ -22,13 +22,13 @@ class UnitTestDDoS(GenericTest.GenericTest):
 
     @mock.patch.object(Statistics.Statistics, 'get_rnd_win_size', side_effect=Lib.get_win_size)
     @mock.patch('ID2TLib.Utility.get_attacker_config', side_effect=Lib.get_attacker_config)
-    def test_basic(self, mock_get_attacker_config, mock_get_rnd_win_size):
+    def test_ddos_basic(self, mock_get_attacker_config, mock_get_rnd_win_size):
         self.generic_test([['DDoSAttack']],
                           sha_basic_ddos)
 
     @mock.patch.object(Statistics.Statistics, 'get_rnd_win_size', side_effect=Lib.get_win_size)
     @mock.patch('ID2TLib.Utility.get_attacker_config', side_effect=Lib.get_attacker_config)
-    def test_num_attackers(self, mock_get_attacker_config, mock_get_rnd_win_size):
+    def test_ddos_num_attackers(self, mock_get_attacker_config, mock_get_rnd_win_size):
         self.generic_test([['DDoSAttack', 'attackers.count=5']],
                           sha_num_attackers_ddos)
 
@@ -42,7 +42,7 @@ class UnitTestDDoS(GenericTest.GenericTest):
     @mock.patch.object(Statistics.Statistics, 'get_rnd_win_size', side_effect=Lib.get_win_size)
     @mock.patch('ID2TLib.Utility.get_attacker_config', side_effect=Lib.get_attacker_config)
     @mock.patch('ID2TLib.Statistics.Statistics.get_most_used_mss', return_value=None)
-    def test_mss_none(self, mock_mss, mock_get_attacker_config, mock_get_rnd_win_size):
+    def test_ddos_mss_none(self, mock_mss, mock_get_attacker_config, mock_get_rnd_win_size):
         self.generic_test([['DDoSAttack']], sha_mss_none_ddos)
 
 
