@@ -147,8 +147,9 @@ class Controller:
             print("ipAddress is a parameterized selector which fetches IP addresses based on (a list of) conditions.")
             print("Conditions are of the following form: PARAMETER OPERATOR VALUE")
             print("The following parameters can be specified:")
-            print("pktsReceived | pktsSent | kbytesReceived | kbytesSent | maxPktRate | minPktRate | macAddress\n"
-                  "ttlValue | ttlCount | portDirection | portDirection | portNumber | portCount | protocolCount")
+            print("pktsReceived | pktsSent | kbytesReceived | kbytesSent | maxPktRate | minPktRate | ipClass\n"
+                  "macAddress | ttlValue | ttlCount | portDirection | portNumber | portCount | protocolCount\n"
+                  "protocolName")
             print()
             print("See 'help examples;' for usage examples.")
             print()
