@@ -33,7 +33,7 @@ void statistics_db::writeStatisticsIP(std::unordered_map<std::string, entry_ipSt
                 "kbytesSent REAL, "
                 "maxPktRate REAL,"
                 "minPktRate REAL,"
-                "ipClass TEXT, "
+                "ipClass TEXT COLLATE NOCASE, "
                 "PRIMARY KEY(ipAddress));";
         db->exec(createTable);
         SQLite::Statement query(*db, "INSERT INTO ip_statistics VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
@@ -187,7 +187,7 @@ void statistics_db::writeStatisticsProtocols(std::unordered_map<ipAddress_protoc
         SQLite::Transaction transaction(*db);
         const char *createTable = "CREATE TABLE ip_protocols ("
                 "ipAddress TEXT,"
-                "protocolName TEXT,"
+                "protocolName TEXT COLLATE NOCASE,"
                 "protocolCount INTEGER,"
                 "PRIMARY KEY(ipAddress,protocolName));";
         db->exec(createTable);
@@ -217,7 +217,7 @@ void statistics_db::writeStatisticsPorts(std::unordered_map<ipAddress_inOut_port
         SQLite::Transaction transaction(*db);
         const char *createTable = "CREATE TABLE ip_ports ("
                 "ipAddress TEXT,"
-                "portDirection TEXT,"
+                "portDirection TEXT COLLATE NOCASE,"
                 "portNumber INTEGER,"
                 "portCount INTEGER,"
                 "PRIMARY KEY(ipAddress,portDirection,portNumber));";
@@ -249,7 +249,7 @@ void statistics_db::writeStatisticsIpMac(std::unordered_map<std::string, std::st
         SQLite::Transaction transaction(*db);
         const char *createTable = "CREATE TABLE ip_mac ("
                 "ipAddress TEXT,"
-                "macAddress TEXT,"
+                "macAddress TEXT COLLATE NOCASE,"
                 "PRIMARY KEY(ipAddress));";
         db->exec(createTable);
         SQLite::Statement query(*db, "INSERT INTO ip_mac VALUES (?, ?)");
