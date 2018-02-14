@@ -1,5 +1,5 @@
 <p align="center">
-<img src="https://git.tk.informatik.tu-darmstadt.de/attachments/6e9882bf-3b40-4397-9c0d-ac53375f232c"></p>
+<img src="https://git.tk.informatik.tu-darmstadt.de/SPIN/ID2T-toolkit/raw/master/logo/id2t.png"></p>
 
 # ID2T - Intrusion Detection Dataset Toolkit
 A toolkit for injecting synthetic attacks into PCAP files.
