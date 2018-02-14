@@ -20,8 +20,12 @@ class AttackController:
 
         self.current_attack = None
         self.added_attacks = []
+        self.seed = None
 
-    def create_attack(self, attack_name: str, seed: int):
+    def set_seed(self, seed: int):
+        self.seed = seed
+
+    def create_attack(self, attack_name: str, seed=None):
         """
         Creates dynamically a new class instance based on the given attack_name.
         :param attack_name: The name of the attack, must correspond to the attack's class name.
@@ -37,7 +41,8 @@ class AttackController:
         self.current_attack = attack_class()
         # Initialize the parameters of the attack with defaults or user supplied values.
         self.current_attack.set_statistics(self.statistics)
-        self.current_attack.set_seed(seed=seed)
+        if seed is not None:
+            self.current_attack.set_seed(seed=seed)
         self.current_attack.init_params()
         # Record the attack
         self.added_attacks.append(self.current_attack)
@@ -50,20 +55,17 @@ class AttackController:
         :param params: The parameters for attack customization, see attack class for supported params.
         :return: The file path to the created pcap file.
         """
+        self.create_attack(attack, self.seed)
+
         print("Validating and adding attack parameters.")
+
+        # Add attack parameters if provided
         params_dict = []
         if isinstance(params, list) and params:
             # Convert attack param list into dictionary
             for entry in params:
                 params_dict.append(entry.split('='))
             params_dict = dict(params_dict)
-
-        seed = params_dict['seed']
-
-        self.create_attack(attack, seed)
-
-        # Add attack parameters if provided
-        if params_dict is not []:
             # Check if Parameter.INJECT_AT_TIMESTAMP and Parameter.INJECT_AFTER_PACKET are provided at the same time
             # if TRUE: delete Paramter.INJECT_AT_TIMESTAMP (lower priority) and use Parameter.INJECT_AFTER_PACKET
             if (Parameter.INJECT_AFTER_PACKET.value in params_dict) and (

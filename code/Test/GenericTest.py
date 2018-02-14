@@ -12,8 +12,7 @@ class GenericTest(unittest.TestCase):
         # TODO: move seed to attacks
         controller = Ctrl.Controller(pcap_file_path=pcap, do_extra_tests=False)
         controller.load_pcap_statistics(flag_write_file, flag_recalculate_stats, flag_print_statistics)
-        attack_args[0].append("seed=" + str(seed))
-        controller.process_attacks(attack_args)
+        controller.process_attacks(attack_args, [[seed]])
 
         caller_function = inspect.stack()[1].function
 

@@ -41,7 +41,7 @@ class BaseAttack(metaclass=ABCMeta):
         self.attack_description = description
         self.attack_type = attack_type
         self.params = {}
-        self.supported_params = {Parameter.SEED: ParameterTypes.TYPE_INTEGER_POSITIVE}
+        self.supported_params = {}
         self.attack_start_utime = 0
         self.attack_end_utime = 0
 
@@ -249,9 +249,8 @@ class BaseAttack(metaclass=ABCMeta):
     #########################################
 
     def set_seed(self, seed: int):
-        if seed:
-            self.add_param_value(Parameter.SEED, seed)
-            random.seed(self.get_param_value(Parameter.SEED))
+        if isinstance(seed, int):
+            random.seed(seed)
 
     def add_param_value(self, param, value):
         """

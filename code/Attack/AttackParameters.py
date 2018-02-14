@@ -45,9 +45,6 @@ class Parameter(Enum):
     CUSTOM_PAYLOAD = 'custom.payload'  # custom payload for ftp exploits
     CUSTOM_PAYLOAD_FILE = 'custom.payload.file'  # file that contains custom payload for ftp exploits
 
-    # benchmark
-    SEED = 'seed'
-
 
 class ParameterTypes(Enum):
     """

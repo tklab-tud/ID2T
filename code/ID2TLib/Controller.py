@@ -18,6 +18,7 @@ class Controller:
         self.pcap_dest_path = ''
         self.written_pcaps = []
         self.do_extra_tests = do_extra_tests
+        self.seed = None
 
         # Initialize class instances
         print("Input file: %s" % self.pcap_src_path)
@@ -39,7 +40,7 @@ class Controller:
         """
         self.statistics.load_pcap_statistics(flag_write_file, flag_recalculate_stats, flag_print_statistics)
 
-    def process_attacks(self, attacks_config: list):
+    def process_attacks(self, attacks_config: list, seeds=[]):
         """
         Creates the attack based on the attack name and the attack parameters given in the attacks_config. The
         attacks_config is a list of attacks, e.g.
@@ -49,9 +50,13 @@ class Controller:
         :param attacks_config: A list of attacks with their attack parameters.
         """
         # load attacks sequentially
+        i = 0
         for attack in attacks_config:
+            if len(seeds) > i:
+                self.attack_controller.set_seed(seed=seeds[i][0])
             temp_attack_pcap = self.attack_controller.process_attack(attack[0], attack[1:])
             self.written_pcaps.append(temp_attack_pcap)
+            i += 1
 
         # merge attack pcaps to get single attack pcap
         if len(self.written_pcaps) > 1:
