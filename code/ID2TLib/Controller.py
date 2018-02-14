@@ -118,6 +118,9 @@ class Controller:
             print("\t\tipAddress(...)  -> Returns all IP addresses fulfilling the specified conditions")
             print("\t\tmacAddress(...) -> Returns all MAC addresses fulfilling the specified conditions")
             print()
+            print("Miscellaneous:")
+            print("\tlabels            -> List all attacks listed in the label file, if any")
+            print()
             print("Additional information is available with 'help [KEYWORD];'")
             print("To get a list of examples, type 'help examples;'")
             print()
@@ -212,6 +215,19 @@ class Controller:
                     if buffer.lower().startswith('help'):
                         buffer = buffer.strip(';')
                         self.process_help(buffer.split(' ')[1:])
+                    elif buffer.lower().strip() == 'labels;':
+                        if not self.label_manager.labels:
+                            print("No labels found.")
+                        else:
+                            print("Attacks listed in the label file:")
+                            print()
+                            for label in self.label_manager.labels:
+                                print("Attack name:     " + str(label.attack_name))
+                                print("Attack note:     " + str(label.attack_note))
+                                print("Start timestamp: " + str(label.timestamp_start))
+                                print("End timestamp:   " + str(label.timestamp_end))
+                                print()
+                        print()
                     else:
                         self.statisticsDB.process_db_query(buffer, True)
                 except sqlite3.Error as e:
