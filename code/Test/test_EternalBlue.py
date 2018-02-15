@@ -1,23 +1,11 @@
-import unittest
-
-import Test.GenericTest as GenTest
+import Test.ID2TAttackTest as Test
 
 sha_default = 'c707492a0493efcf46a569c91fe77685286402ddfdff3c79e64157b3324dc9f6'
 
-"""
-CURRENT COVERAGE
-Name                             Stmts   Miss  Cover   Missing (lines)
----------------------------------------------------------------------------
-Attack/EternalBlueExploit.py       246     10    96%   62, 72, 112, 119, 126-127, 133-134, 139, 266
-"""
-# TODO: get 100% coverage
+# TODO: improve coverage
 
 
-class UnitTestEternalBlue(GenTest.GenericTest):
+class UnitTestEternalBlue(Test.ID2TAttackTest):
 
-    def test_eternalblue_default(self):
-        self.generic_test([['EternalBlueExploit']], sha_default)
-
-
-if __name__ == '__main__':
-    unittest.main()
+    def test_eternal_blue_default(self):
+        self.checksum_test([['EternalBlueExploit']], sha_default)

@@ -1,15 +1,15 @@
+import random
 import unittest
 
-import definitions as defs
-import random as rand
 import ID2TLib.Controller as Ctrl
+import ID2TLib.TestLibrary as Test
 
-pcap = defs.ROOT_DIR + "/../resources/test/reference_1998.pcap"
+# TODO: improve coverage
 
-controller = Ctrl.Controller(pcap_file_path=pcap, do_extra_tests=False)
+controller = Ctrl.Controller(pcap_file_path=Test.test_pcap, do_extra_tests=False)
 controller.load_pcap_statistics(flag_write_file=False, flag_recalculate_stats=True, flag_print_statistics=False)
 
-file_information = [('Pcap file', defs.ROOT_DIR + '/../resources/test/reference_1998.pcap'),
+file_information = [('Pcap file', Test.test_pcap),
                     ('Packets', 1998, 'packets'), ('Capture length', '25.4294414520264', 'seconds'),
                     ('Capture start', '1970-01-01 01:01:45.647675'), ('Capture end', '1970-01-01 01:08:10.102034')]
 
@@ -100,11 +100,11 @@ class TestQueries(unittest.TestCase):
         self.assertEqual(controller.statistics.get_ip_addresses(), ip_addresses)
 
     def test_get_random_ip_address(self):
-        rand.seed(5)
+        random.seed(5)
         self.assertEqual(controller.statistics.get_random_ip_address(), '72.247.178.113')
 
     def test_get_random_ip_address_count_2(self):
-        rand.seed(5)
+        random.seed(5)
         self.assertEqual(controller.statistics.get_random_ip_address(2), ['72.247.178.113', '23.51.123.27'])
 
     def test_get_mac_address_1(self):
@@ -226,7 +226,3 @@ class TestQueries(unittest.TestCase):
 
     def test_all_protocolname(self):
         self.assertEqual(controller.statistics.process_db_query('all(protocolname)'), ['IPv4', 'TCP', 'UDP'])
-
-
-if __name__ == '__main__':
-    unittest.main()

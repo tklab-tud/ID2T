@@ -575,8 +575,18 @@ class Statistics:
             return None
 
     def get_rnd_win_size(self, pkts_num):
-        return self.process_db_query(
-            "SELECT DISTINCT winSize FROM tcp_win ORDER BY RANDOM() LIMIT "+str(pkts_num)+";")
+        """
+        :param pkts_num: maximum number of window sizes, that should be returned
+        :return: A list of randomly chosen window sizes with given length.
+        """
+        sql_return = self.process_db_query("SELECT DISTINCT winSize FROM tcp_win ORDER BY winsize ASC;")
+        if not isinstance(sql_return, list):
+            return [sql_return]
+        result = []
+        for i in range(0, min(pkts_num, len(sql_return))):
+            result.append(random.choice(sql_return))
+            sql_return.remove(result[i])
+        return result
 
     def get_statistics_database(self):
         """

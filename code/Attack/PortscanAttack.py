@@ -1,15 +1,14 @@
-import logging
 import csv
-
+import logging
 from random import shuffle, randint, choice
+
 from lea import Lea
 from scapy.layers.inet import IP, Ether, TCP
 
-from definitions import ROOT_DIR
 from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes
-from ID2TLib.Utility import update_timestamp, get_interval_pps, handle_most_used_outputs
+import ID2TLib.Utility as Util
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 # noinspection PyPep8
@@ -88,7 +87,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
         :return: Ports numbers to be used as default destination ports or default open ports in the port scan.
         """
         ports_dst = []
-        file = open(ROOT_DIR + '/../resources/nmap-services-tcp.csv', 'rt')
+        file = open(Util.RESOURCE_DIR + 'nmap-services-tcp.csv', 'rt')
         spamreader = csv.reader(file, delimiter=',')
         for count in range(ports_num):
             # escape first row (header)
@@ -167,13 +166,13 @@ class PortscanAttack(BaseAttack.BaseAttack):
             source_mss_prob_dict = Lea.fromValFreqsDict(source_mss_dist)
             source_mss_value = source_mss_prob_dict.random()
         else:
-            source_mss_value = handle_most_used_outputs(self.statistics.process_db_query("most_used(mssValue)"))
+            source_mss_value = Util.handle_most_used_outputs(self.statistics.process_db_query("most_used(mssValue)"))
         destination_mss_dist = self.statistics.get_mss_distribution(ip_destination)
         if len(destination_mss_dist) > 0:
             destination_mss_prob_dict = Lea.fromValFreqsDict(destination_mss_dist)
             destination_mss_value = destination_mss_prob_dict.random()
         else:
-            destination_mss_value = handle_most_used_outputs(self.statistics.process_db_query("most_used(mssValue)"))
+            destination_mss_value = Util.handle_most_used_outputs(self.statistics.process_db_query("most_used(mssValue)"))
 
         # Set TTL based on TTL distribution of IP address
         source_ttl_dist = self.statistics.get_ttl_distribution(ip_source)
@@ -181,13 +180,13 @@ class PortscanAttack(BaseAttack.BaseAttack):
             source_ttl_prob_dict = Lea.fromValFreqsDict(source_ttl_dist)
             source_ttl_value = source_ttl_prob_dict.random()
         else:
-            source_ttl_value = handle_most_used_outputs(self.statistics.process_db_query("most_used(ttlValue)"))
+            source_ttl_value = Util.handle_most_used_outputs(self.statistics.process_db_query("most_used(ttlValue)"))
         destination_ttl_dist = self.statistics.get_ttl_distribution(ip_destination)
         if len(destination_ttl_dist) > 0:
             destination_ttl_prob_dict = Lea.fromValFreqsDict(destination_ttl_dist)
             destination_ttl_value = destination_ttl_prob_dict.random()
         else:
-            destination_ttl_value = handle_most_used_outputs(self.statistics.process_db_query("most_used(ttlValue)"))
+            destination_ttl_value = Util.handle_most_used_outputs(self.statistics.process_db_query("most_used(ttlValue)"))
 
         # Set Window Size based on Window Size distribution of IP address
         source_win_dist = self.statistics.get_win_distribution(ip_source)
@@ -195,13 +194,13 @@ class PortscanAttack(BaseAttack.BaseAttack):
             source_win_prob_dict = Lea.fromValFreqsDict(source_win_dist)
             source_win_value = source_win_prob_dict.random()
         else:
-            source_win_value = handle_most_used_outputs(self.statistics.process_db_query("most_used(winSize)"))
+            source_win_value = Util.handle_most_used_outputs(self.statistics.process_db_query("most_used(winSize)"))
         destination_win_dist = self.statistics.get_win_distribution(ip_destination)
         if len(destination_win_dist) > 0:
             destination_win_prob_dict = Lea.fromValFreqsDict(destination_win_dist)
             destination_win_value = destination_win_prob_dict.random()
         else:
-            destination_win_value = handle_most_used_outputs(self.statistics.process_db_query("most_used(winSize)"))
+            destination_win_value = Util.handle_most_used_outputs(self.statistics.process_db_query("most_used(winSize)"))
 
         minDelay,maxDelay = self.get_reply_delay(ip_destination)
 
@@ -233,9 +232,9 @@ class PortscanAttack(BaseAttack.BaseAttack):
                                     options=[('MSS', destination_mss_value)])
                 reply = (reply_ether / reply_ip / reply_tcp)
 
-                timestamp_reply = update_timestamp(timestamp_next_pkt,pps,minDelay)
+                timestamp_reply = Util.update_timestamp(timestamp_next_pkt,pps,minDelay)
                 while (timestamp_reply <= timestamp_prv_reply):
-                    timestamp_reply = update_timestamp(timestamp_prv_reply,pps,minDelay)
+                    timestamp_reply = Util.update_timestamp(timestamp_prv_reply,pps,minDelay)
                 timestamp_prv_reply = timestamp_reply
 
                 reply.time = timestamp_reply
@@ -246,14 +245,14 @@ class PortscanAttack(BaseAttack.BaseAttack):
                 confirm_ip = request_ip
                 confirm_tcp = TCP(sport=sport, dport=dport, seq=1, window=0, flags='R')
                 confirm = (confirm_ether / confirm_ip / confirm_tcp)
-                timestamp_confirm = update_timestamp(timestamp_reply,pps,minDelay)
+                timestamp_confirm = Util.update_timestamp(timestamp_reply,pps,minDelay)
                 confirm.time = timestamp_confirm
                 packets.append(confirm)
 
                 # else: destination port is NOT OPEN -> no reply is sent by target
 
-            pps = max(get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
-            timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps)
+            pps = max(Util.get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
+            timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps)
 
         # store end time of attack
         self.attack_end_utime = packets[-1].time

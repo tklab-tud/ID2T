@@ -2,21 +2,20 @@ import logging
 import random
 
 from lea import Lea
-from scapy.utils import RawPcapReader
 from scapy.layers.inet import Ether
-from ID2TLib.Utility import update_timestamp, get_interval_pps, handle_most_used_outputs
+from scapy.utils import RawPcapReader
 
-from definitions import ROOT_DIR
 from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes
+import ID2TLib.Utility as Util
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 # noinspection PyPep8
 
 
 class SQLiAttack(BaseAttack.BaseAttack):
-    template_attack_pcap_path = ROOT_DIR + "/../resources/ATutorSQLi.pcap"
+    template_attack_pcap_path = Util.RESOURCE_DIR + "ATutorSQLi.pcap"
     # HTTP port
     http_port = 80
     # Metasploit experiments show this range of ports
@@ -108,14 +107,14 @@ class SQLiAttack(BaseAttack.BaseAttack):
             source_ttl_prob_dict = Lea.fromValFreqsDict(source_ttl_dist)
             source_ttl_value = source_ttl_prob_dict.random()
         else:
-            source_ttl_value = handle_most_used_outputs(self.statistics.process_db_query("most_used(ttlValue)"))
+            source_ttl_value = Util.handle_most_used_outputs(self.statistics.process_db_query("most_used(ttlValue)"))
 
         destination_ttl_dist = self.statistics.get_ttl_distribution(ip_destination)
         if len(destination_ttl_dist) > 0:
             destination_ttl_prob_dict = Lea.fromValFreqsDict(destination_ttl_dist)
             destination_ttl_value = destination_ttl_prob_dict.random()
         else:
-            destination_ttl_value = handle_most_used_outputs(self.statistics.process_db_query("most_used(ttlValue)"))
+            destination_ttl_value = Util.handle_most_used_outputs(self.statistics.process_db_query("most_used(ttlValue)"))
 
         # Inject SQLi Attack
         # Read SQLi Attack pcap file
@@ -187,8 +186,8 @@ class SQLiAttack(BaseAttack.BaseAttack):
                     new_pkt = (eth_frame / ip_pkt/ tcp_pkt / str_tcp_seg)
                     new_pkt.time = timestamp_next_pkt
 
-                    pps = max(get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
-                    timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps) + float(timeSteps.random())
+                    pps = max(Util.get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
+                    timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps) + float(timeSteps.random())
 
                 # Victim --> attacker
                 else:
@@ -213,7 +212,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
                         victim_seq += max(strLen, 1)
 
                     new_pkt = (eth_frame / ip_pkt / tcp_pkt / str_tcp_seg)
-                    timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps) + float(timeSteps.random())
+                    timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps) + float(timeSteps.random())
                     new_pkt.time = timestamp_next_pkt
 
             # The last connection
@@ -249,8 +248,8 @@ class SQLiAttack(BaseAttack.BaseAttack):
                     new_pkt = (eth_frame / ip_pkt / tcp_pkt / str_tcp_seg)
                     new_pkt.time = timestamp_next_pkt
 
-                    pps = max(get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
-                    timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps) + float(timeSteps.random())
+                    pps = max(Util.get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
+                    timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps) + float(timeSteps.random())
 
                 # Victim --> attacker
                 else:
@@ -274,7 +273,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
                         victim_seq += max(strLen, 1)
 
                     new_pkt = (eth_frame / ip_pkt / tcp_pkt / str_tcp_seg)
-                    timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps) + float(timeSteps.random())
+                    timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps) + float(timeSteps.random())
                     new_pkt.time = timestamp_next_pkt
 
             packets.append(new_pkt)

@@ -56,5 +56,3 @@ class TestSMBLib(unittest.TestCase):
     def test_invalid_smb_version(self):
         with self.assertRaises(SystemExit):
             SMBLib.invalid_smb_version("abc")
-
-

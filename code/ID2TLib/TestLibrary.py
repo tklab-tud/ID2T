@@ -1,16 +1,16 @@
-import os
 import hashlib
+import os
 import random
 
-from definitions import ROOT_DIR
+import ID2TLib.Utility as Util
 
-test_resource_dir = ROOT_DIR + "/../resources/test"
-test_pcap = ROOT_DIR + "/../resources/test/reference_1998.pcap"
+test_resource_dir = Util.TEST_DIR
+test_pcap = Util.TEST_DIR + "reference_1998.pcap"
 test_pcap_ips = ["10.0.2.15", "52.85.173.182"]
 test_pcap_empty = []
 
 """
-helper functions for generic_test
+helper functions for ID2TAttackTest
 """
 
 
@@ -40,34 +40,6 @@ def clean_up(controller):
     """
     os.remove(controller.pcap_dest_path)
     os.remove(controller.label_manager.label_file_path)
-
-
-"""
-function patches for unittests
-"""
-
-
-def get_bytes(count, ignore):
-    """
-    unittest patch for get_rnd_bytes (ID2TLib.Utility.py)
-
-    :param count: count of requested bytes
-    :param ignore: <not used>
-    :return: a count of As
-    """
-    return b'A' * count
-
-
-def get_x86_nop(count, side_effect_free, char_filter):
-    """
-    unittest patch for get_rnd_x86_nop (ID2TLib.Utility.py)
-
-    :param count: count of requested nops
-    :param side_effect_free: <not used>
-    :param char_filter: <not used>
-    :return: a count of \x90
-    """
-    return b'\x90' * count
 
 
 def rename_test_result_files(controller, caller_function: str, attack_sub_dir=False, test_sub_dir=False):
@@ -111,14 +83,42 @@ def rename_test_result_files(controller, caller_function: str, attack_sub_dir=Fa
     controller.label_manager.label_file_path = result_labels_path
 
 
-def get_win_size(pkts_num):
-    result = []
-    for i in range(0, pkts_num):
-        result.append(10)
-    return result
+"""
+function patches for unittests
+"""
+
+
+def get_bytes(count, ignore):
+    """
+    unittest patch for get_rnd_bytes (ID2TLib.Utility.py)
+
+    :param count: count of requested bytes
+    :param ignore: <not used>
+    :return: a count of As
+    """
+    return b'A' * count
+
+
+def get_x86_nop(count, side_effect_free, char_filter):
+    """
+    unittest patch for get_rnd_x86_nop (ID2TLib.Utility.py)
+
+    :param count: count of requested nops
+    :param side_effect_free: <not used>
+    :param char_filter: <not used>
+    :return: a count of \x90
+    """
+    return b'\x90' * count
 
 
 def get_attacker_config(ip_source_list, ipAddress: str):
+    """
+    unittest patch for get_attacker_config (ID2TLib.Utility.py)
+
+    :param ip_source_list: List of source IPs
+    :param ipAddress: The IP address of the attacker
+    :return: A tuple consisting of (port, ttlValue)
+    """
     next_port = random.randint(0, 2 ** 16 - 1)
     ttl = random.randint(1, 255)
 

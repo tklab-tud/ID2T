@@ -144,10 +144,15 @@ class BaseAttack(metaclass=ABCMeta):
             """
             return num < 1 or num > 65535
 
+        if ports_input is None or ports_input is "":
+            return False
+
         if isinstance(ports_input, str):
             ports_input = ports_input.replace(' ', '').split(',')
         elif isinstance(ports_input, int):
             ports_input = [ports_input]
+        elif len(ports_input) is 0:
+            return False
 
         ports_output = []
 
@@ -249,6 +254,9 @@ class BaseAttack(metaclass=ABCMeta):
     #########################################
 
     def set_seed(self, seed: int):
+        """
+        :param seed: The random seed to be set.
+        """
         if isinstance(seed, int):
             random.seed(seed)
 

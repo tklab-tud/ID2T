@@ -23,6 +23,11 @@ class AttackController:
         self.seed = None
 
     def set_seed(self, seed: int):
+        """
+        Sets global seed.
+
+        :param seed: random seed
+        """
         self.seed = seed
 
     def create_attack(self, attack_name: str, seed=None):

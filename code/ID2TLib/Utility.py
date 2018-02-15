@@ -1,4 +1,5 @@
 import ipaddress
+import os
 
 from random import randint, uniform
 from os import urandom
@@ -7,6 +8,12 @@ from calendar import timegm
 from lea import Lea
 from scipy.stats import gamma
 from scapy.layers.inet import RandShort
+
+CODE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/../"
+ROOT_DIR = CODE_DIR + "../"
+RESOURCE_DIR = ROOT_DIR + "resources/"
+TEST_DIR = RESOURCE_DIR + "test/"
+
 
 platforms = {"win7", "win10", "winxp", "win8.1", "macos", "linux", "win8", "winvista", "winnt", "win2000"}
 platform_probability = {"win7": 48.43, "win10": 27.99, "winxp": 6.07, "win8.1": 6.07, "macos": 5.94, "linux": 3.38,
@@ -340,15 +347,3 @@ def get_attacker_config(ip_source_list, ipAddress: str):
         attacker_ttl_mapping[ipAddress] = ttl
     # return port and TTL
     return next_port, ttl
-
-
-def rreplace(s, old, new, maxreplace):
-    """
-    Replaces occurences of a sub-string with a new sub-string, but, unlike replace(), it starts at the end
-    :param s: The string to search and replace from.
-    :param old: The old sub-string you wish to replace.
-    :param new: The new sub-string you wish to put in-place of the old one.
-    :param maxreplace: The maximum number of times you wish to replace the sub-string.
-    :return: The result of the reverse replace operation.
-    """
-    return new.join(s.rsplit(old, maxreplace))

@@ -1,7 +1,9 @@
 import unittest
 
-import ID2TLib.TestLibrary as TestLibrary
+import ID2TLib.TestLibrary as Lib
 import ID2TLib.Utility as Utility
+
+# TODO: improve coverage
 
 
 class TestUtility(unittest.TestCase):
@@ -38,6 +40,7 @@ class TestUtility(unittest.TestCase):
         results = [("A", 1), ("B", 2)]
         self.assertIn(Utility.get_nth_random_element(letters, numbers), results)
 
+    # TODO: ???
     #def test_get_nth_random_element_single_list(self):
         #letters = ["A", "B", "C"]
         #self.assertIn(Utility.get_nth_random_element(letters), letters)
@@ -108,7 +111,7 @@ class TestUtility(unittest.TestCase):
     def test_generate_source_port_from_platform_newwinmac_maxport(self):
         self.assertTrue(49152 <= Utility.generate_source_port_from_platform("win7", 65535) <= 65535)
 
-    # Test get_filetime_format????
+    # TODO: get_filetime_format Test
 
     def test_get_rnd_boot_time_invalid(self):
         with self.assertRaises(SystemExit):
@@ -173,26 +176,26 @@ class TestUtility(unittest.TestCase):
 
     def test_get_bytes_from_file_invalid_path(self):
         with self.assertRaises(SystemExit):
-            Utility.get_bytes_from_file(TestLibrary.test_resource_dir+"/NonExistingFile.txt")
+            Utility.get_bytes_from_file(Lib.test_resource_dir + "/NonExistingFile.txt")
 
     def test_get_bytes_from_file_invalid_header(self):
         with self.assertRaises(SystemExit):
-            Utility.get_bytes_from_file(TestLibrary.test_resource_dir+"/InvalidHeader.txt")
+            Utility.get_bytes_from_file(Lib.test_resource_dir + "/InvalidHeader.txt")
 
     def test_get_bytes_from_file_invalid_hexfile(self):
         with self.assertRaises(SystemExit):
-            Utility.get_bytes_from_file(TestLibrary.test_resource_dir+"/InvalidHexFile.txt")
+            Utility.get_bytes_from_file(Lib.test_resource_dir + "/InvalidHexFile.txt")
 
     def test_get_bytes_from_file_invalid_strfile(self):
         with self.assertRaises(SystemExit):
-            Utility.get_bytes_from_file(TestLibrary.test_resource_dir+"/InvalidStringFile.txt")
+            Utility.get_bytes_from_file(Lib.test_resource_dir + "/InvalidStringFile.txt")
 
     def test_get_bytes_from_file_str(self):
-        result = Utility.get_bytes_from_file(TestLibrary.test_resource_dir+"/StringTestFile.txt")
+        result = Utility.get_bytes_from_file(Lib.test_resource_dir + "/StringTestFile.txt")
         self.assertEqual(result, b'This is a string-test')
 
     def test_get_bytes_from_file_hex(self):
-        result = Utility.get_bytes_from_file(TestLibrary.test_resource_dir+"/HexTestFile.txt")
+        result = Utility.get_bytes_from_file(Lib.test_resource_dir + "/HexTestFile.txt")
         self.assertEqual(result, b'\xab\xcd\xef\xff\x10\xff\xaa\xab')
 
     def test_handle_most_used_outputs_empty(self):
@@ -214,18 +217,6 @@ class TestUtility(unittest.TestCase):
         test_input = [2, 4, 0, 1, 3]
         self.assertEqual(Utility.handle_most_used_outputs(test_input), 0)
 
-    def test_rreplace_not_in_string(self):
-        self.assertEqual(Utility.rreplace("testateststring", "nonexisting", "correct", 1), "testateststring")
-
-    def test_rreplace_zero(self):
-        self.assertEqual(Utility.rreplace("testateststring", "test", "correct", 0), "testateststring")
-
-    def test_rreplace_one(self):
-        self.assertEqual(Utility.rreplace("testateststring", "test", "correct", 1), "testacorrectstring")
-
-    def test_rreplace_two(self):
-        self.assertEqual(Utility.rreplace("testateststring", "test", "correct", 2), "correctacorrectstring")
-
     def test_check_payload_len_exceeded(self):
         with self.assertRaises(SystemExit):
             Utility.check_payload_len(10, 5)
@@ -235,3 +226,5 @@ class TestUtility(unittest.TestCase):
             Utility.check_payload_len(5, 10)
         except SystemExit:
             self.fail()
+
+    # TODO: get_attacker_config Tests
