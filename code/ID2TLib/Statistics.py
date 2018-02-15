@@ -7,7 +7,7 @@ import random
 import ID2TLib.libpcapreader as pr
 import matplotlib
 
-matplotlib.use('Agg')
+matplotlib.use('Agg', force=True)
 import matplotlib.pyplot as plt
 from ID2TLib.PcapFile import PcapFile
 from ID2TLib.StatsDatabase import StatsDatabase
@@ -513,10 +513,10 @@ class Statistics:
         :return: A randomly chosen IP address from the dataset or iff param count is greater than one, a list of randomly
          chosen IP addresses
         """
+        ip_address_list = self.process_db_query("all(ipAddress)")
         if count == 1:
-            return self.process_db_query("random(all(ipAddress))")
+            return random.choice(ip_address_list)
         else:
-            ip_address_list = self.process_db_query("all(ipAddress)")
             result_list = []
             for i in range(0, count):
                 random_ip = random.choice(ip_address_list)

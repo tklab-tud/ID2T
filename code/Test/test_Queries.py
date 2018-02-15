@@ -99,9 +99,9 @@ class TestQueries(unittest.TestCase):
     def test_get_ip_addresses(self):
         self.assertEqual(controller.statistics.get_ip_addresses(), ip_addresses)
 
-    # TODO: move random for count = 1 outside of query and use seed to test
-    # def test_get_random_ip_address(self):
-    #    self.assertEqual(controller.statistics.get_random_ip_address(), '')
+    def test_get_random_ip_address(self):
+        rand.seed(5)
+        self.assertEqual(controller.statistics.get_random_ip_address(), '72.247.178.113')
 
     def test_get_random_ip_address_count_2(self):
         rand.seed(5)
