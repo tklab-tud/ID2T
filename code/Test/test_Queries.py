@@ -139,9 +139,17 @@ class TestQueries(unittest.TestCase):
         self.assertEqual(controller.statistics.calculate_entropy([1, 1, 2, 3, 5, 8, 13, 21], normalized=True),
                          (2.371389165297016, 0.7904630550990053))
 
-    # TODO: get complement packet rates and a reasonable pps
-    # def test_calculate_complement_packet_rates(self):
-    #    self.assertEqual(controller.statistics.calculate_complement_packet_rates(0), '')
+    def test_calculate_complement_packet_rates_1(self):
+        cpr = controller.statistics.calculate_complement_packet_rates(0)[0:9]
+        self.assertEqual(cpr, [(186.418564, 0), (186.418824, 0), (186.419346, 0), (186.445361, 0),
+                               (186.46954399999998, 0), (186.476234, 0), (186.477304, 0), (186.48606999999998, 0),
+                               (186.486761, 0)])
+
+    def test_calculate_complement_packet_rates_2(self):
+        cpr = controller.statistics.calculate_complement_packet_rates(42)[0:9]
+        self.assertEqual(cpr, [(186.418564, 41), (186.418824, 42), (186.419346, 42), (186.445361, 42),
+                               (186.46954399999998, 42), (186.476234, 42), (186.477304, 42), (186.48606999999998, 42),
+                               (186.486761, 42)])
 
     # NAMED QUERY TESTS
     def test_most_used_ipaddress(self):
