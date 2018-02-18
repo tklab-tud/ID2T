@@ -105,14 +105,15 @@ if [ "$KERNEL" = 'Darwin' ]; then
 elif [ "$KERNEL" = 'Linux' ]; then
     # Kernel is Linux, check for supported distributions
     OS=$(awk '/DISTRIB_ID=/' /etc/*-release | sed 's/DISTRIB_ID=//' | tr '[:upper:]' '[:lower:]')
+    OS_LIKE=$(awk '/ID_LIKE=/' /etc/*-release | sed 's/ID_LIKE=//' | tr '[:upper:]' '[:lower:]')
 
-    if [ "$OS" = 'arch' ]; then
+    if [ "$OS_LIKE" = 'archlinux' ]; then
         echo -e "Detected OS: Arch Linux"
         install_pkg_arch
         install_pip
         exit 0
-    elif [ "$OS" = 'ubuntu' ]; then
-        echo -e "Detected OS: Ubuntu"
+    elif [ "$OS_LIKE" = 'debian' ]; then
+        echo -e "Detected OS: Debian"
         install_pkg_ubuntu
         install_pip
         exit 0
