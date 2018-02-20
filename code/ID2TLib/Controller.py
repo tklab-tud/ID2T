@@ -1,5 +1,6 @@
 import os
 import sys
+import readline
 
 from ID2TLib.AttackController import AttackController
 from ID2TLib.LabelManager import LabelManager
@@ -98,13 +99,109 @@ class Controller:
         else:
             self.statisticsDB.process_db_query(query, print_results)
 
+    @staticmethod
+    def process_help(params):
+        if not params:
+            print("Query mode allows you to enter SQL-queries as well as named queries.")
+            print()
+            print("Named queries:")
+            print("\tSelectors:")
+            print("\t\tmost_used(...)  -> Returns the most occurring element in all elements")
+            print("\t\tleast_used(...) -> Returns the least occurring element in all elements")
+            print("\t\tavg(...)        -> Returns the average of all elements")
+            print("\t\tall(...)        -> Returns all elements")
+            print("\tExtractors:")
+            print("\t\trandom(...)     -> Returns a random element from a list")
+            print("\t\tfirst(...)      -> Returns the first element from a list")
+            print("\t\tlast(...)       -> Returns the last element from a list")
+            print("\tParameterized selectors:")
+            print("\t\tipAddress(...)  -> Returns all IP addresses fulfilling the specified conditions")
+            print("\t\tmacAddress(...) -> Returns all MAC addresses fulfilling the specified conditions")
+            print()
+            print("Miscellaneous:")
+            print("\tlabels            -> List all attacks listed in the label file, if any")
+            print()
+            print("Additional information is available with 'help [KEYWORD];'")
+            print("To get a list of examples, type 'help examples;'")
+            print()
+            return
+
+        param = params[0].lower()
+        if param == "most_used":
+            print("most_used can be used as a selector for the following attributes:")
+            print("ipAddress | macAddress | portNumber | protocolName | ttlValue | mssValue | winSize | ipClass")
+            print()
+        elif param == "least_used":
+            print("least_used can be used as a selector for the following attributes:")
+            print("ipAddress | macAddress | portNumber | protocolName | ttlValue")
+            print()
+        elif param == "avg":
+            print("avg can be used as a selector for the following attributes:")
+            print("pktsReceived | pktsSent | kbytesSent | kbytesReceived | ttlValue | mss")
+            print()
+        elif param == "all":
+            print("all can be used as a selector for the following attributes:")
+            print("ipAddress | ttlValue | mss | macAddress | portNumber | protocolName")
+            print()
+        elif param in ["random", "first", "last"]:
+            print("No additional info available for this keyword.")
+            print()
+        elif param == "ipaddress":
+            print("ipAddress is a parameterized selector which fetches IP addresses based on (a list of) conditions.")
+            print("Conditions are of the following form: PARAMETER OPERATOR VALUE")
+            print("The following parameters can be specified:")
+            print("pktsReceived | pktsSent | kbytesReceived | kbytesSent | maxPktRate | minPktRate | ipClass\n"
+                  "macAddress | ttlValue | ttlCount | portDirection | portNumber | portCount | protocolCount\n"
+                  "protocolName")
+            print()
+            print("See 'help examples;' for usage examples.")
+            print()
+        elif param == "macaddress":
+            print("macAddress is a parameterized selector which fetches MAC addresses based on (a list of) conditions.")
+            print("Conditions are of the following form: PARAMETER OPERATOR VALUE")
+            print("The following parameters can be specified:")
+            print("ipAddress")
+            print()
+            print("See 'help examples;' for usage examples.")
+            print()
+        elif param == "examples":
+            print("Get the average amount of sent packets per IP:")
+            print("\tavg(pktsSent);")
+            print("Get a random IP from all addresses occuring in the pcap:")
+            print("\trandom(all(ipAddress));")
+            print("Return the MAC address of a specified IP:")
+            print("\tmacAddress(ipAddress=192.168.178.2);")
+            print("Get the average TTL-value with SQL:")
+            print("\tSELECT avg(ttlValue) from ip_ttl;")
+            print("Get a random IP address from all addresses that sent and received at least 10 packets:")
+            print("\trandom(ipAddress(pktsSent > 10, pktsReceived > 10));")
+            print()
+        else:
+            print("Unknown keyword '" + param + "', try 'help;' to get a list of allowed keywords'")
+            print()
+
     def enter_query_mode(self):
         """
         Enters into the query mode. This is a read-eval-print-loop, where the user can input named queries or SQL
         queries and the results are printed.
         """
+
+        def make_completer(vocabulary):
+            def custom_template(text, state):
+                results = [x for x in vocabulary if x.startswith(text)] + [None]
+                return results[state]
+            return custom_template
+
+        readline.parse_and_bind('tab: complete')
+        readline.set_completer(make_completer(self.statisticsDB.get_all_named_query_keywords()+self.statisticsDB.get_all_sql_query_keywords()))
+        history_file = os.path.join(os.path.expanduser('~'), 'ID2T_data', 'query_history')
+        try:
+            readline.read_history_file(history_file)
+        except IOError:
+            pass
         print("Entering into query mode...")
-        print("Enter statement ending by ';' and press ENTER to send query. Exit by sending an empty query..")
+        print("Enter statement ending by ';' and press ENTER to send query. Exit by sending an empty query.")
+        print("Type 'help;' for information on possible queries.")
         buffer = ""
         while True:
             line = input("> ")
@@ -115,10 +212,30 @@ class Controller:
             if sqlite3.complete_statement(buffer):
                 try:
                     buffer = buffer.strip()
-                    self.statisticsDB.process_db_query(buffer, True)
+                    if buffer.lower().startswith('help'):
+                        buffer = buffer.strip(';')
+                        self.process_help(buffer.split(' ')[1:])
+                    elif buffer.lower().strip() == 'labels;':
+                        if not self.label_manager.labels:
+                            print("No labels found.")
+                        else:
+                            print("Attacks listed in the label file:")
+                            print()
+                            for label in self.label_manager.labels:
+                                print("Attack name:     " + str(label.attack_name))
+                                print("Attack note:     " + str(label.attack_note))
+                                print("Start timestamp: " + str(label.timestamp_start))
+                                print("End timestamp:   " + str(label.timestamp_end))
+                                print()
+                        print()
+                    else:
+                        self.statisticsDB.process_db_query(buffer, True)
                 except sqlite3.Error as e:
                     print("An error occurred:", e.args[0])
                 buffer = ""
+
+        readline.set_history_length(1000)
+        readline.write_history_file(history_file)
 
     def create_statistics_plot(self, params: str):
         """
