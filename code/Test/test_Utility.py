@@ -141,6 +141,7 @@ class TestUtility(unittest.TestCase):
         for byte in result:
             if byte.to_bytes(1, "little") not in Utility.x86_nops and byte.to_bytes(1, "little") not in Utility.x86_pseudo_nops:
                 correct = False
+                break
         self.assertTrue(correct)
 
     def test_get_rnd_x86_nop_without_sideeffects(self):
@@ -149,6 +150,7 @@ class TestUtility(unittest.TestCase):
         for byte in result:
             if byte.to_bytes(1, "little") in Utility.x86_pseudo_nops:
                 correct = False
+                break
         self.assertTrue(correct)
 
     def test_get_rnd_x86_nop_filter(self):
@@ -157,6 +159,7 @@ class TestUtility(unittest.TestCase):
         for byte in result:
             if byte.to_bytes(1, "little") in Utility.x86_nops:
                 correct = False
+                break
         self.assertTrue(correct)
 
     def test_get_rnd_x86_nop_single_filter(self):
@@ -165,6 +168,7 @@ class TestUtility(unittest.TestCase):
         for byte in result:
             if byte.to_bytes(1, "little") == b'\x20':
                 correct = False
+                break
         self.assertTrue(correct)
 
     def test_get_rnd_bytes_number(self):
