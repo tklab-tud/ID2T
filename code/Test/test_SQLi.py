@@ -9,3 +9,6 @@ class UnitTestSQLi(Test.ID2TAttackTest):
 
     def test_sqli_default(self):
         self.checksum_test([['SQLiAttack']], sha_default)
+
+    def test_sqli_order(self):
+        self.order_test([['SQLiAttack']])

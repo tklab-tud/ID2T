@@ -39,3 +39,6 @@ class UnitTestPortscanAttack(Test.ID2TAttackTest):
     @mock.patch('ID2TLib.Statistics.Statistics.get_win_distribution', return_value='')
     def test_portscan_win_length_zero(self, mock_win_dis):
         self.checksum_test([['PortscanAttack']], sha_portscan_win_value_zero)
+
+    def test_portscan_order(self):
+        self.order_test([['PortscanAttack']])

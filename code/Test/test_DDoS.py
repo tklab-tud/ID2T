@@ -32,3 +32,6 @@ class UnitTestDDoS(Test.ID2TAttackTest):
     @mock.patch('ID2TLib.Statistics.Statistics.get_most_used_mss', return_value=None)
     def test_ddos_mss_none(self, mock_mss, mock_get_attacker_config):
         self.checksum_test([['DDoSAttack']], sha_mss_none_ddos)
+
+    def test_ddos_order(self):
+        self.order_test([['DDoSAttack', 'attackers.count=2']])

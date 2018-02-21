@@ -9,3 +9,6 @@ class UnitTestEternalBlue(Test.ID2TAttackTest):
 
     def test_eternal_blue_default(self):
         self.checksum_test([['EternalBlueExploit']], sha_default)
+
+    def test_eternal_blue_order(self):
+        self.order_test([['EternalBlueExploit']])

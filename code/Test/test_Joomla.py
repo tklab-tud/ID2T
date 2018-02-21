@@ -9,3 +9,6 @@ class UnitTestJoomla(Test.ID2TAttackTest):
 
     def test_joomla_default(self):
         self.checksum_test([['JoomlaRegPrivExploit']], sha_default)
+
+    def test_joomla_order(self):
+        self.order_test([['JoomlaRegPrivExploit']])
