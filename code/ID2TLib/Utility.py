@@ -1,7 +1,7 @@
 import ipaddress
 import os
 
-from random import randint, uniform
+from random import randint, uniform, choice
 from os import urandom
 from datetime import datetime
 from calendar import timegm
@@ -71,10 +71,18 @@ def get_nth_random_element(*element_list):
     :param element_list: An arbitrary number of lists.
     :return: A tuple of the n-th element of every list.
     """
-    range_max = min([len(x) for x in element_list])
-    if range_max > 0: range_max -= 1
-    n = randint(0, range_max)
-    return tuple(x[n] for x in element_list)
+    if len(element_list) <= 0:
+        return None
+    elif len(element_list) == 1 and len(element_list[0]) > 0:
+        return choice(element_list[0])
+    else:
+        range_max = min([len(x) for x in element_list])
+        if range_max > 0:
+            range_max -= 1
+            n = randint(0, range_max)
+            return tuple(x[n] for x in element_list)
+        else:
+            return None
 
 
 def index_increment(number: int, max: int):

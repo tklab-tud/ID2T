@@ -40,10 +40,16 @@ class TestUtility(unittest.TestCase):
         results = [("A", 1), ("B", 2)]
         self.assertIn(Utility.get_nth_random_element(letters, numbers), results)
 
-    # TODO: ???
-    #def test_get_nth_random_element_single_list(self):
-        #letters = ["A", "B", "C"]
-        #self.assertIn(Utility.get_nth_random_element(letters), letters)
+    def test_get_nth_random_element_single_list(self):
+        letters = ["A", "B", "C"]
+        self.assertIn(Utility.get_nth_random_element(letters), letters)
+
+    def test_get_nth_random_element_empty_list(self):
+        letters = ["A", "B", "C"]
+        self.assertEqual(Utility.get_nth_random_element(letters, []), None)
+
+    def test_get_nth_random_element_nothing(self):
+        self.assertEqual(Utility.get_nth_random_element(), None)
 
     def test_index_increment_not_max(self):
         self.assertEqual(Utility.index_increment(5, 10), 6)
