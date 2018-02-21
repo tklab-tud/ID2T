@@ -27,7 +27,6 @@ class TestUtility(unittest.TestCase):
         cipps = [(5, 1), (10, 2), (15, 3)]
         self.assertEqual(Utility.get_interval_pps(cipps, 30), 3)
 
-    # Errors if empty list and result bad if only one list
     def test_get_nth_random_element_equal_no(self):
         letters = ["A", "B", "C"]
         numbers = [1, 2, 3]
