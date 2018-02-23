@@ -59,8 +59,18 @@ install_pkg_ubuntu()
 
 install_pkg_darwin()
 {
-    echo -e "Installing: Packages"
-    brew install cmake python coreutils libdnet libtins boost boost-python --with-python3
+    BREW_PKGS="cmake python coreutils libdnet libtins boost boost-python --with-python3"
+
+    # Check first to avoid unnecessary update
+    echo -e "Packages: Checking..."
+    brew ls --versions $BREW_PKGS &>/dev/null
+    if [ $? != 0 ]; then
+        # Install all missing packages
+        echo -e "Packages: Installing..."
+        brew install $BREW_PKGS
+    else
+        echo -e "Packages: Found."
+    fi
 }
 
 install_pip()
@@ -91,9 +101,9 @@ git submodule update --init
 KERNEL=$(uname)
 
 if [ "$KERNEL" = 'Darwin' ]; then
-    echo -e "Detected OS:  macOS"
+    echo -e "Detected OS: macOS"
 
-    which brew
+    which brew >/dev/null
     if [ $? != 0 ]; then
         echo -e "Brew not found, please install it manually!"
         exit 1
