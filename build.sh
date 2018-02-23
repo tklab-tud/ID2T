@@ -46,8 +46,26 @@ cd \$SCRIPT_PATH
 exec ./code/CLI.py "\$@"
 EOF
 
+# Create the test script
+cat >./run_tests  <<EOF
+#!/bin/sh
+# Find the executable
+if [ $(uname) = 'Darwin' ]; then
+    alias readlink='greadlink'
+fi
+ID2T_DIR=\$(readlink -f \$0)
+SCRIPT_PATH=\${ID2T_DIR%/*}
+cd \$SCRIPT_PATH/code
+# Execute tests
+set -e
+PYTHONWARNINGS="ignore" coverage run --source=. -m unittest discover -s Test/ >/dev/null
+coverage html
+coverage report -m
+EOF
+
 chmod +x ./code/CLI.py
 chmod +x ./id2t
+chmod +x ./run_tests
 
 echo -e "\n\nAll is set. ID2T is ready."
 echo -e "\nRun ID2T with the command './id2t'"

@@ -7,7 +7,7 @@ from scapy.layers.inet import Ether
 from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes
-from ID2TLib.Utility import update_timestamp, get_interval_pps
+from ID2TLib.Utility import update_timestamp, get_interval_pps, handle_most_used_outputs
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 # noinspection PyPep8
@@ -26,13 +26,13 @@ class SalityBotnet(BaseAttack.BaseAttack):
                                         "Botnet")
 
         # Define allowed parameters and their type
-        self.supported_params = {
+        self.supported_params.update({
             Param.MAC_SOURCE: ParameterTypes.TYPE_MAC_ADDRESS,
             Param.IP_SOURCE: ParameterTypes.TYPE_IP_ADDRESS,
             Param.INJECT_AT_TIMESTAMP: ParameterTypes.TYPE_FLOAT,
             Param.INJECT_AFTER_PACKET: ParameterTypes.TYPE_PACKET_POSITION,
             Param.PACKETS_PER_SECOND: ParameterTypes.TYPE_FLOAT
-        }
+        })
 
     def init_params(self):
         """
@@ -45,8 +45,7 @@ class SalityBotnet(BaseAttack.BaseAttack):
         # PARAMETERS: initialize with default utilsvalues
         # (values are overwritten if user specifies them)
         most_used_ip_address = self.statistics.get_most_used_ip_address()
-        if isinstance(most_used_ip_address, list):
-            most_used_ip_address = most_used_ip_address[0]
+
         self.add_param_value(Param.IP_SOURCE, most_used_ip_address)
         self.add_param_value(Param.MAC_SOURCE, self.statistics.get_mac_address(most_used_ip_address))
 
@@ -72,7 +71,8 @@ class SalityBotnet(BaseAttack.BaseAttack):
         ip_source = self.get_param_value(Param.IP_SOURCE)
 
         # Pick a DNS server from the background traffic
-        ip_dns_server = self.statistics.process_db_query("SELECT ipAddress FROM ip_protocols WHERE protocolName='DNS' ORDER BY protocolCount DESC LIMIT 1;")
+        ip_dns_server = self.statistics.process_db_query("SELECT ipAddress FROM ip_protocols WHERE protocolName='DNS' AND protocolCount=(SELECT MAX(protocolCount) FROM ip_protocols WHERE protocolName='DNS');")
+        ip_dns_server = handle_most_used_outputs(ip_dns_server)
         if not ip_dns_server or ip_source == ip_dns_server:
             ip_dns_server = self.statistics.get_random_ip_address()
         mac_dns_server = self.statistics.get_mac_address(ip_dns_server)
@@ -127,6 +127,7 @@ class SalityBotnet(BaseAttack.BaseAttack):
 
             packets.append(new_pkt)
 
+        exploit_raw_packets.close()
         # Store timestamp of first packet (for attack label)
         self.attack_start_utime = packets[0].time
         self.attack_end_utime = packets[-1].time

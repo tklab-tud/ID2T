@@ -61,7 +61,8 @@ class CLI(object):
                             help='query the statistics database. If no query is provided, the application enters query mode.')
         parser.add_argument('-t', '--extraTests', help='perform extra tests on the input pcap file, including calculating IP entropy'
                                                        'in interval-wise, TCP checksum, and checking payload availability.', action='store_true')
-
+        parser.add_argument('-S', '--randomSeed', action='append', help='sets random seed for testing or benchmarking',
+                            nargs='+', default=[])
 
         # Attack arguments
         parser.add_argument('-a', '--attack', metavar="ATTACK", action='append',
@@ -141,10 +142,14 @@ class CLI(object):
         if self.args.plot is not None:
             controller.create_statistics_plot(self.args.plot)
 
+        # Check random seed
+        if not isinstance(self.args.randomSeed, list):
+            self.args.randomSeed = [self.args.randomSeed]
+
         # Process attack(s) with given attack params
         if self.args.attack is not None:
             # If attack is present, load attack with params
-            controller.process_attacks(self.args.attack)
+            controller.process_attacks(self.args.attack, self.args.randomSeed)
 
         # Parameter -q without arguments was given -> go into query loop
         if self.args.query == [None]:
@@ -152,6 +157,7 @@ class CLI(object):
         # Parameter -q with arguments was given -> process query
         elif self.args.query is not None:
             controller.process_db_queries(self.args.query, True)
+
 
 def main(args):
     """
@@ -162,6 +168,7 @@ def main(args):
     cli = CLI()
     # Check arguments
     cli.parse_arguments(args)
+
 
 # Uncomment to enable calling by terminal
 if __name__ == '__main__':

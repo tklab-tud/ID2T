@@ -14,6 +14,8 @@ from scapy.utils import PcapWriter
 from Attack import AttackParameters
 from Attack.AttackParameters import Parameter
 from Attack.AttackParameters import ParameterTypes
+from ID2TLib.Utility import handle_most_used_outputs
+from lea import Lea
 import ID2TLib.libpcapreader as pr
 
 
@@ -142,10 +144,15 @@ class BaseAttack(metaclass=ABCMeta):
             """
             return num < 1 or num > 65535
 
+        if ports_input is None or ports_input is "":
+            return False
+
         if isinstance(ports_input, str):
             ports_input = ports_input.replace(' ', '').split(',')
         elif isinstance(ports_input, int):
             ports_input = [ports_input]
+        elif len(ports_input) is 0:
+            return False
 
         ports_output = []
 
@@ -245,6 +252,13 @@ class BaseAttack(metaclass=ABCMeta):
     #########################################
     # HELPER METHODS
     #########################################
+
+    def set_seed(self, seed: int):
+        """
+        :param seed: The random seed to be set.
+        """
+        if isinstance(seed, int):
+            random.seed(seed)
 
     def add_param_value(self, param, value):
         """
@@ -475,7 +489,7 @@ class BaseAttack(metaclass=ABCMeta):
             if ip_source == ip_destination:
                 equal = True
         if equal:
-            print("\nERROR: Invalid IP addresses; source IP is the same as destination IP: " + ip_source + ".")
+            print("\nERROR: Invalid IP addresses; source IP is the same as destination IP: " + ip_destination + ".")
             sys.exit(0)
 
 
@@ -541,6 +555,37 @@ class BaseAttack(metaclass=ABCMeta):
             str_tcp_seg = str_tcp_seg.replace(orig_ip_dst, target_host)
             str_tcp_seg = self.clean_white_spaces(str_tcp_seg)
         return str_tcp_seg
+
+    def get_ip_data(self, ip_address: str):
+        """
+        :param ip_address: the ip of which (packet-)data shall be returned
+        :return: MSS, TTL and Window Size values of the given IP
+        """
+        # Set MSS (Maximum Segment Size) based on MSS distribution of IP address
+        mss_dist = self.statistics.get_mss_distribution(ip_address)
+        if len(mss_dist) > 0:
+            mss_prob_dict = Lea.fromValFreqsDict(mss_dist)
+            mss_value = mss_prob_dict.random()
+        else:
+            mss_value = handle_most_used_outputs(self.statistics.process_db_query("most_used(mssValue)"))
+
+        # Set TTL based on TTL distribution of IP address
+        ttl_dist = self.statistics.get_ttl_distribution(ip_address)
+        if len(ttl_dist) > 0:
+            ttl_prob_dict = Lea.fromValFreqsDict(ttl_dist)
+            ttl_value = ttl_prob_dict.random()
+        else:
+            ttl_value = handle_most_used_outputs(self.statistics.process_db_query("most_used(ttlValue)"))
+
+        # Set Window Size based on Window Size distribution of IP address
+        win_dist = self.statistics.get_win_distribution(ip_address)
+        if len(win_dist) > 0:
+            win_prob_dict = Lea.fromValFreqsDict(win_dist)
+            win_value = win_prob_dict.random()
+        else:
+            win_value = handle_most_used_outputs(self.statistics.process_db_query("most_used(winSize)"))
+
+        return mss_value, ttl_value, win_value
 
 
     #########################################

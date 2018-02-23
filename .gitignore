@@ -20,6 +20,8 @@ tures/*
 
 code/*.pcap
 code/*.xml
+.coverage
+htmlcov/
 dbs/
 *.csv
 *.stat
@@ -27,3 +29,6 @@ dbs/
 code_boost/src/cxx/CMakeLists.txt
 code_boost/src/cxx/cmake-build-debug/
 code_boost/src/cmake-build-debug/
+resources/test/ID2T_results
+
+run_tests

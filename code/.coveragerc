@@ -1,0 +1,6 @@
+[run]
+disable_warnings = ResourceWarning
+
+[html]
+directory = ../htmlcov
+

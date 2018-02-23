@@ -10,8 +10,9 @@ from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes
 from ID2TLib.SMB2 import *
-from ID2TLib.Utility import update_timestamp, get_interval_pps, get_rnd_os, get_ip_range,\
-    generate_source_port_from_platform, get_filetime_format
+from ID2TLib.Utility import update_timestamp, get_interval_pps, get_ip_range,\
+    generate_source_port_from_platform, get_filetime_format, handle_most_used_outputs
+import ID2TLib.Utility
 from ID2TLib.SMBLib import smb_port, smb_versions, smb_dialects, get_smb_version, get_smb_platform_data,\
     invalid_smb_version
 
@@ -31,7 +32,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                                              "Scanning/Probing")
 
         # Define allowed parameters and their type
-        self.supported_params = {
+        self.supported_params.update({
             Param.IP_SOURCE: ParameterTypes.TYPE_IP_ADDRESS,
             Param.IP_DESTINATION: ParameterTypes.TYPE_IP_ADDRESS,
             Param.PORT_SOURCE: ParameterTypes.TYPE_PORT,
@@ -47,21 +48,18 @@ class SMBScanAttack(BaseAttack.BaseAttack):
             Param.SOURCE_PLATFORM: ParameterTypes.TYPE_STRING,
             Param.PROTOCOL_VERSION: ParameterTypes.TYPE_STRING,
             Param.IP_DESTINATION_END: ParameterTypes.TYPE_IP_ADDRESS
-        }
+        })
 
     def init_params(self):
         """
         Initialize the parameters of this attack using the user supplied command line parameters.
         Use the provided statistics to calculate default parameters and to process user
         supplied queries.
-
-        :param statistics: Reference to a statistics object.
         """
+
         # PARAMETERS: initialize with default values
         # (values are overwritten if user specifies them)
         most_used_ip_address = self.statistics.get_most_used_ip_address()
-        if isinstance(most_used_ip_address, list):
-            most_used_ip_address = most_used_ip_address[0]
 
         self.add_param_value(Param.IP_SOURCE, most_used_ip_address)
         self.add_param_value(Param.IP_SOURCE_RANDOMIZE, 'False')
@@ -87,47 +85,15 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                               self.statistics.get_pps_received(most_used_ip_address)) / 2)
         self.add_param_value(Param.INJECT_AFTER_PACKET, randint(0, self.statistics.get_packet_count()))
 
-        rnd_ip_count = self.statistics.get_ip_address_count()/2
+        rnd_ip_count = self.statistics.get_ip_address_count()//2
         self.add_param_value(Param.HOSTING_IP, self.statistics.get_random_ip_address(rnd_ip_count))
-        self.host_os = get_rnd_os()
+        self.host_os = ID2TLib.Utility.get_rnd_os()
         self.add_param_value(Param.HOSTING_VERSION, get_smb_version(platform=self.host_os))
-        self.add_param_value(Param.SOURCE_PLATFORM, get_rnd_os())
+        self.add_param_value(Param.SOURCE_PLATFORM, ID2TLib.Utility.get_rnd_os())
         self.add_param_value(Param.PROTOCOL_VERSION, "1")
         self.add_param_value(Param.IP_DESTINATION_END, "0.0.0.0")
 
     def generate_attack_pcap(self):
-        def get_ip_data(ip_address: str):
-            """
-            Gets the MSS, TTL and Windows Size values of a given IP
-
-            :param ip_address: the ip of which (packet-)data shall be returned
-            :return: MSS, TTL and Window Size values of the given IP
-            """
-            # Set MSS (Maximum Segment Size) based on MSS distribution of IP address
-            mss_dist = self.statistics.get_mss_distribution(ip_address)
-            if len(mss_dist) > 0:
-                mss_prob_dict = Lea.fromValFreqsDict(mss_dist)
-                mss_value = mss_prob_dict.random()
-            else:
-                mss_value = self.statistics.process_db_query("most_used(mssValue)")
-
-            # Set TTL based on TTL distribution of IP address
-            ttl_dist = self.statistics.get_ttl_distribution(ip_address)
-            if len(ttl_dist) > 0:
-                ttl_prob_dict = Lea.fromValFreqsDict(ttl_dist)
-                ttl_value = ttl_prob_dict.random()
-            else:
-                ttl_value = self.statistics.process_db_query("most_used(ttlValue)")
-
-            # Set Window Size based on Window Size distribution of IP address
-            win_dist = self.statistics.get_win_distribution(ip_address)
-            if len(win_dist) > 0:
-                win_prob_dict = Lea.fromValFreqsDict(win_dist)
-                win_value = win_prob_dict.random()
-            else:
-                win_value = self.statistics.process_db_query("most_used(winSize)")
-
-            return mss_value, ttl_value, win_value
 
         pps = self.get_param_value(Param.PACKETS_PER_SECOND)
 
@@ -195,7 +161,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                 mac_source = self.generate_random_mac_address()
 
         # Get MSS, TTL and Window size value for source IP
-        source_mss_value, source_ttl_value, source_win_value = get_ip_data(ip_source)
+        source_mss_value, source_ttl_value, source_win_value = self.get_ip_data(ip_source)
 
         for ip in ip_dests:
 
@@ -215,7 +181,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                         mac_destination = self.generate_random_mac_address()
 
                 # Get MSS, TTL and Window size value for destination IP
-                destination_mss_value, destination_ttl_value, destination_win_value = get_ip_data(ip)
+                destination_mss_value, destination_ttl_value, destination_win_value = self.get_ip_data(ip)
 
                 minDelay, maxDelay = self.get_reply_delay(ip)
 

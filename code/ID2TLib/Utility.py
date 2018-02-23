@@ -1,10 +1,19 @@
 import ipaddress
+import os
 
 from random import randint, uniform
 from os import urandom
 from datetime import datetime
 from calendar import timegm
 from lea import Lea
+from scipy.stats import gamma
+from scapy.layers.inet import RandShort
+
+CODE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/../"
+ROOT_DIR = CODE_DIR + "../"
+RESOURCE_DIR = ROOT_DIR + "resources/"
+TEST_DIR = RESOURCE_DIR + "test/"
+
 
 platforms = {"win7", "win10", "winxp", "win8.1", "macos", "linux", "win8", "winvista", "winnt", "win2000"}
 platform_probability = {"win7": 48.43, "win10": 27.99, "winxp": 6.07, "win8.1": 6.07, "macos": 5.94, "linux": 3.38,
@@ -17,6 +26,9 @@ x86_pseudo_nops = {b'\x97', b'\x96', b'\x95', b'\x93', b'\x92', b'\x91', b'\x99'
                    b'\x55', b'\x53', b'\x51', b'\x57', b'\x52', b'\x06', b'\x56', b'\x54', b'\x16', b'\x58', b'\x5d',
                    b'\x5b', b'\x59', b'\x5f', b'\x5a', b'\x5e', b'\xd6'}
 forbidden_chars = [b'\x00', b'\x0a', b'\x0d']
+
+attacker_port_mapping = {}
+attacker_ttl_mapping = {}
 
 
 def update_timestamp(timestamp, pps, delay=0):
@@ -188,9 +200,9 @@ def get_rnd_x86_nop(count=1, side_effect_free=False, char_filter=set()):
     :return: Random x86 NOP bytestring
     """
     result = b''
-    nops = x86_nops
+    nops = x86_nops.copy()
     if not side_effect_free:
-        nops |= x86_pseudo_nops
+        nops |= x86_pseudo_nops.copy()
 
     if not isinstance(char_filter, set):
         char_filter = set(char_filter)
@@ -218,6 +230,18 @@ def get_rnd_bytes(count=1, ignore=None):
             char = urandom(1)
         result += char
     return result
+
+
+def check_payload_len(payload_len: int, limit: int):
+    """
+    Checks if the len of the payload exceeds a given limit
+    :param payload_len: The length of the payload
+    :param limit: The limit of the length of the payload which is allowed
+    """
+
+    if payload_len > limit:
+        print("\nCustom payload too long: ", payload_len, " bytes. Should be a maximum of ", limit, " bytes.")
+        exit(1)
 
 
 def get_bytes_from_file(filepath):
@@ -249,16 +273,19 @@ def get_bytes_from_file(filepath):
                 result_bytes = bytes.fromhex(content)
             except ValueError:
                 print("\nERROR: Content of file is not all hexadecimal.")
+                file.close()
                 exit(1)
         elif header == "str":
-            result_bytes = content.encode()
+            result_bytes = content.strip().encode()
         else:
             print("\nERROR: Invalid header found: " + header + ". Try 'hex' or 'str' followed by endline instead.")
+            file.close()
             exit(1)
 
         for forbidden_char in forbidden_chars:
             if forbidden_char in result_bytes:
                 print("\nERROR: Forbidden character found in payload: ", forbidden_char)
+                file.close()
                 exit(1)
 
         file.close()
@@ -267,3 +294,56 @@ def get_bytes_from_file(filepath):
     except FileNotFoundError:
         print("\nERROR: File not found: ", filepath)
         exit(1)
+
+
+def handle_most_used_outputs(most_used_x):
+    """
+    :param most_used_x: Element or list (e.g. from SQL-query output) which should only be one element
+    :return: most_used_x if it's not a list. The first element of most_used_x after being sorted if it's a list.
+    None if that list is empty.
+    """
+    if isinstance(most_used_x, list):
+        if len(most_used_x) == 0:
+            return None
+        most_used_x.sort()
+        return most_used_x[0]
+    else:
+        return most_used_x
+
+
+def get_attacker_config(ip_source_list, ipAddress: str):
+    """
+    Returns the attacker configuration depending on the IP address, this includes the port for the next
+    attacking packet and the previously used (fixed) TTL value.
+    :param ip_source_list: List of source IPs
+    :param ipAddress: The IP address of the attacker
+    :return: A tuple consisting of (port, ttlValue)
+    """
+    # Gamma distribution parameters derived from MAWI 13.8G dataset
+    alpha, loc, beta = (2.3261710235, -0.188306914406, 44.4853123884)
+    gd = gamma.rvs(alpha, loc=loc, scale=beta, size=len(ip_source_list))
+
+    # Determine port
+    port = attacker_port_mapping.get(ipAddress)
+    if port is not None:  # use next port
+        next_port = attacker_port_mapping.get(ipAddress) + 1
+        if next_port > (2 ** 16 - 1):
+            next_port = 1
+    else:  # generate starting port
+        next_port = RandShort()
+    attacker_port_mapping[ipAddress] = next_port
+    # Determine TTL value
+    ttl = attacker_ttl_mapping.get(ipAddress)
+    if ttl is None:  # determine TTL value
+        is_invalid = True
+        pos = ip_source_list.index(ipAddress)
+        pos_max = len(gd)
+        while is_invalid:
+            ttl = int(round(gd[pos]))
+            if 0 < ttl < 256:  # validity check
+                is_invalid = False
+            else:
+                pos = index_increment(pos, pos_max)
+        attacker_ttl_mapping[ipAddress] = ttl
+    # return port and TTL
+    return next_port, ttl

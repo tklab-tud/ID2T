@@ -1,6 +1,6 @@
 from os import urandom
 from binascii import b2a_hex
-from random import random
+from random import choice
 
 from ID2TLib.Utility import check_platform, get_filetime_format, get_rnd_boot_time
 
@@ -60,7 +60,7 @@ def get_smb_version(platform: str):
     """
     check_platform(platform)
     if platform is "linux":
-        return random.choice(list(smb_versions_per_samba.values()))
+        return choice(list(smb_versions_per_samba.values()))
     elif platform is "macos":
         return "2.1"
     else:

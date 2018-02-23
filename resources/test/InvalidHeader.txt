@@ -1,0 +1,2 @@
+InvalidHeader
+The header above is invalid because it is not 'hex' or 'str'

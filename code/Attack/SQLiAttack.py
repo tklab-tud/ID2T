@@ -1,21 +1,21 @@
 import logging
+import random
 
-from random import randint
 from lea import Lea
-from scapy.utils import RawPcapReader
 from scapy.layers.inet import Ether
-from ID2TLib.Utility import update_timestamp, get_interval_pps
+from scapy.utils import RawPcapReader
 
 from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes
+import ID2TLib.Utility as Util
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 # noinspection PyPep8
 
 
 class SQLiAttack(BaseAttack.BaseAttack):
-    template_attack_pcap_path = "resources/ATutorSQLi.pcap"
+    template_attack_pcap_path = Util.RESOURCE_DIR + "ATutorSQLi.pcap"
     # HTTP port
     http_port = 80
     # Metasploit experiments show this range of ports
@@ -32,7 +32,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
                                         "Privilege elevation")
 
         # Define allowed parameters and their type
-        self.supported_params = {
+        self.supported_params.update({
             Param.MAC_SOURCE: ParameterTypes.TYPE_MAC_ADDRESS,
             Param.IP_SOURCE: ParameterTypes.TYPE_IP_ADDRESS,
             Param.MAC_DESTINATION: ParameterTypes.TYPE_MAC_ADDRESS,
@@ -43,22 +43,20 @@ class SQLiAttack(BaseAttack.BaseAttack):
             Param.INJECT_AT_TIMESTAMP: ParameterTypes.TYPE_FLOAT,
             Param.INJECT_AFTER_PACKET: ParameterTypes.TYPE_PACKET_POSITION,
             Param.PACKETS_PER_SECOND: ParameterTypes.TYPE_FLOAT
-        }
+        })
 
     def init_params(self):
         """
         Initialize the parameters of this attack using the user supplied command line parameters.
         Use the provided statistics to calculate default parameters and to process user
         supplied queries.
-
-        :param statistics: Reference to a statistics object.
         """
+
         # PARAMETERS: initialize with default utilsvalues
         # (values are overwritten if user specifies them)
         # Attacker configuration
         most_used_ip_address = self.statistics.get_most_used_ip_address()
-        if isinstance(most_used_ip_address, list):
-            most_used_ip_address = most_used_ip_address[0]
+
         self.add_param_value(Param.IP_SOURCE, most_used_ip_address)
         self.add_param_value(Param.MAC_SOURCE, self.statistics.get_mac_address(most_used_ip_address))
 
@@ -74,7 +72,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.TARGET_HOST, "www.hackme.com")
 
         # Attack configuration
-        self.add_param_value(Param.INJECT_AFTER_PACKET, randint(0, self.statistics.get_packet_count()))
+        self.add_param_value(Param.INJECT_AFTER_PACKET, random.randint(0, self.statistics.get_packet_count()))
         self.add_param_value(Param.PACKETS_PER_SECOND,
                              (self.statistics.get_pps_sent(most_used_ip_address) +
                               self.statistics.get_pps_received(most_used_ip_address)) / 2)
@@ -109,14 +107,14 @@ class SQLiAttack(BaseAttack.BaseAttack):
             source_ttl_prob_dict = Lea.fromValFreqsDict(source_ttl_dist)
             source_ttl_value = source_ttl_prob_dict.random()
         else:
-            source_ttl_value = self.statistics.process_db_query("most_used(ttlValue)")
+            source_ttl_value = Util.handle_most_used_outputs(self.statistics.process_db_query("most_used(ttlValue)"))
 
         destination_ttl_dist = self.statistics.get_ttl_distribution(ip_destination)
         if len(destination_ttl_dist) > 0:
             destination_ttl_prob_dict = Lea.fromValFreqsDict(destination_ttl_dist)
             destination_ttl_value = destination_ttl_prob_dict.random()
         else:
-            destination_ttl_value = self.statistics.process_db_query("most_used(ttlValue)")
+            destination_ttl_value = Util.handle_most_used_outputs(self.statistics.process_db_query("most_used(ttlValue)"))
 
         # Inject SQLi Attack
         # Read SQLi Attack pcap file
@@ -124,15 +122,16 @@ class SQLiAttack(BaseAttack.BaseAttack):
         exploit_raw_packets = RawPcapReader(self.template_attack_pcap_path)
         inter_arrival_times, inter_arrival_time_dist = self.get_inter_arrival_time(exploit_raw_packets,True)
         timeSteps = Lea.fromValFreqsDict(inter_arrival_time_dist)
+        exploit_raw_packets.close()
         exploit_raw_packets = RawPcapReader(self.template_attack_pcap_path)
 
-        port_source = randint(self.minDefaultPort,self.maxDefaultPort) # experiments show this range of ports
+        port_source = random.randint(self.minDefaultPort,self.maxDefaultPort) # experiments show this range of ports
 
         # Random TCP sequence numbers
         global attacker_seq
-        attacker_seq = randint(1000, 50000)
+        attacker_seq = random.randint(1000, 50000)
         global victim_seq
-        victim_seq = randint(1000, 50000)
+        victim_seq = random.randint(1000, 50000)
 
         for pkt_num, pkt in enumerate(exploit_raw_packets):
             eth_frame = Ether(pkt[0])
@@ -156,11 +155,11 @@ class SQLiAttack(BaseAttack.BaseAttack):
 
                     # There are 363 TCP connections with different source ports, for each of them we generate random port
                     if tcp_pkt.getfieldval("sport") != prev_orig_port_source and tcp_pkt.getfieldval("dport") != 4444:
-                        port_source = randint(self.minDefaultPort, self.maxDefaultPort)
+                        port_source = random.randint(self.minDefaultPort, self.maxDefaultPort)
                         prev_orig_port_source = tcp_pkt.getfieldval("sport")
                         # New connection, new random TCP sequence numbers
-                        attacker_seq = randint(1000, 50000)
-                        victim_seq = randint(1000, 50000)
+                        attacker_seq = random.randint(1000, 50000)
+                        victim_seq = random.randint(1000, 50000)
                         # First packet in a connection has ACK = 0
                         tcp_pkt.setfieldval("ack", 0)
 
@@ -187,8 +186,8 @@ class SQLiAttack(BaseAttack.BaseAttack):
                     new_pkt = (eth_frame / ip_pkt/ tcp_pkt / str_tcp_seg)
                     new_pkt.time = timestamp_next_pkt
 
-                    pps = max(get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
-                    timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps) + float(timeSteps.random())
+                    pps = max(Util.get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
+                    timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps) + float(timeSteps.random())
 
                 # Victim --> attacker
                 else:
@@ -213,17 +212,17 @@ class SQLiAttack(BaseAttack.BaseAttack):
                         victim_seq += max(strLen, 1)
 
                     new_pkt = (eth_frame / ip_pkt / tcp_pkt / str_tcp_seg)
-                    timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps) + float(timeSteps.random())
+                    timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps) + float(timeSteps.random())
                     new_pkt.time = timestamp_next_pkt
 
             # The last connection
             else:
                 # New connection, new random TCP sequence numbers
-                attacker_seq = randint(1000, 50000)
-                victim_seq = randint(1000, 50000)
+                attacker_seq = random.randint(1000, 50000)
+                victim_seq = random.randint(1000, 50000)
                 # First packet in a connection has ACK = 0
                 tcp_pkt.setfieldval("ack", 0)
-                #port_source = randint(self.minDefaultPort, self.maxDefaultPort)
+                #port_source = random.randint(self.minDefaultPort, self.maxDefaultPort)
 
                 # Attacker --> vicitm
                 if ip_pkt.getfieldval("dst") == orig_ip_dst:  # victim IP
@@ -249,8 +248,8 @@ class SQLiAttack(BaseAttack.BaseAttack):
                     new_pkt = (eth_frame / ip_pkt / tcp_pkt / str_tcp_seg)
                     new_pkt.time = timestamp_next_pkt
 
-                    pps = max(get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
-                    timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps) + float(timeSteps.random())
+                    pps = max(Util.get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
+                    timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps) + float(timeSteps.random())
 
                 # Victim --> attacker
                 else:
@@ -274,11 +273,12 @@ class SQLiAttack(BaseAttack.BaseAttack):
                         victim_seq += max(strLen, 1)
 
                     new_pkt = (eth_frame / ip_pkt / tcp_pkt / str_tcp_seg)
-                    timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps) + float(timeSteps.random())
+                    timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps) + float(timeSteps.random())
                     new_pkt.time = timestamp_next_pkt
 
             packets.append(new_pkt)
 
+        exploit_raw_packets.close()
         # Store timestamp of first packet (for attack label)
         self.attack_start_utime = packets[0].time
         self.attack_end_utime = packets[-1].time

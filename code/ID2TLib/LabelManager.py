@@ -28,7 +28,7 @@ class LabelManager:
         self.labels = list()
 
         if filepath_pcap is not None:
-            self.label_file_path = filepath_pcap.strip('.pcap') + '_labels.xml'
+            self.label_file_path = os.path.splitext(filepath_pcap)[0] + '_labels.xml'
             # only load labels if label file is existing
             if os.path.exists(self.label_file_path):
                 self.load_labels()
@@ -83,7 +83,7 @@ class LabelManager:
             return timestamp_root
 
         if filepath is not None:
-            self.label_file_path = filepath.strip('.pcap') + '_labels.xml'
+            self.label_file_path = os.path.splitext(filepath)[0] + '_labels.xml'
 
         # Generate XML
         doc = Document()
