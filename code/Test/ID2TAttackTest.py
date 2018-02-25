@@ -72,23 +72,30 @@ class ID2TAttackTest(unittest.TestCase):
         try:
             path = controller.pcap_dest_path
             file = pcr.RawPcapReader(path)
-            all_packets = file.read_all()
-            file.close()
+            packet_a = file.read_packet()
+            packet_b = file.read_packet()
+            i = 0
 
-            for i in range(0, len(all_packets)-1):
+            while packet_b is not None:
 
-                time_a = all_packets[i][2][0:2]
-                time_b = all_packets[i+1][2][0:2]
+                time_a = packet_a[2][0:2]
+                time_b = packet_b[2][0:2]
 
                 if time_a[0] > time_b[0]:
+                    file.close()
                     self.fail("Packet order incorrect at: " + str(i+1) + "-" + str(i+2) +
                               ". Current time: " + str(time_a) + " Next time: " + str(time_b))
                 elif time_a[0] == time_b[0]:
                     if time_a[1] > time_b[1]:
+                        file.close()
                         self.fail("Packet order incorrect at: " + str(i + 1) + "-" + str(i + 2) +
                                   ". Current time: " + str(time_a) + " Next time: " + str(time_b))
-                else:
-                    pass
+
+                packet_a = packet_b
+                packet_b = file.read_packet()
+                i += 1
+
+            file.close()
 
         except self.failureException:
             Lib.rename_test_result_files(controller, caller_function, attack_sub_dir, test_sub_dir)
