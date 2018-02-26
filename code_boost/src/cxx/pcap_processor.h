@@ -13,6 +13,7 @@
 #include <sys/stat.h>
 #include <unordered_map>
 #include "statistics.h"
+#include "statistics_db.h"
 
 using namespace Tins;
 
@@ -44,6 +45,8 @@ public:
     void collect_statistics();
 
     void write_to_database(std::string database_path);
+
+    static int get_db_version() { return statistics_db::DB_VERSION; };
 };
 
 

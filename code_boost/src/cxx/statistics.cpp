@@ -602,6 +602,7 @@ void statistics::writeToDatabase(std::string database_path) {
         db.writeStatisticsWin(win_distribution);
         db.writeStatisticsConv(conv_statistics);
         db.writeStatisticsInterval(interval_statistics);
+        db.writeDbVersion();
     }
     else {
         // Tinslib failed to recognize the types of the packets in the input PCAP

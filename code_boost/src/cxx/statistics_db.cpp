@@ -438,3 +438,14 @@ void statistics_db::writeStatisticsInterval(std::unordered_map<std::string, entr
     }
 }
 
+void statistics_db::writeDbVersion(){
+	try {
+		SQLite::Transaction transaction(*db);
+		SQLite::Statement query(*db, std::string("PRAGMA user_version = ") + std::to_string(DB_VERSION) + ";");
+		query.exec();
+		transaction.commit();
+	}
+	catch (std::exception &e) {
+        std::cout << "Exception in statistics_db: " << e.what() << std::endl;
+    }
+}

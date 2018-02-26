@@ -347,5 +347,6 @@ BOOST_PYTHON_MODULE (libpcapreader) {
             .def("merge_pcaps", &pcap_processor::merge_pcaps)
             .def("collect_statistics", &pcap_processor::collect_statistics)
             .def("get_timestamp_mu_sec", &pcap_processor::get_timestamp_mu_sec)
-            .def("write_to_database", &pcap_processor::write_to_database);
+            .def("write_to_database", &pcap_processor::write_to_database)
+            .def("get_db_version", &pcap_processor::get_db_version).staticmethod("get_db_version");
 }
