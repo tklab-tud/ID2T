@@ -19,3 +19,6 @@ class UnitTestMS17Scan(Test.ID2TAttackTest):
         ip_dst = 'ip.dst='+Lib.test_pcap_ips[1]
         self.checksum_test([['MS17ScanAttack', ip_src, ip_dst, 'mac.src=00:0C:21:1C:60:61',
                              'mac.dst=04:0C:32:2C:63:62', 'port.src=1337', 'port.dst=42']], sha_multiple_params)
+
+    def test_MS17Scan_order(self):
+        self.order_test([['MS17ScanAttack']])
