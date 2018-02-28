@@ -11,7 +11,7 @@ Comparability of the results must be ensured by use of publicly available datase
 
 The ID2T toolkit was first proposed in [[1]](#references) and [[2]](#references) and targets the injection of attacks into existing network datasets. At first, it analyzes a given dataset and collects statistics from it. These statistics are stored into a local database. Next, these statistics can be used to define attack parameters for the injection of one or multiple attacks. Finally, the application creates the required attack packets and injects them into the existing file. Resulting in a new PCAP with the injected attacks and a label file indicating the position (timestamps) of the first and last attack packet.
 
-ID2T was also presented in Blackhat Europe 2017 as part of the Arsenal (https://www.blackhat.com/eu-17/arsenal/schedule/index.html)
+ID2T was also presented in Blackhat Europe 2017 as part of the Arsenal session (https://www.blackhat.com/eu-17/arsenal/schedule/index.html).
 
 ### References
 [1] [Garcia Cordero et al. (2015) ID2T: a DIY Dataset Creation Toolkit for Intrusion Detection System](https://www.tk.informatik.tu-darmstadt.de/fileadmin/user_upload/Group_TK/filesDownload/Published_Papers/id2t.pdf)
