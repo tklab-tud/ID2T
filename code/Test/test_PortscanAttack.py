@@ -26,3 +26,6 @@ class UnitTestPortscanAttack(Test.ID2TAttackTest):
 
     def test_portscan_ips_not_in_pcap(self):
         self.checksum_test([['PortscanAttack', 'ip.src=1.1.1.1', 'ip.dst=2.2.2.2']], sha_portscan_ips_not_in_pcap)
+
+    def test_portscan_order(self):
+        self.order_test([['PortscanAttack']])

@@ -22,3 +22,5 @@ class UnitTestEternalBlue(Test.ID2TAttackTest):
         self.checksum_test([['EternalBlueExploit', ip_src, ip_dst, 'mac.src=00:0C:21:1C:60:61',
                              'mac.dst=04:0C:32:2C:63:62', 'port.src=1337', 'port.dst=42']], sha_multiple_params)
 
+    def test_eternalblue_order(self):
+        self.order_test([['EternalBlueExploit']])
