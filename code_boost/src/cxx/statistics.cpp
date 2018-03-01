@@ -293,17 +293,37 @@ void statistics::incrementToScount(std::string ipAddress, int tosValue) {
  * @param protocol The protocol of the packet.
  */
 void statistics::incrementProtocolCount(std::string ipAddress, std::string protocol) {
-    protocol_distribution[{ipAddress, protocol}]++;
+    protocol_distribution[{ipAddress, protocol}].count++;
 }
 
 /**
  * Returns the number of packets seen for the given IP address and protocol.
  * @param ipAddress The IP address whose packet count is wanted.
  * @param protocol The protocol whose packet count is wanted.
- * @return an integer: the number of packets
+ * @return an integer: The number of packets
  */
 int statistics::getProtocolCount(std::string ipAddress, std::string protocol) {
-    return protocol_distribution[{ipAddress, protocol}];
+    return protocol_distribution[{ipAddress, protocol}].count;
+}
+
+/**
+ * Increases the byte counter for the given IP address and protocol.
+ * @param ipAddress The IP address whose protocol byte counter should be increased.
+ * @param protocol The protocol of the packet.
+ * @param byteSent The packet's size.
+ */
+void statistics::increaseProtocolByteCount(std::string ipAddress, std::string protocol, long bytesSent) {
+    protocol_distribution[{ipAddress, protocol}].byteCount += bytesSent;
+}
+
+/**
+ * Returns the number of bytes seen for the given IP address and protocol.
+ * @param ipAddress The IP address whose byte count is wanted.
+ * @param protocol The protocol whose byte count is wanted.
+ * @return a float: The number of bytes
+ */
+float statistics::getProtocolByteCount(std::string ipAddress, std::string protocol) {
+    return protocol_distribution[{ipAddress, protocol}].byteCount;
 }
 
 /**
@@ -319,9 +339,24 @@ void statistics::incrementPortCount(std::string ipAddressSender, int outgoingPor
                                     int incomingPort) {
     port_values[outgoingPort]++;
     port_values[incomingPort]++;
-    ip_ports[{ipAddressSender, "out", outgoingPort}]++;
-    ip_ports[{ipAddressReceiver, "in", incomingPort}]++;
+    ip_ports[{ipAddressSender, "out", outgoingPort}].count++;
+    ip_ports[{ipAddressReceiver, "in", incomingPort}].count++;
+}
 
+/**
+ * Increases the packet byte counter for
+ * - the given sender IP address with outgoing port and
+ * - the given receiver IP address with incoming port.
+ * @param ipAddressSender The IP address of the packet sender.
+ * @param outgoingPort The port used by the sender.
+ * @param ipAddressReceiver The IP address of the packet receiver.
+ * @param incomingPort The port used by the receiver.
+ * @param byteSent The packet's size.
+ */
+void statistics::increasePortByteCount(std::string ipAddressSender, int outgoingPort, std::string ipAddressReceiver,
+                                       int incomingPort, long bytesSent) {
+    ip_ports[{ipAddressSender, "out", outgoingPort}].byteCount += bytesSent;
+    ip_ports[{ipAddressReceiver, "in", incomingPort}].byteCount += bytesSent;
 }
 
 /**
