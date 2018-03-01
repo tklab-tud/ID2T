@@ -67,7 +67,6 @@ class CLI(object):
         # Attack arguments
         parser.add_argument('-a', '--attack', metavar="ATTACK", action='append',
                                        help='injects ATTACK into a PCAP file.', nargs='+')
-
         # Parse arguments
         self.args = parser.parse_args(args)
 
@@ -140,7 +139,10 @@ class CLI(object):
 
         # Create statistics plots
         if self.args.plot is not None:
-            controller.create_statistics_plot(self.args.plot)
+            doEntropy = False
+            if self.args.extraTests:
+                doEntropy = True
+            controller.create_statistics_plot(self.args.plot, doEntropy)
 
         # Check random seed
         if not isinstance(self.args.randomSeed, list):
