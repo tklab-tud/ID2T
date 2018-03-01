@@ -125,7 +125,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
         exploit_raw_packets.close()
         exploit_raw_packets = RawPcapReader(self.template_attack_pcap_path)
 
-        port_source = random.randint(self.minDefaultPort,self.maxDefaultPort) # experiments show this range of ports
+        port_source = random.randint(self.minDefaultPort, self.maxDefaultPort) # experiments show this range of ports
 
         # Random TCP sequence numbers
         global attacker_seq
@@ -148,13 +148,22 @@ class SQLiAttack(BaseAttack.BaseAttack):
                 prev_orig_port_source = tcp_pkt.getfieldval("sport")
                 orig_ip_dst = ip_pkt.getfieldval("dst")  # victim IP
 
+            # Last connection
+            if tcp_pkt.getfieldval("dport") != 80 and tcp_pkt.getfieldval("sport") != 80:
+                # New connection, new random TCP sequence numbers
+                attacker_seq = random.randint(1000, 50000)
+                victim_seq = random.randint(1000, 50000)
+                # First packet in a connection has ACK = 0
+                tcp_pkt.setfieldval("ack", 0)
+
             # TODO: sometimes results in ERROR: Invalid IP addresses; source IP is the same as destination IP
             # TODO: so far only for the joomla pcap, fixed by specifying inject_after-pkt parameter
             # Attacker --> vicitm
             if ip_pkt.getfieldval("dst") == orig_ip_dst:  # victim IP
 
                 # There are 363 TCP connections with different source ports, for each of them we generate random port
-                if tcp_pkt.getfieldval("sport") != prev_orig_port_source and tcp_pkt.getfieldval("dport") != 4444:
+                if tcp_pkt.getfieldval("sport") != prev_orig_port_source and tcp_pkt.getfieldval("dport") != 4444\
+                        and (tcp_pkt.getfieldval("dport") == 80 or tcp_pkt.getfieldval("sport") == 80):
                     port_source = random.randint(self.minDefaultPort, self.maxDefaultPort)
                     prev_orig_port_source = tcp_pkt.getfieldval("sport")
                     # New connection, new random TCP sequence numbers
