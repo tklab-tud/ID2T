@@ -5,10 +5,10 @@ from lea import Lea
 from scapy.layers.inet import Ether
 from scapy.utils import RawPcapReader
 
+import ID2TLib.Utility as Util
 from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes
-import ID2TLib.Utility as Util
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 # noinspection PyPep8
@@ -148,133 +148,88 @@ class SQLiAttack(BaseAttack.BaseAttack):
                 prev_orig_port_source = tcp_pkt.getfieldval("sport")
                 orig_ip_dst = ip_pkt.getfieldval("dst")  # victim IP
 
+            # TODO: sometimes results in ERROR: Invalid IP addresses; source IP is the same as destination IP
+            # TODO: so far only for the joomla pcap, fixed by specifying inject_after-pkt parameter
+            # Attacker --> vicitm
+            if ip_pkt.getfieldval("dst") == orig_ip_dst:  # victim IP
 
-            if tcp_pkt.getfieldval("dport") == 80 or tcp_pkt.getfieldval("sport") == 80:
-                # Attacker --> vicitm
-                if ip_pkt.getfieldval("dst") == orig_ip_dst: # victim IP
+                # There are 363 TCP connections with different source ports, for each of them we generate random port
+                if tcp_pkt.getfieldval("sport") != prev_orig_port_source and tcp_pkt.getfieldval("dport") != 4444:
+                    port_source = random.randint(self.minDefaultPort, self.maxDefaultPort)
+                    prev_orig_port_source = tcp_pkt.getfieldval("sport")
+                    # New connection, new random TCP sequence numbers
+                    attacker_seq = random.randint(1000, 50000)
+                    victim_seq = random.randint(1000, 50000)
+                    # First packet in a connection has ACK = 0
+                    tcp_pkt.setfieldval("ack", 0)
 
-                    # There are 363 TCP connections with different source ports, for each of them we generate random port
-                    if tcp_pkt.getfieldval("sport") != prev_orig_port_source and tcp_pkt.getfieldval("dport") != 4444:
-                        port_source = random.randint(self.minDefaultPort, self.maxDefaultPort)
-                        prev_orig_port_source = tcp_pkt.getfieldval("sport")
-                        # New connection, new random TCP sequence numbers
-                        attacker_seq = random.randint(1000, 50000)
-                        victim_seq = random.randint(1000, 50000)
-                        # First packet in a connection has ACK = 0
-                        tcp_pkt.setfieldval("ack", 0)
+                # Last connection
+                elif tcp_pkt.getfieldval("dport") != 80 and tcp_pkt.getfieldval("sport") != 80:
+                    # New connection, new random TCP sequence numbers
+                    attacker_seq = random.randint(1000, 50000)
+                    victim_seq = random.randint(1000, 50000)
+                    # First packet in a connection has ACK = 0
+                    tcp_pkt.setfieldval("ack", 0)
 
-                    # Ether
-                    eth_frame.setfieldval("src", mac_source)
-                    eth_frame.setfieldval("dst", mac_destination)
-                    # IP
-                    ip_pkt.setfieldval("src", ip_source)
-                    ip_pkt.setfieldval("dst", ip_destination)
-                    ip_pkt.setfieldval("ttl", source_ttl_value)
-                    # TCP
+                # Ether
+                eth_frame.setfieldval("src", mac_source)
+                eth_frame.setfieldval("dst", mac_destination)
+                # IP
+                ip_pkt.setfieldval("src", ip_source)
+                ip_pkt.setfieldval("dst", ip_destination)
+                ip_pkt.setfieldval("ttl", source_ttl_value)
+
+                # TCP
+
+                # Regular connection
+                if tcp_pkt.getfieldval("dport") == 80 or tcp_pkt.getfieldval("sport") == 80:
                     tcp_pkt.setfieldval("sport",port_source)
                     tcp_pkt.setfieldval("dport", port_destination)
 
-                    str_tcp_seg = self.modify_http_header(str_tcp_seg, '/ATutor', target_uri, orig_ip_dst, target_host)
+                str_tcp_seg = self.modify_http_header(str_tcp_seg, '/ATutor', target_uri, orig_ip_dst, target_host)
 
-                    # TCP Seq, Ack
-                    if tcp_pkt.getfieldval("ack") != 0:
-                        tcp_pkt.setfieldval("ack", victim_seq)
-                    tcp_pkt.setfieldval("seq", attacker_seq)
-                    if not (tcp_pkt.getfieldval("flags") == 16 and len(str_tcp_seg) == 0):  # flags=A:
-                        attacker_seq += max(len(str_tcp_seg), 1)
+                # TCP Seq, Ack
+                if tcp_pkt.getfieldval("ack") != 0:
+                    tcp_pkt.setfieldval("ack", victim_seq)
+                tcp_pkt.setfieldval("seq", attacker_seq)
+                if not (tcp_pkt.getfieldval("flags") == 16 and len(str_tcp_seg) == 0):  # flags=A:
+                    attacker_seq += max(len(str_tcp_seg), 1)
 
-                    new_pkt = (eth_frame / ip_pkt/ tcp_pkt / str_tcp_seg)
-                    new_pkt.time = timestamp_next_pkt
+                new_pkt = (eth_frame / ip_pkt/ tcp_pkt / str_tcp_seg)
+                new_pkt.time = timestamp_next_pkt
 
-                    pps = max(Util.get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
-                    timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps) + float(timeSteps.random())
+                pps = max(Util.get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
+                timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps) + float(timeSteps.random())
 
-                # Victim --> attacker
-                else:
-                    # Ether
-                    eth_frame.setfieldval("src", mac_destination)
-                    eth_frame.setfieldval("dst", mac_source)
-                    # IP
-                    ip_pkt.setfieldval("src", ip_destination)
-                    ip_pkt.setfieldval("dst", ip_source)
-                    ip_pkt.setfieldval("ttl", destination_ttl_value)
-                    # TCP
+            # Victim --> attacker
+            else:
+                # Ether
+                eth_frame.setfieldval("src", mac_destination)
+                eth_frame.setfieldval("dst", mac_source)
+                # IP
+                ip_pkt.setfieldval("src", ip_destination)
+                ip_pkt.setfieldval("dst", ip_source)
+                ip_pkt.setfieldval("ttl", destination_ttl_value)
+
+                # TCP
+
+                # Regular connection
+                if tcp_pkt.getfieldval("dport") == 80 or tcp_pkt.getfieldval("sport") == 80:
                     tcp_pkt.setfieldval("dport", port_source)
                     tcp_pkt.setfieldval("sport", port_destination)
 
-                    str_tcp_seg = self.modify_http_header(str_tcp_seg, '/ATutor', target_uri, orig_ip_dst, target_host)
+                str_tcp_seg = self.modify_http_header(str_tcp_seg, '/ATutor', target_uri, orig_ip_dst, target_host)
 
-                    # TCP Seq, ACK
-                    tcp_pkt.setfieldval("ack", attacker_seq)
-                    tcp_pkt.setfieldval("seq", victim_seq)
-                    strLen = len(str_tcp_seg)
-                    if not (tcp_pkt.getfieldval("flags") == 16 and strLen == 0):  # flags=A:
-                        victim_seq += max(strLen, 1)
+                # TCP Seq, ACK
+                tcp_pkt.setfieldval("ack", attacker_seq)
+                tcp_pkt.setfieldval("seq", victim_seq)
+                strLen = len(str_tcp_seg)
+                if not (tcp_pkt.getfieldval("flags") == 16 and strLen == 0):  # flags=A:
+                    victim_seq += max(strLen, 1)
 
-                    new_pkt = (eth_frame / ip_pkt / tcp_pkt / str_tcp_seg)
-                    timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps) + float(timeSteps.random())
-                    new_pkt.time = timestamp_next_pkt
-
-            # The last connection
-            else:
-                # New connection, new random TCP sequence numbers
-                attacker_seq = random.randint(1000, 50000)
-                victim_seq = random.randint(1000, 50000)
-                # First packet in a connection has ACK = 0
-                tcp_pkt.setfieldval("ack", 0)
-                #port_source = random.randint(self.minDefaultPort, self.maxDefaultPort)
-
-                # Attacker --> vicitm
-                if ip_pkt.getfieldval("dst") == orig_ip_dst:  # victim IP
-                    # Ether
-                    eth_frame.setfieldval("src", mac_source)
-                    eth_frame.setfieldval("dst", mac_destination)
-                    # IP
-                    ip_pkt.setfieldval("src", ip_source)
-                    ip_pkt.setfieldval("dst", ip_destination)
-                    ip_pkt.setfieldval("ttl", source_ttl_value)
-                    # TCP
-                    #tcp_pkt.setfieldval("sport", port_source)
-
-                    str_tcp_seg = self.modify_http_header(str_tcp_seg, '/ATutor', target_uri, orig_ip_dst, target_host)
-
-                    # TCP Seq, Ack
-                    if tcp_pkt.getfieldval("ack") != 0:
-                        tcp_pkt.setfieldval("ack", victim_seq)
-                    tcp_pkt.setfieldval("seq", attacker_seq)
-                    if not (tcp_pkt.getfieldval("flags") == 16 and len(str_tcp_seg) == 0):  # flags=A:
-                        attacker_seq += max(len(str_tcp_seg), 1)
-
-                    new_pkt = (eth_frame / ip_pkt / tcp_pkt / str_tcp_seg)
-                    new_pkt.time = timestamp_next_pkt
-
-                    pps = max(Util.get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
-                    timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps) + float(timeSteps.random())
-
-                # Victim --> attacker
-                else:
-                    # Ether
-                    eth_frame.setfieldval("src", mac_destination)
-                    eth_frame.setfieldval("dst", mac_source)
-                    # IP
-                    ip_pkt.setfieldval("src", ip_destination)
-                    ip_pkt.setfieldval("dst", ip_source)
-                    ip_pkt.setfieldval("ttl", destination_ttl_value)
-                    # TCP
-                    #tcp_pkt.setfieldval("dport", port_source)
-
-                    str_tcp_seg = self.modify_http_header(str_tcp_seg, '/ATutor', target_uri, orig_ip_dst, target_host)
-
-                    # TCP Seq, ACK
-                    tcp_pkt.setfieldval("ack", attacker_seq)
-                    tcp_pkt.setfieldval("seq", victim_seq)
-                    strLen = len(str_tcp_seg)
-                    if not (tcp_pkt.getfieldval("flags") == 16 and strLen == 0):  # flags=A:
-                        victim_seq += max(strLen, 1)
-
-                    new_pkt = (eth_frame / ip_pkt / tcp_pkt / str_tcp_seg)
-                    timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps) + float(timeSteps.random())
-                    new_pkt.time = timestamp_next_pkt
+                new_pkt = (eth_frame / ip_pkt / tcp_pkt / str_tcp_seg)
+                timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps) + float(timeSteps.random())
+                new_pkt.time = timestamp_next_pkt
 
             packets.append(new_pkt)
 
