@@ -1,3 +1,5 @@
+import unittest.mock as mock
+
 import ID2TLib.TestLibrary as Lib
 import Test.ID2TAttackTest as Test
 
@@ -7,6 +9,7 @@ sha_SMBScan_10_000 = '311cbfc28859597ce7ff58b1bdc8f0ddd733f33ab2bd83a4a7579edadc
 sha_SMBScan_100_000 = '9e55f4c2f035ec52701eabed32757f427627ce5ccf53e30bfc084680a4bf49a2'
 sha_SMBScan_hosting_10_000 = '14f92d19535332bf523e94bcb2038309844abedaa848ca7195a343256adba5f3'
 sha_SMBScan_hosting_100_000 = '029d064de82122202b6ae53d4efff2ea3318ded73a2987cb16e1e74606532766'
+sha_FTPExploit = '75290f0135b13b9d570a484fc7c674b80921a9311cd1229243ea8c547d8c08f0'
 
 
 class EfficiencyTests(Test.ID2TAttackTest):
@@ -40,3 +43,10 @@ class EfficiencyTests(Test.ID2TAttackTest):
         self.checksum_test([['SMBScanAttack', 'ip.src=192.168.178.1', 'ip.dst=192.168.178.10-192.168.217.25',
                              'hosting.ip=192.168.178.10-192.168.217.25']], sha_SMBScan_hosting_100_000, time=True)
         self.assertLessEqual(self.controller.durations[0], 150)
+
+    @mock.patch('ID2TLib.Utility.get_rnd_bytes', side_effect=Lib.get_bytes)
+    @mock.patch('ID2TLib.Utility.get_rnd_x86_nop', side_effect=Lib.get_x86_nop)
+    def test_FTPExploit(self, mock_get_rnd_x86_nop, mock_get_rnd_bytes):
+        self.checksum_test([['FTPWinaXeExploit', 'ip.src=192.168.178.1', 'ip.dst=192.168.178.10']],
+                           sha_FTPExploit, time=True)
+        self.assertLessEqual(self.controller.durations[0]*10000/7, 15)
