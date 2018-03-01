@@ -13,6 +13,7 @@ sha_SMBScan_hosting_100_000 = '029d064de82122202b6ae53d4efff2ea3318ded73a2987cb1
 sha_FTPExploit = '75290f0135b13b9d570a484fc7c674b80921a9311cd1229243ea8c547d8c08f0'
 sha_Portscan_open = '2e1deda7b36fb39705dd44dcb2350cca547cfb5049a16fb383c522dbe7e1d4e9'
 sha_Portscan_close = '3a62f594b9cd31bf7b8c455d1bb5cff3ec2beb044f6da39b066317910f10be66'
+sha_SQLi = '40ab01ef72491dcbcc3d8302b578abb5062397e9cd10d81f87aa6b5fff9f3b69'
 
 
 class EfficiencyTests(Test.ID2TAttackTest):
@@ -61,3 +62,7 @@ class EfficiencyTests(Test.ID2TAttackTest):
     def test_PortscanAttack_close(self):
         self.checksum_test([['PortscanAttack', 'ip.src=192.168.178.1', 'port.open=20']], sha_Portscan_close, time=True)
         self.assertLessEqual(self.controller.durations[0]*10, 15)
+
+    def test_sqli_default(self):
+        self.checksum_test([['SQLiAttack', 'ip.dst=192.168.0.1']], sha_SQLi)
+        self.assertLessEqual(self.controller.durations[0]*10000/6423, 15)
