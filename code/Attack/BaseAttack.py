@@ -170,7 +170,7 @@ class BaseAttack(metaclass=ABCMeta):
             elif '-' in port_entry or '..' in port_entry:
                 # port_entry describes a port range
                 # allowed format: '1-49151', '1..49151', '1...49151'
-                match = re.match('^([0-9]{1,5})(?:-|\.{2,3})([0-9]{1,5})$', port_entry)
+                match = re.match(r'^([0-9]{1,5})(?:-|\.{2,3})([0-9]{1,5})$', port_entry)
                 # check validity of port range
                 # and create list of ports derived from given start and end port
                 (port_start, port_end) = int(match.group(1)), int(match.group(2))
@@ -195,7 +195,7 @@ class BaseAttack(metaclass=ABCMeta):
         :param timestamp: The timestamp to be checked.
         :return: True if the timestamp is valid, otherwise False.
         """
-        is_valid = re.match('[0-9]{4}(?:-[0-9]{1,2}){2} (?:[0-9]{1,2}:){2}[0-9]{1,2}', timestamp)
+        is_valid = re.match(r'[0-9]{4}(?:-[0-9]{1,2}){2} (?:[0-9]{1,2}:){2}[0-9]{1,2}', timestamp)
         return is_valid is not None
 
     @staticmethod
@@ -245,7 +245,7 @@ class BaseAttack(metaclass=ABCMeta):
         :param uri: The URI as string.
         :return: True if URI is valid, otherwise False.
         """
-        domain = re.match('^(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+$', val)
+        domain = re.match(r'^(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+$', val)
         return (domain is not None)
 
 
