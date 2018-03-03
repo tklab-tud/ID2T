@@ -5,6 +5,8 @@ from random import randint, uniform, choice
 from os import urandom
 from datetime import datetime
 from calendar import timegm
+import matplotlib
+matplotlib.use('Agg', force=True)
 from lea import Lea
 from scipy.stats import gamma
 from scapy.layers.inet import RandShort
