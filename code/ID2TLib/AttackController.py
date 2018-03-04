@@ -100,8 +100,8 @@ class AttackController:
         if time:
             self.current_attack.set_finish_time()
         duration = self.current_attack.get_packet_generation_time()
-        total_packets, temp_attack_pcap_path = self.current_attack.generate_attack_pcap()
-        print("done. (total: " + str(total_packets) + " pkts", end="")
+        self.total_packets, temp_attack_pcap_path = self.current_attack.generate_attack_pcap()
+        print("done. (total: " + str(self.total_packets) + " pkts", end="")
         if time:
             print(" in ", duration, " seconds", end="")
         print(".)")

@@ -30,20 +30,64 @@ class ID2TAttackTest(unittest.TestCase):
         :param time: Measure time for packet generation.
         """
 
-        self.controller = Ctrl.Controller(pcap_file_path=pcap, do_extra_tests=False)
-        self.controller.load_pcap_statistics(flag_write_file, flag_recalculate_stats, flag_print_statistics)
-        self.controller.process_attacks(attack_args, [[seed]], time)
+        controller = Ctrl.Controller(pcap_file_path=pcap, do_extra_tests=False)
+        controller.load_pcap_statistics(flag_write_file, flag_recalculate_stats, flag_print_statistics)
+
+        controller.process_attacks(attack_args, [[seed]], time)
 
         caller_function = inspect.stack()[1].function
 
         try:
-            self.assertEqual(sha256_checksum, Lib.get_sha256(self.controller.pcap_dest_path))
+            self.assertEqual(sha256_checksum, Lib.get_sha256(controller.pcap_dest_path))
         except self.failureException:
-            Lib.rename_test_result_files(self.controller, caller_function, attack_sub_dir, test_sub_dir)
+            Lib.rename_test_result_files(controller, caller_function, attack_sub_dir, test_sub_dir)
             raise
 
         if cleanup:
-            Lib.clean_up(self.controller)
+            Lib.clean_up(controller)
+        else:
+            Lib.rename_test_result_files(controller, caller_function, attack_sub_dir, test_sub_dir)
+
+    def temporal_efficiency_test(self, attack_args, time_limit=15, factor=1, seed=None, cleanup=True, pcap=Lib.test_pcap,
+                                 flag_write_file=False, flag_recalculate_stats=False, flag_print_statistics=False,
+                                 attack_sub_dir=True, test_sub_dir=True):
+        """
+        Runs the attack with given aruments and monitors time efficiency.
+
+        :param attack_args: A list of attacks with their attack parameters (as defined in Controller.process_attacks).
+        :param time_limit: The given time limit in seconds.
+        :param factor: A factor to scale the generation time (e.g. only 7 pkts generated -> *10000/7 for 15 seconds).
+        :param seed: A random seed to keep random values static (care for count and order of random generation).
+        :param cleanup: Clean up attack output after testing.
+        :param pcap: The input pcap for the attack.
+        :param flag_write_file: Writes the statistics to a file.
+        :param flag_recalculate_stats: Forces the recalculation of statistics.
+        :param flag_print_statistics: Prints the statistics on the terminal.
+        :param attack_sub_dir: create sub-directory for each attack-class if True
+        :param test_sub_dir: create sub-directory for each test-function/case if True
+        """
+
+        controller = Ctrl.Controller(pcap_file_path=pcap, do_extra_tests=False)
+        controller.load_pcap_statistics(flag_write_file, flag_recalculate_stats, flag_print_statistics)
+
+        if seed is None:
+            controller.process_attacks(attack_args, time=True)
+        else:
+            controller.process_attacks(attack_args, [[seed]], time=True)
+
+        duration = controller.durations[0]*factor/controller.attack_controller.total_packets
+        print(attack_args[0][0] + ' needs ' + str(duration) + ' seconds to generate ' + str(factor) + ' packets.')
+
+        caller_function = inspect.stack()[1].function
+
+        try:
+            self.assertLessEqual(duration, time_limit)
+        except self.failureException:
+            Lib.rename_test_result_files(controller, caller_function, attack_sub_dir, test_sub_dir)
+            raise
+
+        if cleanup:
+            Lib.clean_up(controller)
         else:
             Lib.rename_test_result_files(self.controller, caller_function, attack_sub_dir, test_sub_dir)
 
