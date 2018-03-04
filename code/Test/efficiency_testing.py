@@ -51,3 +51,6 @@ class EfficiencyTests(Test.ID2TAttackTest):
 
     def test_Joomla_10_000(self):
         self.temporal_efficiency_test([['JoomlaRegPrivExploit', 'ip.src=192.168.178.1']], time_limit=15, factor=10000)
+
+    def test_SalityBotnet_10_000(self):
+        self.temporal_efficiency_test([['SalityBotnet']], time_limit=15, factor=10000)
