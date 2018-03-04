@@ -48,3 +48,6 @@ class EfficiencyTests(Test.ID2TAttackTest):
     def test_SQLi_10_000(self):
         # FIXME: sometimes it takes 15.34028493521018 instead of the normal 7.150923313737726 seconds
         self.temporal_efficiency_test([['SQLiAttack', 'ip.dst=192.168.0.1']], time_limit=15, factor=10000)
+
+    def test_Joomla_10_000(self):
+        self.temporal_efficiency_test([['JoomlaRegPrivExploit', 'ip.src=192.168.178.1']], time_limit=15, factor=10000)
