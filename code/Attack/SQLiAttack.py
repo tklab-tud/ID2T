@@ -156,8 +156,6 @@ class SQLiAttack(BaseAttack.BaseAttack):
                 # First packet in a connection has ACK = 0
                 tcp_pkt.setfieldval("ack", 0)
 
-            # TODO: sometimes results in ERROR: Invalid IP addresses; source IP is the same as destination IP
-            # TODO: so far only for the joomla pcap, fixed by specifying inject_after-pkt parameter
             # Attacker --> vicitm
             if ip_pkt.getfieldval("dst") == orig_ip_dst:  # victim IP
 
@@ -172,13 +170,6 @@ class SQLiAttack(BaseAttack.BaseAttack):
                     # First packet in a connection has ACK = 0
                     tcp_pkt.setfieldval("ack", 0)
 
-                # Last connection
-                elif tcp_pkt.getfieldval("dport") != 80 and tcp_pkt.getfieldval("sport") != 80:
-                    # New connection, new random TCP sequence numbers
-                    attacker_seq = random.randint(1000, 50000)
-                    victim_seq = random.randint(1000, 50000)
-                    # First packet in a connection has ACK = 0
-                    tcp_pkt.setfieldval("ack", 0)
 
                 # Ether
                 eth_frame.setfieldval("src", mac_source)
