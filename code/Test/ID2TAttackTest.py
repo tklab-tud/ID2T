@@ -13,7 +13,7 @@ class ID2TAttackTest(unittest.TestCase):
 
     def checksum_test(self, attack_args, sha256_checksum, seed=5, cleanup=True, pcap=Lib.test_pcap,
                       flag_write_file=False, flag_recalculate_stats=False, flag_print_statistics=False,
-                      attack_sub_dir=True, test_sub_dir=True):
+                      attack_sub_dir=True, test_sub_dir=True, time=False):
         """
         Runs the attack against a given sha256 checksum.
 
@@ -30,22 +30,22 @@ class ID2TAttackTest(unittest.TestCase):
         :param time: Measure time for packet generation.
         """
 
-        controller = Ctrl.Controller(pcap_file_path=pcap, do_extra_tests=False)
-        controller.load_pcap_statistics(flag_write_file, flag_recalculate_stats, flag_print_statistics)
-        controller.process_attacks(attack_args, [[seed]])
+        self.controller = Ctrl.Controller(pcap_file_path=pcap, do_extra_tests=False)
+        self.controller.load_pcap_statistics(flag_write_file, flag_recalculate_stats, flag_print_statistics)
+        self.controller.process_attacks(attack_args, [[seed]], time)
 
         caller_function = inspect.stack()[1].function
 
         try:
-            self.assertEqual(sha256_checksum, Lib.get_sha256(controller.pcap_dest_path))
+            self.assertEqual(sha256_checksum, Lib.get_sha256(self.controller.pcap_dest_path))
         except self.failureException:
-            Lib.rename_test_result_files(controller, caller_function, attack_sub_dir, test_sub_dir)
+            Lib.rename_test_result_files(self.controller, caller_function, attack_sub_dir, test_sub_dir)
             raise
 
         if cleanup:
-            Lib.clean_up(controller)
+            Lib.clean_up(self.controller)
         else:
-            Lib.rename_test_result_files(controller, caller_function, attack_sub_dir, test_sub_dir)
+            Lib.rename_test_result_files(self.controller, caller_function, attack_sub_dir, test_sub_dir)
 
     def order_test(self, attack_args, seed=None, cleanup=True, pcap=Lib.test_pcap,
                    flag_write_file=False, flag_recalculate_stats=False, flag_print_statistics=False,
