@@ -136,7 +136,11 @@ class PortscanAttack(BaseAttack.BaseAttack):
         # Initialize parameters
         self.packets = []
         ip_source = self.get_param_value(Param.IP_SOURCE)
+        if isinstance(ip_source, list):
+            ip_source = ip_source[0]
         ip_destination = self.get_param_value(Param.IP_DESTINATION)
+        if isinstance(ip_destination, list):
+            ip_destination = ip_destination[0]
 
         # Check ip.src == ip.dst
         self.ip_src_dst_equal_check(ip_source, ip_destination)

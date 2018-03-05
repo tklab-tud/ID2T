@@ -89,8 +89,12 @@ class SQLiAttack(BaseAttack.BaseAttack):
         self.packets = []
         mac_source = self.get_param_value(Param.MAC_SOURCE)
         ip_source = self.get_param_value(Param.IP_SOURCE)
+        if isinstance(ip_source, list):
+            ip_source = ip_source[0]
         mac_destination = self.get_param_value(Param.MAC_DESTINATION)
         ip_destination = self.get_param_value(Param.IP_DESTINATION)
+        if isinstance(ip_destination, list):
+            ip_destination = ip_destination[0]
         port_destination = self.get_param_value(Param.PORT_DESTINATION)
 
         target_host = self.get_param_value(Param.TARGET_HOST)
