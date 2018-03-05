@@ -63,6 +63,7 @@ class CLI(object):
                                                        'in interval-wise, TCP checksum, and checking payload availability.', action='store_true')
         parser.add_argument('-S', '--randomSeed', action='append', help='sets random seed for testing or benchmarking',
                             nargs='+', default=[])
+        parser.add_argument('-T', '--time', help='measures packet generation time', action='store_true', default=False)
 
         # Attack arguments
         parser.add_argument('-a', '--attack', metavar="ATTACK", action='append',
@@ -151,7 +152,7 @@ class CLI(object):
         # Process attack(s) with given attack params
         if self.args.attack is not None:
             # If attack is present, load attack with params
-            controller.process_attacks(self.args.attack, self.args.randomSeed)
+            controller.process_attacks(self.args.attack, self.args.randomSeed, self.args.time)
 
         # Parameter -q without arguments was given -> go into query loop
         if self.args.query == [None]:

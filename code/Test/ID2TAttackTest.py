@@ -27,6 +27,7 @@ class ID2TAttackTest(unittest.TestCase):
         :param flag_print_statistics: Prints the statistics on the terminal.
         :param attack_sub_dir: create sub-directory for each attack-class if True
         :param test_sub_dir: create sub-directory for each test-function/case if True
+        :param time: Measure time for packet generation.
         """
 
         controller = Ctrl.Controller(pcap_file_path=pcap, do_extra_tests=False)

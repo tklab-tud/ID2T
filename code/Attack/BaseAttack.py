@@ -5,6 +5,7 @@ import os
 import random
 import re
 import tempfile
+import time
 import numpy as np
 
 from abc import abstractmethod, ABCMeta
@@ -44,6 +45,10 @@ class BaseAttack(metaclass=ABCMeta):
         self.supported_params = {}
         self.attack_start_utime = 0
         self.attack_end_utime = 0
+        self.start_time = 0
+        self.finish_time = 0
+        self.packets = []
+        self.path_attack_pcap = ""
 
     def set_statistics(self, statistics):
         """
@@ -61,6 +66,13 @@ class BaseAttack(metaclass=ABCMeta):
         Initialize all required parameters taking into account user supplied values. If no value is supplied,
         or if a user defined query is supplied, use a statistics object to do the calculations.
         A call to this function requires a call to 'set_statistics' first.
+        """
+        pass
+
+    @abstractmethod
+    def generate_attack_packets(self):
+        """
+        Creates the attack packets.
         """
         pass
 
@@ -260,6 +272,15 @@ class BaseAttack(metaclass=ABCMeta):
         if isinstance(seed, int):
             random.seed(seed)
 
+    def set_start_time(self):
+        self.start_time = time.time()
+
+    def set_finish_time(self):
+        self.finish_time = time.time()
+
+    def get_packet_generation_time(self):
+        return self.finish_time - self.start_time
+
     def add_param_value(self, param, value):
         """
         Adds the pair param : value to the dictionary of attack parameters. Prints and error message and skips the
@@ -420,7 +441,7 @@ class BaseAttack(metaclass=ABCMeta):
         maxDelay = int(maxDelay) * 10 ** -6
         return minDelay, maxDelay
 
-    def packetsToConvs(self,exploit_raw_packets):
+    def packets_to_convs(self,exploit_raw_packets):
         """
            Classifies a bunch of packets to conversations groups. A conversation is a set of packets go between host A (IP,port)
            to host B (IP,port)
@@ -460,7 +481,6 @@ class BaseAttack(metaclass=ABCMeta):
                     conversations[conv_rep] = pktList
         return (conversations, orderList_conversations)
 
-
     def is_valid_ip_address(self,addr):
         """
         Checks if the IP address family is supported.
@@ -491,7 +511,6 @@ class BaseAttack(metaclass=ABCMeta):
         if equal:
             print("\nERROR: Invalid IP addresses; source IP is the same as destination IP: " + ip_destination + ".")
             sys.exit(0)
-
 
     def get_inter_arrival_time(self, packets, distribution:bool=False):
         """
@@ -524,7 +543,6 @@ class BaseAttack(metaclass=ABCMeta):
             return inter_arrival_times, dict
         else:
             return inter_arrival_times
-
 
     def clean_white_spaces(self, str):
         """
