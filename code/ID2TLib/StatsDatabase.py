@@ -3,6 +3,7 @@ import re
 import sqlite3
 import sys
 from random import randint
+import ID2TLib.libpcapreader as pr
 
 
 def dict_gen(curs: sqlite3.Cursor):
@@ -32,7 +33,10 @@ class StatsDatabase:
 
         # If DB not existing, create a new DB scheme
         if self.existing_db:
-            print('Located statistics database at: ', db_path)
+            if self.get_db_outdated():
+                print('Statistics database outdated. Recreating database at: ', db_path)
+            else:
+                print('Located statistics database at: ', db_path)
         else:
             print('Statistics database not found. Creating new database at: ', db_path)
 
@@ -60,6 +64,15 @@ class StatsDatabase:
         :return: True if the database was already existent, otherwise False
         """
         return self.existing_db
+
+    def get_db_outdated(self):
+        """
+        Retrieves the database version from the database and compares it to the version
+        it should have to check whether the database is outdated and needs to be recreated.
+        :return: True if the versions match, otherwise False
+        """
+        self.cursor.execute('PRAGMA user_version;')
+        return self.cursor.fetchall()[0][0] != pr.pcap_processor.get_db_version()
 
     @staticmethod
     def _get_selector_keywords():

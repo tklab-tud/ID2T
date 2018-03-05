@@ -170,6 +170,26 @@ struct entry_ipStat {
 };
 
 /*
+ * Struct used to represent:
+ * - Number of transmitted packets
+ * - Number of transmitted bytes
+ */
+struct entry_portStat {
+    int count;
+    float byteCount;
+};
+
+/*
+ * Struct used to represent:
+ * - Number of times the protocol is seen
+ * - Amount of bytes transmitted with this protocol
+ */
+struct entry_protocolStat {
+    int count;
+    float byteCount;
+};
+
+/*
  * Struct used to represent interval statistics:
  * - # packets
  * - # bytes
@@ -391,10 +411,17 @@ public:
 
     void incrementProtocolCount(std::string ipAddress, std::string protocol);
 
+    void increaseProtocolByteCount(std::string ipAddress, std::string protocol, long bytesSent);
+
     void incrementPortCount(std::string ipAddressSender, int outgoingPort, std::string ipAddressReceiver,
                             int incomingPort);
 
+    void increasePortByteCount(std::string ipAddressSender, int outgoingPort, std::string ipAddressReceiver,
+                               int incomingPort, long bytesSent);
+
     int getProtocolCount(std::string ipAddress, std::string protocol);
+
+    float getProtocolByteCount(std::string ipAddress, std::string protocol);
 
     void setTimestampFirstPacket(Tins::Timestamp ts);
 
@@ -507,14 +534,14 @@ private:
     // {Port, count}
     std::unordered_map<int, int> port_values;
 
-    // {IP Address, Protocol, count}
-    std::unordered_map<ipAddress_protocol, int> protocol_distribution;
+    // {IP Address, Protocol,  #count, #Data transmitted in bytes}
+    std::unordered_map<ipAddress_protocol, entry_protocolStat> protocol_distribution;
 
     // {IP Address,  #received packets, #sent packets, Data received in kbytes, Data sent in kbytes}
     std::unordered_map<std::string, entry_ipStat> ip_statistics;
 
-    // {IP Address, in_out, Port Number, count}
-    std::unordered_map<ipAddress_inOut_port, int> ip_ports;
+    // {IP Address, in_out, Port Number,  #count, #Data transmitted in bytes}
+    std::unordered_map<ipAddress_inOut_port, entry_portStat> ip_ports;
 
     // {IP Address, MAC Address}
     std::unordered_map<std::string, std::string> ip_mac_mapping;

@@ -19,6 +19,11 @@ public:
     statistics_db(std::string database_path);
 
     /*
+     * Database version: Increment number on every change in the C++ code!
+     */
+    static const int DB_VERSION = 2;
+
+    /*
      * Methods for writing values into database
      */
     void writeStatisticsIP(std::unordered_map<std::string, entry_ipStat> ipStatistics);
@@ -31,9 +36,9 @@ public:
 
     void writeStatisticsWin(std::unordered_map<ipAddress_win, int> winDistribution);
 
-    void writeStatisticsProtocols(std::unordered_map<ipAddress_protocol, int> protocolDistribution);
+    void writeStatisticsProtocols(std::unordered_map<ipAddress_protocol, entry_protocolStat> protocolDistribution);
 
-    void writeStatisticsPorts(std::unordered_map<ipAddress_inOut_port, int> portsStatistics);
+    void writeStatisticsPorts(std::unordered_map<ipAddress_inOut_port, entry_portStat> portsStatistics);
 
     void writeStatisticsIpMac(std::unordered_map<std::string, std::string> IpMacStatistics);
 
@@ -44,6 +49,8 @@ public:
     void writeStatisticsConv(std::unordered_map<conv, entry_convStat> convStatistics);
 
     void writeStatisticsInterval(std::unordered_map<std::string, entry_intervalStat> intervalStatistics);
+
+    void writeDbVersion();
 
 private:
     // Pointer to the SQLite database

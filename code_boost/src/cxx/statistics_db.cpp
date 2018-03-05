@@ -181,7 +181,7 @@ void statistics_db::writeStatisticsWin(std::unordered_map<ipAddress_win, int> wi
  * Writes the protocol distribution into the database.
  * @param protocolDistribution The protocol distribution from class statistics.
  */
-void statistics_db::writeStatisticsProtocols(std::unordered_map<ipAddress_protocol, int> protocolDistribution) {
+void statistics_db::writeStatisticsProtocols(std::unordered_map<ipAddress_protocol, entry_protocolStat> protocolDistribution) {
     try {
         db->exec("DROP TABLE IF EXISTS ip_protocols");
         SQLite::Transaction transaction(*db);
@@ -189,14 +189,16 @@ void statistics_db::writeStatisticsProtocols(std::unordered_map<ipAddress_protoc
                 "ipAddress TEXT,"
                 "protocolName TEXT COLLATE NOCASE,"
                 "protocolCount INTEGER,"
+                "byteCount REAL,"
                 "PRIMARY KEY(ipAddress,protocolName));";
         db->exec(createTable);
-        SQLite::Statement query(*db, "INSERT INTO ip_protocols VALUES (?, ?, ?)");
+        SQLite::Statement query(*db, "INSERT INTO ip_protocols VALUES (?, ?, ?, ?)");
         for (auto it = protocolDistribution.begin(); it != protocolDistribution.end(); ++it) {
             ipAddress_protocol e = it->first;
             query.bind(1, e.ipAddress);
             query.bind(2, e.protocol);
-            query.bind(3, it->second);
+            query.bind(3, it->second.count);
+            query.bind(4, it->second.byteCount);
             query.exec();
             query.reset();
         }
@@ -211,7 +213,7 @@ void statistics_db::writeStatisticsProtocols(std::unordered_map<ipAddress_protoc
  * Writes the port statistics into the database.
  * @param portsStatistics The ports statistics from class statistics.
  */
-void statistics_db::writeStatisticsPorts(std::unordered_map<ipAddress_inOut_port, int> portsStatistics) {
+void statistics_db::writeStatisticsPorts(std::unordered_map<ipAddress_inOut_port, entry_portStat> portsStatistics) {
     try {
         db->exec("DROP TABLE IF EXISTS ip_ports");
         SQLite::Transaction transaction(*db);
@@ -220,15 +222,17 @@ void statistics_db::writeStatisticsPorts(std::unordered_map<ipAddress_inOut_port
                 "portDirection TEXT COLLATE NOCASE,"
                 "portNumber INTEGER,"
                 "portCount INTEGER,"
+                "byteCount REAL,"
                 "PRIMARY KEY(ipAddress,portDirection,portNumber));";
         db->exec(createTable);
-        SQLite::Statement query(*db, "INSERT INTO ip_ports VALUES (?, ?, ?, ?)");
+        SQLite::Statement query(*db, "INSERT INTO ip_ports VALUES (?, ?, ?, ?, ?)");
         for (auto it = portsStatistics.begin(); it != portsStatistics.end(); ++it) {
             ipAddress_inOut_port e = it->first;
             query.bind(1, e.ipAddress);
             query.bind(2, e.trafficDirection);
             query.bind(3, e.portNumber);
-            query.bind(4, it->second);
+            query.bind(4, it->second.count);
+            query.bind(5, it->second.byteCount);
             query.exec();
             query.reset();
         }
@@ -438,3 +442,14 @@ void statistics_db::writeStatisticsInterval(std::unordered_map<std::string, entr
     }
 }
 
+void statistics_db::writeDbVersion(){
+	try {
+		SQLite::Transaction transaction(*db);
+		SQLite::Statement query(*db, std::string("PRAGMA user_version = ") + std::to_string(DB_VERSION) + ";");
+		query.exec();
+		transaction.commit();
+	}
+	catch (std::exception &e) {
+        std::cout << "Exception in statistics_db: " << e.what() << std::endl;
+    }
+}

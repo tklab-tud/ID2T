@@ -211,6 +211,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
 
         // Protocol distribution
         stats.incrementProtocolCount(ipAddressSender, "IPv4");
+        stats.increaseProtocolByteCount(ipAddressSender, "IPv4", sizeCurrentPacket);
 
         // Assign IP Address to MAC Address
         stats.assignMacAddress(ipAddressSender, macAddressSender);
@@ -230,6 +231,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
 
         // Protocol distribution
         stats.incrementProtocolCount(ipAddressSender, "IPv6");
+        stats.increaseProtocolByteCount(ipAddressSender, "IPv6", sizeCurrentPacket);
 
         // Assign IP Address to MAC Address
         stats.assignMacAddress(ipAddressSender, macAddressSender);
@@ -257,7 +259,8 @@ void pcap_processor::process_packets(const Packet &pkt) {
             stats.checkTCPChecksum(ipAddressSender, ipAddressReceiver, tcpPkt);
           }
 
-            stats.incrementProtocolCount(ipAddressSender, "TCP");                        
+            stats.incrementProtocolCount(ipAddressSender, "TCP");
+            stats.increaseProtocolByteCount(ipAddressSender, "TCP", sizeCurrentPacket);
 
             // Conversation statistics
             stats.addConvStat(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), pkt.timestamp());
@@ -275,17 +278,22 @@ void pcap_processor::process_packets(const Packet &pkt) {
                 // Ignore MSS if option not set
             }
             stats.incrementPortCount(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport());
+            stats.increasePortByteCount(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), sizeCurrentPacket);
             
           // UDP Packet
         } else if (p == PDU::PDUType::UDP) {
             const UDP udpPkt = (const UDP &) *pdu_l4;
-            stats.incrementProtocolCount(ipAddressSender, "UDP");            
-            stats.incrementPortCount(ipAddressSender, udpPkt.sport(), ipAddressReceiver, udpPkt.dport());                        
+            stats.incrementProtocolCount(ipAddressSender, "UDP");
+            stats.increaseProtocolByteCount(ipAddressSender, "UDP", sizeCurrentPacket);
+            stats.incrementPortCount(ipAddressSender, udpPkt.sport(), ipAddressReceiver, udpPkt.dport());
+            stats.increasePortByteCount(ipAddressSender, udpPkt.sport(), ipAddressReceiver, udpPkt.dport(), sizeCurrentPacket);
           
         } else if (p == PDU::PDUType::ICMP) {
             stats.incrementProtocolCount(ipAddressSender, "ICMP");
+            stats.increaseProtocolByteCount(ipAddressSender, "ICMP", sizeCurrentPacket);
         } else if (p == PDU::PDUType::ICMPv6) {
             stats.incrementProtocolCount(ipAddressSender, "ICMPv6");
+            stats.increaseProtocolByteCount(ipAddressSender, "ICMPv6", sizeCurrentPacket);
         }
     }
 }
@@ -347,5 +355,6 @@ BOOST_PYTHON_MODULE (libpcapreader) {
             .def("merge_pcaps", &pcap_processor::merge_pcaps)
             .def("collect_statistics", &pcap_processor::collect_statistics)
             .def("get_timestamp_mu_sec", &pcap_processor::get_timestamp_mu_sec)
-            .def("write_to_database", &pcap_processor::write_to_database);
+            .def("write_to_database", &pcap_processor::write_to_database)
+            .def("get_db_version", &pcap_processor::get_db_version).staticmethod("get_db_version");
 }
