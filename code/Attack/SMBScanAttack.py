@@ -46,8 +46,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
             Param.HOSTING_IP: ParameterTypes.TYPE_IP_ADDRESS,
             Param.HOSTING_VERSION: ParameterTypes.TYPE_STRING,
             Param.SOURCE_PLATFORM: ParameterTypes.TYPE_STRING,
-            Param.PROTOCOL_VERSION: ParameterTypes.TYPE_STRING,
-            Param.IP_DESTINATION_END: ParameterTypes.TYPE_IP_ADDRESS
+            Param.PROTOCOL_VERSION: ParameterTypes.TYPE_STRING
         })
 
     def init_params(self):
@@ -91,7 +90,6 @@ class SMBScanAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.HOSTING_VERSION, get_smb_version(platform=self.host_os))
         self.add_param_value(Param.SOURCE_PLATFORM, ID2TLib.Utility.get_rnd_os())
         self.add_param_value(Param.PROTOCOL_VERSION, "1")
-        self.add_param_value(Param.IP_DESTINATION_END, "0.0.0.0")
 
     def generate_attack_packets(self):
 
@@ -111,7 +109,6 @@ class SMBScanAttack(BaseAttack.BaseAttack):
         ip_source = self.get_param_value(Param.IP_SOURCE)
         ip_destinations = self.get_param_value(Param.IP_DESTINATION)
         hosting_ip = self.get_param_value(Param.HOSTING_IP)
-        ip_range_end = self.get_param_value(Param.IP_DESTINATION_END)
         mac_source = self.get_param_value(Param.MAC_SOURCE)
         mac_dest = self.get_param_value(Param.MAC_DESTINATION)
 
@@ -146,9 +143,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
         else:
             ip_dests.append(ip_destinations)
 
-        # Generate IPs of destination IP range, if specified
-        if ip_range_end != "0.0.0.0":
-            ip_dests = get_ip_range(ip_dests[0], ip_range_end)
+        if isinstance(ip_dests, list):
             shuffle(ip_dests)
 
         # Randomize source IP, if specified
