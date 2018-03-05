@@ -1,7 +1,7 @@
-from enum import Enum
+import enum
 
 
-class Parameter(Enum):
+class Parameter(enum.Enum):
     """
     Defines the shortname for attack parameters. The shortname may be used for attack parameter specification
     when calling ID2T via the command line.
@@ -46,7 +46,7 @@ class Parameter(Enum):
     CUSTOM_PAYLOAD_FILE = 'custom.payload.file'  # file that contains custom payload for ftp exploits
 
 
-class ParameterTypes(Enum):
+class ParameterTypes(enum.Enum):
     """
     Defines types for parameters. These types may be used in the specification of allowed parameters within the
     individual attack classes. The type is used to verify the validity of the given value.
