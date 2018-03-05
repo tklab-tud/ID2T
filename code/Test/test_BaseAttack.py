@@ -148,20 +148,20 @@ class TestBaseAttack(unittest.TestCase):
         self.assertFalse(BA.BaseAttack._is_domain("this is not a valid domain, I guess, maybe, let's find out."))
 
     def test_is_valid_ipaddress_valid(self):
-        self.assertTrue(BA.BaseAttack.is_valid_ip_address(BA, "192.168.178.42"))
+        self.assertTrue(BA.BaseAttack.is_valid_ip_address("192.168.178.42"))
 
     def test_is_valid_ipaddress_invalid(self):
-        self.assertFalse(BA.BaseAttack.is_valid_ip_address(BA, "192.168.1789.42"))
+        self.assertFalse(BA.BaseAttack.is_valid_ip_address("192.168.1789.42"))
 
     def test_ip_src_dst_equal_check_equal(self):
         with self.assertRaises(SystemExit):
-            BA.BaseAttack.ip_src_dst_equal_check(BA, "192.168.178.42", "192.168.178.42")
+            BA.BaseAttack.ip_src_dst_equal_check("192.168.178.42", "192.168.178.42")
 
     def test_ip_src_dst_equal_check_unequal(self):
-        BA.BaseAttack.ip_src_dst_equal_check(BA, "192.168.178.42", "192.168.178.43")
+        BA.BaseAttack.ip_src_dst_equal_check("192.168.178.42", "192.168.178.43")
 
     def test_clean_whitespaces(self):
-        self.assertEqual("a\nb\rc\td\'e", BA.BaseAttack.clean_white_spaces(BA, "a\\nb\\rc\\td\\\'e"))
+        self.assertEqual("a\nb\rc\td\'e", BA.BaseAttack.clean_white_spaces("a\\nb\\rc\\td\\\'e"))
 
     def test_generate_random_ipv4_address(self):
         ip_list = BA.BaseAttack.generate_random_ipv4_address("Unknown", 10)
