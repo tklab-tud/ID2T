@@ -28,3 +28,6 @@ class UnitTestSMBLoris(Test.ID2TAttackTest):
     def test_smbloris_same_ip_src_dst(self):
         with self.assertRaises(SystemExit):
             self.checksum_test([['SMBLorisAttack', 'ip.src=192.168.1.240', 'ip.dst=192.168.1.240']], sha_default)
+
+    def test_smbloris_order(self):
+        self.order_test([['SMBLorisAttack', 'attackers.count=1']])

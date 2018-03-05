@@ -68,3 +68,6 @@ class UnitTestSMBScan(Test.ID2TAttackTest):
             self.checksum_test([['SMBScanAttack', 'ip.src=192.168.178.1', 'ip.dst=192.168.178.5',
                                 'ip.dst.end=192.168.178.10', 'hosting.ip=192.168.178.5', 'protocol.version=2.1',
                                 'hosting.version=2.1']], sha_smb2)
+
+    def test_smbscan_order(self):
+        self.order_test([['SMBScanAttack']])

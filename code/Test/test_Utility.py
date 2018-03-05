@@ -27,7 +27,6 @@ class TestUtility(unittest.TestCase):
         cipps = [(5, 1), (10, 2), (15, 3)]
         self.assertEqual(Utility.get_interval_pps(cipps, 30), 3)
 
-    # Errors if empty list and result bad if only one list
     def test_get_nth_random_element_equal_no(self):
         letters = ["A", "B", "C"]
         numbers = [1, 2, 3]
@@ -40,10 +39,16 @@ class TestUtility(unittest.TestCase):
         results = [("A", 1), ("B", 2)]
         self.assertIn(Utility.get_nth_random_element(letters, numbers), results)
 
-    # TODO: ???
-    #def test_get_nth_random_element_single_list(self):
-        #letters = ["A", "B", "C"]
-        #self.assertIn(Utility.get_nth_random_element(letters), letters)
+    def test_get_nth_random_element_single_list(self):
+        letters = ["A", "B", "C"]
+        self.assertIn(Utility.get_nth_random_element(letters), letters)
+
+    def test_get_nth_random_element_empty_list(self):
+        letters = ["A", "B", "C"]
+        self.assertEqual(Utility.get_nth_random_element(letters, []), None)
+
+    def test_get_nth_random_element_nothing(self):
+        self.assertEqual(Utility.get_nth_random_element(), None)
 
     def test_index_increment_not_max(self):
         self.assertEqual(Utility.index_increment(5, 10), 6)
@@ -136,6 +141,7 @@ class TestUtility(unittest.TestCase):
         for byte in result:
             if byte.to_bytes(1, "little") not in Utility.x86_nops and byte.to_bytes(1, "little") not in Utility.x86_pseudo_nops:
                 correct = False
+                break
         self.assertTrue(correct)
 
     def test_get_rnd_x86_nop_without_sideeffects(self):
@@ -144,6 +150,7 @@ class TestUtility(unittest.TestCase):
         for byte in result:
             if byte.to_bytes(1, "little") in Utility.x86_pseudo_nops:
                 correct = False
+                break
         self.assertTrue(correct)
 
     def test_get_rnd_x86_nop_filter(self):
@@ -152,6 +159,7 @@ class TestUtility(unittest.TestCase):
         for byte in result:
             if byte.to_bytes(1, "little") in Utility.x86_nops:
                 correct = False
+                break
         self.assertTrue(correct)
 
     def test_get_rnd_x86_nop_single_filter(self):
@@ -160,6 +168,7 @@ class TestUtility(unittest.TestCase):
         for byte in result:
             if byte.to_bytes(1, "little") == b'\x20':
                 correct = False
+                break
         self.assertTrue(correct)
 
     def test_get_rnd_bytes_number(self):
