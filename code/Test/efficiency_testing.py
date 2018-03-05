@@ -37,11 +37,11 @@ class EfficiencyTests(Test.ID2TAttackTest):
         self.temporal_efficiency_test([['FTPWinaXeExploit', 'ip.src=192.168.178.1', 'ip.dst=192.168.178.10']],
                                       time_limit=15, factor=10000)
 
-    def test_PortscanAttack_open(self):
+    def test_PortscanAttack_open_10_000(self):
         self.temporal_efficiency_test([['PortscanAttack', 'ip.src=192.168.178.1', 'port.open=80']], time_limit=15,
                                       factor=10000)
 
-    def test_PortscanAttack_close(self):
+    def test_PortscanAttack_close_10_000(self):
         self.temporal_efficiency_test([['PortscanAttack', 'ip.src=192.168.178.1', 'port.open=20']], time_limit=15,
                                       factor=10000)
 
