@@ -54,3 +54,15 @@ class EfficiencyTests(Test.ID2TAttackTest):
 
     def test_SalityBotnet_10_000(self):
         self.temporal_efficiency_test([['SalityBotnet']], time_limit=15, factor=10000)
+
+    @mock.patch('Attack.BaseAttack.BaseAttack.write_attack_pcap', side_effect=Lib.write_attack_pcap)
+    def test_DDoS_10_000(self, mock_write_attack_pcap):
+        # TODO: update attack args, when DDoS gets refactored
+        self.temporal_efficiency_test([['DDoSAttack', 'attackers.count=100', 'packets.per-second=95',
+                                        'attack.duration=150']], time_limit=15, factor=10000)
+
+    @mock.patch('Attack.BaseAttack.BaseAttack.write_attack_pcap', side_effect=Lib.write_attack_pcap)
+    def test_DDoS_100_000(self, mock_write_attack_pcap):
+        # TODO: update attack args, when DDoS gets refactored
+        self.temporal_efficiency_test([['DDoSAttack', 'attackers.count=1000', 'packets.per-second=950',
+                                        'attack.duration=300']], time_limit=150, factor=100000)
