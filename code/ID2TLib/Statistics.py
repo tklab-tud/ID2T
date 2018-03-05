@@ -635,7 +635,7 @@ class Statistics:
         return sd
 
 
-    def plot_statistics(self, format: str = 'pdf'): #'png'
+    def plot_statistics(self,entropy : int , format: str = 'pdf'): #'png'
         """
         Plots the statistics associated with the dataset.
         :param format: The format to be used to save the statistics diagrams.
@@ -973,10 +973,11 @@ class Statistics:
         win_out_path = plot_win('.' + format)
         protocol_out_path = plot_protocol('.' + format)
         plot_interval_pktCount = plot_interval_pktCount('.' + format)
-        plot_interval_ip_src_ent = plot_interval_ip_src_ent('.' + format)
-        plot_interval_ip_dst_ent = plot_interval_ip_dst_ent('.' + format)
-        plot_interval_ip_src_cum_ent = plot_interval_ip_src_cum_ent('.' + format)
-        plot_interval_ip_dst_cum_ent = plot_interval_ip_dst_cum_ent('.' + format)
+        if entropy:
+            plot_interval_ip_src_ent = plot_interval_ip_src_ent('.' + format)
+            plot_interval_ip_dst_ent = plot_interval_ip_dst_ent('.' + format)
+            plot_interval_ip_src_cum_ent = plot_interval_ip_src_cum_ent('.' + format)
+            plot_interval_ip_dst_cum_ent = plot_interval_ip_dst_cum_ent('.' + format)
         plot_interval_new_ip = plot_interval_new_ip('.' + format)
         plot_interval_new_port = plot_interval_new_port('.' + format)
         plot_interval_new_ttl = plot_interval_new_ttl('.' + format)

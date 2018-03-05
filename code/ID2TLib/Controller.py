@@ -251,12 +251,12 @@ class Controller:
         readline.set_history_length(1000)
         readline.write_history_file(history_file)
 
-    def create_statistics_plot(self, params: str):
+    def create_statistics_plot(self, params: str, entropy: bool):
         """
         Plots the statistics to a file by using the given customization parameters.
         """
         if params is not None and params[0] is not None:
             params_dict = dict([z.split("=") for z in params])
-            self.statistics.plot_statistics(format=params_dict['format'])
+            self.statistics.plot_statistics(entropy = entropy, format=params_dict['format'])
         else:
-            self.statistics.plot_statistics()
+            self.statistics.plot_statistics(entropy = entropy)
