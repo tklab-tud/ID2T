@@ -59,8 +59,18 @@ install_pkg_ubuntu()
 
 install_pkg_darwin()
 {
-    echo -e "Installing: Packages"
-    brew install cmake python coreutils libdnet libtins boost boost-python --with-python3
+    BREW_PKGS="cmake python coreutils libdnet libtins boost boost-python --with-python3"
+
+    # Check first to avoid unnecessary update
+    echo -e "Packages: Checking..."
+    brew ls --versions $BREW_PKGS &>/dev/null
+    if [ $? != 0 ]; then
+        # Install all missing packages
+        echo -e "Packages: Installing..."
+        brew install $BREW_PKGS
+    else
+        echo -e "Packages: Found."
+    fi
 }
 
 install_pip()
@@ -91,9 +101,9 @@ git submodule update --init
 KERNEL=$(uname)
 
 if [ "$KERNEL" = 'Darwin' ]; then
-    echo -e "Detected OS:  macOS"
+    echo -e "Detected OS: macOS"
 
-    which brew
+    which brew >/dev/null
     if [ $? != 0 ]; then
         echo -e "Brew not found, please install it manually!"
         exit 1
@@ -104,15 +114,16 @@ if [ "$KERNEL" = 'Darwin' ]; then
     exit 0
 elif [ "$KERNEL" = 'Linux' ]; then
     # Kernel is Linux, check for supported distributions
-    OS=$(awk '/DISTRIB_ID=/' /etc/*-release | sed 's/DISTRIB_ID=//' | tr '[:upper:]' '[:lower:]')
+    OS=$(awk '/DISTRIB_ID=/' /etc/*-release | sed 's/DISTRIB_ID=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]')
+    OS_LIKE=$(awk '/ID_LIKE=/' /etc/*-release | sed 's/ID_LIKE=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]')
 
-    if [ "$OS" = 'arch' ]; then
+    if [ "$OS_LIKE" = 'archlinux' ]; then
         echo -e "Detected OS: Arch Linux"
         install_pkg_arch
         install_pip
         exit 0
-    elif [ "$OS" = 'ubuntu' ]; then
-        echo -e "Detected OS: Ubuntu"
+    elif [ "$OS_LIKE" = 'debian' ]; then
+        echo -e "Detected OS: Debian"
         install_pkg_ubuntu
         install_pip
         exit 0
