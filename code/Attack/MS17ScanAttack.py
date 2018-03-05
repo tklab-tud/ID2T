@@ -77,7 +77,7 @@ class MS17ScanAttack(BaseAttack.BaseAttack):
                               self.statistics.get_pps_received(most_used_ip_address)) / 2)
         self.add_param_value(Param.INJECT_AFTER_PACKET, randint(0, self.statistics.get_packet_count()))
 
-    def generate_attack_pcap(self):
+    def generate_attack_packets(self):
 
         # Timestamp
         timestamp_next_pkt = self.get_param_value(Param.INJECT_AT_TIMESTAMP)
@@ -87,7 +87,7 @@ class MS17ScanAttack(BaseAttack.BaseAttack):
         complement_interval_pps = self.statistics.calculate_complement_packet_rates(pps)
 
         # Initialize parameters
-        packets = []
+        self.packets = []
         mac_source = self.get_param_value(Param.MAC_SOURCE)
         ip_source = self.get_param_value(Param.IP_SOURCE)
         port_source = self.get_param_value(Param.PORT_SOURCE)
@@ -98,7 +98,7 @@ class MS17ScanAttack(BaseAttack.BaseAttack):
         # Check ip.src == ip.dst
         self.ip_src_dst_equal_check(ip_source, ip_destination)
 
-        path_attack_pcap = None
+        self.path_attack_pcap = None
 
         # Set TTL based on TTL distribution of IP address
         source_ttl_dist = self.statistics.get_ttl_distribution(ip_source)
@@ -146,12 +146,12 @@ class MS17ScanAttack(BaseAttack.BaseAttack):
 
         source_origin_wins, destination_origin_wins = {}, {}
 
-        for pkt_num, pkt in enumerate(exploit_raw_packets):
+        for self.pkt_num, pkt in enumerate(exploit_raw_packets):
             eth_frame = Ether(pkt[0])
             ip_pkt = eth_frame.payload
             tcp_pkt = ip_pkt.payload
 
-            if pkt_num == 0:
+            if self.pkt_num == 0:
                 if tcp_pkt.getfieldval("dport") == smb_port:
                     orig_ip_dst = ip_pkt.getfieldval("dst")  # victim IP
 
@@ -185,7 +185,7 @@ class MS17ScanAttack(BaseAttack.BaseAttack):
 
                 pps = max(Util.get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
                 timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps) + inter_arrival_times[
-                    pkt_num]  # float(timeSteps.random())
+                    self.pkt_num]  # float(timeSteps.random())
             # Reply
             else:
                 # Ether
@@ -213,21 +213,22 @@ class MS17ScanAttack(BaseAttack.BaseAttack):
 
                 new_pkt = (eth_frame / ip_pkt / tcp_pkt)
                 timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps) + inter_arrival_times[
-                    pkt_num]  # + float(timeSteps.random())
+                    self.pkt_num]  # + float(timeSteps.random())
                 new_pkt.time = timestamp_next_pkt
 
-            packets.append(new_pkt)
+            self.packets.append(new_pkt)
 
         exploit_raw_packets.close()
 
+    def generate_attack_pcap(self):
         # Store timestamp of first packet (for attack label)
-        self.attack_start_utime = packets[0].time
-        self.attack_end_utime = packets[-1].time
+        self.attack_start_utime = self.packets[0].time
+        self.attack_end_utime = self.packets[-1].time
 
-        if len(packets) > 0:
-            packets = sorted(packets, key=lambda pkt: pkt.time)
-            path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
+        if len(self.packets) > 0:
+            self.packets = sorted(self.packets, key=lambda pkt: pkt.time)
+            self.path_attack_pcap = self.write_attack_pcap(self.packets, True, self.path_attack_pcap)
 
         # return packets sorted by packet time_sec_start
         # pkt_num+1: because pkt_num starts at 0
-        return pkt_num + 1, path_attack_pcap
+        return self.pkt_num + 1, self.path_attack_pcap

@@ -41,21 +41,26 @@ class Controller:
         """
         self.statistics.load_pcap_statistics(flag_write_file, flag_recalculate_stats, flag_print_statistics)
 
-    def process_attacks(self, attacks_config: list, seeds=[]):
+    def process_attacks(self, attacks_config: list, seeds=[], time=False):
         """
         Creates the attack based on the attack name and the attack parameters given in the attacks_config. The
         attacks_config is a list of attacks, e.g.
         [['PortscanAttack', 'ip.src="192.168.178.2",'dst.port=80'],['PortscanAttack', 'ip.src="10.10.10.2"]].
         Merges the individual temporary attack pcaps into one single pcap and merges this single pcap with the
         input dataset.
+
         :param attacks_config: A list of attacks with their attack parameters.
+        :param seeds: A list of random seeds for the given attacks.
+        :param time: Measure time for packet generation.
         """
         # load attacks sequentially
+        self.durations = []
         i = 0
         for attack in attacks_config:
             if len(seeds) > i:
                 self.attack_controller.set_seed(seed=seeds[i][0])
-            temp_attack_pcap = self.attack_controller.process_attack(attack[0], attack[1:])
+            temp_attack_pcap, duration = self.attack_controller.process_attack(attack[0], attack[1:], time)
+            self.durations.append(duration)
             self.written_pcaps.append(temp_attack_pcap)
             i += 1
 

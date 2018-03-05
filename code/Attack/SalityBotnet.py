@@ -55,7 +55,7 @@ class SalityBotnet(BaseAttack.BaseAttack):
                              (self.statistics.get_pps_sent(most_used_ip_address) +
                               self.statistics.get_pps_received(most_used_ip_address)) / 2)
 
-    def generate_attack_pcap(self):
+    def generate_attack_packets(self):
 
         # Timestamp
         timestamp_next_pkt = self.get_param_value(Param.INJECT_AT_TIMESTAMP)
@@ -66,7 +66,7 @@ class SalityBotnet(BaseAttack.BaseAttack):
         complement_interval_pps = self.statistics.calculate_complement_packet_rates(pps)
 
         # Initialize parameters
-        packets = []
+        self.packets = []
         mac_source = self.get_param_value(Param.MAC_SOURCE)
         ip_source = self.get_param_value(Param.IP_SOURCE)
 
@@ -89,13 +89,13 @@ class SalityBotnet(BaseAttack.BaseAttack):
         ip_map = {origin_ip_src : ip_source, origin_ip_dns_server: ip_dns_server}
         mac_map = {origin_mac_src : mac_source, origin_mac_dns_server: mac_dns_server}
 
-        path_attack_pcap = None
+        self.path_attack_pcap = None
 
         # Inject Sality botnet
         # Read sality_botnet pcap file
         exploit_raw_packets = RawPcapReader(self.template_attack_pcap_path)
 
-        for pkt_num, pkt in enumerate(exploit_raw_packets):
+        for self.pkt_num, pkt in enumerate(exploit_raw_packets):
             eth_frame = Ether(pkt[0])
             ip_pkt = eth_frame.payload
 
@@ -127,17 +127,19 @@ class SalityBotnet(BaseAttack.BaseAttack):
             pps = max(Util.get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
             timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps)
 
-            packets.append(new_pkt)
+            self.packets.append(new_pkt)
 
         exploit_raw_packets.close()
-        # Store timestamp of first packet (for attack label)
-        self.attack_start_utime = packets[0].time
-        self.attack_end_utime = packets[-1].time
 
-        if len(packets) > 0:
-            packets = sorted(packets, key=lambda pkt: pkt.time)
-            path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
+    def generate_attack_pcap(self):
+        # Store timestamp of first packet (for attack label)
+        self.attack_start_utime = self.packets[0].time
+        self.attack_end_utime = self.packets[-1].time
+
+        if len(self.packets) > 0:
+            self.packets = sorted(self.packets, key=lambda pkt: pkt.time)
+            self.path_attack_pcap = self.write_attack_pcap(self.packets, True, self.path_attack_pcap)
 
         # return packets sorted by packet time_sec_start
         # pkt_num+1: because pkt_num starts at 0
-        return pkt_num + 1, path_attack_pcap
+        return self.pkt_num + 1, self.path_attack_pcap
