@@ -52,7 +52,7 @@ class AttackController:
         # Record the attack
         self.added_attacks.append(self.current_attack)
 
-    def process_attack(self, attack: str, params: str):
+    def process_attack(self, attack: str, params: str, time=False):
         """
         Takes as input the name of an attack (classname) and the attack parameters as string. Parses the string of
         attack parameters, creates the attack by writing the attack packets and returns the path of the written pcap.
@@ -94,15 +94,24 @@ class AttackController:
         # Write attack into pcap file
         print("Generating attack packets...", end=" ")
         sys.stdout.flush()  # force python to print text immediately
-        total_packets, temp_attack_pcap_path = self.current_attack.generate_attack_pcap()
-        print("done. (total: " + str(total_packets) + " pkts.)")
+        if time:
+            self.current_attack.set_start_time()
+        self.current_attack.generate_attack_packets()
+        if time:
+            self.current_attack.set_finish_time()
+        duration = self.current_attack.get_packet_generation_time()
+        self.total_packets, temp_attack_pcap_path = self.current_attack.generate_attack_pcap()
+        print("done. (total: " + str(self.total_packets) + " pkts", end="")
+        if time:
+            print(" in ", duration, " seconds", end="")
+        print(".)")
 
         # Store label into LabelManager
         l = Label(attack, self.get_attack_start_utime(),
                   self.get_attack_end_utime(), attack_note)
         self.label_mgr.add_labels(l)
 
-        return temp_attack_pcap_path
+        return temp_attack_pcap_path, duration
 
     def get_attack_start_utime(self):
         """

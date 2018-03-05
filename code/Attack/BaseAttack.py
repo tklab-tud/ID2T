@@ -5,6 +5,7 @@ import os
 import random
 import re
 import tempfile
+import time
 import numpy as np
 
 from abc import abstractmethod, ABCMeta
@@ -14,7 +15,7 @@ from scapy.utils import PcapWriter
 from Attack import AttackParameters
 from Attack.AttackParameters import Parameter
 from Attack.AttackParameters import ParameterTypes
-from ID2TLib.Utility import handle_most_used_outputs
+import ID2TLib.Utility as Util
 from lea import Lea
 import ID2TLib.libpcapreader as pr
 
@@ -44,6 +45,10 @@ class BaseAttack(metaclass=ABCMeta):
         self.supported_params = {}
         self.attack_start_utime = 0
         self.attack_end_utime = 0
+        self.start_time = 0
+        self.finish_time = 0
+        self.packets = []
+        self.path_attack_pcap = ""
 
     def set_statistics(self, statistics):
         """
@@ -61,6 +66,13 @@ class BaseAttack(metaclass=ABCMeta):
         Initialize all required parameters taking into account user supplied values. If no value is supplied,
         or if a user defined query is supplied, use a statistics object to do the calculations.
         A call to this function requires a call to 'set_statistics' first.
+        """
+        pass
+
+    @abstractmethod
+    def generate_attack_packets(self):
+        """
+        Creates the attack packets.
         """
         pass
 
@@ -103,26 +115,44 @@ class BaseAttack(metaclass=ABCMeta):
         Verifies that the given string or list of IP addresses (strings) is a valid IPv4/IPv6 address.
         Accepts comma-separated lists of IP addresses, like "192.169.178.1, 192.168.178.2"
 
-        :param ip_address: The IP address(es) as list of strings or comma-separated string.
+        :param ip_address: The IP address(es) as list of strings, comma-separated or dash-separated string.
         :return: True if all IP addresses are valid, otherwise False. And a list of IP addresses as string.
         """
+        def append_ips(ip_address_input):
+            """
+            Recursive appending function to handle lists and ranges of IP addresses.
+
+            :param ip_address_input: The IP address(es) as list of strings, comma-separated or dash-separated string.
+            :return: List of all given IP addresses.
+            """
+            ip_list = []
+            is_valid = True
+            for ip in ip_address_input:
+                if '-' in ip:
+                    ip_range = ip.split('-')
+                    ip_range = Util.get_ip_range(ip_range[0], ip_range[1])
+                    is_valid, ips = append_ips(ip_range)
+                    ip_list.extend(ips)
+                else:
+                    try:
+                        ipaddress.ip_address(ip)
+                        ip_list.append(ip)
+                    except ValueError:
+                        return False, ip_list
+            return is_valid, ip_list
+
         ip_address_output = []
 
         # a comma-separated list of IP addresses must be splitted first
         if isinstance(ip_address, str):
             ip_address = ip_address.split(',')
 
-        for ip in ip_address:
-            try:
-                ipaddress.ip_address(ip)
-                ip_address_output.append(ip)
-            except ValueError:
-                return False, ip_address_output
+        result, ip_address_output = append_ips(ip_address)
 
         if len(ip_address_output) == 1:
-            return True, ip_address_output[0]
+            return result, ip_address_output[0]
         else:
-            return True, ip_address_output
+            return result, ip_address_output
 
     @staticmethod
     def _is_port(ports_input: str):
@@ -259,6 +289,15 @@ class BaseAttack(metaclass=ABCMeta):
         """
         if isinstance(seed, int):
             random.seed(seed)
+
+    def set_start_time(self):
+        self.start_time = time.time()
+
+    def set_finish_time(self):
+        self.finish_time = time.time()
+
+    def get_packet_generation_time(self):
+        return self.finish_time - self.start_time
 
     def add_param_value(self, param, value):
         """
@@ -420,7 +459,7 @@ class BaseAttack(metaclass=ABCMeta):
         maxDelay = int(maxDelay) * 10 ** -6
         return minDelay, maxDelay
 
-    def packetsToConvs(self,exploit_raw_packets):
+    def packets_to_convs(self,exploit_raw_packets):
         """
            Classifies a bunch of packets to conversations groups. A conversation is a set of packets go between host A (IP,port)
            to host B (IP,port)
@@ -460,7 +499,6 @@ class BaseAttack(metaclass=ABCMeta):
                     conversations[conv_rep] = pktList
         return (conversations, orderList_conversations)
 
-
     def is_valid_ip_address(self,addr):
         """
         Checks if the IP address family is supported.
@@ -491,7 +529,6 @@ class BaseAttack(metaclass=ABCMeta):
         if equal:
             print("\nERROR: Invalid IP addresses; source IP is the same as destination IP: " + ip_destination + ".")
             sys.exit(0)
-
 
     def get_inter_arrival_time(self, packets, distribution:bool=False):
         """
@@ -524,7 +561,6 @@ class BaseAttack(metaclass=ABCMeta):
             return inter_arrival_times, dict
         else:
             return inter_arrival_times
-
 
     def clean_white_spaces(self, str):
         """
@@ -567,7 +603,7 @@ class BaseAttack(metaclass=ABCMeta):
             mss_prob_dict = Lea.fromValFreqsDict(mss_dist)
             mss_value = mss_prob_dict.random()
         else:
-            mss_value = handle_most_used_outputs(self.statistics.process_db_query("most_used(mssValue)"))
+            mss_value = Util.handle_most_used_outputs(self.statistics.process_db_query("most_used(mssValue)"))
 
         # Set TTL based on TTL distribution of IP address
         ttl_dist = self.statistics.get_ttl_distribution(ip_address)
@@ -575,7 +611,7 @@ class BaseAttack(metaclass=ABCMeta):
             ttl_prob_dict = Lea.fromValFreqsDict(ttl_dist)
             ttl_value = ttl_prob_dict.random()
         else:
-            ttl_value = handle_most_used_outputs(self.statistics.process_db_query("most_used(ttlValue)"))
+            ttl_value = Util.handle_most_used_outputs(self.statistics.process_db_query("most_used(ttlValue)"))
 
         # Set Window Size based on Window Size distribution of IP address
         win_dist = self.statistics.get_win_distribution(ip_address)
@@ -583,7 +619,7 @@ class BaseAttack(metaclass=ABCMeta):
             win_prob_dict = Lea.fromValFreqsDict(win_dist)
             win_value = win_prob_dict.random()
         else:
-            win_value = handle_most_used_outputs(self.statistics.process_db_query("most_used(winSize)"))
+            win_value = Util.handle_most_used_outputs(self.statistics.process_db_query("most_used(winSize)"))
 
         return mss_value, ttl_value, win_value
 

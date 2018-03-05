@@ -27,6 +27,9 @@ class DDoSAttack(BaseAttack.BaseAttack):
         super(DDoSAttack, self).__init__("DDoS Attack", "Injects a DDoS attack'",
                                         "Resource Exhaustion")
 
+        self.last_packet = None
+        self.total_pkt_num = 0
+
         # Define allowed parameters and their type
         self.supported_params.update({
             Param.IP_SOURCE: ParameterTypes.TYPE_IP_ADDRESS,
@@ -74,7 +77,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.MAC_DESTINATION, destination_mac)
         self.add_param_value(Param.VICTIM_BUFFER, randint(1000,10000))
 
-    def generate_attack_pcap(self):
+    def generate_attack_packets(self):
         BUFFER_SIZE = 1000
 
         # Determine source IP and MAC address
@@ -93,7 +96,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
             num_attackers = len(ip_source_list)
 
         # Initialize parameters
-        packets = deque(maxlen=BUFFER_SIZE)
+        self.packets = deque(maxlen=BUFFER_SIZE)
         port_source_list = self.get_param_value(Param.PORT_SOURCE)
         mac_destination = self.get_param_value(Param.MAC_DESTINATION)
         ip_destination = self.get_param_value(Param.IP_DESTINATION)
@@ -134,7 +137,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         alpha, loc, beta = (2.3261710235, -0.188306914406, 44.4853123884)
         gd = gamma.rvs(alpha, loc=loc, scale=beta, size=len(ip_source_list))
 
-        path_attack_pcap = None
+        self.path_attack_pcap = None
 
         timestamp_prv_reply, timestamp_confirm = 0, 0
         minDelay, maxDelay = self.get_reply_delay(ip_destination)
@@ -162,7 +165,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         mss_dst = handle_most_used_outputs(mss_dst)
 
         replies_count = 0
-        total_pkt_num = 0
+        self.total_pkt_num = 0
         # For each attacker, generate his own packets, then merge all packets
         for attacker in range(num_attackers):
             # Timestamp
@@ -188,8 +191,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 request = (request_ether / request_ip / request_tcp)
                 request.time = timestamp_next_pkt
                 # Append request
-                packets.append(request)
-                total_pkt_num +=1
+                self.packets.append(request)
+                self.total_pkt_num +=1
 
                 # Build reply package
                 if replies_count <= victim_buffer:
@@ -204,29 +207,30 @@ class DDoSAttack(BaseAttack.BaseAttack):
                     timestamp_prv_reply = timestamp_reply
 
                     reply.time = timestamp_reply
-                    packets.append(reply)
+                    self.packets.append(reply)
                     replies_count+=1
-                    total_pkt_num += 1
+                    self.total_pkt_num += 1
 
                 attacker_pps = max(get_interval_pps(complement_interval_attacker_pps, timestamp_next_pkt), (pps / num_attackers) / 2)
                 timestamp_next_pkt = update_timestamp(timestamp_next_pkt, attacker_pps)
 
                 # Store timestamp of first packet (for attack label)
-                if total_pkt_num <= 2 :
-                    self.attack_start_utime = packets[0].time
+                if self.total_pkt_num <= 2 :
+                    self.attack_start_utime = self.packets[0].time
                 elif pkt_num % BUFFER_SIZE == 0: # every 1000 packets write them to the pcap file (append)
-                    last_packet = packets[-1]
-                    packets = sorted(packets, key=lambda pkt: pkt.time)
-                    path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
-                    packets = []
+                    self.last_packet = self.packets[-1]
+                    self.packets = sorted(self.packets, key=lambda pkt: pkt.time)
+                    self.path_attack_pcap = self.write_attack_pcap(self.packets, True, self.path_attack_pcap)
+                    self.packets = []
 
-        if len(packets) > 0:
-            packets = sorted(packets, key=lambda pkt: pkt.time)
-            path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
+    def generate_attack_pcap(self):
+        if len(self.packets) > 0:
+            self.packets = sorted(self.packets, key=lambda pkt: pkt.time)
+            self.path_attack_pcap = self.write_attack_pcap(self.packets, True, self.path_attack_pcap)
 
         # Store timestamp of last packet
-        self.attack_end_utime = last_packet.time
+        self.attack_end_utime = self.last_packet.time
 
         # Return packets sorted by packet time_sec_start
         # pkt_num+1: because pkt_num starts at 0
-        return total_pkt_num , path_attack_pcap
+        return self.total_pkt_num, self.path_attack_pcap

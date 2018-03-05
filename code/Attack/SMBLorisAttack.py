@@ -74,8 +74,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.INJECT_AFTER_PACKET, random.randint(0, self.statistics.get_packet_count()))
         self.add_param_value(Param.ATTACK_DURATION, 30)
 
-    def generate_attack_pcap(self):
-
+    def generate_attack_packets(self):
         pps = self.get_param_value(Param.PACKETS_PER_SECOND)
 
         # Timestamp
@@ -84,7 +83,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
         self.attack_start_utime = first_timestamp
 
         # Initialize parameters
-        packets = []
+        self.packets = []
         ip_destination = self.get_param_value(Param.IP_DESTINATION)
         mac_destination = self.get_param_value(Param.MAC_DESTINATION)
 
@@ -140,7 +139,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
 
             sport = 1025
 
-            # Timestamps of first packets shouldn't be exactly the same to look more realistic
+            # Timestamps of first self.packets shouldn't be exactly the same to look more realistic
             timestamp_next_pkt = random.uniform(first_timestamp, update_timestamp(first_timestamp, pps))
 
             while timestamp_next_pkt <= attack_ends_time:
@@ -161,7 +160,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
                 syn = (attacker_ether / attacker_ip / syn_tcp)
                 syn.time = timestamp_next_pkt
                 timestamp_next_pkt = update_timestamp(timestamp_next_pkt, victim_pps, minDelay)
-                packets.append(syn)
+                self.packets.append(syn)
 
                 # response from victim (server)
                 synack_tcp = TCP(sport=smb_port, dport=sport, seq=victim_seq, ack=attacker_seq, flags='SA',
@@ -170,7 +169,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
                 synack = (victim_ether / victim_ip / synack_tcp)
                 synack.time = timestamp_next_pkt
                 timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, minDelay)
-                packets.append(synack)
+                self.packets.append(synack)
 
                 # acknowledgement from attacker (client)
                 ack_tcp = TCP(sport=sport, dport=smb_port, seq=attacker_seq, ack=victim_seq, flags='A',
@@ -178,7 +177,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
                 ack = (attacker_ether / attacker_ip / ack_tcp)
                 ack.time = timestamp_next_pkt
                 timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps)
-                packets.append(ack)
+                self.packets.append(ack)
 
                 # send NBT session header paket with maximum LENGTH-field
                 req_tcp = TCP(sport=sport, dport=smb_port, seq=attacker_seq, ack=victim_seq, flags='AP',
@@ -189,7 +188,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
                 req = (attacker_ether / attacker_ip / req_tcp / req_payload)
                 req.time = timestamp_next_pkt
                 timestamp_next_pkt = update_timestamp(timestamp_next_pkt, victim_pps, minDelay)
-                packets.append(req)
+                self.packets.append(req)
 
                 # final ack from victim (server)
                 last_ack_tcp = TCP(sport=smb_port, dport=sport, seq=victim_seq, ack=attacker_seq, flags='A',
@@ -197,15 +196,16 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
                 last_ack = (victim_ether / victim_ip / last_ack_tcp)
                 last_ack.time = timestamp_next_pkt
                 timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps, minDelay)
-                packets.append(last_ack)
+                self.packets.append(last_ack)
 
                 sport += 1
 
+    def generate_attack_pcap(self):
         # store end time of attack
-        self.attack_end_utime = packets[-1].time
+        self.attack_end_utime = self.packets[-1].time
 
-        # write attack packets to pcap
-        pcap_path = self.write_attack_pcap(sorted(packets, key=lambda pkt: pkt.time))
+        # write attack self.packets to pcap
+        pcap_path = self.write_attack_pcap(sorted(self.packets, key=lambda pkt: pkt.time))
 
         # return packets sorted by packet time_sec_start
-        return len(packets), pcap_path
+        return len(self.packets), pcap_path

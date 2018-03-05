@@ -108,7 +108,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
             port_dst_shuffled = ports_dst
         return port_dst_shuffled
 
-    def generate_attack_pcap(self):
+    def generate_attack_packets(self):
         mac_source = self.get_param_value(Param.MAC_SOURCE)
         mac_destination = self.get_param_value(Param.MAC_DESTINATION)
         pps = self.get_param_value(Param.PACKETS_PER_SECOND)
@@ -134,9 +134,13 @@ class PortscanAttack(BaseAttack.BaseAttack):
         timestamp_prv_reply, timestamp_confirm = 0,0
 
         # Initialize parameters
-        packets = []
+        self.packets = []
         ip_source = self.get_param_value(Param.IP_SOURCE)
+        if isinstance(ip_source, list):
+            ip_source = ip_source[0]
         ip_destination = self.get_param_value(Param.IP_DESTINATION)
+        if isinstance(ip_destination, list):
+            ip_destination = ip_destination[0]
 
         # Check ip.src == ip.dst
         self.ip_src_dst_equal_check(ip_source, ip_destination)
@@ -222,7 +226,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
 
             request.time = timestamp_next_pkt
             # Append request
-            packets.append(request)
+            self.packets.append(request)
 
             # 2) Build reply (for open ports) package
             if dport in ports_open:  # destination port is OPEN
@@ -238,7 +242,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
                 timestamp_prv_reply = timestamp_reply
 
                 reply.time = timestamp_reply
-                packets.append(reply)
+                self.packets.append(reply)
 
                 # requester confirms
                 confirm_ether = request_ether
@@ -247,18 +251,19 @@ class PortscanAttack(BaseAttack.BaseAttack):
                 confirm = (confirm_ether / confirm_ip / confirm_tcp)
                 timestamp_confirm = Util.update_timestamp(timestamp_reply,pps,minDelay)
                 confirm.time = timestamp_confirm
-                packets.append(confirm)
+                self.packets.append(confirm)
 
                 # else: destination port is NOT OPEN -> no reply is sent by target
 
             pps = max(Util.get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
             timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps)
 
+    def generate_attack_pcap(self):
         # store end time of attack
-        self.attack_end_utime = packets[-1].time
+        self.attack_end_utime = self.packets[-1].time
 
         # write attack packets to pcap
-        pcap_path = self.write_attack_pcap(sorted(packets, key=lambda pkt: pkt.time))
+        pcap_path = self.write_attack_pcap(sorted(self.packets, key=lambda pkt: pkt.time))
 
         # return packets sorted by packet time_sec_start
-        return len(packets), pcap_path
+        return len(self.packets), pcap_path

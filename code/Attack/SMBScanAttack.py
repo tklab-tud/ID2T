@@ -46,8 +46,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
             Param.HOSTING_IP: ParameterTypes.TYPE_IP_ADDRESS,
             Param.HOSTING_VERSION: ParameterTypes.TYPE_STRING,
             Param.SOURCE_PLATFORM: ParameterTypes.TYPE_STRING,
-            Param.PROTOCOL_VERSION: ParameterTypes.TYPE_STRING,
-            Param.IP_DESTINATION_END: ParameterTypes.TYPE_IP_ADDRESS
+            Param.PROTOCOL_VERSION: ParameterTypes.TYPE_STRING
         })
 
     def init_params(self):
@@ -91,9 +90,8 @@ class SMBScanAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.HOSTING_VERSION, get_smb_version(platform=self.host_os))
         self.add_param_value(Param.SOURCE_PLATFORM, ID2TLib.Utility.get_rnd_os())
         self.add_param_value(Param.PROTOCOL_VERSION, "1")
-        self.add_param_value(Param.IP_DESTINATION_END, "0.0.0.0")
 
-    def generate_attack_pcap(self):
+    def generate_attack_packets(self):
 
         pps = self.get_param_value(Param.PACKETS_PER_SECOND)
 
@@ -111,7 +109,6 @@ class SMBScanAttack(BaseAttack.BaseAttack):
         ip_source = self.get_param_value(Param.IP_SOURCE)
         ip_destinations = self.get_param_value(Param.IP_DESTINATION)
         hosting_ip = self.get_param_value(Param.HOSTING_IP)
-        ip_range_end = self.get_param_value(Param.IP_DESTINATION_END)
         mac_source = self.get_param_value(Param.MAC_SOURCE)
         mac_dest = self.get_param_value(Param.MAC_DESTINATION)
 
@@ -124,7 +121,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
             invalid_smb_version(hosting_version)
         # Check source platform
         src_platform = self.get_param_value(Param.SOURCE_PLATFORM).lower()
-        packets = []
+        self.packets = []
 
         # randomize source ports according to platform, if specified
         if self.get_param_value(Param.PORT_SOURCE_RANDOMIZE):
@@ -146,9 +143,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
         else:
             ip_dests.append(ip_destinations)
 
-        # Generate IPs of destination IP range, if specified
-        if ip_range_end != "0.0.0.0":
-            ip_dests = get_ip_range(ip_dests[0], ip_range_end)
+        if isinstance(ip_dests, list):
             shuffle(ip_dests)
 
         # Randomize source IP, if specified
@@ -203,7 +198,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                 request.time = timestamp_next_pkt
 
                 # Append request
-                packets.append(request)
+                self.packets.append(request)
 
                 # Update timestamp for next package
                 timestamp_reply = update_timestamp(timestamp_next_pkt, pps, minDelay)
@@ -223,7 +218,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     victim_seq += 1
                     reply = (reply_ether / reply_ip / reply_tcp)
                     reply.time = timestamp_reply
-                    packets.append(reply)
+                    self.packets.append(reply)
 
                     # requester confirms, ACK
                     confirm_ether = request_ether
@@ -233,7 +228,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     confirm = (confirm_ether / confirm_ip / confirm_tcp)
                     timestamp_confirm = update_timestamp(timestamp_reply, pps, minDelay)
                     confirm.time = timestamp_confirm
-                    packets.append(confirm)
+                    self.packets.append(confirm)
 
                     smb_MID = randint(1, 65535)
                     smb_PID = randint(1, 65535)
@@ -269,7 +264,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
 
                     timestamp_smb_req = update_timestamp(timestamp_confirm, pps, minDelay)
                     smb_req_combined.time = timestamp_smb_req
-                    packets.append(smb_req_combined)
+                    self.packets.append(smb_req_combined)
 
                     # destination confirms SMB request package
                     reply_tcp = TCP(sport=smb_port, dport=sport, seq=victim_seq, ack=attacker_seq,
@@ -277,7 +272,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     confirm_smb_req = (reply_ether / reply_ip / reply_tcp)
                     timestamp_reply = update_timestamp(timestamp_smb_req, pps, minDelay)
                     confirm_smb_req.time = timestamp_reply
-                    packets.append(confirm_smb_req)
+                    self.packets.append(confirm_smb_req)
 
                     # smb response package
                     first_timestamp = time.mktime(time.strptime(self.statistics.get_pcap_timestamp_start()[:19],
@@ -316,7 +311,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                         smb_rsp_combined = (smb_rsp_combined / smb_rsp_negotiate_body)
 
                     smb_rsp_combined.time = timestamp_smb_rsp
-                    packets.append(smb_rsp_combined)
+                    self.packets.append(smb_rsp_combined)
 
 
                     # source confirms SMB response package
@@ -325,7 +320,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     confirm_smb_res = (confirm_ether / confirm_ip / confirm_tcp)
                     timestamp_confirm = update_timestamp(timestamp_smb_rsp, pps, minDelay)
                     confirm_smb_res.time = timestamp_confirm
-                    packets.append(confirm_smb_res)
+                    self.packets.append(confirm_smb_res)
 
                     # attacker sends FIN ACK
                     confirm_tcp = TCP(sport=sport, dport=smb_port, seq=attacker_seq, ack=victim_seq,
@@ -334,7 +329,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     timestamp_src_fin_ack = update_timestamp(timestamp_confirm, pps, minDelay)
                     source_fin_ack.time = timestamp_src_fin_ack
                     attacker_seq += 1
-                    packets.append(source_fin_ack)
+                    self.packets.append(source_fin_ack)
 
                     # victim sends FIN ACK
                     reply_tcp = TCP(sport=smb_port, dport=sport, seq=victim_seq, ack=attacker_seq,
@@ -343,7 +338,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     timestamp_dest_fin_ack = update_timestamp(timestamp_src_fin_ack, pps, minDelay)
                     victim_seq += 1
                     destination_fin_ack.time = timestamp_dest_fin_ack
-                    packets.append(destination_fin_ack)
+                    self.packets.append(destination_fin_ack)
 
                     # source sends final ACK
                     confirm_tcp = TCP(sport=sport, dport=smb_port, seq=attacker_seq, ack=victim_seq,
@@ -351,7 +346,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     final_ack = (confirm_ether / confirm_ip / confirm_tcp)
                     timestamp_final_ack = update_timestamp(timestamp_dest_fin_ack, pps, minDelay)
                     final_ack.time = timestamp_final_ack
-                    packets.append(final_ack)
+                    self.packets.append(final_ack)
 
                 else:
                     # Build RST package
@@ -361,16 +356,18 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                                     window=destination_win_value, options=[('MSS', destination_mss_value)])
                     reply = (reply_ether / reply_ip / reply_tcp)
                     reply.time = timestamp_reply
-                    packets.append(reply)
+                    self.packets.append(reply)
 
             pps = max(get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
             timestamp_next_pkt = update_timestamp(timestamp_next_pkt, pps)
 
-        # store end time of attack
-        self.attack_end_utime = packets[-1].time
+    def generate_attack_pcap(self):
 
-        # write attack packets to pcap
-        pcap_path = self.write_attack_pcap(sorted(packets, key=lambda pkt: pkt.time))
+        # store end time of attack
+        self.attack_end_utime = self.packets[-1].time
+
+        # write attack self.packets to pcap
+        pcap_path = self.write_attack_pcap(sorted(self.packets, key=lambda pkt: pkt.time))
 
         # return packets sorted by packet time_sec_start
-        return len(packets), pcap_path
+        return len(self.packets), pcap_path
