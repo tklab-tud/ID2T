@@ -124,3 +124,12 @@ def get_attacker_config(ip_source_list, ipAddress: str):
 
     return next_port, ttl
 
+
+def write_attack_pcap(self, packets: list, append_flag: bool = False, destination_path: str = None):
+    """
+    temporal efficiency test patch for write_attack_pcap (Attack.BaseAttack.py)
+
+    :return: The path to a dummy pcap file.
+    """
+    os.system("cp " + test_pcap + " " + test_resource_dir + "dummy.pcap")
+    return test_resource_dir + 'dummy.pcap'
