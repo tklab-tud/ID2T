@@ -45,6 +45,6 @@ class EfficiencyTests(Test.ID2TAttackTest):
         self.temporal_efficiency_test([['PortscanAttack', 'ip.src=192.168.178.1', 'port.open=20']], time_limit=15,
                                       factor=10000)
 
-    def test_sqli_default(self):
+    def test_SQLi_10_000(self):
         # FIXME: sometimes it takes 15.34028493521018 instead of the normal 7.150923313737726 seconds
         self.temporal_efficiency_test([['SQLiAttack', 'ip.dst=192.168.0.1']], time_limit=15, factor=10000)
