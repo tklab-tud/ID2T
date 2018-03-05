@@ -66,3 +66,5 @@ class EfficiencyTests(Test.ID2TAttackTest):
         # TODO: update attack args, when DDoS gets refactored
         self.temporal_efficiency_test([['DDoSAttack', 'attackers.count=1000', 'packets.per-second=950',
                                         'attack.duration=300']], time_limit=150, factor=100000)
+
+    # TODO: add temporal efficiency test(s) for EternalBlue and MS17
