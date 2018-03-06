@@ -1,9 +1,10 @@
-import unittest
 import inspect
+import unittest
+
+import scapy.utils as pcr
 
 import ID2TLib.Controller as Ctrl
 import ID2TLib.TestLibrary as Lib
-import scapy.utils as pcr
 
 
 class ID2TAttackTest(unittest.TestCase):
@@ -48,7 +49,8 @@ class ID2TAttackTest(unittest.TestCase):
         else:
             Lib.rename_test_result_files(controller, caller_function, attack_sub_dir, test_sub_dir)
 
-    def temporal_efficiency_test(self, attack_args, time_limit=15, factor=1, seed=None, cleanup=True, pcap=Lib.test_pcap,
+    def temporal_efficiency_test(self, attack_args, time_limit=15, factor=1, seed=None, cleanup=True,
+                                 pcap=Lib.test_pcap,
                                  flag_write_file=False, flag_recalculate_stats=False, flag_print_statistics=False,
                                  attack_sub_dir=True, test_sub_dir=True):
         """
@@ -75,7 +77,7 @@ class ID2TAttackTest(unittest.TestCase):
         else:
             controller.process_attacks(attack_args, [[seed]], time=True)
 
-        duration = controller.durations[0]*factor/controller.attack_controller.total_packets
+        duration = controller.durations[0] * factor / controller.attack_controller.total_packets
         print(attack_args[0][0] + ' needs ' + str(duration) + ' seconds to generate ' + str(factor) + ' packets.')
 
         caller_function = inspect.stack()[1].function
@@ -89,7 +91,7 @@ class ID2TAttackTest(unittest.TestCase):
         if cleanup:
             Lib.clean_up(controller)
         else:
-            Lib.rename_test_result_files(self.controller, caller_function, attack_sub_dir, test_sub_dir)
+            Lib.rename_test_result_files(controller, caller_function, attack_sub_dir, test_sub_dir)
 
     def order_test(self, attack_args, seed=None, cleanup=True, pcap=Lib.test_pcap,
                    flag_write_file=False, flag_recalculate_stats=False, flag_print_statistics=False,
@@ -128,7 +130,7 @@ class ID2TAttackTest(unittest.TestCase):
 
                 if time_a[0] > time_b[0]:
                     file.close()
-                    self.fail("Packet order incorrect at: " + str(i+1) + "-" + str(i+2) +
+                    self.fail("Packet order incorrect at: " + str(i + 1) + "-" + str(i + 2) +
                               ". Current time: " + str(time_a) + " Next time: " + str(time_b))
                 elif time_a[0] == time_b[0]:
                     if time_a[1] > time_b[1]:
