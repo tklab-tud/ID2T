@@ -50,16 +50,6 @@ class TestUtility(unittest.TestCase):
     def test_get_nth_random_element_nothing(self):
         self.assertEqual(Utility.get_nth_random_element(), None)
 
-    def test_index_increment_not_max(self):
-        self.assertEqual(Utility.index_increment(5, 10), 6)
-
-    def test_index_increment_max(self):
-        self.assertEqual(Utility.index_increment(10, 10), 0)
-
-    # Correct?
-    def test_index_increment_max2(self):
-        self.assertEqual(Utility.index_increment(9, 10), 0)
-
     def test_get_rnd_os(self):
         self.assertIn(Utility.get_rnd_os(), Utility.platforms)
 
