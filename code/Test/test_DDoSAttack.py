@@ -1,7 +1,7 @@
 import unittest.mock as mock
 
-import Test.ID2TAttackTest as Test
 import ID2TLib.TestLibrary as Lib
+import Test.ID2TAttackTest as Test
 
 sha_basic_ddos = '87c6c9cf4b496b84fecfd758c1d891ff06fe234dba2f421a5ab8bd7d6d9239a5'
 sha_num_attackers_ddos = 'cbbb9b55d03a0efde965bbb8c38f6ba8a9acbd605cb2f3ac22a6ed6e3958f8e9'
@@ -12,7 +12,6 @@ sha_mss_none_ddos = '87c6c9cf4b496b84fecfd758c1d891ff06fe234dba2f421a5ab8bd7d6d9
 
 
 class UnitTestDDoS(Test.ID2TAttackTest):
-
     @mock.patch('ID2TLib.Utility.get_attacker_config', side_effect=Lib.get_attacker_config)
     def test_ddos_basic(self, mock_get_attacker_config):
         self.checksum_test([['DDoSAttack']],
