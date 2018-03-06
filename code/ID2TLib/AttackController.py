@@ -1,18 +1,21 @@
 import importlib
 import sys
 
-from Attack.AttackParameters import Parameter
-from ID2TLib import LabelManager
-from ID2TLib import Statistics
-from ID2TLib.Label import Label
-from ID2TLib.PcapFile import PcapFile
+import Attack.AttackParameters as atkParam
+import ID2TLib.Label as Label
+import ID2TLib.LabelManager as LabelManager
+import ID2TLib.PcapFile as PcapFile
+import ID2TLib.Statistics as Statistics
 
 
 class AttackController:
-    def __init__(self, pcap_file: PcapFile, statistics_class: Statistics, label_manager: LabelManager):
+    def __init__(self, pcap_file: PcapFile.PcapFile, statistics_class: Statistics, label_manager: LabelManager):
         """
         Creates a new AttackController. The controller manages the attack injection, including the PCAP writing.
-        :param statistics_class:
+
+        :param pcap_file: The source .pcap file to run the attack on.
+        :param statistics_class: A Statistics Object.
+        :param label_manager: A LabelManager Object.
         """
         self.statistics = statistics_class
         self.pcap_file = pcap_file
@@ -21,6 +24,7 @@ class AttackController:
         self.current_attack = None
         self.added_attacks = []
         self.seed = None
+        self.total_packets = 0
 
     def set_seed(self, seed: int):
         """
@@ -33,6 +37,7 @@ class AttackController:
     def create_attack(self, attack_name: str, seed=None):
         """
         Creates dynamically a new class instance based on the given attack_name.
+
         :param attack_name: The name of the attack, must correspond to the attack's class name.
         :param seed: random seed for param generation
         :return: None
@@ -56,8 +61,10 @@ class AttackController:
         """
         Takes as input the name of an attack (classname) and the attack parameters as string. Parses the string of
         attack parameters, creates the attack by writing the attack packets and returns the path of the written pcap.
+
         :param attack: The classname of the attack to injecect.
         :param params: The parameters for attack customization, see attack class for supported params.
+        :param time: Measure packet generation time or not.
         :return: The file path to the created pcap file.
         """
         self.create_attack(attack, self.seed)
@@ -73,13 +80,13 @@ class AttackController:
             params_dict = dict(params_dict)
             # Check if Parameter.INJECT_AT_TIMESTAMP and Parameter.INJECT_AFTER_PACKET are provided at the same time
             # if TRUE: delete Paramter.INJECT_AT_TIMESTAMP (lower priority) and use Parameter.INJECT_AFTER_PACKET
-            if (Parameter.INJECT_AFTER_PACKET.value in params_dict) and (
-                        Parameter.INJECT_AT_TIMESTAMP.value in params_dict):
-                print("CONFLICT: Parameters", Parameter.INJECT_AT_TIMESTAMP.value, "and",
-                      Parameter.INJECT_AFTER_PACKET.value,
-                      "given at the same time. Ignoring", Parameter.INJECT_AT_TIMESTAMP.value, "and using",
-                      Parameter.INJECT_AFTER_PACKET.value, "instead to derive the timestamp.")
-                del params_dict[Parameter.INJECT_AT_TIMESTAMP.value]
+            if (atkParam.Parameter.INJECT_AFTER_PACKET.value in params_dict) and (
+                        atkParam.Parameter.INJECT_AT_TIMESTAMP.value in params_dict):
+                print("CONFLICT: Parameters", atkParam.Parameter.INJECT_AT_TIMESTAMP.value, "and",
+                      atkParam.Parameter.INJECT_AFTER_PACKET.value,
+                      "given at the same time. Ignoring", atkParam.Parameter.INJECT_AT_TIMESTAMP.value, "and using",
+                      atkParam.Parameter.INJECT_AFTER_PACKET.value, "instead to derive the timestamp.")
+                del params_dict[atkParam.Parameter.INJECT_AT_TIMESTAMP.value]
 
             # Extract attack_note parameter, if not provided returns an empty string
             key_attack_note = "attack.note"
@@ -107,9 +114,9 @@ class AttackController:
         print(".)")
 
         # Store label into LabelManager
-        l = Label(attack, self.get_attack_start_utime(),
-                  self.get_attack_end_utime(), attack_note)
-        self.label_mgr.add_labels(l)
+        label = Label.Label(attack, self.get_attack_start_utime(),
+                            self.get_attack_end_utime(), attack_note)
+        self.label_mgr.add_labels(label)
 
         return temp_attack_pcap_path, duration
 
@@ -128,6 +135,7 @@ class AttackController:
     def set_params(self, params: dict):
         """
         Sets the attack's parameters.
+
         :param params: The parameters in a dictionary: {parameter_name: parameter_value}
         :return: None
         """
