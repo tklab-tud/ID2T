@@ -1,6 +1,6 @@
 import hashlib
 import os
-import random
+import random as rnd
 
 import ID2TLib.Utility as Util
 
@@ -85,6 +85,8 @@ def rename_test_result_files(controller, caller_function: str, attack_sub_dir=Fa
 
 """
 function patches for unittests
+
+FYI: the parameters below, which are not used are needed to mock the mentioned function/method correctly
 """
 
 
@@ -119,8 +121,8 @@ def get_attacker_config(ip_source_list, ipAddress: str):
     :param ipAddress: The IP address of the attacker
     :return: A tuple consisting of (port, ttlValue)
     """
-    next_port = random.randint(0, 2 ** 16 - 1)
-    ttl = random.randint(1, 255)
+    next_port = rnd.randint(0, 2 ** 16 - 1)
+    ttl = rnd.randint(1, 255)
 
     return next_port, ttl
 
@@ -131,5 +133,6 @@ def write_attack_pcap(self, packets: list, append_flag: bool = False, destinatio
 
     :return: The path to a dummy pcap file.
     """
+    # TODO: find another solution - copying influences efficiency tests
     os.system("cp " + test_pcap + " " + test_resource_dir + "dummy.pcap")
     return test_resource_dir + 'dummy.pcap'
