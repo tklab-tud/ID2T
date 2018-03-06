@@ -1,17 +1,18 @@
 import os
-import sys
 import readline
+import sys
 
-from ID2TLib.AttackController import AttackController
-from ID2TLib.LabelManager import LabelManager
-from ID2TLib.PcapFile import PcapFile
-from ID2TLib.Statistics import Statistics
+import ID2TLib.AttackController as atkCtrl
+import ID2TLib.LabelManager as LabelManager
+import ID2TLib.PcapFile as PcapFile
+import ID2TLib.Statistics as Statistics
 
 
 class Controller:
     def __init__(self, pcap_file_path: str, do_extra_tests: bool):
         """
         Creates a new Controller, acting as a central coordinator for the whole application.
+
         :param pcap_file_path:
         """
         # Fields
@@ -20,20 +21,22 @@ class Controller:
         self.written_pcaps = []
         self.do_extra_tests = do_extra_tests
         self.seed = None
+        self.durations = []
 
         # Initialize class instances
         print("Input file: %s" % self.pcap_src_path)
-        self.pcap_file = PcapFile(self.pcap_src_path)
-        self.label_manager = LabelManager(self.pcap_src_path)
-        self.statistics = Statistics(self.pcap_file)
+        self.pcap_file = PcapFile.PcapFile(self.pcap_src_path)
+        self.label_manager = LabelManager.LabelManager(self.pcap_src_path)
+        self.statistics = Statistics.Statistics(self.pcap_file)
         self.statistics.do_extra_tests = self.do_extra_tests
         self.statisticsDB = self.statistics.get_statistics_database()
-        self.attack_controller = AttackController(self.pcap_file, self.statistics, self.label_manager)
+        self.attack_controller = atkCtrl.AttackController(self.pcap_file, self.statistics, self.label_manager)
 
     def load_pcap_statistics(self, flag_write_file: bool, flag_recalculate_stats: bool, flag_print_statistics: bool):
         """
         Loads the PCAP statistics either from the database, if the statistics were calculated earlier, or calculates
         the statistics and creates a new database.
+
         :param flag_write_file: Writes the statistics to a file.
         :param flag_recalculate_stats: Forces the recalculation of statistics.
         :param flag_print_statistics: Prints the statistics on the terminal.
@@ -41,11 +44,11 @@ class Controller:
         """
         self.statistics.load_pcap_statistics(flag_write_file, flag_recalculate_stats, flag_print_statistics)
 
-    def process_attacks(self, attacks_config: list, seeds=[], time=False):
+    def process_attacks(self, attacks_config: list, seeds=None, time=False):
         """
         Creates the attack based on the attack name and the attack parameters given in the attacks_config. The
-        attacks_config is a list of attacks, e.g.
-        [['PortscanAttack', 'ip.src="192.168.178.2",'dst.port=80'],['PortscanAttack', 'ip.src="10.10.10.2"]].
+        attacks_config is a list of attacks.
+        e.g. [['PortscanAttack', 'ip.src="192.168.178.2",'dst.port=80'],['PortscanAttack', 'ip.src="10.10.10.2"]].
         Merges the individual temporary attack pcaps into one single pcap and merges this single pcap with the
         input dataset.
 
@@ -54,22 +57,23 @@ class Controller:
         :param time: Measure time for packet generation.
         """
         # load attacks sequentially
-        self.durations = []
         i = 0
         for attack in attacks_config:
-            if len(seeds) > i:
+            if seeds is not None and len(seeds) > i:
                 self.attack_controller.set_seed(seed=seeds[i][0])
             temp_attack_pcap, duration = self.attack_controller.process_attack(attack[0], attack[1:], time)
             self.durations.append(duration)
             self.written_pcaps.append(temp_attack_pcap)
             i += 1
 
+        attacks_pcap_path = None
+
         # merge attack pcaps to get single attack pcap
         if len(self.written_pcaps) > 1:
             print("\nMerging temporary attack pcaps into single pcap file...", end=" ")
             sys.stdout.flush()  # force python to print text immediately
             for i in range(0, len(self.written_pcaps) - 1):
-                attacks_pcap = PcapFile(self.written_pcaps[i])
+                attacks_pcap = PcapFile.PcapFile(self.written_pcaps[i])
                 attacks_pcap_path = attacks_pcap.merge_attack(self.written_pcaps[i + 1])
                 os.remove(self.written_pcaps[i + 1])  # remove merged pcap
                 self.written_pcaps[i + 1] = attacks_pcap_path
@@ -107,6 +111,7 @@ class Controller:
     def process_db_queries(self, query, print_results=False):
         """
         Processes a statistics database query. This can be a standard SQL query or a named query.
+
         :param query: The query as a string or multiple queries as a list of strings.
         :param print_results: Must be True if the results should be printed to terminal.
         :return: The query's result
@@ -209,10 +214,12 @@ class Controller:
             def custom_template(text, state):
                 results = [x for x in vocabulary if x.startswith(text)] + [None]
                 return results[state]
+
             return custom_template
 
         readline.parse_and_bind('tab: complete')
-        readline.set_completer(make_completer(self.statisticsDB.get_all_named_query_keywords()+self.statisticsDB.get_all_sql_query_keywords()))
+        readline.set_completer(make_completer(
+            self.statisticsDB.get_all_named_query_keywords() + self.statisticsDB.get_all_sql_query_keywords()))
         history_file = os.path.join(os.path.expanduser('~'), 'ID2T_data', 'query_history')
         try:
             readline.read_history_file(history_file)
@@ -261,7 +268,8 @@ class Controller:
         Plots the statistics to a file by using the given customization parameters.
         """
         if params is not None and params[0] is not None:
+            # FIXME: cleanup
             params_dict = dict([z.split("=") for z in params])
-            self.statistics.plot_statistics(entropy = entropy, format=params_dict['format'])
+            self.statistics.plot_statistics(entropy=entropy, format=params_dict['format'])
         else:
-            self.statistics.plot_statistics(entropy = entropy)
+            self.statistics.plot_statistics(entropy=entropy)
