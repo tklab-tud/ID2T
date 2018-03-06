@@ -1,7 +1,7 @@
-from functools import total_ordering
+import functools
 
 
-@total_ordering
+@functools.total_ordering
 class Label:
     def __init__(self, attack_name, timestamp_start, timestamp_end, attack_note=""):
         """
