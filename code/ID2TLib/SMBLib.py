@@ -1,8 +1,8 @@
-from os import urandom
-from binascii import b2a_hex
-from random import choice
+import binascii
+import os
+import random as rnd
 
-from ID2TLib.Utility import check_platform, get_filetime_format, get_rnd_boot_time
+import ID2TLib.Utility as Util
 
 # SMB port
 smb_port = 445
@@ -58,9 +58,9 @@ def get_smb_version(platform: str):
     :param platform: the platform as string
     :return: SMB version as string
     """
-    check_platform(platform)
+    Util.check_platform(platform)
     if platform is "linux":
-        return choice(list(smb_versions_per_samba.values()))
+        return rnd.choice(list(smb_versions_per_samba.values()))
     elif platform is "macos":
         return "2.1"
     else:
@@ -75,7 +75,7 @@ def get_smb_platform_data(platform: str, timestamp: float):
     :param timestamp: a timestamp for calculating the boot-time
     :return: server_guid, security_blob, capabilities, data_size and server_start_time of the given platform
     """
-    check_platform(platform)
+    Util.check_platform(platform)
     if platform == "linux":
         server_guid = "ubuntu"
         security_blob = security_blob_ubuntu
@@ -83,17 +83,17 @@ def get_smb_platform_data(platform: str, timestamp: float):
         data_size = 0x800000
         server_start_time = 0
     elif platform == "macos":
-        server_guid = b2a_hex(urandom(15)).decode()
+        server_guid = binascii.b2a_hex(os.urandom(15)).decode()
         security_blob = security_blob_macos
         capabilities = 0x6
         data_size = 0x400000
         server_start_time = 0
     else:
-        server_guid = b2a_hex(urandom(15)).decode()
+        server_guid = binascii.b2a_hex(os.urandom(15)).decode()
         security_blob = security_blob_windows
         capabilities = 0x7
         data_size = 0x100000
-        server_start_time = get_filetime_format(get_rnd_boot_time(timestamp))
+        server_start_time = Util.get_filetime_format(Util.get_rnd_boot_time(timestamp))
     return server_guid, security_blob, capabilities, data_size, server_start_time
 
 
