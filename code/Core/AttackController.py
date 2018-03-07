@@ -2,10 +2,10 @@ import importlib
 import sys
 
 import Attack.AttackParameters as atkParam
+import Core.LabelManager as LabelManager
+import Core.Statistics as Statistics
 import ID2TLib.Label as Label
-import ID2TLib.LabelManager as LabelManager
 import ID2TLib.PcapFile as PcapFile
-import ID2TLib.Statistics as Statistics
 
 
 class AttackController:

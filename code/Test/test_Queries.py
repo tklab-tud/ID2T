@@ -1,7 +1,7 @@
 import random
 import unittest
 
-import ID2TLib.Controller as Ctrl
+import Core.Controller as Ctrl
 import ID2TLib.TestLibrary as Test
 
 # TODO: improve coverage

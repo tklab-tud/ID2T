@@ -11,7 +11,7 @@ class UnitTestSalityBotnet(Test.ID2TAttackTest):
     def test_botnet_basic(self):
         self.checksum_test([['SalityBotnet']], sha_botnet_basic)
 
-    @mock.patch('ID2TLib.Statistics.Statistics.get_most_used_ip_address')
+    @mock.patch('Core.Statistics.Statistics.get_most_used_ip_address')
     def test_botnet_most_used_ip(self, mock_most_used_ip_address):
         mock_most_used_ip_address.return_value = Lib.test_pcap_ips[0]
         self.checksum_test([['SalityBotnet']], sha_botnet_most_used_ip_in_list)

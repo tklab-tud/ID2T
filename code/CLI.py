@@ -2,7 +2,7 @@
 import argparse
 import sys
 
-from ID2TLib.Controller import Controller
+from Core.Controller import Controller
 
 
 class LoadFromFile(argparse.Action):
@@ -31,7 +31,7 @@ class CLI(object):
         :param args: The application arguments
         """
         # Create parser for arguments
-        parser = argparse.ArgumentParser(description="Intrusion Detection Dataset Toolkit (ID2T) - A toolkit for "
+        parser = argparse.ArgumentParser(description="Intrusion Detection Dataset Toolkit (Core) - A toolkit for "
                                                      "injecting synthetically created attacks into PCAP files.",
                                          prog="id2t")
         # Required arguments
@@ -138,7 +138,7 @@ class CLI(object):
         Loads the application controller, the PCAP file statistics and if present, processes the given attacks.
         Evaluates given queries.
         """
-        # Create ID2T Controller
+        # Create Core Controller
         controller = Controller(self.args.input, self.args.extraTests)
 
         # Load PCAP statistics

@@ -9,8 +9,8 @@ from operator import itemgetter
 import ID2TLib.libpcapreader as pr
 import matplotlib
 
+import Core.StatsDatabase as statsDB
 import ID2TLib.PcapFile as PcapFile
-import ID2TLib.StatsDatabase as statsDB
 import ID2TLib.Utility as Util
 
 matplotlib.use('Agg', force=True)

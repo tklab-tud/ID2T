@@ -3,13 +3,13 @@ import unittest
 
 import scapy.utils as pcr
 
-import ID2TLib.Controller as Ctrl
+import Core.Controller as Ctrl
 import ID2TLib.TestLibrary as Lib
 
 
 class ID2TAttackTest(unittest.TestCase):
     """
-    Generic Test Class for ID2T attacks based on unittest.TestCase.
+    Generic Test Class for Core attacks based on unittest.TestCase.
     """
 
     def checksum_test(self, attack_args, sha256_checksum, seed=5, cleanup=True, pcap=Lib.test_pcap,

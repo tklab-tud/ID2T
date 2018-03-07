@@ -4,7 +4,7 @@ import enum
 class Parameter(enum.Enum):
     """
     Defines the shortname for attack parameters. The shortname may be used for attack parameter specification
-    when calling ID2T via the command line.
+    when calling Core via the command line.
     """
     # recommended type: IP address -------------------------------
     IP_SOURCE = 'ip.src'  # source IP address

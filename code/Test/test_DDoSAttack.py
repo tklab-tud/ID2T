@@ -23,12 +23,12 @@ class UnitTestDDoS(Test.ID2TAttackTest):
                            sha_num_attackers_ddos)
 
     @mock.patch('ID2TLib.Utility.get_attacker_config', side_effect=Lib.get_attacker_config)
-    @mock.patch('ID2TLib.Statistics.Statistics.get_mac_address', return_value=[])
+    @mock.patch('Core.Statistics.Statistics.get_mac_address', return_value=[])
     def test_ddos_dest_mac_length_zero(self, mock_dest_mac, mock_get_attacker_config):
         self.checksum_test([['DDoSAttack']], sha_dest_mac_length_zero_ddos)
 
     @mock.patch('ID2TLib.Utility.get_attacker_config', side_effect=Lib.get_attacker_config)
-    @mock.patch('ID2TLib.Statistics.Statistics.get_most_used_mss', return_value=None)
+    @mock.patch('Core.Statistics.Statistics.get_most_used_mss', return_value=None)
     def test_ddos_mss_none(self, mock_mss, mock_get_attacker_config):
         self.checksum_test([['DDoSAttack']], sha_mss_none_ddos)
 

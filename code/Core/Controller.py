@@ -2,10 +2,10 @@ import os
 import readline
 import sys
 
-import ID2TLib.AttackController as atkCtrl
-import ID2TLib.LabelManager as LabelManager
+import Core.AttackController as atkCtrl
+import Core.LabelManager as LabelManager
+import Core.Statistics as Statistics
 import ID2TLib.PcapFile as PcapFile
-import ID2TLib.Statistics as Statistics
 
 
 class Controller:
