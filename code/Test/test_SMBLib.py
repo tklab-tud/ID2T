@@ -5,7 +5,6 @@ import ID2TLib.Utility as Utility
 
 
 class TestSMBLib(unittest.TestCase):
-
     def test_get_smb_version_all(self):
 
         for platform in Utility.platforms:
