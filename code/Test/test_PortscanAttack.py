@@ -11,7 +11,6 @@ sha_portscan_ips_not_in_pcap = '7f0f65beb8398fc1abe65b0819b6e3a5ce143fd8c9eafb2d
 
 
 class UnitTestPortscanAttack(Test.ID2TAttackTest):
-
     def test_portscan_default(self):
         self.checksum_test([['PortscanAttack']], sha_portscan_default)
 
