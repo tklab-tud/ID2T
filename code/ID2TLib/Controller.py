@@ -270,6 +270,6 @@ class Controller:
         if params is not None and params[0] is not None:
             # FIXME: cleanup
             params_dict = dict([z.split("=") for z in params])
-            self.statistics.plot_statistics(entropy=entropy, format=params_dict['format'])
+            self.statistics.plot_statistics(entropy=entropy, file_format=params_dict['format'])
         else:
             self.statistics.plot_statistics(entropy=entropy)

@@ -73,25 +73,25 @@ class TestQueries(unittest.TestCase):
         self.assertEqual(controller.statistics.get_most_used_ip_address(), '10.0.2.15')
 
     def test_get_ttl_distribution_1(self):
-        self.assertEqual(controller.statistics.get_ttl_distribution(ipAddress='72.247.178.67'), {64: 5})
+        self.assertEqual(controller.statistics.get_ttl_distribution(ip_address='72.247.178.67'), {64: 5})
 
     def test_get_ttl_distribution_2(self):
-        self.assertEqual(controller.statistics.get_ttl_distribution(ipAddress='10.0.2.15'), {128: 817})
+        self.assertEqual(controller.statistics.get_ttl_distribution(ip_address='10.0.2.15'), {128: 817})
 
     def test_get_mss_distribution_1(self):
-        self.assertEqual(controller.statistics.get_mss_distribution(ipAddress='72.247.178.67'), {1460: 1})
+        self.assertEqual(controller.statistics.get_mss_distribution(ip_address='72.247.178.67'), {1460: 1})
 
     def test_get_mss_distribution_2(self):
-        self.assertEqual(controller.statistics.get_mss_distribution(ipAddress='10.0.2.15'), {1460: 36})
+        self.assertEqual(controller.statistics.get_mss_distribution(ip_address='10.0.2.15'), {1460: 36})
 
     def test_get_win_distribution_1(self):
-        self.assertEqual(controller.statistics.get_win_distribution(ipAddress='72.247.178.67'), {65535: 5})
+        self.assertEqual(controller.statistics.get_win_distribution(ip_address='72.247.178.67'), {65535: 5})
 
     def test_get_tos_distribution_1(self):
-        self.assertEqual(controller.statistics.get_tos_distribution(ipAddress='72.247.178.67'), {0: 5})
+        self.assertEqual(controller.statistics.get_tos_distribution(ip_address='72.247.178.67'), {0: 5})
 
     def test_get_tos_distribution_2(self):
-        self.assertEqual(controller.statistics.get_tos_distribution(ipAddress='10.0.2.15'), {0: 817})
+        self.assertEqual(controller.statistics.get_tos_distribution(ip_address='10.0.2.15'), {0: 817})
 
     def test_get_ip_address_count(self):
         self.assertEqual(controller.statistics.get_ip_address_count(), 22)
@@ -108,16 +108,16 @@ class TestQueries(unittest.TestCase):
         self.assertEqual(controller.statistics.get_random_ip_address(2), ['72.247.178.113', '23.51.123.27'])
 
     def test_get_mac_address_1(self):
-        self.assertEqual(controller.statistics.get_mac_address(ipAddress='72.247.178.67'), '52:54:00:12:35:02')
+        self.assertEqual(controller.statistics.get_mac_address(ip_address='72.247.178.67'), '52:54:00:12:35:02')
 
     def test_get_mac_address_2(self):
-        self.assertEqual(controller.statistics.get_mac_address(ipAddress='10.0.2.15'), '08:00:27:a3:83:43')
+        self.assertEqual(controller.statistics.get_mac_address(ip_address='10.0.2.15'), '08:00:27:a3:83:43')
 
     def test_get_most_used_mss(self):
-        self.assertEqual(controller.statistics.get_most_used_mss(ipAddress='10.0.2.15'), 1460)
+        self.assertEqual(controller.statistics.get_most_used_mss(ip_address='10.0.2.15'), 1460)
 
     def test_get_most_used_ttl(self):
-        self.assertEqual(controller.statistics.get_most_used_ttl(ipAddress='10.0.2.15'), 128)
+        self.assertEqual(controller.statistics.get_most_used_ttl(ip_address='10.0.2.15'), 128)
 
     def test_is_query_no_string(self):
         self.assertFalse(controller.statistics.is_query(42))

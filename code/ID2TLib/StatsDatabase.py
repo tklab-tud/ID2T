@@ -111,7 +111,7 @@ class StatsDatabase:
         """
         return ["select", "insert"]
 
-    def _process_user_defined_query(self, query_string: str, query_parameters: tuple = None):
+    def process_user_defined_query(self, query_string: str, query_parameters: tuple = None):
         """
         Takes as input a SQL query query_string and optional a tuple of parameters which are marked by '?' in the query
         and later substituted.
@@ -259,7 +259,7 @@ class StatsDatabase:
         # query_string is a user-defined SQL query
         result = None
         if sql_query_parameters is not None or query_string.startswith("select") or query_string.startswith("insert"):
-            result = self._process_user_defined_query(query_string, sql_query_parameters)
+            result = self.process_user_defined_query(query_string, sql_query_parameters)
         # query string is a named query -> parse it and pass it to statisticsDB
         elif any(k in query_string for k in named_query_keywords) and all(k in query_string for k in ['(', ')']):
             # Clean query_string
