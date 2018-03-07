@@ -1,4 +1,3 @@
-import csv
 import logging
 import random as rnd
 
@@ -75,36 +74,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
                              (self.statistics.get_pps_sent(most_used_ip_address) +
                               self.statistics.get_pps_received(most_used_ip_address)) / 2)
         self.add_param_value(atkParam.Parameter.INJECT_AFTER_PACKET, rnd.randint(0, self.statistics.get_packet_count()))
-
-    @staticmethod
-    def get_ports_from_nmap_service_dst(ports_num):
-        """
-        Read the most ports_num frequently open ports from nmap-service-tcp file to be used in the port scan.
-
-        :return: Ports numbers to be used as default destination ports or default open ports in the port scan.
-        """
-        ports_dst = []
-        file = open(Util.RESOURCE_DIR + 'nmap-services-tcp.csv', 'rt')
-        spamreader = csv.reader(file, delimiter=',')
-        for count in range(ports_num):
-            # escape first row (header)
-            next(spamreader)
-            # save ports numbers
-            ports_dst.append(next(spamreader)[0])
-        file.close()
-        # rnd.shuffle ports numbers partially
-        if ports_num == 1000:  # used for port.dst
-            # FIXME: cleanup
-            temp_array = [[0 for i in range(10)] for i in range(100)]
-            port_dst_shuffled = []
-            for count in range(0, 10):
-                temp_array[count] = ports_dst[count * 100:(count + 1) * 100]
-                rnd.shuffle(temp_array[count])
-                port_dst_shuffled += temp_array[count]
-        else:  # used for port.open
-            rnd.shuffle(ports_dst)
-            port_dst_shuffled = ports_dst
-        return port_dst_shuffled
 
     def generate_attack_packets(self):
         mac_source = self.get_param_value(atkParam.Parameter.MAC_SOURCE)
