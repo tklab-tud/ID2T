@@ -5,7 +5,6 @@ import Test.ID2TAttackTest as Test
 
 
 class EfficiencyTests(Test.ID2TAttackTest):
-
     def test_SMBLoris_10_000(self):
         self.temporal_efficiency_test([['SMBLorisAttack', 'attackers.count=30', 'packets.per-second=8.0']],
                                       time_limit=15, factor=10000)
@@ -67,4 +66,4 @@ class EfficiencyTests(Test.ID2TAttackTest):
         self.temporal_efficiency_test([['DDoSAttack', 'attackers.count=1000', 'packets.per-second=950',
                                         'attack.duration=300']], time_limit=150, factor=100000)
 
-    # TODO: add temporal efficiency test(s) for EternalBlue and MS17
+        # TODO: add temporal efficiency test(s) for EternalBlue and MS17
