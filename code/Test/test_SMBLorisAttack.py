@@ -10,7 +10,6 @@ sha_ips_in_pcap = 'f299e4139780869d9f02c25ba00f1cad483a4f215d6aef4079b93f7f7e1de
 
 
 class UnitTestSMBLoris(Test.ID2TAttackTest):
-
     def test_smbloris_default(self):
         self.checksum_test([['SMBLorisAttack']], sha_default)
 
@@ -18,8 +17,8 @@ class UnitTestSMBLoris(Test.ID2TAttackTest):
         self.checksum_test([['SMBLorisAttack', 'ip.src=192.168.1.240', 'ip.dst=192.168.1.210']], sha_one_attacker)
 
     def test_smbloris_ips_in_pcap(self):
-        ip_src = 'ip.src='+Lib.test_pcap_ips[0]
-        ip_dst = 'ip.dst='+Lib.test_pcap_ips[1]
+        ip_src = 'ip.src=' + Lib.test_pcap_ips[0]
+        ip_dst = 'ip.dst=' + Lib.test_pcap_ips[1]
         self.checksum_test([['SMBLorisAttack', ip_src, ip_dst]], sha_ips_in_pcap)
 
     def test_smbloris_sixteen_attackers(self):
