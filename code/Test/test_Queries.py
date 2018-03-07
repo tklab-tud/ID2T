@@ -221,6 +221,7 @@ class TestQueries(unittest.TestCase):
     def test_all_macaddress(self):
         self.assertEqual(controller.statistics.process_db_query('all(macaddress)'), ['08:00:27:a3:83:43',
                                                                                      '52:54:00:12:35:02'])
+
     def test_all_portnumber(self):
         self.assertEqual(controller.statistics.process_db_query('all(portnumber)'), ports)
 
