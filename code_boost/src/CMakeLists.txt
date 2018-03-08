@@ -58,6 +58,7 @@ IF (Boost_FOUND)
     # Find the boost python 3 component
     EXECUTE_PROCESS(COMMAND python3 --version OUTPUT_VARIABLE PY_VERSION)
     STRING(REGEX REPLACE "Python ([0-9]+)\.([0-9]+)\.[0-9]+" "python-py\\1\\2" PY_VERSION ${PY_VERSION})
+    STRING(STRIP ${PY_VERSION} PY_VERSION)
     SET(PYTHON_VERSIONS python3 ${PY_VERSION} python-py35 python-py34 python-py33 python-py32)
     FOREACH(VERSION ${PYTHON_VERSIONS})
       FIND_PACKAGE(Boost COMPONENTS ${VERSION} QUIET)
