@@ -3,10 +3,10 @@ import unittest.mock as mock
 import ID2TLib.TestLibrary as Lib
 import Test.ID2TAttackTest as Test
 
-sha_basic_ddos = '87c6c9cf4b496b84fecfd758c1d891ff06fe234dba2f421a5ab8bd7d6d9239a5'
-sha_num_attackers_ddos = 'cbbb9b55d03a0efde965bbb8c38f6ba8a9acbd605cb2f3ac22a6ed6e3958f8e9'
-sha_dest_mac_length_zero_ddos = 'acf1d108ab3d4e76636c6b58e08296126a74fcf3936377588376a79716fffd60'
-sha_mss_none_ddos = '87c6c9cf4b496b84fecfd758c1d891ff06fe234dba2f421a5ab8bd7d6d9239a5'
+sha_basic_ddos = 'd30a14ba0568cb9c3be0db6a6d8e5d68b703d995015fc2215bfa150a8aff8b2a'
+sha_num_attackers_ddos = '0de1ac89bb02e0163a31a0215d59ef2e2d819ffb904f8a99be1ecb52a568a392'
+sha_dest_mac_length_zero_ddos = '55720bc3aa43a6abad2db1bd1f9c7ff71cb50f11ca5f17995b24184678c18226'
+sha_mss_none_ddos = 'd30a14ba0568cb9c3be0db6a6d8e5d68b703d995015fc2215bfa150a8aff8b2a'
 
 # TODO: improve coverage
 
