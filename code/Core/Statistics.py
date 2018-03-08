@@ -1,21 +1,24 @@
-from operator import itemgetter
-from math import sqrt, ceil, log
-
 import os
-import time
 import random
+import time
+from math import sqrt, ceil, log
+from operator import itemgetter
+
+# TODO: double check this import
+# does it complain because libpcapreader is not a .py?
 import ID2TLib.libpcapreader as pr
 import matplotlib
 
+import Core.StatsDatabase as statsDB
+import ID2TLib.PcapFile as PcapFile
+import ID2TLib.Utility as Util
+
 matplotlib.use('Agg', force=True)
 import matplotlib.pyplot as plt
-from ID2TLib.PcapFile import PcapFile
-from ID2TLib.StatsDatabase import StatsDatabase
-from ID2TLib.Utility import handle_most_used_outputs
 
 
 class Statistics:
-    def __init__(self, pcap_file: PcapFile):
+    def __init__(self, pcap_file: PcapFile.PcapFile):
         """
         Creates a new Statistics object.
 
@@ -25,6 +28,7 @@ class Statistics:
         self.pcap_filepath = pcap_file.pcap_file_path
         self.pcap_proc = None
         self.do_extra_tests = False
+        self.file_info = None
 
         # Create folder for statistics database if required
         self.path_db = pcap_file.get_db_path()
@@ -33,7 +37,7 @@ class Statistics:
             os.makedirs(path_dir)
 
         # Class instances
-        self.stats_db = StatsDatabase(self.path_db)
+        self.stats_db = statsDB.StatsDatabase(self.path_db)
 
     def load_pcap_statistics(self, flag_write_file: bool, flag_recalculate_stats: bool, flag_print_statistics: bool):
         """
@@ -103,8 +107,8 @@ class Statistics:
     @staticmethod
     def write_list(desc_val_unit_list, func, line_ending="\n"):
         """
-        Takes a list of tuples (statistic name, statistic value, unit) as input, generates a string of these three values
-        and applies the function func on this string.
+        Takes a list of tuples (statistic name, statistic value, unit) as input, generates a string of these three
+        values and applies the function func on this string.
 
         Before generating the string, it identifies text containing a float number, casts the string to a
         float and rounds the value to two decimal digits.
@@ -141,25 +145,25 @@ class Statistics:
         Statistics.write_list(self.get_general_file_statistics(), print, "")
         print("\n")
 
-
-    def calculate_entropy(self, frequency:list, normalized:bool = False):
+    @staticmethod
+    def calculate_entropy(frequency: list, normalized: bool = False):
         """
         Calculates entropy and normalized entropy of list of elements that have specific frequency
         :param frequency: The frequency of the elements.
         :param normalized: Calculate normalized entropy
         :return: entropy or (entropy, normalized entropy)
         """
-        entropy, normalizedEnt, n = 0, 0, 0
-        sumFreq = sum(frequency)
+        entropy, normalized_ent, n = 0, 0, 0
+        sum_freq = sum(frequency)
         for i, x in enumerate(frequency):
-            p_x = float(frequency[i] / sumFreq)
+            p_x = float(frequency[i] / sum_freq)
             if p_x > 0:
                 n += 1
                 entropy += - p_x * log(p_x, 2)
         if normalized:
-            if log(n)>0:
-                normalizedEnt = entropy/log(n, 2)
-            return entropy, normalizedEnt
+            if log(n) > 0:
+                normalized_ent = entropy / log(n, 2)
+            return entropy, normalized_ent
         else:
             return entropy
 
@@ -175,225 +179,235 @@ class Statistics:
         # print(result)
         bg_interval_pps = []
         complement_interval_pps = []
-        intervalsSum = 0
+        intervals_sum = 0
         if result:
             # Get the interval in seconds
             for i, row in enumerate(result):
                 if i < len(result) - 1:
-                    intervalsSum += ceil((int(result[i + 1][0]) * 10 ** -6) - (int(row[0]) * 10 ** -6))
-            interval = intervalsSum / (len(result) - 1)
+                    intervals_sum += ceil((int(result[i + 1][0]) * 10 ** -6) - (int(row[0]) * 10 ** -6))
+            interval = intervals_sum / (len(result) - 1)
             # Convert timestamp from micro to seconds, convert packet rate "per interval" to "per second"
             for row in result:
                 bg_interval_pps.append((int(row[0]) * 10 ** -6, int(row[1] / interval)))
             # Find max PPS
-            maxPPS = max(bg_interval_pps, key=itemgetter(1))[1]
+            max_pps = max(bg_interval_pps, key=itemgetter(1))[1]
 
             for row in bg_interval_pps:
-                complement_interval_pps.append((row[0], int(pps * (maxPPS - row[1]) / maxPPS)))
+                complement_interval_pps.append((row[0], int(pps * (max_pps - row[1]) / max_pps)))
 
         return complement_interval_pps
-
 
     def get_tests_statistics(self):
         """
         Writes the calculated basic defects tests statistics into a file.
         """
-        # self.stats_db._process_user_defined_query output is list of tuples, thus, we ned [0][0] to access data
 
-        def count_frequncy(valuesList):
-            values, frequency = [] , []
-            for x in valuesList:
+        # self.stats_db.process_user_defined_query output is list of tuples, thus, we ned [0][0] to access data
+
+        def count_frequncy(values_list):
+            values, freq_output = [], []
+            for x in values_list:
                 if x in values:
-                    frequency[values.index(x)] += 1
+                    freq_output[values.index(x)] += 1
                 else:
                     values.append(x)
-                    frequency.append(1)
-            return values, frequency
+                    freq_output.append(1)
+            return values, freq_output
 
-        ####### Payload Tests #######
-        sumPayloadCount = self.stats_db._process_user_defined_query("SELECT sum(payloadCount) FROM interval_statistics")
-        pktCount = self.stats_db._process_user_defined_query("SELECT packetCount FROM file_statistics")
-        if sumPayloadCount and pktCount:
-            payloadRatio=0
-            if(pktCount[0][0]!=0):
-                payloadRatio = float(sumPayloadCount[0][0] / pktCount[0][0] * 100)
+        # Payload Tests
+        sum_payload_count = self.stats_db.process_user_defined_query("SELECT sum(payloadCount) FROM "
+                                                                     "interval_statistics")
+        pkt_count = self.stats_db.process_user_defined_query("SELECT packetCount FROM file_statistics")
+        if sum_payload_count and pkt_count:
+            payload_ratio = 0
+            if pkt_count[0][0] != 0:
+                payload_ratio = float(sum_payload_count[0][0] / pkt_count[0][0] * 100)
         else:
-            payloadRatio = -1
+            payload_ratio = -1
 
-        ####### TCP checksum Tests #######
-        incorrectChecksumCount = self.stats_db._process_user_defined_query("SELECT sum(incorrectTCPChecksumCount) FROM interval_statistics")
-        correctChecksumCount = self.stats_db._process_user_defined_query("SELECT avg(correctTCPChecksumCount) FROM interval_statistics")
-        if incorrectChecksumCount and correctChecksumCount:
-            incorrectChecksumRatio=0
-            if(incorrectChecksumCount[0][0] + correctChecksumCount[0][0])!=0:
-                incorrectChecksumRatio = float(incorrectChecksumCount[0][0]  / (incorrectChecksumCount[0][0] + correctChecksumCount[0][0] ) * 100)
+        # TCP checksum Tests
+        incorrect_checksum_count = self.stats_db.process_user_defined_query(
+            "SELECT sum(incorrectTCPChecksumCount) FROM interval_statistics")
+        correct_checksum_count = self.stats_db.process_user_defined_query(
+            "SELECT avg(correctTCPChecksumCount) FROM interval_statistics")
+        if incorrect_checksum_count and correct_checksum_count:
+            incorrect_checksum_ratio = 0
+            if (incorrect_checksum_count[0][0] + correct_checksum_count[0][0]) != 0:
+                incorrect_checksum_ratio = float(incorrect_checksum_count[0][0] /
+                                                 (incorrect_checksum_count[0][0] + correct_checksum_count[0][0]) * 100)
         else:
-            incorrectChecksumRatio = -1
+            incorrect_checksum_ratio = -1
 
-        ####### IP Src & Dst Tests #######
-        result = self.stats_db._process_user_defined_query("SELECT ipAddress,pktsSent,pktsReceived FROM ip_statistics")
-        data, srcFrequency, dstFrequency = [], [], []
+        # IP Src & Dst Tests
+        result = self.stats_db.process_user_defined_query("SELECT ipAddress,pktsSent,pktsReceived FROM ip_statistics")
+        data, src_frequency, dst_frequency = [], [], []
         if result:
             for row in result:
-                srcFrequency.append(row[1])
-                dstFrequency.append(row[2])
-        ipSrcEntropy, ipSrcNormEntropy = self.calculate_entropy(srcFrequency, True)
-        ipDstEntropy, ipDstNormEntropy = self.calculate_entropy(dstFrequency, True)
+                src_frequency.append(row[1])
+                dst_frequency.append(row[2])
+        ip_src_entropy, ip_src_norm_entropy = self.calculate_entropy(src_frequency, True)
+        ip_dst_entropy, ip_dst_norm_entropy = self.calculate_entropy(dst_frequency, True)
 
-        newIPCount = self.stats_db._process_user_defined_query("SELECT newIPCount FROM interval_statistics")
-        ipNovelsPerInterval, ipNovelsPerIntervalFrequency = count_frequncy(newIPCount)
-        ipNoveltyDistEntropy = self.calculate_entropy(ipNovelsPerIntervalFrequency)
+        new_ip_count = self.stats_db.process_user_defined_query("SELECT newIPCount FROM interval_statistics")
+        ip_novels_per_interval, ip_novels_per_interval_frequency = count_frequncy(new_ip_count)
+        ip_novelty_dist_entropy = self.calculate_entropy(ip_novels_per_interval_frequency)
 
-        ####### Ports Tests #######
-        port0Count = self.stats_db._process_user_defined_query("SELECT SUM(portCount) FROM ip_ports WHERE portNumber = 0")
-        if not port0Count[0][0]:
-            port0Count = 0
+        # Ports Tests
+        port0_count = self.stats_db.process_user_defined_query(
+            "SELECT SUM(portCount) FROM ip_ports WHERE portNumber = 0")
+        if not port0_count[0][0]:
+            port0_count = 0
         else:
-            port0Count = port0Count[0][0]
-        reservedPortCount = self.stats_db._process_user_defined_query(
-            "SELECT SUM(portCount) FROM ip_ports WHERE portNumber IN (100,114,1023,1024,49151,49152,65535)")# could be extended
-        if not reservedPortCount[0][0]:
-            reservedPortCount = 0
+            port0_count = port0_count[0][0]
+        # FIXME: could be extended
+        reserved_port_count = self.stats_db.process_user_defined_query(
+            "SELECT SUM(portCount) FROM ip_ports WHERE portNumber IN (100,114,1023,1024,49151,49152,65535)")
+        if not reserved_port_count[0][0]:
+            reserved_port_count = 0
         else:
-            reservedPortCount = reservedPortCount[0][0]
+            reserved_port_count = reserved_port_count[0][0]
 
-        ####### TTL Tests #######
-        result = self.stats_db._process_user_defined_query("SELECT ttlValue,SUM(ttlCount) FROM ip_ttl GROUP BY ttlValue")
+        # TTL Tests
+        result = self.stats_db.process_user_defined_query(
+            "SELECT ttlValue,SUM(ttlCount) FROM ip_ttl GROUP BY ttlValue")
         data, frequency = [], []
         for row in result:
             frequency.append(row[1])
-        ttlEntropy, ttlNormEntropy  = self.calculate_entropy(frequency,True)
-        newTTLCount = self.stats_db._process_user_defined_query("SELECT newTTLCount FROM interval_statistics")
-        ttlNovelsPerInterval, ttlNovelsPerIntervalFrequency = count_frequncy(newTTLCount)
-        ttlNoveltyDistEntropy = self.calculate_entropy(ttlNovelsPerIntervalFrequency)
+        ttl_entropy, ttl_norm_entropy = self.calculate_entropy(frequency, True)
+        new_ttl_count = self.stats_db.process_user_defined_query("SELECT newTTLCount FROM interval_statistics")
+        ttl_novels_per_interval, ttl_novels_per_interval_frequency = count_frequncy(new_ttl_count)
+        ttl_novelty_dist_entropy = self.calculate_entropy(ttl_novels_per_interval_frequency)
 
-        ####### Window Size Tests #######
-        result = self.stats_db._process_user_defined_query("SELECT winSize,SUM(winCount) FROM tcp_win GROUP BY winSize")
+        # Window Size Tests
+        result = self.stats_db.process_user_defined_query("SELECT winSize,SUM(winCount) FROM tcp_win GROUP BY winSize")
         data, frequency = [], []
         for row in result:
             frequency.append(row[1])
-        winEntropy, winNormEntropy = self.calculate_entropy(frequency, True)
-        newWinSizeCount = self.stats_db._process_user_defined_query("SELECT newWinSizeCount FROM interval_statistics")
-        winNovelsPerInterval, winNovelsPerIntervalFrequency = count_frequncy(newWinSizeCount)
-        winNoveltyDistEntropy = self.calculate_entropy(winNovelsPerIntervalFrequency)
+        win_entropy, win_norm_entropy = self.calculate_entropy(frequency, True)
+        new_win_size_count = self.stats_db.process_user_defined_query("SELECT newWinSizeCount FROM interval_statistics")
+        win_novels_per_interval, win_novels_per_interval_frequency = count_frequncy(new_win_size_count)
+        win_novelty_dist_entropy = self.calculate_entropy(win_novels_per_interval_frequency)
 
-        ####### ToS Tests #######
-        result = self.stats_db._process_user_defined_query(
+        # ToS Tests
+        result = self.stats_db.process_user_defined_query(
             "SELECT tosValue,SUM(tosCount) FROM ip_tos GROUP BY tosValue")
         data, frequency = [], []
         for row in result:
             frequency.append(row[1])
-        tosEntropy, tosNormEntropy = self.calculate_entropy(frequency, True)
-        newToSCount = self.stats_db._process_user_defined_query("SELECT newToSCount FROM interval_statistics")
-        tosNovelsPerInterval, tosNovelsPerIntervalFrequency = count_frequncy(newToSCount)
-        tosNoveltyDistEntropy = self.calculate_entropy(tosNovelsPerIntervalFrequency)
+        tos_entropy, tos_norm_entropy = self.calculate_entropy(frequency, True)
+        new_tos_count = self.stats_db.process_user_defined_query("SELECT newToSCount FROM interval_statistics")
+        tos_novels_per_interval, tos_novels_per_interval_frequency = count_frequncy(new_tos_count)
+        tos_novelty_dist_entropy = self.calculate_entropy(tos_novels_per_interval_frequency)
 
-        ####### MSS Tests #######
-        result = self.stats_db._process_user_defined_query(
+        # MSS Tests
+        result = self.stats_db.process_user_defined_query(
             "SELECT mssValue,SUM(mssCount) FROM tcp_mss GROUP BY mssValue")
         data, frequency = [], []
         for row in result:
             frequency.append(row[1])
-        mssEntropy, mssNormEntropy = self.calculate_entropy(frequency, True)
-        newMSSCount = self.stats_db._process_user_defined_query("SELECT newMSSCount FROM interval_statistics")
-        mssNovelsPerInterval, mssNovelsPerIntervalFrequency = count_frequncy(newMSSCount)
-        mssNoveltyDistEntropy = self.calculate_entropy(mssNovelsPerIntervalFrequency)
+        mss_entropy, mss_norm_entropy = self.calculate_entropy(frequency, True)
+        new_mss_count = self.stats_db.process_user_defined_query("SELECT newMSSCount FROM interval_statistics")
+        mss_novels_per_interval, mss_novels_per_interval_frequency = count_frequncy(new_mss_count)
+        mss_novelty_dist_entropy = self.calculate_entropy(mss_novels_per_interval_frequency)
 
-        result = self.stats_db._process_user_defined_query("SELECT SUM(mssCount) FROM tcp_mss WHERE mssValue > 1460")
+        result = self.stats_db.process_user_defined_query("SELECT SUM(mssCount) FROM tcp_mss WHERE mssValue > 1460")
         # The most used MSS < 1460. Calculate the ratio of the values bigger that 1460.
         if not result[0][0]:
             result = 0
         else:
             result = result[0][0]
-        bigMSS = (result / sum(frequency)) * 100
+        big_mss = (result / sum(frequency)) * 100
 
         output = []
         if self.do_extra_tests:
-            output = [("Payload ratio", payloadRatio, "%"),
-                ("Incorrect TCP checksum ratio", incorrectChecksumRatio, "%")]
+            output = [("Payload ratio", payload_ratio, "%"),
+                      ("Incorrect TCP checksum ratio", incorrect_checksum_ratio, "%")]
 
-        output = output + [("# IP addresses", sum([x[0] for x in newIPCount]), ""),
-                ("IP Src Entropy", ipSrcEntropy, ""),
-                ("IP Src Normalized Entropy", ipSrcNormEntropy, ""),
-                ("IP Dst Entropy", ipDstEntropy, ""),
-                ("IP Dst Normalized Entropy", ipDstNormEntropy, ""),
-                ("IP Novelty Distribution Entropy", ipNoveltyDistEntropy, ""),
-                ("# TTL values", sum([x[0] for x in newTTLCount]), ""),
-                ("TTL Entropy", ttlEntropy, ""),
-                ("TTL Normalized Entropy", ttlNormEntropy, ""),
-                ("TTL Novelty Distribution Entropy", ttlNoveltyDistEntropy, ""),
-                ("# WinSize values", sum([x[0] for x in newWinSizeCount]), ""),
-                ("WinSize Entropy", winEntropy, ""),
-                ("WinSize Normalized Entropy", winNormEntropy, ""),
-                ("WinSize Novelty Distribution Entropy", winNoveltyDistEntropy, ""),
-                ("# ToS values",  sum([x[0] for x in newToSCount]), ""),
-                ("ToS Entropy", tosEntropy, ""),
-                ("ToS Normalized Entropy", tosNormEntropy, ""),
-                ("ToS Novelty Distribution Entropy", tosNoveltyDistEntropy, ""),
-                ("# MSS values", sum([x[0] for x in newMSSCount]), ""),
-                ("MSS Entropy", mssEntropy, ""),
-                ("MSS Normalized Entropy", mssNormEntropy, ""),
-                ("MSS Novelty Distribution Entropy", mssNoveltyDistEntropy, ""),
-                ("======================","","")]
+        output = output + [("# IP addresses", sum([x[0] for x in new_ip_count]), ""),
+                           ("IP Src Entropy", ip_src_entropy, ""),
+                           ("IP Src Normalized Entropy", ip_src_norm_entropy, ""),
+                           ("IP Dst Entropy", ip_dst_entropy, ""),
+                           ("IP Dst Normalized Entropy", ip_dst_norm_entropy, ""),
+                           ("IP Novelty Distribution Entropy", ip_novelty_dist_entropy, ""),
+                           ("# TTL values", sum([x[0] for x in new_ttl_count]), ""),
+                           ("TTL Entropy", ttl_entropy, ""),
+                           ("TTL Normalized Entropy", ttl_norm_entropy, ""),
+                           ("TTL Novelty Distribution Entropy", ttl_novelty_dist_entropy, ""),
+                           ("# WinSize values", sum([x[0] for x in new_win_size_count]), ""),
+                           ("WinSize Entropy", win_entropy, ""),
+                           ("WinSize Normalized Entropy", win_norm_entropy, ""),
+                           ("WinSize Novelty Distribution Entropy", win_novelty_dist_entropy, ""),
+                           ("# ToS values", sum([x[0] for x in new_tos_count]), ""),
+                           ("ToS Entropy", tos_entropy, ""),
+                           ("ToS Normalized Entropy", tos_norm_entropy, ""),
+                           ("ToS Novelty Distribution Entropy", tos_novelty_dist_entropy, ""),
+                           ("# MSS values", sum([x[0] for x in new_mss_count]), ""),
+                           ("MSS Entropy", mss_entropy, ""),
+                           ("MSS Normalized Entropy", mss_norm_entropy, ""),
+                           ("MSS Novelty Distribution Entropy", mss_novelty_dist_entropy, ""),
+                           ("======================", "", "")]
 
         # Reasoning the statistics values
         if self.do_extra_tests:
-            if payloadRatio > 80:
-                output.append(("WARNING: Too high payload ratio", payloadRatio, "%."))
-            if payloadRatio < 30:
-                output.append(("WARNING: Too low payload ratio", payloadRatio, "% (Injecting attacks that are carried out in the packet payloads is not recommmanded)."))
+            if payload_ratio > 80:
+                output.append(("WARNING: Too high payload ratio", payload_ratio, "%."))
+            if payload_ratio < 30:
+                output.append(("WARNING: Too low payload ratio", payload_ratio, "% (Injecting attacks that are carried "
+                                                                                "out in the packet payloads is not "
+                                                                                "recommmanded)."))
 
-            if incorrectChecksumRatio > 5:
-                output.append(("WARNING: High incorrect TCP checksum ratio",incorrectChecksumRatio,"%."))
+            if incorrect_checksum_ratio > 5:
+                output.append(("WARNING: High incorrect TCP checksum ratio", incorrect_checksum_ratio, "%."))
 
-        if ipSrcNormEntropy > 0.65:
-            output.append(("WARNING: High IP source normalized entropy",ipSrcNormEntropy,"."))
-        if ipSrcNormEntropy < 0.2:
-            output.append(("WARNING: Low IP source normalized entropy", ipSrcNormEntropy, "."))
-        if ipDstNormEntropy > 0.65:
-            output.append(("WARNING: High IP destination normalized entropy", ipDstNormEntropy, "."))
-        if ipDstNormEntropy < 0.2:
-            output.append(("WARNING: Low IP destination normalized entropy", ipDstNormEntropy, "."))
+        if ip_src_norm_entropy > 0.65:
+            output.append(("WARNING: High IP source normalized entropy", ip_src_norm_entropy, "."))
+        if ip_src_norm_entropy < 0.2:
+            output.append(("WARNING: Low IP source normalized entropy", ip_src_norm_entropy, "."))
+        if ip_dst_norm_entropy > 0.65:
+            output.append(("WARNING: High IP destination normalized entropy", ip_dst_norm_entropy, "."))
+        if ip_dst_norm_entropy < 0.2:
+            output.append(("WARNING: Low IP destination normalized entropy", ip_dst_norm_entropy, "."))
 
-        if ttlNormEntropy > 0.65:
-            output.append(("WARNING: High TTL normalized entropy", ttlNormEntropy, "."))
-        if ttlNormEntropy < 0.2:
-            output.append(("WARNING: Low TTL normalized entropy", ttlNormEntropy, "."))
-        if ttlNoveltyDistEntropy < 1:
-            output.append(("WARNING: Too low TTL novelty distribution entropy", ttlNoveltyDistEntropy,
+        if ttl_norm_entropy > 0.65:
+            output.append(("WARNING: High TTL normalized entropy", ttl_norm_entropy, "."))
+        if ttl_norm_entropy < 0.2:
+            output.append(("WARNING: Low TTL normalized entropy", ttl_norm_entropy, "."))
+        if ttl_novelty_dist_entropy < 1:
+            output.append(("WARNING: Too low TTL novelty distribution entropy", ttl_novelty_dist_entropy,
                            "(The distribution of the novel TTL values is suspicious)."))
 
-        if winNormEntropy > 0.6:
-            output.append(("WARNING: High Window Size normalized entropy", winNormEntropy, "."))
-        if winNormEntropy < 0.1:
-            output.append(("WARNING: Low Window Size normalized entropy", winNormEntropy, "."))
-        if winNoveltyDistEntropy < 4:
-            output.append(("WARNING: Low Window Size novelty distribution entropy", winNoveltyDistEntropy,
+        if win_norm_entropy > 0.6:
+            output.append(("WARNING: High Window Size normalized entropy", win_norm_entropy, "."))
+        if win_norm_entropy < 0.1:
+            output.append(("WARNING: Low Window Size normalized entropy", win_norm_entropy, "."))
+        if win_novelty_dist_entropy < 4:
+            output.append(("WARNING: Low Window Size novelty distribution entropy", win_novelty_dist_entropy,
                            "(The distribution of the novel Window Size values is suspicious)."))
 
-        if tosNormEntropy > 0.4:
-            output.append(("WARNING: High ToS normalized entropy", tosNormEntropy, "."))
-        if tosNormEntropy < 0.1:
-            output.append(("WARNING: Low ToS normalized entropy", tosNormEntropy, "."))
-        if tosNoveltyDistEntropy < 0.5:
-            output.append(("WARNING: Low ToS novelty distribution entropy", tosNoveltyDistEntropy,
+        if tos_norm_entropy > 0.4:
+            output.append(("WARNING: High ToS normalized entropy", tos_norm_entropy, "."))
+        if tos_norm_entropy < 0.1:
+            output.append(("WARNING: Low ToS normalized entropy", tos_norm_entropy, "."))
+        if tos_novelty_dist_entropy < 0.5:
+            output.append(("WARNING: Low ToS novelty distribution entropy", tos_novelty_dist_entropy,
                            "(The distribution of the novel ToS values is suspicious)."))
 
-        if mssNormEntropy > 0.4:
-            output.append(("WARNING: High MSS normalized entropy", mssNormEntropy, "."))
-        if mssNormEntropy < 0.1:
-            output.append(("WARNING: Low MSS normalized entropy", mssNormEntropy, "."))
-        if mssNoveltyDistEntropy < 0.5:
-            output.append(("WARNING: Low MSS novelty distribution entropy", mssNoveltyDistEntropy,
+        if mss_norm_entropy > 0.4:
+            output.append(("WARNING: High MSS normalized entropy", mss_norm_entropy, "."))
+        if mss_norm_entropy < 0.1:
+            output.append(("WARNING: Low MSS normalized entropy", mss_norm_entropy, "."))
+        if mss_novelty_dist_entropy < 0.5:
+            output.append(("WARNING: Low MSS novelty distribution entropy", mss_novelty_dist_entropy,
                            "(The distribution of the novel MSS values is suspicious)."))
 
-        if bigMSS > 50:
-            output.append(("WARNING: High ratio of MSS > 1460", bigMSS, "% (High fragmentation rate in Ethernet)."))
+        if big_mss > 50:
+            output.append(("WARNING: High ratio of MSS > 1460", big_mss, "% (High fragmentation rate in Ethernet)."))
 
-        if port0Count > 0:
-            output.append(("WARNING: Port number 0 is used in ",port0Count,"packets (awkward-looking port)."))
-        if reservedPortCount > 0:
-            output.append(("WARNING: Reserved port numbers are used in ",reservedPortCount,"packets (uncommonly-used ports)."))
+        if port0_count > 0:
+            output.append(("WARNING: Port number 0 is used in ", port0_count, "packets (awkward-looking port)."))
+        if reserved_port_count > 0:
+            output.append(("WARNING: Reserved port numbers are used in ", reserved_port_count,
+                           "packets (uncommonly-used ports)."))
 
         return output
 
@@ -479,25 +493,25 @@ class Statistics:
         """
         :return: The IP address/addresses with the highest sum of packets sent and received
         """
-        return handle_most_used_outputs(self.process_db_query("most_used(ipAddress)"))
+        return Util.handle_most_used_outputs(self.process_db_query("most_used(ipAddress)"))
 
-    def get_ttl_distribution(self, ipAddress: str):
-        result = self.process_db_query('SELECT ttlValue, ttlCount from ip_ttl WHERE ipAddress="' + ipAddress + '"')
+    def get_ttl_distribution(self, ip_address: str):
+        result = self.process_db_query('SELECT ttlValue, ttlCount from ip_ttl WHERE ipAddress="' + ip_address + '"')
         result_dict = {key: value for (key, value) in result}
         return result_dict
 
-    def get_mss_distribution(self, ipAddress: str):
-        result = self.process_db_query('SELECT mssValue, mssCount from tcp_mss WHERE ipAddress="' + ipAddress + '"')
+    def get_mss_distribution(self, ip_address: str):
+        result = self.process_db_query('SELECT mssValue, mssCount from tcp_mss WHERE ipAddress="' + ip_address + '"')
         result_dict = {key: value for (key, value) in result}
         return result_dict
 
-    def get_win_distribution(self, ipAddress: str):
-        result = self.process_db_query('SELECT winSize, winCount from tcp_win WHERE ipAddress="' + ipAddress + '"')
+    def get_win_distribution(self, ip_address: str):
+        result = self.process_db_query('SELECT winSize, winCount from tcp_win WHERE ipAddress="' + ip_address + '"')
         result_dict = {key: value for (key, value) in result}
         return result_dict
 
-    def get_tos_distribution(self, ipAddress: str):
-        result = self.process_db_query('SELECT tosValue, tosCount from ip_tos WHERE ipAddress="' + ipAddress + '"')
+    def get_tos_distribution(self, ip_address: str):
+        result = self.process_db_query('SELECT tosValue, tosCount from ip_tos WHERE ipAddress="' + ip_address + '"')
         result_dict = {key: value for (key, value) in result}
         return result_dict
 
@@ -510,8 +524,8 @@ class Statistics:
     def get_random_ip_address(self, count: int = 1):
         """
         :param count: The number of IP addreses to return
-        :return: A randomly chosen IP address from the dataset or iff param count is greater than one, a list of randomly
-         chosen IP addresses
+        :return: A randomly chosen IP address from the dataset or iff param count is greater than one, a list of
+        randomly chosen IP addresses
         """
         ip_address_list = self.process_db_query("all(ipAddress)")
         if count == 1:
@@ -524,26 +538,28 @@ class Statistics:
                 ip_address_list.remove(random_ip)
             return result_list
 
-    def get_ip_address_from_mac(self, macAddress: str):
+    def get_ip_address_from_mac(self, mac_address: str):
         """
-        :param macAddress: the MAC address of which the IP shall be returned, if existing in DB
+        :param mac_address: the MAC address of which the IP shall be returned, if existing in DB
         :return: the IP address used in the dataset by a given MAC address
         """
-        return self.process_db_query('ipAddress(macAddress=' + macAddress + ")")
+        return self.process_db_query('ipAddress(macAddress=' + mac_address + ")")
 
-    def get_mac_address(self, ipAddress: str):
+    def get_mac_address(self, ip_address: str):
         """
         :return: The MAC address used in the dataset for the given IP address.
         """
-        return self.process_db_query('macAddress(ipAddress=' + ipAddress + ")")
+        return self.process_db_query('macAddress(ipAddress=' + ip_address + ")")
 
-    def get_most_used_mss(self, ipAddress: str):
+    def get_most_used_mss(self, ip_address: str):
         """
-        :param ipAddress: The IP address whose used MSS should be determined
+        :param ip_address: The IP address whose used MSS should be determined
         :return: The TCP MSS value used by the IP address, or if the IP addresses never specified a MSS,
         then None is returned
         """
-        mss_value = self.process_db_query('SELECT mssValue from tcp_mss WHERE ipAddress="' + ipAddress + '" AND mssCount == (SELECT MAX(mssCount) from tcp_mss WHERE ipAddress="' + ipAddress + '")')
+        mss_value = self.process_db_query('SELECT mssValue from tcp_mss WHERE ipAddress="' + ip_address +
+                                          '" AND mssCount == (SELECT MAX(mssCount) from tcp_mss WHERE ipAddress="'
+                                          + ip_address + '")')
         if isinstance(mss_value, int):
             return mss_value
         elif isinstance(mss_value, list):
@@ -555,14 +571,15 @@ class Statistics:
         else:
             return None
 
-    def get_most_used_ttl(self, ipAddress: str):
+    def get_most_used_ttl(self, ip_address: str):
         """
-        :param ipAddress: The IP address whose used TTL should be determined
+        :param ip_address: The IP address whose used TTL should be determined
         :return: The TTL value used by the IP address, or if the IP addresses never specified a TTL,
         then None is returned
         """
-        ttl_value = self.process_db_query(
-            'SELECT ttlValue from ip_ttl WHERE ipAddress="' + ipAddress + '" AND ttlCount == (SELECT MAX(ttlCount) from ip_ttl WHERE ipAddress="' + ipAddress + '")')
+        ttl_value = self.process_db_query('SELECT ttlValue from ip_ttl WHERE ipAddress="' + ip_address +
+                                          '" AND ttlCount == (SELECT MAX(ttlCount) from ip_ttl WHERE ipAddress="'
+                                          + ip_address + '")')
         if isinstance(ttl_value, int):
             return ttl_value
         elif isinstance(ttl_value, list):
@@ -618,10 +635,11 @@ class Statistics:
             return (any(x in value.lower().strip() for x in self.stats_db.get_all_named_query_keywords()) or
                     any(x in value.lower().strip() for x in self.stats_db.get_all_sql_query_keywords()))
 
-
-    def calculate_standard_deviation(self, lst):
+    @staticmethod
+    def calculate_standard_deviation(lst):
         """
         Calculates the standard deviation of a list of numbers.
+
         :param lst: The list of numbers to calculate its SD.
 
         """
@@ -634,63 +652,64 @@ class Statistics:
         sd = sqrt(variance)
         return sd
 
-
-    def plot_statistics(self,entropy : int , format: str = 'pdf'): #'png'
+    def plot_statistics(self, entropy: int, file_format: str = 'pdf'):  # 'png'
         """
         Plots the statistics associated with the dataset.
-        :param format: The format to be used to save the statistics diagrams.
+
+        :param entropy: the statistics entropy
+        :param file_format: The format to be used to save the statistics diagrams.
         """
 
-        def plot_distribution(queryOutput, title,  xLabel, yLabel, file_ending: str):
+        def plot_distribution(query_output, title, x_label, y_label, file_ending: str):
             plt.gcf().clear()
             graphx, graphy = [], []
-            for row in queryOutput:
+            for row in query_output:
                 graphx.append(row[0])
                 graphy.append(row[1])
             plt.autoscale(enable=True, axis='both')
             plt.title(title)
-            plt.xlabel(xLabel)
-            plt.ylabel(yLabel)
+            plt.xlabel(x_label)
+            plt.ylabel(y_label)
             width = 0.1
             plt.xlim([0, max(graphx)])
             plt.grid(True)
             plt.bar(graphx, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
             out = self.pcap_filepath.replace('.pcap', '_plot-' + title + file_ending)
-            plt.savefig(out,dpi=500)
+            plt.savefig(out, dpi=500)
             return out
 
         def plot_ttl(file_ending: str):
-            queryOutput = self.stats_db._process_user_defined_query(
+            query_output = self.stats_db.process_user_defined_query(
                 "SELECT ttlValue, SUM(ttlCount) FROM ip_ttl GROUP BY ttlValue")
             title = "TTL Distribution"
-            xLabel = "TTL Value"
-            yLabel = "Number of Packets"
-            if queryOutput:
-                return plot_distribution(queryOutput, title, xLabel, yLabel, file_ending)
+            x_label = "TTL Value"
+            y_label = "Number of Packets"
+            if query_output:
+                return plot_distribution(query_output, title, x_label, y_label, file_ending)
 
         def plot_mss(file_ending: str):
-            queryOutput = self.stats_db._process_user_defined_query(
+            query_output = self.stats_db.process_user_defined_query(
                 "SELECT mssValue, SUM(mssCount) FROM tcp_mss GROUP BY mssValue")
             title = "MSS Distribution"
-            xLabel = "MSS Value"
-            yLabel = "Number of Packets"
-            if queryOutput:
-                return plot_distribution(queryOutput, title, xLabel, yLabel, file_ending)
+            x_label = "MSS Value"
+            y_label = "Number of Packets"
+            if query_output:
+                return plot_distribution(query_output, title, x_label, y_label, file_ending)
 
         def plot_win(file_ending: str):
-            queryOutput = self.stats_db._process_user_defined_query(
+            query_output = self.stats_db.process_user_defined_query(
                 "SELECT winSize, SUM(winCount) FROM tcp_win GROUP BY winSize")
             title = "Window Size Distribution"
-            xLabel = "Window Size"
-            yLabel = "Number of Packets"
-            if queryOutput:
-                return plot_distribution(queryOutput, title, xLabel, yLabel, file_ending)
+            x_label = "Window Size"
+            y_label = "Number of Packets"
+            if query_output:
+                return plot_distribution(query_output, title, x_label, y_label, file_ending)
 
         def plot_protocol(file_ending: str):
             plt.gcf().clear()
-            result = self.stats_db._process_user_defined_query(
+            result = self.stats_db.process_user_defined_query(
                 "SELECT protocolName, SUM(protocolCount) FROM ip_protocols GROUP BY protocolName")
-            if (result):
+            if result:
                 graphx, graphy = [], []
                 for row in result:
                     graphx.append(row[0])
@@ -704,20 +723,20 @@ class Statistics:
                 plt.grid(True)
 
                 # Protocols' names on x-axis
-                x = range(0,len(graphx))
+                x = range(0, len(graphx))
                 my_xticks = graphx
                 plt.xticks(x, my_xticks)
 
                 plt.bar(x, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
                 out = self.pcap_filepath.replace('.pcap', '_plot-protocol' + file_ending)
-                plt.savefig(out,dpi=500)
+                plt.savefig(out, dpi=500)
                 return out
             else:
                 print("Error plot protocol: No protocol values found!")
 
         def plot_port(file_ending: str):
             plt.gcf().clear()
-            result = self.stats_db._process_user_defined_query(
+            result = self.stats_db.process_user_defined_query(
                 "SELECT portNumber, SUM(portCount) FROM ip_ports GROUP BY portNumber")
             graphx, graphy = [], []
             for row in result:
@@ -732,13 +751,13 @@ class Statistics:
             plt.grid(True)
             plt.bar(graphx, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
             out = self.pcap_filepath.replace('.pcap', '_plot-port' + file_ending)
-            plt.savefig(out,dpi=500)
+            plt.savefig(out, dpi=500)
             return out
 
         # This distribution is not drawable for big datasets
         def plot_ip_src(file_ending: str):
             plt.gcf().clear()
-            result = self.stats_db._process_user_defined_query(
+            result = self.stats_db.process_user_defined_query(
                 "SELECT ipAddress, pktsSent FROM ip_statistics")
             graphx, graphy = [], []
             for row in result:
@@ -769,7 +788,7 @@ class Statistics:
         # This distribution is not drawable for big datasets
         def plot_ip_dst(file_ending: str):
             plt.gcf().clear()
-            result = self.stats_db._process_user_defined_query(
+            result = self.stats_db.process_user_defined_query(
                 "SELECT ipAddress, pktsReceived FROM ip_statistics")
             graphx, graphy = [], []
             for row in result:
@@ -797,16 +816,16 @@ class Statistics:
             plt.savefig(out, dpi=500)
             return out
 
-        def plot_interval_statistics(queryOutput, title,  xLabel, yLabel, file_ending: str):
+        def plot_interval_statistics(query_output, title, x_label, y_label, file_ending: str):
             plt.gcf().clear()
             graphx, graphy = [], []
-            for row in queryOutput:
+            for row in query_output:
                 graphx.append(row[0])
                 graphy.append(row[1])
             plt.autoscale(enable=True, axis='both')
             plt.title(title)
-            plt.xlabel(xLabel)
-            plt.ylabel(yLabel)
+            plt.xlabel(x_label)
+            plt.ylabel(y_label)
             width = 0.5
             plt.xlim([0, len(graphx)])
             plt.grid(True)
@@ -822,90 +841,90 @@ class Statistics:
             plt.savefig(out, dpi=500)
             return out
 
-        def plot_interval_pktCount(file_ending: str):
-            queryOutput = self.stats_db._process_user_defined_query(
+        def plot_interval_pkt_count(file_ending: str):
+            query_output = self.stats_db.process_user_defined_query(
                 "SELECT lastPktTimestamp, pktsCount FROM interval_statistics ORDER BY lastPktTimestamp")
             title = "Packet Rate"
-            xLabel = "Time Interval"
-            yLabel = "Number of Packets"
-            if queryOutput:
-                return plot_interval_statistics(queryOutput, title, xLabel, yLabel, file_ending)
+            x_label = "Time Interval"
+            y_label = "Number of Packets"
+            if query_output:
+                return plot_interval_statistics(query_output, title, x_label, y_label, file_ending)
 
         def plot_interval_ip_src_ent(file_ending: str):
-            queryOutput = self.stats_db._process_user_defined_query(
+            query_output = self.stats_db.process_user_defined_query(
                 "SELECT lastPktTimestamp, ipSrcEntropy FROM interval_statistics ORDER BY lastPktTimestamp")
             title = "Source IP Entropy"
-            xLabel = "Time Interval"
-            yLabel = "Entropy"
-            if queryOutput:
-                return plot_interval_statistics(queryOutput, title, xLabel, yLabel, file_ending)
+            x_label = "Time Interval"
+            y_label = "Entropy"
+            if query_output:
+                return plot_interval_statistics(query_output, title, x_label, y_label, file_ending)
 
         def plot_interval_ip_dst_ent(file_ending: str):
-            queryOutput = self.stats_db._process_user_defined_query(
+            query_output = self.stats_db.process_user_defined_query(
                 "SELECT lastPktTimestamp, ipDstEntropy FROM interval_statistics ORDER BY lastPktTimestamp")
             title = "Destination IP Entropy"
-            xLabel = "Time Interval"
-            yLabel = "Entropy"
-            if queryOutput:
-                return plot_interval_statistics(queryOutput, title, xLabel, yLabel, file_ending)
+            x_label = "Time Interval"
+            y_label = "Entropy"
+            if query_output:
+                return plot_interval_statistics(query_output, title, x_label, y_label, file_ending)
 
         def plot_interval_new_ip(file_ending: str):
-            queryOutput = self.stats_db._process_user_defined_query(
+            query_output = self.stats_db.process_user_defined_query(
                 "SELECT lastPktTimestamp, newIPCount FROM interval_statistics ORDER BY lastPktTimestamp")
             title = "IP Novelty Distribution"
-            xLabel = "Time Interval"
-            yLabel = "Novel values count"
-            if queryOutput:
-                return plot_interval_statistics(queryOutput, title, xLabel, yLabel, file_ending)
+            x_label = "Time Interval"
+            y_label = "Novel values count"
+            if query_output:
+                return plot_interval_statistics(query_output, title, x_label, y_label, file_ending)
 
         def plot_interval_new_port(file_ending: str):
-            queryOutput = self.stats_db._process_user_defined_query(
+            query_output = self.stats_db.process_user_defined_query(
                 "SELECT lastPktTimestamp, newPortCount FROM interval_statistics ORDER BY lastPktTimestamp")
             title = "Port Novelty Distribution"
-            xLabel = "Time Interval"
-            yLabel = "Novel values count"
-            if queryOutput:
-                return plot_interval_statistics(queryOutput, title, xLabel, yLabel, file_ending)
+            x_label = "Time Interval"
+            y_label = "Novel values count"
+            if query_output:
+                return plot_interval_statistics(query_output, title, x_label, y_label, file_ending)
 
         def plot_interval_new_ttl(file_ending: str):
-            queryOutput = self.stats_db._process_user_defined_query(
+            query_output = self.stats_db.process_user_defined_query(
                 "SELECT lastPktTimestamp, newTTLCount FROM interval_statistics ORDER BY lastPktTimestamp")
             title = "TTL Novelty Distribution"
-            xLabel = "Time Interval"
-            yLabel = "Novel values count"
-            if queryOutput:
-                return plot_interval_statistics(queryOutput, title, xLabel, yLabel, file_ending)
+            x_label = "Time Interval"
+            y_label = "Novel values count"
+            if query_output:
+                return plot_interval_statistics(query_output, title, x_label, y_label, file_ending)
 
         def plot_interval_new_tos(file_ending: str):
-            queryOutput = self.stats_db._process_user_defined_query(
+            query_output = self.stats_db.process_user_defined_query(
                 "SELECT lastPktTimestamp, newToSCount FROM interval_statistics ORDER BY lastPktTimestamp")
             title = "ToS Novelty Distribution"
-            xLabel = "Time Interval"
-            yLabel = "Novel values count"
-            if queryOutput:
-                return plot_interval_statistics(queryOutput, title, xLabel, yLabel, file_ending)
+            x_label = "Time Interval"
+            y_label = "Novel values count"
+            if query_output:
+                return plot_interval_statistics(query_output, title, x_label, y_label, file_ending)
 
         def plot_interval_new_win_size(file_ending: str):
-            queryOutput = self.stats_db._process_user_defined_query(
+            query_output = self.stats_db.process_user_defined_query(
                 "SELECT lastPktTimestamp, newWinSizeCount FROM interval_statistics ORDER BY lastPktTimestamp")
             title = "Window Size Novelty Distribution"
-            xLabel = "Time Interval"
-            yLabel = "Novel values count"
-            if queryOutput:
-                return plot_interval_statistics(queryOutput, title, xLabel, yLabel, file_ending)
+            x_label = "Time Interval"
+            y_label = "Novel values count"
+            if query_output:
+                return plot_interval_statistics(query_output, title, x_label, y_label, file_ending)
 
         def plot_interval_new_mss(file_ending: str):
-            queryOutput = self.stats_db._process_user_defined_query(
+            query_output = self.stats_db.process_user_defined_query(
                 "SELECT lastPktTimestamp, newMSSCount FROM interval_statistics ORDER BY lastPktTimestamp")
             title = "MSS Novelty Distribution"
-            xLabel = "Time Interval"
-            yLabel = "Novel values count"
-            if queryOutput:
-                return plot_interval_statistics(queryOutput, title, xLabel, yLabel, file_ending)
+            x_label = "Time Interval"
+            y_label = "Novel values count"
+            if query_output:
+                return plot_interval_statistics(query_output, title, x_label, y_label, file_ending)
 
         def plot_interval_ip_dst_cum_ent(file_ending: str):
             plt.gcf().clear()
-            result = self.stats_db._process_user_defined_query(
+            result = self.stats_db.process_user_defined_query(
                 "SELECT lastPktTimestamp, ipDstCumEntropy FROM interval_statistics ORDER BY lastPktTimestamp")
             graphx, graphy = [], []
             for row in result:
@@ -938,7 +957,7 @@ class Statistics:
         def plot_interval_ip_src_cum_ent(file_ending: str):
             plt.gcf().clear()
 
-            result = self.stats_db._process_user_defined_query(
+            result = self.stats_db.process_user_defined_query(
                 "SELECT lastPktTimestamp, ipSrcCumEntropy FROM interval_statistics ORDER BY lastPktTimestamp")
             graphx, graphy = [], []
             for row in result:
@@ -968,26 +987,26 @@ class Statistics:
                 plt.savefig(out, dpi=500)
                 return out
 
-        ttl_out_path = plot_ttl('.' + format)
-        mss_out_path = plot_mss('.' + format)
-        win_out_path = plot_win('.' + format)
-        protocol_out_path = plot_protocol('.' + format)
-        plot_interval_pktCount = plot_interval_pktCount('.' + format)
+        ttl_out_path = plot_ttl('.' + file_format)
+        mss_out_path = plot_mss('.' + file_format)
+        win_out_path = plot_win('.' + file_format)
+        protocol_out_path = plot_protocol('.' + file_format)
+        plot_interval_pktCount = plot_interval_pkt_count('.' + file_format)
         if entropy:
-            plot_interval_ip_src_ent = plot_interval_ip_src_ent('.' + format)
-            plot_interval_ip_dst_ent = plot_interval_ip_dst_ent('.' + format)
-            plot_interval_ip_src_cum_ent = plot_interval_ip_src_cum_ent('.' + format)
-            plot_interval_ip_dst_cum_ent = plot_interval_ip_dst_cum_ent('.' + format)
-        plot_interval_new_ip = plot_interval_new_ip('.' + format)
-        plot_interval_new_port = plot_interval_new_port('.' + format)
-        plot_interval_new_ttl = plot_interval_new_ttl('.' + format)
-        plot_interval_new_tos = plot_interval_new_tos('.' + format)
-        plot_interval_new_win_size = plot_interval_new_win_size('.' + format)
-        plot_interval_new_mss = plot_interval_new_mss('.' + format)
+            plot_interval_ip_src_ent = plot_interval_ip_src_ent('.' + file_format)
+            plot_interval_ip_dst_ent = plot_interval_ip_dst_ent('.' + file_format)
+            plot_interval_ip_src_cum_ent = plot_interval_ip_src_cum_ent('.' + file_format)
+            plot_interval_ip_dst_cum_ent = plot_interval_ip_dst_cum_ent('.' + file_format)
+        plot_interval_new_ip = plot_interval_new_ip('.' + file_format)
+        plot_interval_new_port = plot_interval_new_port('.' + file_format)
+        plot_interval_new_ttl = plot_interval_new_ttl('.' + file_format)
+        plot_interval_new_tos = plot_interval_new_tos('.' + file_format)
+        plot_interval_new_win_size = plot_interval_new_win_size('.' + file_format)
+        plot_interval_new_mss = plot_interval_new_mss('.' + file_format)
 
-        ## Time consuming plot
+        # Time consuming plot
         # port_out_path = plot_port('.' + format)
-        ## Not drawable for too many IPs
+        # Not drawable for too many IPs
         # ip_src_out_path = plot_ip_src('.' + format)
         # ip_dst_out_path = plot_ip_dst('.' + format)
 

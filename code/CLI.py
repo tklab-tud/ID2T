@@ -2,13 +2,14 @@
 import argparse
 import sys
 
-from ID2TLib.Controller import Controller
+from Core.Controller import Controller
 
 
 class LoadFromFile(argparse.Action):
     """
     Parses the parameter file given by application param -c/--config.
     """
+
     def __call__(self, parser, namespace, values, option_string=None):
         with values as f:
             parser.parse_args(f.read().split(), namespace)
@@ -30,8 +31,8 @@ class CLI(object):
         :param args: The application arguments
         """
         # Create parser for arguments
-        parser = argparse.ArgumentParser(description="Intrusion Detection Dataset Toolkit (ID2T) - A toolkit for "
-                                         "injecting synthetically created attacks into PCAP files.",
+        parser = argparse.ArgumentParser(description="Intrusion Detection Dataset Toolkit (Core) - A toolkit for "
+                                                     "injecting synthetically created attacks into PCAP files.",
                                          prog="id2t")
         # Required arguments
         required_group = parser.add_argument_group('required arguments')
@@ -52,22 +53,26 @@ class CLI(object):
                             action='store_true', default=False)
         parser.add_argument('-s', '--statistics', help='print file statistics to stdout.', action='store_true',
                             default=False)
-        parser.add_argument('-p', '--plot', help='creates the following plots: the values distributions of TTL, MSS, Window Size, '
-                                                 'protocol, and the novelty distributions of IP, port, TTL, MSS, Window Size,'
-                                                 ' and ToS. In addition to packets count in interval-wise.', action='append',
+        parser.add_argument('-p', '--plot',
+                            help='creates the following plots: the values distributions of TTL, MSS, Window Size, '
+                                 'protocol, and the novelty distributions of IP, port, TTL, MSS, Window Size,'
+                                 ' and ToS. In addition to packets count in interval-wise.', action='append',
                             nargs='?')
         parser.add_argument('-q', '--query', metavar="QUERY",
                             action='append', nargs='?',
-                            help='query the statistics database. If no query is provided, the application enters query mode.')
-        parser.add_argument('-t', '--extraTests', help='perform extra tests on the input pcap file, including calculating IP entropy'
-                                                       'in interval-wise, TCP checksum, and checking payload availability.', action='store_true')
+                            help='query the statistics database. If no query is provided, '
+                                 'the application enters query mode.')
+        parser.add_argument('-t', '--extraTests',
+                            help='perform extra tests on the input pcap file, including calculating IP entropy'
+                                 'in interval-wise, TCP checksum, and checking payload availability.',
+                            action='store_true')
         parser.add_argument('-S', '--randomSeed', action='append', help='sets random seed for testing or benchmarking',
                             nargs='+', default=[])
         parser.add_argument('-T', '--time', help='measures packet generation time', action='store_true', default=False)
 
         # Attack arguments
         parser.add_argument('-a', '--attack', metavar="ATTACK", action='append',
-                                       help='injects ATTACK into a PCAP file.', nargs='+')
+                            help='injects ATTACK into a PCAP file.', nargs='+')
         # Parse arguments
         self.args = parser.parse_args(args)
 
@@ -84,7 +89,8 @@ class CLI(object):
             # User wants to process a PCAP
             self.process_pcap()
 
-    def process_attack_listing(self):
+    @staticmethod
+    def process_attack_listing():
         import pkgutil
         import importlib
         import Attack
@@ -129,10 +135,10 @@ class CLI(object):
 
     def process_pcap(self):
         """
-        Loads the application controller, the PCAP file statistics and if present, processes the given attacks. Evaluates
-        given queries.
+        Loads the application controller, the PCAP file statistics and if present, processes the given attacks.
+        Evaluates given queries.
         """
-        # Create ID2T Controller
+        # Create Core Controller
         controller = Controller(self.args.input, self.args.extraTests)
 
         # Load PCAP statistics
@@ -140,10 +146,10 @@ class CLI(object):
 
         # Create statistics plots
         if self.args.plot is not None:
-            doEntropy = False
+            do_entropy = False
             if self.args.extraTests:
-                doEntropy = True
-            controller.create_statistics_plot(self.args.plot, doEntropy)
+                do_entropy = True
+            controller.create_statistics_plot(self.args.plot, do_entropy)
 
         # Check random seed
         if not isinstance(self.args.randomSeed, list):

@@ -75,16 +75,16 @@ class PcapFile(object):
         :return: The full path to the database file
         """
 
-        def hashcode(input: str):
+        def hashcode(string_in: str):
             """
             Creates a hashcode of a string, based on Java's hashcode implementation.
             Code based on: http://garage.pimentech.net/libcommonPython_src_python_libcommon_javastringhashcode/
 
-            :param input: The string the hashcode should be calculated from
+            :param string_in: The string the hashcode should be calculated from
             :return: The hashcode as string
             """
             h = 0
-            for c in input:
+            for c in string_in:
                 h = (31 * h + ord(c)) & 0xFFFFFFFF
             return ((h + 0x80000000) & 0xFFFFFFFF) - 0x80000000
 

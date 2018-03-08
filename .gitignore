@@ -31,4 +31,6 @@ code_boost/src/cxx/cmake-build-debug/
 code_boost/src/cmake-build-debug/
 resources/test/ID2T_results
 
+id2t
 run_tests
+test_efficiency

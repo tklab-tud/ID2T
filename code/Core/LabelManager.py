@@ -1,6 +1,6 @@
+import datetime as dt
 import os.path
-from datetime import datetime
-from xml.dom.minidom import *
+import xml.dom.minidom as minidom
 
 import ID2TLib.Label as Label
 
@@ -76,7 +76,7 @@ class LabelManager:
 
             # add timestamp in human-readable format
             timestamp_hr = doc.createElement(self.TAG_TIMESTAMP_HR)
-            timestamp_hr_text = datetime.fromtimestamp(timestamp_entry).strftime('%Y-%m-%d %H:%M:%S.%f')
+            timestamp_hr_text = dt.datetime.fromtimestamp(timestamp_entry).strftime('%Y-%m-%d %H:%M:%S.%f')
             timestamp_hr.appendChild(doc.createTextNode(timestamp_hr_text))
             timestamp_root.appendChild(timestamp_hr)
 
@@ -86,7 +86,7 @@ class LabelManager:
             self.label_file_path = os.path.splitext(filepath)[0] + '_labels.xml'
 
         # Generate XML
-        doc = Document()
+        doc = minidom.Document()
         node = doc.createElement(self.TAG_ROOT)
         node.setAttribute(self.ATTR_VERSION, self.ATTR_VERSION_VALUE)
         for label in self.labels:
@@ -118,14 +118,13 @@ class LabelManager:
     def load_labels(self):
         """
         Loads the labels from an already existing label XML file located at label_file_path (set by constructor).
-
         """
 
         def get_value_from_node(node, tag_name, *child_number):
             """
             Returns the value located in the tag specified by tag_name from a given node. Walks therefor the
-            node's children along as indicated by child_number, e.g., childNumber = (1,2,) first goes to the 1st child, and
-            then to the 2nd child of the first child -> elem.childNodes[1].childNodes[2].
+            node's children along as indicated by child_number, e.g., childNumber = (1,2,) first goes to the 1st child,
+            and then to the 2nd child of the first child -> elem.childNodes[1].childNodes[2].
             """
             elem = node.getElementsByTagName(tag_name)
             if len(elem) == 1:
@@ -141,8 +140,9 @@ class LabelManager:
 
         print("Label file found. Loading labels...")
         try:
-            dom = parse(self.label_file_path)
+            dom = minidom.parse(self.label_file_path)
         except Exception:
+            # TODO: more specific exception
             print('ERROR: Provided label file could not be parsed. Ignoring label file')
             return
 
@@ -152,7 +152,8 @@ class LabelManager:
             version = version[0].getAttribute(self.ATTR_VERSION)
             if version == [] or not version == self.ATTR_VERSION_VALUE:
                 print(
-                    "The file " + self.label_file_path + " was created by another version of ID2TLib.LabelManager. Ignoring label file.")
+                    "The file " + self.label_file_path + " was created by another version of ID2TLib.LabelManager. "
+                                                         "Ignoring label file.")
 
         # Parse attacks from XML file
         attacks = dom.getElementsByTagName(self.TAG_ATTACK)

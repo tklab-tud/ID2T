@@ -7,12 +7,11 @@ import ID2TLib.Utility as Utility
 
 
 class TestUtility(unittest.TestCase):
-
     def test_update_timestamp_no_delay(self):
-        self.assertTrue(100+10/5 >= Utility.update_timestamp(100, 5) >= 100+1/5)
+        self.assertTrue(100 + 10 / 5 >= Utility.update_timestamp(100, 5) >= 100 + 1 / 5)
 
     def test_update_timestamp_with_delay(self):
-        self.assertTrue(100+1/5+10*100 >= Utility.update_timestamp(100, 5, 10) >= 100+1/5+10)
+        self.assertTrue(100 + 1 / 5 + 10 * 100 >= Utility.update_timestamp(100, 5, 10) >= 100 + 1 / 5 + 10)
 
     def test_update_timestamp_comparison(self):
         self.assertTrue(Utility.update_timestamp(100, 5) <= Utility.update_timestamp(100, 5, 10))
@@ -49,16 +48,6 @@ class TestUtility(unittest.TestCase):
 
     def test_get_nth_random_element_nothing(self):
         self.assertEqual(Utility.get_nth_random_element(), None)
-
-    def test_index_increment_not_max(self):
-        self.assertEqual(Utility.index_increment(5, 10), 6)
-
-    def test_index_increment_max(self):
-        self.assertEqual(Utility.index_increment(10, 10), 0)
-
-    # Correct?
-    def test_index_increment_max2(self):
-        self.assertEqual(Utility.index_increment(9, 10), 0)
 
     def test_get_rnd_os(self):
         self.assertIn(Utility.get_rnd_os(), Utility.platforms)
@@ -139,7 +128,8 @@ class TestUtility(unittest.TestCase):
         result = Utility.get_rnd_x86_nop(1000, False)
         correct = True
         for byte in result:
-            if byte.to_bytes(1, "little") not in Utility.x86_nops and byte.to_bytes(1, "little") not in Utility.x86_pseudo_nops:
+            if byte.to_bytes(1, "little") not in Utility.x86_nops \
+                    and byte.to_bytes(1, "little") not in Utility.x86_pseudo_nops:
                 correct = False
                 break
         self.assertTrue(correct)
@@ -236,4 +226,4 @@ class TestUtility(unittest.TestCase):
         except SystemExit:
             self.fail()
 
-    # TODO: get_attacker_config Tests
+            # TODO: get_attacker_config Tests
