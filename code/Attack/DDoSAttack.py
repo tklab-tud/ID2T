@@ -98,6 +98,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
             mac_source_list = [mac_source_list]
 
         if (num_attackers is None) or (num_attackers is 0):
+            if len(ip_source_list) > len(mac_source_list):
+                mac_source_list.extend(self.generate_random_mac_address(len(ip_source_list)-len(mac_source_list)))
             num_attackers = min(len(ip_source_list), len(mac_source_list))
 
         # Initialize parameters
