@@ -91,12 +91,14 @@ class DDoSAttack(BaseAttack.BaseAttack):
             ip_source_list = self.get_param_value(atkParam.Parameter.IP_SOURCE)
             mac_source_list = self.get_param_value(atkParam.Parameter.MAC_SOURCE)
 
+        # Make sure IPs and MACs are lists
         if not isinstance(ip_source_list, list):
             ip_source_list = [ip_source_list]
 
         if not isinstance(mac_source_list, list):
             mac_source_list = [mac_source_list]
 
+        # Generate MACs for each IP that has no corresponding MAC yet
         if (num_attackers is None) or (num_attackers is 0):
             if len(ip_source_list) > len(mac_source_list):
                 mac_source_list.extend(self.generate_random_mac_address(len(ip_source_list)-len(mac_source_list)))
@@ -170,14 +172,18 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         mss_dst = Util.handle_most_used_outputs(mss_dst)
 
+        # Stores triples of (timestamp, source_id, destination_id) for each timestamp. Victim has id=0
         timestamps_tuples = []
+        # For each attacker(id), stores the current source-ports of SYN-packets
+        # which still have to be acknowledged by the victim, as a "FIFO" for each attacker
         previous_attacker_port = []
         replies_count = 0
         self.total_pkt_num = 0
         # For each attacker, generate his own packets, then merge all packets
         for attacker in range(num_attackers):
+            # Initialize empty port "FIFO" for current attacker
             previous_attacker_port.append([])
-            # Timestamp
+            # Calculate timestamp of first SYN-packet of attacker
             timestamp_next_pkt = self.get_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP)
             attack_ends_time = timestamp_next_pkt + attack_duration
             timestamp_next_pkt = rnd.uniform(timestamp_next_pkt, Util.update_timestamp(timestamp_next_pkt, attacker_pps))
@@ -188,24 +194,31 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 if timestamp_next_pkt > attack_ends_time:
                     break
 
+                # Add timestamp of attacker SYN-packet
                 timestamps_tuples.append((timestamp_next_pkt, attacker+1, 0))
 
+                # Calculate timestamp of victim ACK-packet
                 timestamp_reply = Util.update_timestamp(timestamp_next_pkt, attacker_pps, min_delay)
                 while timestamp_reply <= timestamp_prv_reply:
                     timestamp_reply = Util.update_timestamp(timestamp_prv_reply, attacker_pps, min_delay)
                 timestamp_prv_reply = timestamp_reply
 
+                # Add timestamp of victim ACK-packet(victim always has id=0)
                 timestamps_tuples.append((timestamp_reply, 0, attacker+1))
 
+                # Calculate timestamp for next attacker SYN-packet
                 attacker_pps = max(Util.get_interval_pps(complement_interval_attacker_pps, timestamp_next_pkt),
                                    (pps / num_attackers) / 2)
                 timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, attacker_pps)
 
-        timestamps_tuples.sort()
+        # Sort timestamp-triples according to their timestamps in ascending order
+        timestamps_tuples.sort(key=lambda tmstmp: tmstmp[0])
         self.attack_start_utime = timestamps_tuples[0][0]
 
+        # For each triple, generate packet
         for timestamp in timestamps_tuples:
 
+            # If current current triple is an attacker
             if timestamp[1] != 0:
 
                 attacker_id = timestamp[1]-1
@@ -216,6 +229,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
                 # Determine source port
                 (port_source, ttl_value) = Util.get_attacker_config(ip_source_list, ip_source)
+                # Push port of current attacker SYN-packet into port "FIFO" of the current attacker
                 previous_attacker_port[attacker_id].insert(0, port_source)
 
                 request_ether = inet.Ether(dst=mac_destination, src=mac_source)
@@ -231,6 +245,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 self.packets.append(request)
                 self.total_pkt_num += 1
 
+            # If current triple is the victim
             else:
 
                 # Build reply package
@@ -239,6 +254,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
                     reply_ether = inet.Ether(src=mac_destination, dst=mac_source_list[attacker_id])
                     reply_ip = inet.IP(src=ip_destination, dst=ip_source_list[attacker_id], flags='DF')
+                    # Pop port from attacker's port "FIFO" into destination port
                     reply_tcp = inet.TCP(sport=port_destination, dport=previous_attacker_port[attacker_id].pop(), seq=0,
                                          ack=1, flags='SA', window=destination_win_value, options=[('MSS', mss_dst)])
                     reply = (reply_ether / reply_ip / reply_tcp)
