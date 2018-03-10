@@ -172,7 +172,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         mss_dst = Util.handle_most_used_outputs(mss_dst)
 
-        # Stores triples of (timestamp, source_id, destination_id) for each timestamp. Victim has id=0
+        # Stores triples of (timestamp, source_id, destination_id) for each timestamp.
+        # Victim has id=0. Attacker tuple does not need to specify the destination because it's always the victim.
         timestamps_tuples = []
         # For each attacker(id), stores the current source-ports of SYN-packets
         # which still have to be acknowledged by the victim, as a "FIFO" for each attacker
@@ -194,8 +195,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 if timestamp_next_pkt > attack_ends_time:
                     break
 
-                # Add timestamp of attacker SYN-packet
-                timestamps_tuples.append((timestamp_next_pkt, attacker+1, 0))
+                # Add timestamp of attacker SYN-packet. Attacker tuples do not need to specify destination
+                timestamps_tuples.append((timestamp_next_pkt, attacker+1))
 
                 # Calculate timestamp of victim ACK-packet
                 timestamp_reply = Util.update_timestamp(timestamp_next_pkt, attacker_pps, min_delay)
@@ -230,7 +231,9 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 # Determine source port
                 (port_source, ttl_value) = Util.get_attacker_config(ip_source_list, ip_source)
                 # Push port of current attacker SYN-packet into port "FIFO" of the current attacker
-                previous_attacker_port[attacker_id].insert(0, port_source)
+                # only if victim can still respond, otherwise, memory is wasted
+                if replies_count <= victim_buffer:
+                    previous_attacker_port[attacker_id].insert(0, port_source)
 
                 request_ether = inet.Ether(dst=mac_destination, src=mac_source)
                 request_ip = inet.IP(src=ip_source, dst=ip_destination, ttl=ttl_value)
