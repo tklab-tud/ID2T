@@ -10,6 +10,10 @@
 #include <string>
 #include "statistics.h"
 #include <SQLiteCpp/SQLiteCpp.h>
+#include <vector>
+
+// Struct which contains a port and it's corresponding service
+struct port_service {int p; std::string s;};
 
 class statistics_db {
 public:
@@ -21,7 +25,7 @@ public:
     /*
      * Database version: Increment number on every change in the C++ code!
      */
-    static const int DB_VERSION = 2;
+    static const int DB_VERSION = 3;
 
     /*
      * Methods for writing values into database
@@ -52,11 +56,18 @@ public:
 
     void writeDbVersion();
 
+    std::string getPortService(int port);
+
+    void readPortServicesFromNmap();
+
+    std::string getNmapPath();
+
 private:
     // Pointer to the SQLite database
     std::unique_ptr<SQLite::Database> db;
 
-
+    // Vector which contains all ports and their corresponding services
+    std::vector<port_service> portServices;
 };
 
 

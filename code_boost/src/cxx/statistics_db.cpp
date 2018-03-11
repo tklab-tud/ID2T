@@ -2,6 +2,9 @@
 #include <math.h>
 #include <iostream>
 #include <sstream>
+#include <fstream>
+#include <unistd.h>
+#include <stdio.h>
 
 /**
  * Creates a new statistics_db object. Opens an existing database located at database_path. If not existing, creates
@@ -15,6 +18,9 @@ statistics_db::statistics_db(std::string database_path) {
     }
     // creates the DB if not existing, opens the DB for read+write access
     db.reset(new SQLite::Database(database_path, SQLite::OPEN_CREATE | SQLite::OPEN_READWRITE));
+
+    // Read ports and services into portServices vector
+    readPortServicesFromNmap();
 }
 
 /**
@@ -223,16 +229,21 @@ void statistics_db::writeStatisticsPorts(std::unordered_map<ipAddress_inOut_port
                 "portNumber INTEGER,"
                 "portCount INTEGER,"
                 "byteCount REAL,"
+                "portService TEXT COLLATE NOCASE,"
                 "PRIMARY KEY(ipAddress,portDirection,portNumber));";
         db->exec(createTable);
-        SQLite::Statement query(*db, "INSERT INTO ip_ports VALUES (?, ?, ?, ?, ?)");
+        SQLite::Statement query(*db, "INSERT INTO ip_ports VALUES (?, ?, ?, ?, ?, ?)");
         for (auto it = portsStatistics.begin(); it != portsStatistics.end(); ++it) {
             ipAddress_inOut_port e = it->first;
+
+            std::string portService = getPortService(e.portNumber);
+
             query.bind(1, e.ipAddress);
             query.bind(2, e.trafficDirection);
             query.bind(3, e.portNumber);
             query.bind(4, it->second.count);
             query.bind(5, it->second.byteCount);
+            query.bind(6, portService);
             query.exec();
             query.reset();
         }
@@ -452,4 +463,78 @@ void statistics_db::writeDbVersion(){
 	catch (std::exception &e) {
         std::cout << "Exception in statistics_db: " << e.what() << std::endl;
     }
+}
+
+/**
+ * Reads all ports and their corresponding services from nmap-services-tcp.csv and stores them into portServices vector.
+ */
+void statistics_db::readPortServicesFromNmap()
+{
+    std::string portnumber;
+	std::string service;
+	std::string dump;
+	std::ifstream reader;
+
+	reader.open(getNmapPath(), std::ios::in);
+
+    if(reader.is_open())
+    {
+        getline(reader, dump);
+
+        while(!reader.eof())
+        {
+            getline(reader, portnumber, ',');
+            getline(reader, service, ',');
+            getline(reader, dump);
+            if(!service.empty() && !portnumber.empty())
+            {
+                port_service ps = {std::stoi(portnumber), service};
+                portServices.push_back(ps);
+            }
+        }
+
+        reader.close();
+	}
+
+	else
+	{
+	    port_service ps = {0, "unknown"};
+	    portServices.push_back(ps);
+	}
+}
+
+/**
+ * Gets the service of a given port from portServices.
+ * @param port The port of which the service should be returned.
+ */
+std::string statistics_db::getPortService(int port)
+{
+    for(unsigned int x = 0; x < portServices.size(); x++)
+    {
+        port_service ps = portServices[x];
+        if(ps.p == port) {return ps.s;}
+    }
+
+    return "unknown";
+}
+
+/**
+ * Gets the path to nmap-services-tcp.csv and makes sure the file is reached from any working directory within "/code"
+ * because the working directory can be different when running tests. Checks if the file/path exists and warns the user.
+ */
+std::string statistics_db::getNmapPath()
+{
+    char buff[FILENAME_MAX];
+	std::string dir(getcwd(buff, FILENAME_MAX));
+	dir = dir.substr(0, dir.rfind("/code")) + "/resources/nmap-services-tcp.csv";
+
+	std::ifstream reader;
+	reader.open(dir, std::ios::in);
+	if(!reader.is_open())
+	{
+	    std::cerr << "WARNING: " << dir << " could not be opened! PortServices can't be read!" << std::endl;
+	}
+
+	else {reader.close();}
+	return dir;
 }
