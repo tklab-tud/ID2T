@@ -277,16 +277,16 @@ void pcap_processor::process_packets(const Packet &pkt) {
             } catch (Tins::option_not_found) {
                 // Ignore MSS if option not set
             }
-            stats.incrementPortCount(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport());
-            stats.increasePortByteCount(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), sizeCurrentPacket);
+            stats.incrementPortCount(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), "TCP");
+            stats.increasePortByteCount(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), sizeCurrentPacket, "TCP");
             
           // UDP Packet
         } else if (p == PDU::PDUType::UDP) {
             const UDP udpPkt = (const UDP &) *pdu_l4;
             stats.incrementProtocolCount(ipAddressSender, "UDP");
             stats.increaseProtocolByteCount(ipAddressSender, "UDP", sizeCurrentPacket);
-            stats.incrementPortCount(ipAddressSender, udpPkt.sport(), ipAddressReceiver, udpPkt.dport());
-            stats.increasePortByteCount(ipAddressSender, udpPkt.sport(), ipAddressReceiver, udpPkt.dport(), sizeCurrentPacket);
+            stats.incrementPortCount(ipAddressSender, udpPkt.sport(), ipAddressReceiver, udpPkt.dport(), "UDP");
+            stats.increasePortByteCount(ipAddressSender, udpPkt.sport(), ipAddressReceiver, udpPkt.dport(), sizeCurrentPacket, "UDP");
           
         } else if (p == PDU::PDUType::ICMP) {
             stats.incrementProtocolCount(ipAddressSender, "ICMP");

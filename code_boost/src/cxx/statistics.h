@@ -275,11 +275,13 @@ struct ipAddress_inOut_port {
     std::string ipAddress;
     std::string trafficDirection;
     int portNumber;
+    std::string protocol;
 
     bool operator==(const ipAddress_inOut_port &other) const {
         return ipAddress == other.ipAddress
                && trafficDirection == other.trafficDirection
-               && portNumber == other.portNumber;
+               && portNumber == other.portNumber
+               && protocol == other.protocol;
     }
 };
 
@@ -414,10 +416,10 @@ public:
     void increaseProtocolByteCount(std::string ipAddress, std::string protocol, long bytesSent);
 
     void incrementPortCount(std::string ipAddressSender, int outgoingPort, std::string ipAddressReceiver,
-                            int incomingPort);
+                            int incomingPort, std::string protocol);
 
     void increasePortByteCount(std::string ipAddressSender, int outgoingPort, std::string ipAddressReceiver,
-                               int incomingPort, long bytesSent);
+                               int incomingPort, long bytesSent, std::string protocol);
 
     int getProtocolCount(std::string ipAddress, std::string protocol);
 

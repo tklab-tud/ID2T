@@ -336,11 +336,11 @@ float statistics::getProtocolByteCount(std::string ipAddress, std::string protoc
  * @param incomingPort The port used by the receiver.
  */
 void statistics::incrementPortCount(std::string ipAddressSender, int outgoingPort, std::string ipAddressReceiver,
-                                    int incomingPort) {
+                                    int incomingPort, std::string protocol) {
     port_values[outgoingPort]++;
     port_values[incomingPort]++;
-    ip_ports[{ipAddressSender, "out", outgoingPort}].count++;
-    ip_ports[{ipAddressReceiver, "in", incomingPort}].count++;
+    ip_ports[{ipAddressSender, "out", outgoingPort, protocol}].count++;
+    ip_ports[{ipAddressReceiver, "in", incomingPort, protocol}].count++;
 }
 
 /**
@@ -354,9 +354,9 @@ void statistics::incrementPortCount(std::string ipAddressSender, int outgoingPor
  * @param byteSent The packet's size.
  */
 void statistics::increasePortByteCount(std::string ipAddressSender, int outgoingPort, std::string ipAddressReceiver,
-                                       int incomingPort, long bytesSent) {
-    ip_ports[{ipAddressSender, "out", outgoingPort}].byteCount += bytesSent;
-    ip_ports[{ipAddressReceiver, "in", incomingPort}].byteCount += bytesSent;
+                                       int incomingPort, long bytesSent, std::string protocol) {
+    ip_ports[{ipAddressSender, "out", outgoingPort, protocol}].byteCount += bytesSent;
+    ip_ports[{ipAddressReceiver, "in", incomingPort, protocol}].byteCount += bytesSent;
 }
 
 /**
