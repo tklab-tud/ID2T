@@ -237,7 +237,8 @@ void statistics_db::writeStatisticsPorts(std::unordered_map<ipAddress_inOut_port
         for (auto it = portsStatistics.begin(); it != portsStatistics.end(); ++it) {
             ipAddress_inOut_port e = it->first;
 
-            std::string portService = getPortService(e.portNumber);
+            std::string portService = portServices[e.portNumber];
+            if(portService.empty()) {portService = "unknown";}
 
             query.bind(1, e.ipAddress);
             query.bind(2, e.trafficDirection);
@@ -490,8 +491,7 @@ void statistics_db::readPortServicesFromNmap()
             getline(reader, dump);
             if(!service.empty() && !portnumber.empty())
             {
-                port_service ps = {std::stoi(portnumber), service};
-                portServices.push_back(ps);
+                portServices.insert({std::stoi(portnumber), service});
             }
         }
 
@@ -500,24 +500,8 @@ void statistics_db::readPortServicesFromNmap()
 
     else
     {
-        port_service ps = {0, "unknown"};
-        portServices.push_back(ps);
+        portServices.insert({0, "unknown"});
     }
-}
-
-/**
- * Gets the service of a given port from portServices.
- * @param port The port of which the service should be returned.
- */
-std::string statistics_db::getPortService(int port)
-{
-    for(unsigned int x = 0; x < portServices.size(); x++)
-    {
-        port_service ps = portServices[x];
-        if(ps.p == port) {return ps.s;}
-    }
-
-    return "unknown";
 }
 
 /**

@@ -10,10 +10,8 @@
 #include <string>
 #include "statistics.h"
 #include <SQLiteCpp/SQLiteCpp.h>
-#include <vector>
+#include <unordered_map>
 
-// Struct which contains a port and it's corresponding service
-struct port_service {int p; std::string s;};
 
 class statistics_db {
 public:
@@ -56,8 +54,6 @@ public:
 
     void writeDbVersion();
 
-    std::string getPortService(int port);
-
     void readPortServicesFromNmap();
 
     std::string getNmapPath();
@@ -67,7 +63,7 @@ private:
     std::unique_ptr<SQLite::Database> db;
 
     // Vector which contains all ports and their corresponding services
-    std::vector<port_service> portServices;
+    std::unordered_map<int, std::string> portServices;
 };
 
 
