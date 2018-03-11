@@ -526,7 +526,7 @@ std::string statistics_db::getNmapPath()
 {
     char buff[FILENAME_MAX];
 	std::string dir(getcwd(buff, FILENAME_MAX));
-	dir = dir.substr(0, dir.rfind("/code")) + "/resources/nmap-services-tcp.csv";
+	dir = dir.substr(0, dir.rfind("/ID2T-toolkit")) + "/ID2T-toolkit/resources/nmap-services-tcp.csv";
 
 	std::ifstream reader;
 	reader.open(dir, std::ios::in);
