@@ -7,6 +7,8 @@ import sys
 # TODO: double check this import
 # does it complain because libpcapreader is not a .py?
 import ID2TLib.libpcapreader as pr
+import Core.QueryParser as qp
+import pyparsing as pp
 
 
 def dict_gen(curs: sqlite3.Cursor):
@@ -30,6 +32,8 @@ class StatsDatabase:
 
         :param db_path: The path to the database file
         """
+        self.query_parser = qp.QueryParser()
+
         self.existing_db = os.path.exists(db_path)
         self.database = sqlite3.connect(db_path)
         self.cursor = self.database.cursor()
@@ -164,6 +168,9 @@ class StatsDatabase:
         field_types = self.get_field_types('ip_mac', 'ip_ttl', 'ip_ports', 'ip_protocols', 'ip_statistics', 'ip_mac')
         conditions = []
         for key, op, value in param_op_val:
+            if isinstance(value, pp.ParseResults):
+                # If we have another query instead of a direct value, execute and replace it
+                value = self._execute_query_list(value)[0][0]
             # this makes sure that TEXT fields are queried by strings,
             # e.g. ipAddress=192.168.178.1 --is-converted-to--> ipAddress='192.168.178.1'
             if field_types.get(key) == 'TEXT':
@@ -179,102 +186,85 @@ class StatsDatabase:
         self.cursor.execute(query)
         return self.cursor.fetchall()
 
-    def _process_named_query(self, query_param_list):
+    named_queries = {
+        "most_used.ipaddress": "SELECT ipAddress FROM ip_statistics WHERE (pktsSent+pktsReceived) == "
+                               "(SELECT MAX(pktsSent+pktsReceived) from ip_statistics) ORDER BY ipAddress ASC",
+        "most_used.macaddress": "SELECT macAddress FROM (SELECT macAddress, COUNT(*) as occ from ip_mac GROUP BY "
+                                "macAddress) WHERE occ=(SELECT COUNT(*) as occ from ip_mac GROUP BY macAddress "
+                                "ORDER BY occ DESC LIMIT 1) ORDER BY macAddress ASC",
+        "most_used.portnumber": "SELECT portNumber FROM ip_ports GROUP BY portNumber HAVING COUNT(portNumber)="
+                                "(SELECT MAX(cntPort) from (SELECT portNumber, COUNT(portNumber) as cntPort FROM "
+                                "ip_ports GROUP BY portNumber)) ORDER BY portNumber ASC",
+        "most_used.protocolname": "SELECT protocolName FROM ip_protocols GROUP BY protocolName HAVING "
+                                  "COUNT(protocolCount)=(SELECT COUNT(protocolCount) as cnt FROM ip_protocols "
+                                  "GROUP BY protocolName ORDER BY cnt DESC LIMIT 1) ORDER BY protocolName ASC",
+        "most_used.ttlvalue": "SELECT ttlValue FROM (SELECT ttlValue, SUM(ttlCount) as occ FROM ip_ttl GROUP BY "
+                              "ttlValue) WHERE occ=(SELECT SUM(ttlCount) as occ FROM ip_ttl GROUP BY ttlValue "
+                              "ORDER BY occ DESC LIMIT 1) ORDER BY ttlValue ASC",
+        "most_used.mssvalue": "SELECT mssValue FROM (SELECT mssValue, SUM(mssCount) as occ FROM tcp_mss GROUP BY "
+                              "mssValue) WHERE occ=(SELECT SUM(mssCount) as occ FROM tcp_mss GROUP BY mssValue "
+                              "ORDER BY occ DESC LIMIT 1) ORDER BY mssValue ASC",
+        "most_used.winsize": "SELECT winSize FROM (SELECT winSize, SUM(winCount) as occ FROM tcp_win GROUP BY "
+                             "winSize) WHERE occ=(SELECT SUM(winCount) as occ FROM tcp_win GROUP BY winSize ORDER "
+                             "BY occ DESC LIMIT 1) ORDER BY winSize ASC",
+        "most_used.ipclass": "SELECT ipClass FROM (SELECT ipClass, COUNT(*) as occ from ip_statistics GROUP BY "
+                             "ipClass ORDER BY occ DESC) WHERE occ=(SELECT COUNT(*) as occ from ip_statistics "
+                             "GROUP BY ipClass ORDER BY occ DESC LIMIT 1) ORDER BY ipClass ASC",
+        "least_used.ipaddress": "SELECT ipAddress FROM ip_statistics WHERE (pktsSent+pktsReceived) == (SELECT "
+                                "MIN(pktsSent+pktsReceived) from ip_statistics) ORDER BY ipAddress ASC",
+        "least_used.macaddress": "SELECT macAddress FROM (SELECT macAddress, COUNT(*) as occ from ip_mac GROUP "
+                                 "BY macAddress) WHERE occ=(SELECT COUNT(*) as occ from ip_mac GROUP BY macAddress "
+                                 "ORDER BY occ ASC LIMIT 1) ORDER BY macAddress ASC",
+        "least_used.portnumber": "SELECT portNumber FROM ip_ports GROUP BY portNumber HAVING COUNT(portNumber)="
+                                 "(SELECT MIN(cntPort) from (SELECT portNumber, COUNT(portNumber) as cntPort FROM "
+                                 "ip_ports GROUP BY portNumber)) ORDER BY portNumber ASC",
+        "least_used.protocolname": "SELECT protocolName FROM ip_protocols GROUP BY protocolName HAVING "
+                                   "COUNT(protocolCount)=(SELECT COUNT(protocolCount) as cnt FROM ip_protocols "
+                                   "GROUP BY protocolName ORDER BY cnt ASC LIMIT 1) ORDER BY protocolName ASC",
+        "least_used.ttlvalue": "SELECT ttlValue FROM (SELECT ttlValue, SUM(ttlCount) as occ FROM ip_ttl GROUP BY "
+                               "ttlValue) WHERE occ=(SELECT SUM(ttlCount) as occ FROM ip_ttl GROUP BY ttlValue "
+                               "ORDER BY occ ASC LIMIT 1) ORDER BY ttlValue ASC",
+        "least_used.mssvalue": "SELECT mssValue FROM (SELECT mssValue, SUM(mssCount) as occ FROM tcp_mss GROUP BY "
+                               "mssValue) WHERE occ=(SELECT SUM(mssCount) as occ FROM tcp_mss GROUP BY mssValue "
+                               "ORDER BY occ ASC LIMIT 1) ORDER BY mssValue ASC",
+        "least_used.winsize": "SELECT winSize FROM (SELECT winSize, SUM(winCount) as occ FROM tcp_win GROUP BY "
+                              "winSize) WHERE occ=(SELECT SUM(winCount) as occ FROM tcp_win GROUP BY winSize "
+                              "ORDER BY occ ASC LIMIT 1) ORDER BY winSize ASC",
+        "avg.pktsreceived": "SELECT avg(pktsReceived) from ip_statistics",
+        "avg.pktssent": "SELECT avg(pktsSent) from ip_statistics",
+        "avg.kbytesreceived": "SELECT avg(kbytesReceived) from ip_statistics",
+        "avg.kbytessent": "SELECT avg(kbytesSent) from ip_statistics",
+        "avg.ttlvalue": "SELECT avg(ttlValue) from ip_ttl",
+        "avg.mss": "SELECT avg(mssValue) from tcp_mss",
+        "all.ipaddress": "SELECT ipAddress from ip_statistics ORDER BY ipAddress ASC",
+        "all.ttlvalue": "SELECT DISTINCT ttlValue from ip_ttl ORDER BY ttlValue ASC",
+        "all.mss": "SELECT DISTINCT mssValue from tcp_mss ORDER BY mssValue ASC",
+        "all.macaddress": "SELECT DISTINCT macAddress from ip_mac ORDER BY macAddress ASC",
+        "all.portnumber": "SELECT DISTINCT portNumber from ip_ports ORDER BY portNumber ASC",
+        "all.protocolname": "SELECT DISTINCT protocolName from ip_protocols ORDER BY protocolName ASC"}
+
+    def _execute_query_list(self, query_list):
         """
-        Executes a named query.
-
-        :param query_param_list: A query list consisting of (keyword, params), e.g. [(most_used, ipAddress), (random,)]
-        :return: the result of the query
+        Recursively executes a list of named queries. They are of the following form:
+        ['macaddress_param', [['ipaddress', '=', ['most_used', 'ipaddress']]]]
+        :param query_list: The query statement list obtained from the query parser
+        :return: The result of the query (either a single result or a list).
         """
-        # Definition of SQL queries associated to named queries
-        named_queries = {
-            "most_used.ipaddress": "SELECT ipAddress FROM ip_statistics WHERE (pktsSent+pktsReceived) == "
-                                   "(SELECT MAX(pktsSent+pktsReceived) from ip_statistics) ORDER BY ipAddress ASC",
-            "most_used.macaddress": "SELECT macAddress FROM (SELECT macAddress, COUNT(*) as occ from ip_mac GROUP BY "
-                                    "macAddress) WHERE occ=(SELECT COUNT(*) as occ from ip_mac GROUP BY macAddress "
-                                    "ORDER BY occ DESC LIMIT 1) ORDER BY macAddress ASC",
-            "most_used.portnumber": "SELECT portNumber FROM ip_ports GROUP BY portNumber HAVING COUNT(portNumber)="
-                                    "(SELECT MAX(cntPort) from (SELECT portNumber, COUNT(portNumber) as cntPort FROM "
-                                    "ip_ports GROUP BY portNumber)) ORDER BY portNumber ASC",
-            "most_used.protocolname": "SELECT protocolName FROM ip_protocols GROUP BY protocolName HAVING "
-                                      "COUNT(protocolCount)=(SELECT COUNT(protocolCount) as cnt FROM ip_protocols "
-                                      "GROUP BY protocolName ORDER BY cnt DESC LIMIT 1) ORDER BY protocolName ASC",
-            "most_used.ttlvalue": "SELECT ttlValue FROM (SELECT ttlValue, SUM(ttlCount) as occ FROM ip_ttl GROUP BY "
-                                  "ttlValue) WHERE occ=(SELECT SUM(ttlCount) as occ FROM ip_ttl GROUP BY ttlValue "
-                                  "ORDER BY occ DESC LIMIT 1) ORDER BY ttlValue ASC",
-            "most_used.mssvalue": "SELECT mssValue FROM (SELECT mssValue, SUM(mssCount) as occ FROM tcp_mss GROUP BY "
-                                  "mssValue) WHERE occ=(SELECT SUM(mssCount) as occ FROM tcp_mss GROUP BY mssValue "
-                                  "ORDER BY occ DESC LIMIT 1) ORDER BY mssValue ASC",
-            "most_used.winsize": "SELECT winSize FROM (SELECT winSize, SUM(winCount) as occ FROM tcp_win GROUP BY "
-                                 "winSize) WHERE occ=(SELECT SUM(winCount) as occ FROM tcp_win GROUP BY winSize ORDER "
-                                 "BY occ DESC LIMIT 1) ORDER BY winSize ASC",
-            "most_used.ipclass": "SELECT ipClass FROM (SELECT ipClass, COUNT(*) as occ from ip_statistics GROUP BY "
-                                 "ipClass ORDER BY occ DESC) WHERE occ=(SELECT COUNT(*) as occ from ip_statistics "
-                                 "GROUP BY ipClass ORDER BY occ DESC LIMIT 1) ORDER BY ipClass ASC",
-            "least_used.ipaddress": "SELECT ipAddress FROM ip_statistics WHERE (pktsSent+pktsReceived) == (SELECT "
-                                    "MIN(pktsSent+pktsReceived) from ip_statistics) ORDER BY ipAddress ASC",
-            "least_used.macaddress": "SELECT macAddress FROM (SELECT macAddress, COUNT(*) as occ from ip_mac GROUP "
-                                     "BY macAddress) WHERE occ=(SELECT COUNT(*) as occ from ip_mac GROUP BY macAddress "
-                                     "ORDER BY occ ASC LIMIT 1) ORDER BY macAddress ASC",
-            "least_used.portnumber": "SELECT portNumber FROM ip_ports GROUP BY portNumber HAVING COUNT(portNumber)="
-                                     "(SELECT MIN(cntPort) from (SELECT portNumber, COUNT(portNumber) as cntPort FROM "
-                                     "ip_ports GROUP BY portNumber)) ORDER BY portNumber ASC",
-            "least_used.protocolname": "SELECT protocolName FROM ip_protocols GROUP BY protocolName HAVING "
-                                       "COUNT(protocolCount)=(SELECT COUNT(protocolCount) as cnt FROM ip_protocols "
-                                       "GROUP BY protocolName ORDER BY cnt ASC LIMIT 1) ORDER BY protocolName ASC",
-            "least_used.ttlvalue": "SELECT ttlValue FROM (SELECT ttlValue, SUM(ttlCount) as occ FROM ip_ttl GROUP BY "
-                                   "ttlValue) WHERE occ=(SELECT SUM(ttlCount) as occ FROM ip_ttl GROUP BY ttlValue "
-                                   "ORDER BY occ ASC LIMIT 1) ORDER BY ttlValue ASC",
-            "least_used.mssvalue": "SELECT mssValue FROM (SELECT mssValue, SUM(mssCount) as occ FROM tcp_mss GROUP BY "
-                                   "mssValue) WHERE occ=(SELECT SUM(mssCount) as occ FROM tcp_mss GROUP BY mssValue "
-                                   "ORDER BY occ ASC LIMIT 1) ORDER BY mssValue ASC",
-            "least_used.winsize": "SELECT winSize FROM (SELECT winSize, SUM(winCount) as occ FROM tcp_win GROUP BY "
-                                  "winSize) WHERE occ=(SELECT SUM(winCount) as occ FROM tcp_win GROUP BY winSize "
-                                  "ORDER BY occ ASC LIMIT 1) ORDER BY winSize ASC",
-            "avg.pktsreceived": "SELECT avg(pktsReceived) from ip_statistics",
-            "avg.pktssent": "SELECT avg(pktsSent) from ip_statistics",
-            "avg.kbytesreceived": "SELECT avg(kbytesReceived) from ip_statistics",
-            "avg.kbytessent": "SELECT avg(kbytesSent) from ip_statistics",
-            "avg.ttlvalue": "SELECT avg(ttlValue) from ip_ttl",
-            "avg.mss": "SELECT avg(mssValue) from tcp_mss",
-            "all.ipaddress": "SELECT ipAddress from ip_statistics ORDER BY ipAddress ASC",
-            "all.ttlvalue": "SELECT DISTINCT ttlValue from ip_ttl ORDER BY ttlValue ASC",
-            "all.mss": "SELECT DISTINCT mssValue from tcp_mss ORDER BY mssValue ASC",
-            "all.macaddress": "SELECT DISTINCT macAddress from ip_mac ORDER BY macAddress ASC",
-            "all.portnumber": "SELECT DISTINCT portNumber from ip_ports ORDER BY portNumber ASC",
-            "all.protocolname": "SELECT DISTINCT protocolName from ip_protocols ORDER BY protocolName ASC"}
-
-        # Retrieve values by selectors, if given, reduce results by extractor
-        last_result = 0
-        for q in query_param_list:
-            # if selector, like avg, ttl, is given
-            if any(e in q[0] for e in self._get_selector_keywords()):
-                (keyword, param) = q
-                query = named_queries.get(keyword + "." + param)
-                self.cursor.execute(str(query))
-                last_result = self.cursor.fetchall()
-            # if selector is parametrized, i.e. ipAddress(mac=AA:BB:CC:DD:EE) or macAddress(ipAddress=192.168.178.1)
-            elif any(e in q[0] for e in self._get_parametrized_selector_keywords()) and any(
-                            o in q[1] for o in ["<", "=", ">", "<=", ">="]):
-                (keyword, param) = q
-                # convert string into list of triples
-                # example string 'paramName1<operator1>paramValue1,paramName2<operator2>paramValue2,...'
-                param_op_val = [(key, op, value) for (key, op, value) in
-                                [re.split("(<=|>=|>|<|=)", x) for x in param.split(",")]]
-                last_result = self.named_query_parameterized(keyword, param_op_val)
-            # if extractor, like random, first, last, is given
-            elif any(e in q[0] for e in self._get_extractor_keywords()) and (
-                        isinstance(last_result, list) or isinstance(last_result, tuple)):
-                extractor = q[0]
-                if extractor == 'random':
-                    index = rnd.randint(a=0, b=len(last_result) - 1)
-                    last_result = last_result[index]
-                elif extractor == 'first':
-                    last_result = last_result[0]
-                elif extractor == 'last':
-                    last_result = last_result[-1]
-
-        return last_result
+        if query_list[0] == "random":
+            return rnd.choice(self._execute_query_list(query_list[1:]))
+        elif query_list[0] == "first":
+            return self._execute_query_list(query_list[1:])[0]
+        elif query_list[0] == "last":
+            return self._execute_query_list(query_list[1:])[-1]
+        elif query_list[0] == "macaddress_param":
+            return self.named_query_parameterized("macaddress", query_list[1])
+        elif query_list[0] == "ipaddress_param":
+            return self.named_query_parameterized("ipaddress", query_list[1])
+        else:
+            query = self.named_queries.get(query_list[0] + "." + query_list[1])
+            self.cursor.execute(str(query))
+            last_result = self.cursor.fetchall()
+            return last_result
 
     def process_db_query(self, query_string_in: str, print_results=False, sql_query_parameters: tuple = None):
         """
@@ -296,36 +286,11 @@ class StatsDatabase:
             result = self.process_user_defined_query(query_string, sql_query_parameters)
         # query string is a named query -> parse it and pass it to statisticsDB
         elif any(k in query_string for k in named_query_keywords) and all(k in query_string for k in ['(', ')']):
-            # Clean query_string
-            query_string = query_string.replace(" ", "")
-
-            # Validity check: Brackets
-            brackets_open, brackets_closed = query_string.count("("), query_string.count(")")
-            if not (brackets_open == brackets_closed):
-                sys.stderr.write("Bracketing of given query '" + query_string + "' is incorrect.")
-
-            # Parse query string into [ (query_keyword1, query_params1), ... ]
-            delimiter_start, delimiter_end = "(", ")"
-            kplist = []
-            current_word = ""
-            for char in query_string:  # process characters one-by-one
-                # if char is no delimiter, add char to current_word
-                if char != delimiter_end and char != delimiter_start:
-                    current_word += char
-                # if a start delimiter was found and the current_word so far is a keyword, add it to kplist
-                elif char == delimiter_start:
-                    if current_word in named_query_keywords:
-                        kplist.append((current_word,))
-                        current_word = ""
-                    else:
-                        print("ERROR: Unrecognized keyword '" + current_word + "' found. Ignoring query.")
-                        return
-                # else if characeter is end delimiter and there were no two directly following ending delimiters,
-                # the current_word must be the parameters of an earlier given keyword
-                elif char == delimiter_end and len(current_word) > 0:
-                    kplist[-1] += (current_word,)
-                    current_word = ""
-            result = self._process_named_query(kplist[::-1])
+            if query_string[-1] != ";":
+                query_string += ";"
+            query_list = self.query_parser.parse_query(query_string)
+            print(str(query_list))
+            result = self._execute_query_list(query_list)
         else:
             sys.stderr.write(
                 "Query invalid. Only named queries and SQL SELECT/INSERT allowed. Please check the query's syntax!\n")
@@ -342,7 +307,7 @@ class StatsDatabase:
                 requires_extraction = False
 
         # If tuple of tuples or list of tuples, each consisting of single element is returned,
-        # then convert it into list of values, because the returned colum is clearly specified by the given query
+        # then convert it into list of values, because the returned column is clearly specified by the given query
         if (isinstance(result, tuple) or isinstance(result, list)) and all(len(val) == 1 for val in result):
             result = [c for c in result for c in c]
 
