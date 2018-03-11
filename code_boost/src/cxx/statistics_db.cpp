@@ -473,11 +473,11 @@ void statistics_db::writeDbVersion(){
 void statistics_db::readPortServicesFromNmap()
 {
     std::string portnumber;
-	std::string service;
-	std::string dump;
-	std::ifstream reader;
+    std::string service;
+    std::string dump;
+    std::ifstream reader;
 
-	reader.open(getNmapPath(), std::ios::in);
+    reader.open(getNmapPath(), std::ios::in);
 
     if(reader.is_open())
     {
@@ -496,13 +496,13 @@ void statistics_db::readPortServicesFromNmap()
         }
 
         reader.close();
-	}
+    }
 
-	else
-	{
-	    port_service ps = {0, "unknown"};
-	    portServices.push_back(ps);
-	}
+    else
+    {
+        port_service ps = {0, "unknown"};
+        portServices.push_back(ps);
+    }
 }
 
 /**
@@ -527,16 +527,16 @@ std::string statistics_db::getPortService(int port)
 std::string statistics_db::getNmapPath()
 {
     char buff[FILENAME_MAX];
-	std::string dir(getcwd(buff, FILENAME_MAX));
-	dir = dir.substr(0, dir.rfind("/ID2T-toolkit")) + "/ID2T-toolkit/resources/nmap-services-tcp.csv";
+    std::string dir(getcwd(buff, FILENAME_MAX));
+    dir = dir.substr(0, dir.rfind("/ID2T-toolkit")) + "/ID2T-toolkit/resources/nmap-services-tcp.csv";
 
-	std::ifstream reader;
-	reader.open(dir, std::ios::in);
-	if(!reader.is_open())
-	{
-	    std::cerr << "WARNING: " << dir << " could not be opened! PortServices can't be read!" << std::endl;
-	}
+    std::ifstream reader;
+    reader.open(dir, std::ios::in);
+    if(!reader.is_open())
+    {
+        std::cerr << "WARNING: " << dir << " could not be opened! PortServices can't be read!" << std::endl;
+    }
 
-	else {reader.close();}
-	return dir;
+    else {reader.close();}
+    return dir;
 }
