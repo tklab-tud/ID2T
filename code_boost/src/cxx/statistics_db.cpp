@@ -476,9 +476,10 @@ void statistics_db::readPortServicesFromNmap()
     std::string portnumber;
     std::string service;
     std::string dump;
+    std::string nmapPath = getNmapPath();
     std::ifstream reader;
 
-    reader.open(getNmapPath(), std::ios::in);
+    reader.open(nmapPath, std::ios::in);
 
     if(reader.is_open())
     {
@@ -500,6 +501,7 @@ void statistics_db::readPortServicesFromNmap()
 
     else
     {
+        std::cerr << "WARNING: " << nmapPath << " could not be opened! PortServices can't be read!" << std::endl;
         portServices.insert({0, "unknown"});
     }
 }
@@ -514,13 +516,5 @@ std::string statistics_db::getNmapPath()
     std::string dir(getcwd(buff, FILENAME_MAX));
     dir = dir.substr(0, dir.rfind("/ID2T-toolkit")) + "/ID2T-toolkit/resources/nmap-services-tcp.csv";
 
-    std::ifstream reader;
-    reader.open(dir, std::ios::in);
-    if(!reader.is_open())
-    {
-        std::cerr << "WARNING: " << dir << " could not be opened! PortServices can't be read!" << std::endl;
-    }
-
-    else {reader.close();}
     return dir;
 }
