@@ -236,7 +236,27 @@ void pcap_processor::process_packets(const Packet &pkt) {
         // Assign IP Address to MAC Address
         stats.assignMacAddress(ipAddressSender, macAddressSender);
         stats.assignMacAddress(ipAddressReceiver, macAddressReceiver);
-    } else {
+
+    } //PDU is ARP
+    else if(pdu_l3_type == PDU::PDUType::ARP) {
+        const ARP &ipLayer = (const ARP &) *pdu_l3;
+        ipAddressSender = ipLayer.sender_ip_addr().to_string();
+        ipAddressReceiver = ipLayer.target_ip_addr().to_string();
+
+        // IP distribution
+        stats.addIpStat_packetSent(filePath, ipAddressSender, ipLayer.target_ip_addr().to_string(), sizeCurrentPacket, pkt.timestamp());
+
+        // Protocol distribution
+        stats.incrementProtocolCount(ipAddressSender, "ARP");
+        stats.increaseProtocolByteCount(ipAddressSender, "ARP", sizeCurrentPacket);
+
+        // Assign IP Address to MAC Address
+        stats.assignMacAddress(ipAddressSender, macAddressSender);
+        stats.assignMacAddress(ipAddressReceiver, macAddressReceiver);
+
+    }
+
+    else {
         std::cout << "Unknown PDU Type on L3: " << pdu_l3_type << std::endl;
     }
 
