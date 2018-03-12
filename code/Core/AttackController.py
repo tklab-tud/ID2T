@@ -1,5 +1,6 @@
 import importlib
 import sys
+import difflib
 
 import Attack.AttackParameters as atkParam
 import Core.LabelManager as LabelManager
@@ -42,6 +43,40 @@ class AttackController:
         :param seed: random seed for param generation
         :return: None
         """
+
+        def choose_attack(input_name):
+            # TODO: get list dynamically from module names
+            list_of_attacks = ('DDoSAttack', 'EternalBlueExploit', 'FTPWinaXeExploit', 'JoomlaRegPrivExploit',
+                               'MS17ScanAttack', 'PortscanAttack', 'SalityBotnet', 'SMBLorisAttack', 'SMBScanAttack',
+                               'SQLiAttack')
+
+            input_name = input_name.lower()
+            highest_sim = 0
+            highest_sim_attack = ''
+            for attack in list_of_attacks:
+                similarity = difflib.SequenceMatcher(None, input_name, attack.lower()).ratio()
+                # Exact match, return appropriate attack name
+                if similarity == 1.0:
+                    return attack
+                # Found more likely match
+                if similarity > highest_sim:
+                    highest_sim = similarity
+                    highest_sim_attack = attack
+
+            # Found no exactly matching attack name, print highest match
+            if highest_sim >= 0.6:
+                print('Found no attack of name ' + input_name + '. The closest match was ' + highest_sim_attack +
+                      '. Use ./id2t -l for a list of available attacks.')
+                exit(1)
+            # Found no reasonably matching attack name
+            else:
+                print('Found no attack of name ' + input_name + ' or one similar to it .'
+                      'Use ./id2t -l for a list of available attacks.')
+                exit(1)
+
+
+        attack_name = choose_attack(attack_name)
+
         print("\nCreating attack instance of \033[1m" + attack_name + "\033[0m")
         # Load attack class
         attack_module = importlib.import_module("Attack." + attack_name)
