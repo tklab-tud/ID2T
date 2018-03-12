@@ -352,3 +352,17 @@ def get_attacker_config(ip_source_list, ip_address: str):
         attacker_ttl_mapping[ip_address] = ttl
     # return port and TTL
     return next_port, ttl
+
+
+def rchop(string, endings):
+    """"
+    Returns the input string with it's ending cut off, in case it was part of 'endings'
+
+    :param string: Input string
+    :param endings: List of possible endings to be cut off
+    :return: Input string with ending cut off
+    """
+    for end in endings:
+        if string.endswith(end):
+            return string[:-len(end)]
+    return string

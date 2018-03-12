@@ -7,6 +7,7 @@ import Core.LabelManager as LabelManager
 import Core.Statistics as Statistics
 import ID2TLib.Label as Label
 import ID2TLib.PcapFile as PcapFile
+import ID2TLib.Utility as Util
 
 
 class AttackController:
@@ -45,16 +46,27 @@ class AttackController:
         """
 
         def choose_attack(input_name):
+            """"
+            Finds the attack best matching to input_name
+
+            :param input_name: The name of the attack the user put in
+            :return: The best matching attack in case one was found
+            """
+
             # TODO: get list dynamically from module names
             list_of_attacks = ('DDoSAttack', 'EternalBlueExploit', 'FTPWinaXeExploit', 'JoomlaRegPrivExploit',
                                'MS17ScanAttack', 'PortscanAttack', 'SalityBotnet', 'SMBLorisAttack', 'SMBScanAttack',
                                'SQLiAttack')
 
             input_name = input_name.lower()
-            highest_sim = 0
-            highest_sim_attack = ''
+            highest_sim = 0.0
+            highest_sim_attack = None
             for attack in list_of_attacks:
-                similarity = difflib.SequenceMatcher(None, input_name, attack.lower()).ratio()
+                # Compares input with one of the available attacks
+                # Makes comparison with lowercase version with generic 'attack' and 'exploit' ending removed
+                similarity = difflib.SequenceMatcher(None, input_name,
+                                                     Util.rchop(attack.lower(), ('attack', 'exploit')))\
+                    .ratio()
                 # Exact match, return appropriate attack name
                 if similarity == 1.0:
                     return attack
@@ -63,17 +75,16 @@ class AttackController:
                     highest_sim = similarity
                     highest_sim_attack = attack
 
-            # Found no exactly matching attack name, print highest match
+            # Found no exactly matching attack name, print best match and exit
             if highest_sim >= 0.6:
                 print('Found no attack of name ' + input_name + '. The closest match was ' + highest_sim_attack +
-                      '. Use ./id2t -l for a list of available attacks.')
+                      '.  Use ./id2t -l for a list of available attacks.')
                 exit(1)
-            # Found no reasonably matching attack name
+            # Found no reasonably matching attack name, recommend -l and exit
             else:
-                print('Found no attack of name ' + input_name + ' or one similar to it .'
-                      'Use ./id2t -l for a list of available attacks.')
+                print('Found no attack of name ' + input_name + ' or one similar to it.'
+                      ' Use ./id2t -l for an overview of available attacks.')
                 exit(1)
-
 
         attack_name = choose_attack(attack_name)
 
