@@ -78,7 +78,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         # Determine source IP and MAC address
         num_attackers = self.get_param_value(atkParam.Parameter.NUMBER_ATTACKERS)
-        if num_attackers is not None:  # user supplied atkParam.Parameter.NUMBER_ATTACKERS
+        if (num_attackers is not None) and (num_attackers is not 0):
+            # user supplied atkParam.Parameter.NUMBER_ATTACKERS
             # The most used IP class in background traffic
             most_used_ip_class = Util.handle_most_used_outputs(self.statistics.process_db_query("most_used(ipClass)"))
             # Create random attackers based on user input atkParam.Parameter.NUMBER_ATTACKERS
@@ -89,7 +90,19 @@ class DDoSAttack(BaseAttack.BaseAttack):
             # if user supplied any values for those params
             ip_source_list = self.get_param_value(atkParam.Parameter.IP_SOURCE)
             mac_source_list = self.get_param_value(atkParam.Parameter.MAC_SOURCE)
-            num_attackers = len(ip_source_list)
+
+        # Make sure IPs and MACs are lists
+        if not isinstance(ip_source_list, list):
+            ip_source_list = [ip_source_list]
+
+        if not isinstance(mac_source_list, list):
+            mac_source_list = [mac_source_list]
+
+        # Generate MACs for each IP that has no corresponding MAC yet
+        if (num_attackers is None) or (num_attackers is 0):
+            if len(ip_source_list) > len(mac_source_list):
+                mac_source_list.extend(self.generate_random_mac_address(len(ip_source_list)-len(mac_source_list)))
+            num_attackers = min(len(ip_source_list), len(mac_source_list))
 
         # Initialize parameters
         self.packets = col.deque(maxlen=buffer_size)
@@ -133,18 +146,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         port_destination = Util.handle_most_used_outputs(port_destination)
 
-        # FIXME: why are attacker_port_mapping and attacker_ttl_mapping never used?
-        attacker_port_mapping = {}
-        attacker_ttl_mapping = {}
-
-        # Gamma distribution parameters derived from MAWI 13.8G dataset
-        alpha, loc, beta = (2.3261710235, -0.188306914406, 44.4853123884)
-        # FIXME: why is gd never used?
-        gd = stats.gamma.rvs(alpha, loc=loc, scale=beta, size=len(ip_source_list))
-
         self.path_attack_pcap = None
 
-        timestamp_prv_reply, timestamp_confirm = 0, 0
         min_delay, max_delay = self.get_reply_delay(ip_destination)
         victim_buffer = self.get_param_value(atkParam.Parameter.VICTIM_BUFFER)
 
@@ -169,24 +172,69 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         mss_dst = Util.handle_most_used_outputs(mss_dst)
 
+        # Stores triples of (timestamp, source_id, destination_id) for each timestamp.
+        # Victim has id=0. Attacker tuple does not need to specify the destination because it's always the victim.
+        timestamps_tuples = []
+        # For each attacker(id), stores the current source-ports of SYN-packets
+        # which still have to be acknowledged by the victim, as a "FIFO" for each attacker
+        previous_attacker_port = []
         replies_count = 0
         self.total_pkt_num = 0
         # For each attacker, generate his own packets, then merge all packets
         for attacker in range(num_attackers):
-            # Timestamp
+            # Initialize empty port "FIFO" for current attacker
+            previous_attacker_port.append([])
+            # Calculate timestamp of first SYN-packet of attacker
             timestamp_next_pkt = self.get_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP)
             attack_ends_time = timestamp_next_pkt + attack_duration
-            timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, attacker_pps)
+            timestamp_next_pkt = rnd.uniform(timestamp_next_pkt, Util.update_timestamp(timestamp_next_pkt, attacker_pps))
             attacker_pkts_num = int(pkts_num / num_attackers) + rnd.randint(0, 100)
+            timestamp_prv_reply = 0
             for pkt_num in range(attacker_pkts_num):
                 # Stop the attack when it exceeds the duration
                 if timestamp_next_pkt > attack_ends_time:
                     break
+
+                # Add timestamp of attacker SYN-packet. Attacker tuples do not need to specify destination
+                timestamps_tuples.append((timestamp_next_pkt, attacker+1))
+
+                # Calculate timestamp of victim ACK-packet
+                timestamp_reply = Util.update_timestamp(timestamp_next_pkt, attacker_pps, min_delay)
+                while timestamp_reply <= timestamp_prv_reply:
+                    timestamp_reply = Util.update_timestamp(timestamp_prv_reply, attacker_pps, min_delay)
+                timestamp_prv_reply = timestamp_reply
+
+                # Add timestamp of victim ACK-packet(victim always has id=0)
+                timestamps_tuples.append((timestamp_reply, 0, attacker+1))
+
+                # Calculate timestamp for next attacker SYN-packet
+                attacker_pps = max(Util.get_interval_pps(complement_interval_attacker_pps, timestamp_next_pkt),
+                                   (pps / num_attackers) / 2)
+                timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, attacker_pps)
+
+        # Sort timestamp-triples according to their timestamps in ascending order
+        timestamps_tuples.sort(key=lambda tmstmp: tmstmp[0])
+        self.attack_start_utime = timestamps_tuples[0][0]
+
+        # For each triple, generate packet
+        for timestamp in timestamps_tuples:
+
+            # If current current triple is an attacker
+            if timestamp[1] != 0:
+
+                attacker_id = timestamp[1]-1
                 # Build request package
                 # Select one IP address and its corresponding MAC address
-                (ip_source, mac_source) = Util.get_nth_random_element(ip_source_list, mac_source_list)
+                ip_source = ip_source_list[attacker_id]
+                mac_source = mac_source_list[attacker_id]
+
                 # Determine source port
                 (port_source, ttl_value) = Util.get_attacker_config(ip_source_list, ip_source)
+                # Push port of current attacker SYN-packet into port "FIFO" of the current attacker
+                # only if victim can still respond, otherwise, memory is wasted
+                if replies_count <= victim_buffer:
+                    previous_attacker_port[attacker_id].insert(0, port_source)
+
                 request_ether = inet.Ether(dst=mac_destination, src=mac_source)
                 request_ip = inet.IP(src=ip_source, dst=ip_destination, ttl=ttl_value)
                 # Random win size for each packet
@@ -195,46 +243,43 @@ class DDoSAttack(BaseAttack.BaseAttack):
                                        window=source_win_size)
 
                 request = (request_ether / request_ip / request_tcp)
-                request.time = timestamp_next_pkt
+                request.time = timestamp[0]
                 # Append request
                 self.packets.append(request)
                 self.total_pkt_num += 1
 
+            # If current triple is the victim
+            else:
+
                 # Build reply package
                 if replies_count <= victim_buffer:
-                    reply_ether = inet.Ether(src=mac_destination, dst=mac_source)
-                    reply_ip = inet.IP(src=ip_destination, dst=ip_source, flags='DF')
-                    reply_tcp = inet.TCP(sport=port_destination, dport=port_source, seq=0, ack=1, flags='SA',
-                                         window=destination_win_value, options=[('MSS', mss_dst)])
+                    attacker_id = timestamp[2]-1
+
+                    reply_ether = inet.Ether(src=mac_destination, dst=mac_source_list[attacker_id])
+                    reply_ip = inet.IP(src=ip_destination, dst=ip_source_list[attacker_id], flags='DF')
+                    # Pop port from attacker's port "FIFO" into destination port
+                    reply_tcp = inet.TCP(sport=port_destination, dport=previous_attacker_port[attacker_id].pop(), seq=0,
+                                         ack=1, flags='SA', window=destination_win_value, options=[('MSS', mss_dst)])
                     reply = (reply_ether / reply_ip / reply_tcp)
 
-                    timestamp_reply = Util.update_timestamp(timestamp_next_pkt, attacker_pps, min_delay)
-                    while timestamp_reply <= timestamp_prv_reply:
-                        timestamp_reply = Util.update_timestamp(timestamp_prv_reply, attacker_pps, min_delay)
-                    timestamp_prv_reply = timestamp_reply
-
-                    reply.time = timestamp_reply
+                    reply.time = timestamp[0]
                     self.packets.append(reply)
                     replies_count += 1
                     self.total_pkt_num += 1
 
-                attacker_pps = max(Util.get_interval_pps(complement_interval_attacker_pps, timestamp_next_pkt),
-                                   (pps / num_attackers) / 2)
-                timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, attacker_pps)
-
-                # Store timestamp of first packet (for attack label)
-                if self.total_pkt_num <= 2:
-                    self.attack_start_utime = self.packets[0].time
-                elif pkt_num % buffer_size == 0:  # every 1000 packets write them to the pcap file (append)
-                    self.last_packet = self.packets[-1]
-                    self.packets = sorted(self.packets, key=lambda pkt: pkt.time)
-                    self.path_attack_pcap = self.write_attack_pcap(self.packets, True, self.path_attack_pcap)
-                    self.packets = []
+            # every 1000 packets write them to the pcap file (append)
+            if (self.total_pkt_num > 0) and (self.total_pkt_num % buffer_size == 0) and (len(self.packets) > 0):
+                self.last_packet = self.packets[-1]
+                self.attack_end_utime = self.last_packet.time
+                self.packets = sorted(self.packets, key=lambda pkt: pkt.time)
+                self.path_attack_pcap = self.write_attack_pcap(self.packets, True, self.path_attack_pcap)
+                self.packets = []
 
     def generate_attack_pcap(self):
         if len(self.packets) > 0:
             self.packets = sorted(self.packets, key=lambda pkt: pkt.time)
             self.path_attack_pcap = self.write_attack_pcap(self.packets, True, self.path_attack_pcap)
+            self.last_packet = self.packets[-1]
 
         # Store timestamp of last packet
         self.attack_end_utime = self.last_packet.time
