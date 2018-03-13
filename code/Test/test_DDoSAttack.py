@@ -9,8 +9,7 @@ sha_dest_mac_length_zero_ddos = '55720bc3aa43a6abad2db1bd1f9c7ff71cb50f11ca5f179
 sha_mss_none_ddos = 'd30a14ba0568cb9c3be0db6a6d8e5d68b703d995015fc2215bfa150a8aff8b2a'
 sha_one_attacker_ddos = '8bb7798e85cff15b91c5ee2c0bb65f01ff3097a417bdd2e58a540f89d542bea9'
 sha_ip_range_ddos = 'bef5deb3cc7ee7537a90a85323cf885cf5a0431e15ae7001c0c762afc643e7a6'
-
-# TODO: improve coverage
+sha_port_range_ddos = '082f9bee607931751087fc4004bc95bf225f23b2a54ce1f771969019a5443ee7'
 
 
 class UnitTestDDoS(Test.ID2TAttackTest):
@@ -43,6 +42,11 @@ class UnitTestDDoS(Test.ID2TAttackTest):
     def test_ddos_ip_range(self, mock_get_attacker_config):
         self.checksum_test([['DDoSAttack', 'ip.src=1.1.1.1-1.1.1.10']],
                            sha_ip_range_ddos)
+
+    @mock.patch('ID2TLib.Utility.get_attacker_config', side_effect=Lib.get_attacker_config)
+    def test_ddos_port_range(self, mock_get_attacker_config):
+        self.checksum_test([['DDoSAttack', 'attackers.count=5', 'port.src=1000-2000']],
+                           sha_port_range_ddos)
 
     def test_ddos_order(self):
         self.order_test([['DDoSAttack', 'attackers.count=5']])

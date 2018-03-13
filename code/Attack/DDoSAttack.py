@@ -4,7 +4,6 @@ import random as rnd
 
 import lea
 import scapy.layers.inet as inet
-import scipy.stats as stats
 
 import Attack.AttackParameters as atkParam
 import Attack.BaseAttack as BaseAttack
@@ -26,6 +25,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         self.last_packet = None
         self.total_pkt_num = 0
+        self.default_port = 0
 
         # Define allowed parameters and their type
         self.supported_params.update({
@@ -60,7 +60,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
         self.add_param_value(atkParam.Parameter.IP_SOURCE,
                              self.generate_random_ipv4_address(most_used_ip_class, num_attackers))
         self.add_param_value(atkParam.Parameter.MAC_SOURCE, self.generate_random_mac_address(num_attackers))
-        self.add_param_value(atkParam.Parameter.PORT_SOURCE, str(inet.RandShort()))
+        self.default_port = int(inet.RandShort())
+        self.add_param_value(atkParam.Parameter.PORT_SOURCE, self.default_port)
         self.add_param_value(atkParam.Parameter.PACKETS_PER_SECOND, 0)
         self.add_param_value(atkParam.Parameter.ATTACK_DURATION, rnd.randint(5, 30))
 
@@ -106,8 +107,10 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         # Initialize parameters
         self.packets = col.deque(maxlen=buffer_size)
-        # FIXME: why is port_source_list never used?
+
         port_source_list = self.get_param_value(atkParam.Parameter.PORT_SOURCE)
+        if not isinstance(port_source_list, list):
+            port_source_list = [port_source_list]
         mac_destination = self.get_param_value(atkParam.Parameter.MAC_DESTINATION)
         ip_destination = self.get_param_value(atkParam.Parameter.IP_DESTINATION)
 
@@ -230,6 +233,11 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
                 # Determine source port
                 (port_source, ttl_value) = Util.get_attacker_config(ip_source_list, ip_source)
+
+                # If source ports were specified by the user, get random port from specified ports
+                if port_source_list[0] != self.default_port:
+                    port_source = rnd.choice(port_source_list)
+
                 # Push port of current attacker SYN-packet into port "FIFO" of the current attacker
                 # only if victim can still respond, otherwise, memory is wasted
                 if replies_count <= victim_buffer:
