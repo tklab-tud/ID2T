@@ -150,13 +150,16 @@ There are also parameterizable selectors which take conditions as input. Followi
 	-> returns the MAC address matching the given criteria
 	Supports the field: ipAddress
 
+Parameterizable selectors also allow for specifying another query in the comparison instead of a specific value, like the following example demonstrates:
+	macAddress(ipAddress=most_used(ipAddress))
+
 __Extractors__ are to be used on the result of a named query. If the result is a list, applying an extractor reduces the result set to a single element. If the result is already a single element, the extractor is ignored.
 ```
 random(...)  -> returns a random element from a list
 first(...)   -> returns the first element from a list
 last(...)    -> returns the last element from a list
 ```
-Attention: Named queries are designed to be combined with extractors, like ``random(all(ipAddress))``. But it is currently NOT possible to encapsulate multiple named queries, like `` macAddress(ipAddress=most_used(ipAddress))``. This can be circumvented by first querying ``most_used(ipAddress)`` and then inserting the result as argument in ``macAddress(…)``.
+Named queries are designed to be combined with extractors, like ``random(all(ipAddress))``
 
 ## Versioning
 The [SemVer](http://semver.org/spec/v2.0.0.html) is used for versioning. For currently available versions of ID2T, see page [releases](https://git.tk.informatik.tu-darmstadt.de/SPIN/ID2T-toolkit/releases).

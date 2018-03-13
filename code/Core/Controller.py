@@ -2,6 +2,7 @@ import os
 import readline
 import sys
 
+import pyparsing as pp
 import Core.AttackController as atkCtrl
 import Core.LabelManager as LabelManager
 import Core.Statistics as Statistics
@@ -236,28 +237,35 @@ class Controller:
             buffer += line
             import sqlite3
             if sqlite3.complete_statement(buffer):
-                try:
-                    buffer = buffer.strip()
-                    if buffer.lower().startswith('help'):
-                        buffer = buffer.strip(';')
-                        self.process_help(buffer.split(' ')[1:])
-                    elif buffer.lower().strip() == 'labels;':
-                        if not self.label_manager.labels:
-                            print("No labels found.")
-                        else:
-                            print("Attacks listed in the label file:")
-                            print()
-                            for label in self.label_manager.labels:
-                                print("Attack name:     " + str(label.attack_name))
-                                print("Attack note:     " + str(label.attack_note))
-                                print("Start timestamp: " + str(label.timestamp_start))
-                                print("End timestamp:   " + str(label.timestamp_end))
-                                print()
-                        print()
+                buffer = buffer.strip()
+                if buffer.lower().startswith('help'):
+                    buffer = buffer.strip(';')
+                    self.process_help(buffer.split(' ')[1:])
+                elif buffer.lower().strip() == 'labels;':
+                    if not self.label_manager.labels:
+                        print("No labels found.")
                     else:
+                        print("Attacks listed in the label file:")
+                        print()
+                        for label in self.label_manager.labels:
+                            print("Attack name:     " + str(label.attack_name))
+                            print("Attack note:     " + str(label.attack_note))
+                            print("Start timestamp: " + str(label.timestamp_start))
+                            print("End timestamp:   " + str(label.timestamp_end))
+                            print()
+                    print()
+                else:
+                    try:
                         self.statisticsDB.process_db_query(buffer, True)
-                except sqlite3.Error as e:
-                    print("An error occurred:", e.args[0])
+                    except sqlite3.Error as e:
+                        print("An error occurred:", e.args[0])
+                    except pp.ParseException as e:
+                        sys.stderr.write("Error in query:\n")
+                        sys.stderr.write(buffer)
+                        sys.stderr.write("\n")
+                        for i in range(1, e.col):
+                            sys.stderr.write(" ")
+                        sys.stderr.write("^\n\n")
                 buffer = ""
 
         readline.set_history_length(1000)
