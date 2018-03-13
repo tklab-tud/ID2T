@@ -512,9 +512,34 @@ void statistics_db::readPortServicesFromNmap()
  */
 std::string statistics_db::getNmapPath()
 {
+    //The different working directory paths according to how the database is built:
+    //<ID2T> stands for the directory id2t.sh is located in
+    //From tests(e.g. pycharm)  /<ID2T>/code/Test
+    //From run_tests.sh         /<ID2T>/code
+    //From id2t.sh              /<ID2T>
+    std::string filename = "nmap-services-tcp.csv";
+    std::string resourcesDir = "/resources/";
+    std::string codeDir = "/code";
+    std::string testDir = "/code/Test";
     char buff[FILENAME_MAX];
+    // Working directory
     std::string dir(getcwd(buff, FILENAME_MAX));
-    dir = dir.substr(0, dir.rfind("/ID2T-toolkit")) + "/ID2T-toolkit/resources/nmap-services-tcp.csv";
+
+    // If working directory is test directory(happens if tests are called from pycharm for example)
+    if(dir.rfind(testDir) == (dir.size()-testDir.size()))
+    {
+        // Remove test directory from path
+        dir = dir.substr(0, (dir.size()-testDir.size()));
+    }
+
+    // If working directory is code directory(happens if tests are called with testscript)
+    if(dir.rfind(codeDir) == (dir.size()-codeDir.size()))
+    {
+        // Remove code directory from path
+        dir = dir.substr(0, (dir.size()-codeDir.size()));
+    }
+
+    dir = dir + resourcesDir + filename;
 
     return dir;
 }
