@@ -53,15 +53,20 @@ class AttackController:
             :return: The best matching attack in case one was found
             """
 
-            # TODO: get list dynamically from module names
-            list_of_attacks = ('DDoSAttack', 'EternalBlueExploit', 'FTPWinaXeExploit', 'JoomlaRegPrivExploit',
-                               'MS17ScanAttack', 'PortscanAttack', 'SalityBotnet', 'SMBLorisAttack', 'SMBScanAttack',
-                               'SQLiAttack')
+            import pkgutil
+            import Attack
+
+            # Find all attacks, exclude some classes
+            package = Attack
+            available_attacks = []
+            for _, name, __ in pkgutil.iter_modules(package.__path__):
+                if name != 'BaseAttack' and name != 'AttackParameters':
+                    available_attacks.append(name)
 
             input_name = input_name.lower()
             highest_sim = 0.0
             highest_sim_attack = None
-            for attack in list_of_attacks:
+            for attack in available_attacks:
                 # Compares input with one of the available attacks
                 # Makes comparison with lowercase version with generic 'attack' and 'exploit' ending removed
                 similarity = difflib.SequenceMatcher(None, input_name,
