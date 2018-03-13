@@ -525,15 +525,21 @@ std::string statistics_db::getNmapPath()
     // Working directory
     std::string dir(getcwd(buff, FILENAME_MAX));
 
+    // Check if working directory is id2t.sh directory(try to reach file from working directory)
+    if(pathExists(dir + resourcesDir + filename))
+    {
+        return dir + resourcesDir + filename;
+    }
+
     // If working directory is test directory(happens if tests are called from pycharm for example)
-    if(dir.rfind(testDir) == (dir.size()-testDir.size()))
+    else if(dir.rfind(testDir) == (dir.size()-testDir.size()))
     {
         // Remove test directory from path
         dir = dir.substr(0, (dir.size()-testDir.size()));
     }
 
     // If working directory is code directory(happens if tests are called with testscript)
-    if(dir.rfind(codeDir) == (dir.size()-codeDir.size()))
+    else if(dir.rfind(codeDir) == (dir.size()-codeDir.size()))
     {
         // Remove code directory from path
         dir = dir.substr(0, (dir.size()-codeDir.size()));
@@ -542,4 +548,20 @@ std::string statistics_db::getNmapPath()
     dir = dir + resourcesDir + filename;
 
     return dir;
+}
+
+bool statistics_db::pathExists(std::string path)
+{
+    std::ifstream file;
+    file.open(path, std::ios::in);
+    if(file.is_open())
+    {
+        file.close();
+        return true;
+    }
+
+    else
+    {
+        return false;
+    }
 }

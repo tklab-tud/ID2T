@@ -58,6 +58,8 @@ public:
 
     std::string getNmapPath();
 
+    bool pathExists(std::string path);
+
 private:
     // Pointer to the SQLite database
     std::unique_ptr<SQLite::Database> db;
