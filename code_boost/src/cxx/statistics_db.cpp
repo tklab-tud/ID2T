@@ -568,3 +568,34 @@ bool statistics_db::pathExists(std::string path)
         return false;
     }
 }
+/**
+ * Writes the untracked PDUs into the database.
+ * @param untracked_PDUs The untracked PDUs from class statistics.
+ */
+void statistics_db::writeStatisticsUntrackedPDUs(std::unordered_map<untracked_PDU, int> untracked_PDUs) {
+    try {
+        db->exec("DROP TABLE IF EXISTS untracked_pdus");
+        SQLite::Transaction transaction(*db);
+        const char *createTable = "CREATE TABLE untracked_pdus ("
+                "srcMac TEXT COLLATE NOCASE,"
+                "dstMac TEXT COLLATE NOCASE,"
+                "typeNumber INTEGER,"
+                "pktCount INTEGER,"
+                "PRIMARY KEY(srcMac,dstMac,typeNumber));";
+        db->exec(createTable);
+        SQLite::Statement query(*db, "INSERT INTO untracked_pdus VALUES (?, ?, ?, ?)");
+        for (auto it = untracked_PDUs.begin(); it != untracked_PDUs.end(); ++it) {
+            untracked_PDU e = it->first;
+            query.bind(1, e.srcMacAddress);
+            query.bind(2, e.dstMacAddress);
+            query.bind(3, e.typeNumber);
+            query.bind(4, it->second);
+            query.exec();
+            query.reset();
+        }
+        transaction.commit();
+    }
+    catch (std::exception &e) {
+        std::cout << "Exception in statistics_db: " << e.what() << std::endl;
+    }
+}

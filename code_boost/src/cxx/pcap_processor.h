@@ -30,6 +30,7 @@ public:
      */
     statistics stats;
     std::string filePath;
+    bool hasUntracked;
 
     /*
      * Methods
