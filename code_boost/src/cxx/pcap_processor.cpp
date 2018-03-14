@@ -238,30 +238,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
         stats.assignMacAddress(ipAddressSender, macAddressSender);
         stats.assignMacAddress(ipAddressReceiver, macAddressReceiver);
 
-    } //PDU is ARP
-    else if(pdu_l3_type == PDU::PDUType::ARP) {
-        const ARP &ipLayer = (const ARP &) *pdu_l3;
-        ipAddressSender = ipLayer.sender_ip_addr().to_string();
-        ipAddressReceiver = ipLayer.target_ip_addr().to_string();
-
-        // Protocol distribution
-        stats.incrementProtocolCount(ipAddressSender, "ARP");
-        stats.increaseProtocolByteCount(ipAddressSender, "ARP", sizeCurrentPacket);
-
-        // Assign IP Address to MAC Address
-        stats.assignMacAddress(ipAddressSender, macAddressSender);
-
-        EthernetII eth = (const EthernetII &) *pdu_l2;
-
-        stats.incrementUnrecognizedPDUCount(macAddressSender, macAddressReceiver, eth.payload_type());
-
-        if(!hasUnrecognized) {
-            std::cerr << "Unrecognized PDUs detected: Check 'unrecognized_pdus' table!" << std::endl;
-            hasUnrecognized = true;
-        }
-
-    }
-
+    } //PDU is unrecognized
     else {
         if(!hasUnrecognized) {
             std::cerr << "Unrecognized PDUs detected: Check 'unrecognized_pdus' table!" << std::endl;
@@ -269,8 +246,10 @@ void pcap_processor::process_packets(const Packet &pkt) {
         }
 
         EthernetII eth = (const EthernetII &) *pdu_l2;
+        Tins::Timestamp ts = pkt.timestamp();
+        std::string timestamp_pkt = stats.getFormattedTimestamp(ts.seconds(), ts.microseconds());
 
-        stats.incrementUnrecognizedPDUCount(macAddressSender, macAddressReceiver, eth.payload_type());
+        stats.incrementUnrecognizedPDUCount(macAddressSender, macAddressReceiver, eth.payload_type(), timestamp_pkt);
     }
 
     // Layer 4 - Transport -------------------------------

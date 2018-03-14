@@ -572,7 +572,8 @@ bool statistics_db::pathExists(std::string path)
  * Writes the unrecognized PDUs into the database.
  * @param unrecognized_PDUs The unrecognized PDUs from class statistics.
  */
-void statistics_db::writeStatisticsUnrecognizedPDUs(std::unordered_map<unrecognized_PDU, int> unrecognized_PDUs) {
+void statistics_db::writeStatisticsUnrecognizedPDUs(std::unordered_map<unrecognized_PDU, unrecognized_PDU_stat>
+                                                    unrecognized_PDUs) {
     try {
         db->exec("DROP TABLE IF EXISTS unrecognized_pdus");
         SQLite::Transaction transaction(*db);
@@ -581,15 +582,17 @@ void statistics_db::writeStatisticsUnrecognizedPDUs(std::unordered_map<unrecogni
                 "dstMac TEXT COLLATE NOCASE,"
                 "etherType INTEGER,"
                 "pktCount INTEGER,"
+                "timestampLastOccurrence TEXT,"
                 "PRIMARY KEY(srcMac,dstMac,etherType));";
         db->exec(createTable);
-        SQLite::Statement query(*db, "INSERT INTO unrecognized_pdus VALUES (?, ?, ?, ?)");
+        SQLite::Statement query(*db, "INSERT INTO unrecognized_pdus VALUES (?, ?, ?, ?, ?)");
         for (auto it = unrecognized_PDUs.begin(); it != unrecognized_PDUs.end(); ++it) {
             unrecognized_PDU e = it->first;
             query.bind(1, e.srcMacAddress);
             query.bind(2, e.dstMacAddress);
             query.bind(3, e.typeNumber);
-            query.bind(4, it->second);
+            query.bind(4, it->second.count);
+            query.bind(5, it->second.timestamp_last_occurrence);
             query.exec();
             query.reset();
         }

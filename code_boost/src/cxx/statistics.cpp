@@ -367,8 +367,10 @@ void statistics::increasePortByteCount(std::string ipAddressSender, int outgoing
  * @param dstMac The MAC address of the packet receiver.
  * @param typeNumber The payload type number of the packet.
  */
-void statistics::incrementUnrecognizedPDUCount(std::string srcMac, std::string dstMac, uint32_t typeNumber) {
-    unrecognized_PDUs[{srcMac, dstMac, typeNumber}]++;
+void statistics::incrementUnrecognizedPDUCount(std::string srcMac, std::string dstMac, uint32_t typeNumber,
+                                               std::string timestamp) {
+    unrecognized_PDUs[{srcMac, dstMac, typeNumber}].count++;
+    unrecognized_PDUs[{srcMac, dstMac, typeNumber}].timestamp_last_occurrence = timestamp;
 }
 
 /**

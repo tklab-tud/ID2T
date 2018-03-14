@@ -304,6 +304,17 @@ struct unrecognized_PDU {
 };
 
 /*
+ * Struct used to represent:
+ * - Number of occurrences
+ * - Formatted timestamp of last occurrence
+ */
+struct unrecognized_PDU_stat {
+    int count;
+    std::string timestamp_last_occurrence;
+};
+
+
+/*
  * Definition of hash functions for structs used as key in unordered_map
  */
 namespace std {
@@ -445,7 +456,8 @@ public:
 
     void increaseProtocolByteCount(std::string ipAddress, std::string protocol, long bytesSent);
 
-    void incrementUnrecognizedPDUCount(std::string srcMac, std::string dstMac, uint32_t typeNumber);
+    void incrementUnrecognizedPDUCount(std::string srcMac, std::string dstMac, uint32_t typeNumber,
+                                       std::string timestamp);
 
     void incrementPortCount(std::string ipAddressSender, int outgoingPort, std::string ipAddressReceiver,
                             int incomingPort, std::string protocol);
@@ -580,8 +592,8 @@ private:
     // {IP Address, MAC Address}
     std::unordered_map<std::string, std::string> ip_mac_mapping;
 
-    // {Source MAC, Destination MAC, typeNumber, #count}
-    std::unordered_map<unrecognized_PDU, int> unrecognized_PDUs;
+    // {Source MAC, Destination MAC, typeNumber, #count, #timestamp of last occurrence}
+    std::unordered_map<unrecognized_PDU, unrecognized_PDU_stat> unrecognized_PDUs;
 };
 
 
