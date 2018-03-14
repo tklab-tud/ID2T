@@ -238,7 +238,7 @@ void statistics_db::writeStatisticsPorts(std::unordered_map<ipAddress_inOut_port
             ipAddress_inOut_port e = it->first;
 
             std::string portService = portServices[e.portNumber];
-            if(portService.empty()) {portService = "unknown";}
+            if(portService.empty()) {portService = "unavailable";}
 
             query.bind(1, e.ipAddress);
             query.bind(2, e.trafficDirection);
@@ -502,7 +502,7 @@ void statistics_db::readPortServicesFromNmap()
     else
     {
         std::cerr << "WARNING: " << nmapPath << " could not be opened! PortServices can't be read!" << std::endl;
-        portServices.insert({0, "unknown"});
+        portServices.insert({0, "unavailable"});
     }
 }
 
