@@ -291,12 +291,12 @@ struct ipAddress_inOut_port {
  * - Destination MAC address
  * - Payload type number
  */
-struct untracked_PDU {
+struct unrecognized_PDU {
     std::string srcMacAddress;
     std::string dstMacAddress;
     uint32_t typeNumber;
 
-    bool operator==(const untracked_PDU &other) const {
+    bool operator==(const unrecognized_PDU &other) const {
         return srcMacAddress == other.srcMacAddress
                && dstMacAddress == other.dstMacAddress
                && typeNumber == other.typeNumber;
@@ -388,8 +388,8 @@ namespace std {
     };
 
     template<>
-    struct hash<untracked_PDU> {
-        std::size_t operator()(const untracked_PDU &k) const {
+    struct hash<unrecognized_PDU> {
+        std::size_t operator()(const unrecognized_PDU &k) const {
             using std::size_t;
             using std::hash;
             using std::string;
@@ -445,7 +445,7 @@ public:
 
     void increaseProtocolByteCount(std::string ipAddress, std::string protocol, long bytesSent);
 
-    void incrementUntrackedPDUCount(std::string srcMac, std::string dstMac, uint32_t typeNumber);
+    void incrementUnrecognizedPDUCount(std::string srcMac, std::string dstMac, uint32_t typeNumber);
 
     void incrementPortCount(std::string ipAddressSender, int outgoingPort, std::string ipAddressReceiver,
                             int incomingPort, std::string protocol);
@@ -581,7 +581,7 @@ private:
     std::unordered_map<std::string, std::string> ip_mac_mapping;
 
     // {Source MAC, Destination MAC, typeNumber, #count}
-    std::unordered_map<untracked_PDU, int> untracked_PDUs;
+    std::unordered_map<unrecognized_PDU, int> unrecognized_PDUs;
 };
 
 

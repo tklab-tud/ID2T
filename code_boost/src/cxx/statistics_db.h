@@ -60,7 +60,7 @@ public:
 
     bool pathExists(std::string path);
 
-    void writeStatisticsUntrackedPDUs(std::unordered_map<untracked_PDU, int> untracked_PDUs);
+    void writeStatisticsUnrecognizedPDUs(std::unordered_map<unrecognized_PDU, int> unrecognized_PDUs);
 
 private:
     // Pointer to the SQLite database

@@ -8,7 +8,7 @@ using namespace Tins;
  */
 pcap_processor::pcap_processor(std::string path, std::string extraTests) {
     filePath = path;
-    hasUntracked = false;
+    hasUnrecognized = false;
     if(extraTests == "True")
         stats.setDoExtraTests(true);
     else stats.setDoExtraTests(false);;
@@ -253,24 +253,24 @@ void pcap_processor::process_packets(const Packet &pkt) {
 
         EthernetII eth = (const EthernetII &) *pdu_l2;
 
-        stats.incrementUntrackedPDUCount(macAddressSender, macAddressReceiver, eth.payload_type());
+        stats.incrementUnrecognizedPDUCount(macAddressSender, macAddressReceiver, eth.payload_type());
 
-        if(!hasUntracked) {
-            std::cerr << "Unrecognized PDUs detected: Check 'untracked_pdus' table!" << std::endl;
-            hasUntracked = true;
+        if(!hasUnrecognized) {
+            std::cerr << "Unrecognized PDUs detected: Check 'unrecognized_pdus' table!" << std::endl;
+            hasUnrecognized = true;
         }
 
     }
 
     else {
-        if(!hasUntracked) {
-            std::cerr << "Unrecognized PDUs detected: Check 'untracked_pdus' table!" << std::endl;
-            hasUntracked = true;
+        if(!hasUnrecognized) {
+            std::cerr << "Unrecognized PDUs detected: Check 'unrecognized_pdus' table!" << std::endl;
+            hasUnrecognized = true;
         }
 
         EthernetII eth = (const EthernetII &) *pdu_l2;
 
-        stats.incrementUntrackedPDUCount(macAddressSender, macAddressReceiver, eth.payload_type());
+        stats.incrementUnrecognizedPDUCount(macAddressSender, macAddressReceiver, eth.payload_type());
     }
 
     // Layer 4 - Transport -------------------------------

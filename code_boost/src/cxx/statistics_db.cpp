@@ -569,23 +569,23 @@ bool statistics_db::pathExists(std::string path)
     }
 }
 /**
- * Writes the untracked PDUs into the database.
- * @param untracked_PDUs The untracked PDUs from class statistics.
+ * Writes the unrecognized PDUs into the database.
+ * @param unrecognized_PDUs The unrecognized PDUs from class statistics.
  */
-void statistics_db::writeStatisticsUntrackedPDUs(std::unordered_map<untracked_PDU, int> untracked_PDUs) {
+void statistics_db::writeStatisticsUnrecognizedPDUs(std::unordered_map<unrecognized_PDU, int> unrecognized_PDUs) {
     try {
-        db->exec("DROP TABLE IF EXISTS untracked_pdus");
+        db->exec("DROP TABLE IF EXISTS unrecognized_pdus");
         SQLite::Transaction transaction(*db);
-        const char *createTable = "CREATE TABLE untracked_pdus ("
+        const char *createTable = "CREATE TABLE unrecognized_pdus ("
                 "srcMac TEXT COLLATE NOCASE,"
                 "dstMac TEXT COLLATE NOCASE,"
-                "typeNumber INTEGER,"
+                "etherType INTEGER,"
                 "pktCount INTEGER,"
-                "PRIMARY KEY(srcMac,dstMac,typeNumber));";
+                "PRIMARY KEY(srcMac,dstMac,etherType));";
         db->exec(createTable);
-        SQLite::Statement query(*db, "INSERT INTO untracked_pdus VALUES (?, ?, ?, ?)");
-        for (auto it = untracked_PDUs.begin(); it != untracked_PDUs.end(); ++it) {
-            untracked_PDU e = it->first;
+        SQLite::Statement query(*db, "INSERT INTO unrecognized_pdus VALUES (?, ?, ?, ?)");
+        for (auto it = unrecognized_PDUs.begin(); it != unrecognized_PDUs.end(); ++it) {
+            unrecognized_PDU e = it->first;
             query.bind(1, e.srcMacAddress);
             query.bind(2, e.dstMacAddress);
             query.bind(3, e.typeNumber);

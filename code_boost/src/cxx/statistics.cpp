@@ -367,8 +367,8 @@ void statistics::increasePortByteCount(std::string ipAddressSender, int outgoing
  * @param dstMac The MAC address of the packet receiver.
  * @param typeNumber The payload type number of the packet.
  */
-void statistics::incrementUntrackedPDUCount(std::string srcMac, std::string dstMac, uint32_t typeNumber) {
-    untracked_PDUs[{srcMac, dstMac, typeNumber}]++;
+void statistics::incrementUnrecognizedPDUCount(std::string srcMac, std::string dstMac, uint32_t typeNumber) {
+    unrecognized_PDUs[{srcMac, dstMac, typeNumber}]++;
 }
 
 /**
@@ -650,7 +650,7 @@ void statistics::writeToDatabase(std::string database_path) {
         db.writeStatisticsConv(conv_statistics);
         db.writeStatisticsInterval(interval_statistics);
         db.writeDbVersion();
-        db.writeStatisticsUntrackedPDUs(untracked_PDUs);
+        db.writeStatisticsUnrecognizedPDUs(unrecognized_PDUs);
     }
     else {
         // Tinslib failed to recognize the types of the packets in the input PCAP
