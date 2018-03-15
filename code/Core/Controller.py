@@ -7,6 +7,7 @@ import Core.AttackController as atkCtrl
 import Core.LabelManager as LabelManager
 import Core.Statistics as Statistics
 import ID2TLib.PcapFile as PcapFile
+import ID2TLib.Utility as Util
 
 
 class Controller:
@@ -223,7 +224,7 @@ class Controller:
         readline.parse_and_bind('tab: complete')
         readline.set_completer(make_completer(
             self.statisticsDB.get_all_named_query_keywords() + self.statisticsDB.get_all_sql_query_keywords()))
-        history_file = os.path.join(os.path.expanduser('~'), 'ID2T_data', 'query_history')
+        history_file = os.path.join(Util.CACHE_DIR, 'query_history')
         try:
             readline.read_history_file(history_file)
         except IOError:

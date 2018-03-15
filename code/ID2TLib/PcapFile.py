@@ -2,6 +2,7 @@ import hashlib
 import os.path
 
 import ID2TLib.libpcapreader as pr
+import ID2TLib.Utility as Util
 
 
 class PcapFile(object):
@@ -63,7 +64,7 @@ class PcapFile(object):
 
         return hasher.hexdigest()
 
-    def get_db_path(self, root_directory: str = os.path.join(os.path.expanduser('~'), 'ID2T_data', 'db')):
+    def get_db_path(self, root_directory: str = os.path.join(Util.CACHE_DIR, 'db')):
         """
         Creates a path based on a hashed directory structure. Derives a hash code by the file's hash and derives
         thereof the database path.
