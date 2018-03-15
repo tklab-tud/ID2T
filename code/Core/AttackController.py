@@ -63,15 +63,18 @@ class AttackController:
                 if name != 'BaseAttack' and name != 'AttackParameters':
                     available_attacks.append(name)
 
-            input_name = input_name.lower()
             highest_sim = 0.0
             highest_sim_attack = None
             for attack in available_attacks:
+                # Check if attack name is accurate
+                if input_name == attack:
+                    return attack
                 # Compares input with one of the available attacks
                 # Makes comparison with lowercase version with generic 'attack' and 'exploit' ending removed
-                similarity = difflib.SequenceMatcher(None, input_name,
-                                                     Util.rchop(attack.lower(), ('attack', 'exploit')))\
-                    .ratio()
+                counter_check = attack.lower()
+                if 'attack' not in input_name and 'exploit' not in input_name:
+                    counter_check = Util.rchop(attack.lower(), ('attack', 'exploit'))
+                similarity = difflib.SequenceMatcher(None, input_name.lower(), counter_check).ratio()
                 # Exact match, return appropriate attack name
                 if similarity == 1.0:
                     return attack
