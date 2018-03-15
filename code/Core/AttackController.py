@@ -170,7 +170,7 @@ class AttackController:
 
         # Store label into LabelManager
         label = Label.Label(attack, self.get_attack_start_utime(),
-                            self.get_attack_end_utime(), attack_note)
+                            self.get_attack_end_utime(), self.current_attack.params, attack_note)
         self.label_mgr.add_labels(label)
 
         return temp_attack_pcap_path, duration

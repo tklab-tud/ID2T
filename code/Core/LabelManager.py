@@ -1,3 +1,4 @@
+import importlib
 import datetime as dt
 import os.path
 import xml.dom.minidom as minidom
@@ -8,16 +9,17 @@ import ID2TLib.Label as Label
 class LabelManager:
     TAG_ROOT = 'labels'
     TAG_ATTACK = 'attack'
-    TAG_ATTACK_NAME = 'attack_name'
-    TAG_ATTACK_NOTE = 'attack_note'
+    TAG_ATTACK_NAME = 'name'
+    TAG_ATTACK_NOTE = 'note'
     TAG_TIMESTAMP_START = 'timestamp_start'
     TAG_TIMESTAMP_END = 'timestamp_end'
     TAG_TIMESTAMP = 'timestamp'
     TAG_TIMESTAMP_HR = 'timestamp_hr'
+    TAG_PARAMETERS = 'parameters'
     ATTR_VERSION = 'version_parser'
 
     # update this attribute if XML scheme was modified
-    ATTR_VERSION_VALUE = '0.2'
+    ATTR_VERSION_VALUE = '0.3'
 
     def __init__(self, filepath_pcap=None):
         """
@@ -82,6 +84,22 @@ class LabelManager:
 
             return timestamp_root
 
+        def get_subtree_parameters(parameters):
+            """
+            Creates a subtree containing all parameters used to construct the attack
+
+            :param parameters: The list of parameters used to run the attack
+            :return: The root node of the XML subtree
+            """
+            parameters_root = doc.createElement(self.TAG_PARAMETERS)
+
+            for param_key, param_value in parameters.items():
+                param = doc.createElement(param_key.value)
+                param.appendChild(doc.createTextNode(str(param_value)))
+                parameters_root.appendChild(param)
+
+            return parameters_root
+
         if filepath is not None:
             self.label_file_path = os.path.splitext(filepath)[0] + '_labels.xml'
 
@@ -105,6 +123,9 @@ class LabelManager:
 
             # add timestamp_end to XML tree
             xml_tree.appendChild(get_subtree_timestamp(self.TAG_TIMESTAMP_END, label.timestamp_end))
+
+            # add parameters to XML tree
+            xml_tree.appendChild(get_subtree_parameters(label.parameters))
 
             node.appendChild(xml_tree)
 
@@ -163,7 +184,23 @@ class LabelManager:
             attack_note = get_value_from_node(a, self.TAG_ATTACK_NOTE, 0)
             timestamp_start = get_value_from_node(a, self.TAG_TIMESTAMP_START, 1, 0)
             timestamp_end = get_value_from_node(a, self.TAG_TIMESTAMP_END, 1, 0)
-            label = Label.Label(attack_name, float(timestamp_start), float(timestamp_end), attack_note)
+
+            # Instantiate this attack to create a parameter list with the correct types
+            attack_module = importlib.import_module("Attack." + attack_name)
+            attack_class = getattr(attack_module, attack_name)
+            attack = attack_class()
+
+            # Loop through all parameters listed in the XML file
+            param = a.getElementsByTagName(self.TAG_PARAMETERS)[0]
+            for param in param.childNodes:
+                # Skip empty text nodes returned by minidom
+                if not isinstance(param, minidom.Text):
+                    param_name = param.tagName
+                    param_value = param.childNodes[0].nodeValue
+                    attack.add_param_value(param_name, param_value)
+
+            # Create the label from the data read
+            label = Label.Label(attack_name, float(timestamp_start), float(timestamp_end), attack.params, attack_note)
             self.labels.append(label)
             count_labels += 1
 
