@@ -671,7 +671,7 @@ class Statistics:
             plt.xlabel(x_label)
             plt.ylabel(y_label)
             width = 0.1
-            plt.xlim([0, max(graphx)])
+            plt.xlim([0, (max(graphx) * 1.1)])
             plt.grid(True)
             plt.bar(graphx, graphy, width, align='center', linewidth=1, color='red', edgecolor='red')
             out = self.pcap_filepath.replace('.pcap', '_plot-' + title + file_ending)
