@@ -289,7 +289,6 @@ class StatsDatabase:
             if query_string[-1] != ";":
                 query_string += ";"
             query_list = self.query_parser.parse_query(query_string)
-            print(str(query_list))
             result = self._execute_query_list(query_list)
         else:
             sys.stderr.write(
