@@ -238,7 +238,10 @@ void statistics_db::writeStatisticsPorts(std::unordered_map<ipAddress_inOut_port
             ipAddress_inOut_port e = it->first;
 
             std::string portService = portServices[e.portNumber];
-            if(portService.empty()) {portService = "unavailable";}
+            if(portService.empty()) {
+                if(portServices[{0}] == "unavailable") {portService = "unavailable";}
+                else {portService = "unknown";}
+            }
 
             query.bind(1, e.ipAddress);
             query.bind(2, e.trafficDirection);
