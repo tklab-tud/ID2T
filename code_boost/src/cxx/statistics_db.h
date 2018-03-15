@@ -10,6 +10,8 @@
 #include <string>
 #include "statistics.h"
 #include <SQLiteCpp/SQLiteCpp.h>
+#include <unordered_map>
+
 
 class statistics_db {
 public:
@@ -21,7 +23,7 @@ public:
     /*
      * Database version: Increment number on every change in the C++ code!
      */
-    static const int DB_VERSION = 2;
+    static const int DB_VERSION = 3;
 
     /*
      * Methods for writing values into database
@@ -52,11 +54,18 @@ public:
 
     void writeDbVersion();
 
+    void readPortServicesFromNmap();
+
+    std::string getNmapPath();
+
+    bool pathExists(std::string path);
+
 private:
     // Pointer to the SQLite database
     std::unique_ptr<SQLite::Database> db;
 
-
+    // Vector which contains all ports and their corresponding services
+    std::unordered_map<int, std::string> portServices;
 };
 
 

@@ -2,6 +2,9 @@
 #include <math.h>
 #include <iostream>
 #include <sstream>
+#include <fstream>
+#include <unistd.h>
+#include <stdio.h>
 
 /**
  * Creates a new statistics_db object. Opens an existing database located at database_path. If not existing, creates
@@ -15,6 +18,9 @@ statistics_db::statistics_db(std::string database_path) {
     }
     // creates the DB if not existing, opens the DB for read+write access
     db.reset(new SQLite::Database(database_path, SQLite::OPEN_CREATE | SQLite::OPEN_READWRITE));
+
+    // Read ports and services into portServices vector
+    readPortServicesFromNmap();
 }
 
 /**
@@ -223,16 +229,27 @@ void statistics_db::writeStatisticsPorts(std::unordered_map<ipAddress_inOut_port
                 "portNumber INTEGER,"
                 "portCount INTEGER,"
                 "byteCount REAL,"
+                "portProtocol TEXT COLLATE NOCASE,"
+                "portService TEXT COLLATE NOCASE,"
                 "PRIMARY KEY(ipAddress,portDirection,portNumber));";
         db->exec(createTable);
-        SQLite::Statement query(*db, "INSERT INTO ip_ports VALUES (?, ?, ?, ?, ?)");
+        SQLite::Statement query(*db, "INSERT INTO ip_ports VALUES (?, ?, ?, ?, ?, ?, ?)");
         for (auto it = portsStatistics.begin(); it != portsStatistics.end(); ++it) {
             ipAddress_inOut_port e = it->first;
+
+            std::string portService = portServices[e.portNumber];
+            if(portService.empty()) {
+                if(portServices[{0}] == "unavailable") {portService = "unavailable";}
+                else {portService = "unknown";}
+            }
+
             query.bind(1, e.ipAddress);
             query.bind(2, e.trafficDirection);
             query.bind(3, e.portNumber);
             query.bind(4, it->second.count);
             query.bind(5, it->second.byteCount);
+            query.bind(6, e.protocol);
+            query.bind(7, portService);
             query.exec();
             query.reset();
         }
@@ -451,5 +468,103 @@ void statistics_db::writeDbVersion(){
 	}
 	catch (std::exception &e) {
         std::cout << "Exception in statistics_db: " << e.what() << std::endl;
+    }
+}
+
+/**
+ * Reads all ports and their corresponding services from nmap-services-tcp.csv and stores them into portServices vector.
+ */
+void statistics_db::readPortServicesFromNmap()
+{
+    std::string portnumber;
+    std::string service;
+    std::string dump;
+    std::string nmapPath = getNmapPath();
+    std::ifstream reader;
+
+    reader.open(nmapPath, std::ios::in);
+
+    if(reader.is_open())
+    {
+        getline(reader, dump);
+
+        while(!reader.eof())
+        {
+            getline(reader, portnumber, ',');
+            getline(reader, service, ',');
+            getline(reader, dump);
+            if(!service.empty() && !portnumber.empty())
+            {
+                portServices.insert({std::stoi(portnumber), service});
+            }
+        }
+
+        reader.close();
+    }
+
+    else
+    {
+        std::cerr << "WARNING: " << nmapPath << " could not be opened! PortServices can't be read!" << std::endl;
+        portServices.insert({0, "unavailable"});
+    }
+}
+
+/**
+ * Gets the path to nmap-services-tcp.csv and makes sure the file is reached from any working directory within "/code"
+ * because the working directory can be different when running tests. Checks if the file/path exists and warns the user.
+ */
+std::string statistics_db::getNmapPath()
+{
+    //The different working directory paths according to how the database is built:
+    //<ID2T> stands for the directory id2t.sh is located in
+    //From tests(e.g. pycharm)  /<ID2T>/code/Test
+    //From run_tests.sh         /<ID2T>/code
+    //From id2t.sh              /<ID2T>
+    std::string filename = "nmap-services-tcp.csv";
+    std::string resourcesDir = "/resources/";
+    std::string codeDir = "/code";
+    std::string testDir = "/code/Test";
+    char buff[FILENAME_MAX];
+    // Working directory
+    std::string dir(getcwd(buff, FILENAME_MAX));
+
+    // Check if working directory is id2t.sh directory(try to reach file from working directory)
+    if(pathExists(dir + resourcesDir + filename))
+    {
+        return dir + resourcesDir + filename;
+    }
+
+    // If working directory is test directory(happens if tests are called from pycharm for example)
+    else if(dir.rfind(testDir) == (dir.size()-testDir.size()))
+    {
+        // Remove test directory from path
+        dir = dir.substr(0, (dir.size()-testDir.size()));
+    }
+
+    // If working directory is code directory(happens if tests are called with testscript)
+    else if(dir.rfind(codeDir) == (dir.size()-codeDir.size()))
+    {
+        // Remove code directory from path
+        dir = dir.substr(0, (dir.size()-codeDir.size()));
+    }
+
+    dir = dir + resourcesDir + filename;
+
+    return dir;
+}
+
+bool statistics_db::pathExists(std::string path)
+{
+    std::ifstream file;
+    file.open(path, std::ios::in);
+    if(file.is_open())
+    {
+        file.close();
+        return true;
+    }
+
+    else
+    {
+        return false;
     }
 }
