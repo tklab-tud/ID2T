@@ -145,6 +145,8 @@ class Controller:
             print()
             print("Miscellaneous:")
             print("\tlabels            -> List all attacks listed in the label file, if any")
+            print("\ttables            -> List all tables from database")
+            print("\tcolumns TABLE     -> List column names and types from specified table")
             print()
             print("Additional information is available with 'help [KEYWORD];'")
             print("To get a list of examples, type 'help examples;'")
@@ -254,6 +256,13 @@ class Controller:
                             print("End timestamp:   " + str(label.timestamp_end))
                             print()
                     print()
+                elif buffer.lower().strip() == 'tables;':
+                    self.statisticsDB.process_db_query("SELECT name FROM sqlite_master WHERE type='table';", True)
+                elif buffer.lower().strip().startswith('columns '):
+                    self.statisticsDB.process_db_query("SELECT * FROM " + buffer.lower()[8:], False)
+                    columns = self.statisticsDB.get_field_types(buffer.lower()[8:].strip(";"))
+                    for column in columns:
+                        print(column + ": " + columns[column])
                 else:
                     try:
                         self.statisticsDB.process_db_query(buffer, True)
