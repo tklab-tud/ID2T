@@ -75,14 +75,6 @@ std::string getIPv4Class(std::string ipAddress){
 }
 
 /**
- * Advance iterator by 10 steps.
- * @param iterator to advance.
- */
-void snifferIteratorIncrement(Tins::SnifferIterator& iterator){
-    (((((((((iterator++)++)++)++)++)++)++)++)++)++;  
-}
-
-/**
  * Convert IP address from string to array of bytes.
  * @param IP to convert.
  * @param IP_bytes to be filled and retrieved.

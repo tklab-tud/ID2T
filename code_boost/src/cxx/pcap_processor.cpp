@@ -128,6 +128,7 @@ void pcap_processor::collect_statistics() {
         // Save timestamp of first packet
         stats.setTimestampFirstPacket(i->timestamp());
 
+        int totalPackets = 0;
         int timeIntervalCounter = 1;
         int timeIntervalsNum = 100;
         std::chrono::microseconds intervalStartTimestamp = stats.getTimestampFirstPacket();
@@ -135,7 +136,7 @@ void pcap_processor::collect_statistics() {
 
         // An empty loop to know the capture duration, then choose a suitable time interval
         SnifferIterator lastpkt; 
-        for (SnifferIterator j = snifferOverview.begin(); j != snifferOverview.end();  snifferIteratorIncrement(j)) {lastpkt = j;}          
+        for (SnifferIterator j = snifferOverview.begin(); j != snifferOverview.end(); ++j, ++totalPackets) {lastpkt = j;}
 
         std::chrono::microseconds lastTimestamp = lastpkt->timestamp();                  
         std::chrono::microseconds captureDuration = lastTimestamp - firstTimestamp;
@@ -146,6 +147,9 @@ void pcap_processor::collect_statistics() {
         long timeInterval_microsec = captureDuration.count() / timeIntervalsNum;
         std::chrono::duration<int, std::micro> timeInterval(timeInterval_microsec);
         std::chrono::microseconds barrier = timeInterval;
+
+        std::cout << "\n";
+        std::chrono::system_clock::time_point lastPrinted = std::chrono::system_clock::now();
 
         // Iterate over all packets and collect statistics
         for (; i != sniffer.end(); i++) {
@@ -163,8 +167,19 @@ void pcap_processor::collect_statistics() {
 
             stats.incrementPacketCount();
             this->process_packets(*i);
+
+            // Indicate progress once every second
+            if (std::chrono::system_clock::now() - lastPrinted >= std::chrono::seconds(1)) {
+                int packetCount = stats.getPacketCount();
+                std::cout << "\rInspected packets: ";
+                std::cout << std::fixed << std::setprecision(1) << (static_cast<float>(packetCount)*100/totalPackets) << "%";
+                std::cout << " (" << packetCount << "/" << totalPackets << ")" << std::flush;
+                lastPrinted = std::chrono::system_clock::now();
+            }
         }
-        
+
+        std::cout << "\n";
+
         // Save timestamp of last packet into statistics
         stats.setTimestampLastPacket(currentPktTimestamp);
     }
