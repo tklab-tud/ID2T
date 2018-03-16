@@ -11,7 +11,6 @@ class Parameter(enum.Enum):
     IP_DESTINATION = 'ip.dst'  # destination IP address
     IP_DNS = 'ip.dns'  # IP address of DNS server
     HOSTING_IP = 'hosting.ip'
-    IP_DESTINATION_END = 'ip.dst.end'
     # recommended type: MAC address ------------------------------
     MAC_SOURCE = 'mac.src'  # MAC address of source
     MAC_DESTINATION = 'mac.dst'  # MAC address of destination
