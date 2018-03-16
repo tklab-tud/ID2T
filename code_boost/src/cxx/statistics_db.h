@@ -23,7 +23,7 @@ public:
     /*
      * Database version: Increment number on every change in the C++ code!
      */
-    static const int DB_VERSION = 3;
+    static const int DB_VERSION = 4;
 
     /*
      * Methods for writing values into database
@@ -59,6 +59,8 @@ public:
     std::string getNmapPath();
 
     bool pathExists(std::string path);
+
+    void writeStatisticsUnrecognizedPDUs(std::unordered_map<unrecognized_PDU, unrecognized_PDU_stat> unrecognized_PDUs);
 
 private:
     // Pointer to the SQLite database

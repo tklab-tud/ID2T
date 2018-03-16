@@ -286,6 +286,35 @@ struct ipAddress_inOut_port {
 };
 
 /*
+ * Struct used to represent:
+ * - Source MAC address
+ * - Destination MAC address
+ * - Payload type number
+ */
+struct unrecognized_PDU {
+    std::string srcMacAddress;
+    std::string dstMacAddress;
+    uint32_t typeNumber;
+
+    bool operator==(const unrecognized_PDU &other) const {
+        return srcMacAddress == other.srcMacAddress
+               && dstMacAddress == other.dstMacAddress
+               && typeNumber == other.typeNumber;
+    }
+};
+
+/*
+ * Struct used to represent:
+ * - Number of occurrences
+ * - Formatted timestamp of last occurrence
+ */
+struct unrecognized_PDU_stat {
+    int count;
+    std::string timestamp_last_occurrence;
+};
+
+
+/*
  * Definition of hash functions for structs used as key in unordered_map
  */
 namespace std {
@@ -368,6 +397,18 @@ namespace std {
                    ^ (hash<int>()(k.portNumber) << 1);
         }
     };
+
+    template<>
+    struct hash<unrecognized_PDU> {
+        std::size_t operator()(const unrecognized_PDU &k) const {
+            using std::size_t;
+            using std::hash;
+            using std::string;
+            return ((hash<string>()(k.srcMacAddress)
+                     ^ (hash<string>()(k.dstMacAddress) << 1)) >> 1)
+                   ^ (hash<uint32_t>()(k.typeNumber) << 1);
+        }
+    };
 }
 
 class statistics {
@@ -414,6 +455,9 @@ public:
     void incrementProtocolCount(std::string ipAddress, std::string protocol);
 
     void increaseProtocolByteCount(std::string ipAddress, std::string protocol, long bytesSent);
+
+    void incrementUnrecognizedPDUCount(std::string srcMac, std::string dstMac, uint32_t typeNumber,
+                                       std::string timestamp);
 
     void incrementPortCount(std::string ipAddressSender, int outgoingPort, std::string ipAddressReceiver,
                             int incomingPort, std::string protocol);
@@ -547,6 +591,9 @@ private:
 
     // {IP Address, MAC Address}
     std::unordered_map<std::string, std::string> ip_mac_mapping;
+
+    // {Source MAC, Destination MAC, typeNumber, #count, #timestamp of last occurrence}
+    std::unordered_map<unrecognized_PDU, unrecognized_PDU_stat> unrecognized_PDUs;
 };
 
 

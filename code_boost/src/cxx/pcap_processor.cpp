@@ -8,6 +8,7 @@ using namespace Tins;
  */
 pcap_processor::pcap_processor(std::string path, std::string extraTests) {
     filePath = path;
+    hasUnrecognized = false;
     if(extraTests == "True")
         stats.setDoExtraTests(true);
     else stats.setDoExtraTests(false);;
@@ -236,8 +237,19 @@ void pcap_processor::process_packets(const Packet &pkt) {
         // Assign IP Address to MAC Address
         stats.assignMacAddress(ipAddressSender, macAddressSender);
         stats.assignMacAddress(ipAddressReceiver, macAddressReceiver);
-    } else {
-        std::cout << "Unknown PDU Type on L3: " << pdu_l3_type << std::endl;
+
+    } //PDU is unrecognized
+    else {
+        if(!hasUnrecognized) {
+            std::cerr << "Unrecognized PDUs detected: Check 'unrecognized_pdus' table!" << std::endl;
+            hasUnrecognized = true;
+        }
+
+        EthernetII eth = (const EthernetII &) *pdu_l2;
+        Tins::Timestamp ts = pkt.timestamp();
+        std::string timestamp_pkt = stats.getFormattedTimestamp(ts.seconds(), ts.microseconds());
+
+        stats.incrementUnrecognizedPDUCount(macAddressSender, macAddressReceiver, eth.payload_type(), timestamp_pkt);
     }
 
     // Layer 4 - Transport -------------------------------
