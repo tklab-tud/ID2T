@@ -226,4 +226,13 @@ class TestUtility(unittest.TestCase):
         except SystemExit:
             self.fail()
 
-            # TODO: get_attacker_config Tests
+    def test_remove_generic_ending_attack(self):
+        self.assertEqual(Utility.remove_generic_ending("someattack"), "some")
+
+    def test_remove_generic_ending_exploit(self):
+        self.assertEqual(Utility.remove_generic_ending("someexploit"), "some")
+
+    def test_remove_generic_ending_wrong_ending(self):
+        self.assertEqual(Utility.remove_generic_ending("somestuff"), "somestuff")
+
+    # TODO: get_attacker_config Tests
