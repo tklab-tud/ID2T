@@ -9,8 +9,10 @@ import scipy.stats as stats
 
 matplotlib.use('Agg', force=True)
 import lea
+import xdg.BaseDirectory as BaseDir
 import scapy.layers.inet as inet
 
+CACHE_DIR = os.path.join(BaseDir.xdg_cache_home, 'id2t')
 CODE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/../"
 ROOT_DIR = CODE_DIR + "../"
 RESOURCE_DIR = ROOT_DIR + "resources/"
