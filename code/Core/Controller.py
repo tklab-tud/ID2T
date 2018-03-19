@@ -58,9 +58,6 @@ class Controller:
         :param time: Measure time for packet generation.
         """
 
-        # print summary of src pcap statistics
-        self.attack_controller.stats_summary(self.pcap_dest_path)
-
         # load attacks sequentially
         i = 0
         for attack in attacks_config:
@@ -112,6 +109,9 @@ class Controller:
 
         # print status message
         print('\nOutput files created: \n', self.pcap_dest_path, '\n', self.label_manager.label_file_path)
+
+        # print summary statistics
+        self.attack_controller.stats_summary(self.pcap_dest_path)
 
     def process_db_queries(self, query, print_results=False):
         """

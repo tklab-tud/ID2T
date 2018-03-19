@@ -206,6 +206,7 @@ class AttackController:
         #self.statistics.load_pcap_statistics(False, True, False)
 
         total_packet_count = self.statistics.get_packet_count() + self.total_packets
+        added_packets_share = self.total_packets / total_packet_count * 100
         pdu_count = self.statistics.process_db_query("SELECT SUM(pktCount) FROM unrecognized_pdus")
         pdu_share = pdu_count / total_packet_count * 100
         last_pdu_timestamp = self.statistics.process_db_query(
@@ -213,9 +214,11 @@ class AttackController:
         timespan = self.statistics.get_capture_duration()
 
         summary = [("Total packet count", total_packet_count, "packets"),
-                   ("Total unknown pdu count", pdu_count, "pdus"),
+                   ("Added packet count", self.total_packets, "packets"),
+                   ("Share of added packets", added_packets_share, "%"),
+                   ("Unknown pdu count", pdu_count, "pdus"),
                    ("Share of unknown pdus", pdu_share, "%"),
-                   ("Last unknown pdu occurrence", last_pdu_timestamp, ""),
+                   ("Last unknown pdu", last_pdu_timestamp, ""),
                    ("Capture duration", timespan, "seconds")]
 
         print("\nPCAP FILE STATISTICS SUMMARY  ------------------------------")
