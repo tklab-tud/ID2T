@@ -195,3 +195,29 @@ class AttackController:
         """
         for param_key, param_value in params.items():
             self.current_attack.add_param_value(param_key, param_value)
+
+    def stats_summary(self, pcap):
+        """
+        Prints a summary of important statistics
+        :param pcap: path of the pcap file whose statistics are to be printed
+        :return: None
+        """
+        #self.statistics.pcap_filepath = pcap
+        #self.statistics.load_pcap_statistics(False, True, False)
+
+        total_packet_count = self.statistics.get_packet_count() + self.total_packets
+        pdu_count = self.statistics.process_db_query("SELECT SUM(pktCount) FROM unrecognized_pdus")
+        pdu_share = pdu_count / total_packet_count * 100
+        last_pdu_timestamp = self.statistics.process_db_query(
+            "SELECT MAX(timestampLastOccurrence) FROM unrecognized_pdus")
+        timespan = self.statistics.get_capture_duration()
+
+        summary = [("Total packet count", total_packet_count, "packets"),
+                   ("Total pdu count", pdu_count, "pdus"),
+                   ("Share of pdus", pdu_share, "%"),
+                   ("Last pdu occurrence", last_pdu_timestamp, ""),
+                   ("Capture duration", timespan, "seconds")]
+
+        print("\nPCAP FILE STATISTICS SUMMARY  ------------------------------")
+
+        self.statistics.write_list(summary, print, "")

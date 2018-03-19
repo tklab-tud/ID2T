@@ -109,6 +109,8 @@ class Controller:
         # print status message
         print('\nOutput files created: \n', self.pcap_dest_path, '\n', self.label_manager.label_file_path)
 
+        self.attack_controller.stats_summary(self.pcap_dest_path)
+
     def process_db_queries(self, query, print_results=False):
         """
         Processes a statistics database query. This can be a standard SQL query or a named query.
