@@ -213,11 +213,11 @@ class AttackController:
         timespan = self.statistics.get_capture_duration()
 
         summary = [("Total packet count", total_packet_count, "packets"),
-                   ("Total pdu count", pdu_count, "pdus"),
-                   ("Share of pdus", pdu_share, "%"),
-                   ("Last pdu occurrence", last_pdu_timestamp, ""),
+                   ("Total unknown pdu count", pdu_count, "pdus"),
+                   ("Share of unknown pdus", pdu_share, "%"),
+                   ("Last unknown pdu occurrence", last_pdu_timestamp, ""),
                    ("Capture duration", timespan, "seconds")]
 
         print("\nPCAP FILE STATISTICS SUMMARY  ------------------------------")
-
         self.statistics.write_list(summary, print, "")
+        print("------------------------------------------------------------")
