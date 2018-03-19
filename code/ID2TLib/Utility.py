@@ -33,6 +33,8 @@ forbidden_chars = [b'\x00', b'\x0a', b'\x0d']
 attacker_port_mapping = {}
 attacker_ttl_mapping = {}
 
+generic_attack_names = {"attack", "exploit"}
+
 
 def update_timestamp(timestamp, pps, delay=0):
     """
@@ -356,15 +358,14 @@ def get_attacker_config(ip_source_list, ip_address: str):
     return next_port, ttl
 
 
-def rchop(string, endings):
+def remove_generic_ending(string):
     """"
-    Returns the input string with it's ending cut off, in case it was part of 'endings'
+    Returns the input string with it's ending cut off, in case it was a generic one
 
     :param string: Input string
-    :param endings: List of possible endings to be cut off
     :return: Input string with ending cut off
     """
-    for end in endings:
+    for end in generic_attack_names:
         if string.endswith(end):
             return string[:-len(end)]
     return string
