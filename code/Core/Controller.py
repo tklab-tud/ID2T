@@ -23,6 +23,7 @@ class Controller:
         self.do_extra_tests = do_extra_tests
         self.seed = None
         self.durations = []
+        self.added_packets = 0
 
         # Initialize class instances
         print("Input file: %s" % self.pcap_src_path)
@@ -65,6 +66,8 @@ class Controller:
                 self.attack_controller.set_seed(seed=seeds[i][0])
             temp_attack_pcap, duration = self.attack_controller.process_attack(attack[0], attack[1:], time)
             self.durations.append(duration)
+            self.added_packets += self.attack_controller.total_packets
+            self.statistics.stats_summary_post_attack(self.added_packets)
             self.written_pcaps.append(temp_attack_pcap)
             i += 1
 
@@ -111,7 +114,7 @@ class Controller:
         print('\nOutput files created: \n', self.pcap_dest_path, '\n', self.label_manager.label_file_path)
 
         # print summary statistics
-        self.attack_controller.stats_summary(self.pcap_dest_path)
+        self.statistics.stats_summary_post_attack(self.added_packets)
 
     def process_db_queries(self, query, print_results=False):
         """

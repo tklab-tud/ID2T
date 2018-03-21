@@ -63,6 +63,10 @@ class Statistics:
             self.pcap_proc.collect_statistics()
             self.pcap_proc.write_to_database(self.path_db)
             outstring_datasource = "by PCAP file processor."
+
+            # only print summary of new db if -s flag not set
+            if not flag_print_statistics:
+                self.stats_summary_new_db()
         else:
             outstring_datasource = "from statistics database."
 
@@ -1011,3 +1015,52 @@ class Statistics:
         # ip_dst_out_path = plot_ip_dst('.' + format)
 
         print("Saved plots in the input PCAP directory.")
+
+    def stats_summary_post_attack(self, added_packets):
+        """
+        Prints a summary of relevant statistics after an attack is injected
+
+        :param added_packets: sum of packets added by attacks, gets updated if more than one attack
+        :return: None
+        """
+
+        total_packet_count = self.get_packet_count() + added_packets
+        added_packets_share = added_packets / total_packet_count * 100
+        timespan = self.get_capture_duration()
+
+        summary = [("Total packet count", total_packet_count, "packets"),
+                   ("Added packet count", added_packets, "packets"),
+                   ("Share of added packets", added_packets_share, "%"),
+                   ("Capture duration", timespan, "seconds")]
+
+        print("\nPOST INJECTION STATISTICS SUMMARY  ----------------------------")
+        self.write_list(summary, print, "")
+        print("------------------------------------------------------------")
+
+    def stats_summary_new_db(self):
+        """
+        Prints a summary of relevant statistics when a new db is created
+
+        :return: None
+        """
+
+        self.file_info = self.stats_db.get_file_info()
+        print("\nNew database has been generated, printing statistics summary... ")
+        total_packet_count = self.get_packet_count()
+        pdu_count = self.process_db_query("SELECT SUM(pktCount) FROM unrecognized_pdus")
+        pdu_share = pdu_count / total_packet_count * 100
+        last_pdu_timestamp = self.process_db_query(
+            "SELECT MAX(timestampLastOccurrence) FROM unrecognized_pdus")
+        timespan = self.get_capture_duration()
+
+        summary = [("Total packet count", total_packet_count, "packets"),
+                   ("Recognized packet count", total_packet_count - pdu_count, "packets"),
+                   ("Unrecognized packet count", pdu_count, "PDUs"),
+                   ("Share of recognized packets", 100 - pdu_share, "%"),
+                   ("Share of unrecognized packets", pdu_share, "%"),
+                   ("Last unknown pdu", last_pdu_timestamp, ""),
+                   ("Capture duration", timespan, "seconds")]
+
+        print("\nPCAP FILE STATISTICS SUMMARY  ------------------------------")
+        self.write_list(summary, print, "")
+        print("------------------------------------------------------------")
