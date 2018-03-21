@@ -6,7 +6,7 @@ import ID2TLib.Label as Label
 
 
 class LabelManager:
-    TAG_ROOT = 'LABELS'
+    TAG_ROOT = 'labels'
     TAG_ATTACK = 'attack'
     TAG_ATTACK_NAME = 'attack_name'
     TAG_ATTACK_NOTE = 'attack_note'
