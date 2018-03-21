@@ -250,7 +250,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         try:
             import distutils.core
             import distutils.util
-            value = distutils.util.strtobool(value.lower())
+            value = bool(distutils.util.strtobool(value.lower()))
             is_bool = True
         except ValueError:
             is_bool = False
