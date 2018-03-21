@@ -90,11 +90,22 @@ class Statistics:
 
         :return: a list of tuples, each consisting of (description, value, unit), where unit is optional.
         """
-        return [("Pcap file", self.pcap_filepath),
-                ("Packets", self.get_packet_count(), "packets"),
-                ("Capture length", self.get_capture_duration(), "seconds"),
-                ("Capture start", self.get_pcap_timestamp_start()),
-                ("Capture end", self.get_pcap_timestamp_end())]
+
+        pdu_count = self.process_db_query("SELECT SUM(pktCount) FROM unrecognized_pdus")
+        pdu_share = pdu_count / self.get_packet_count() * 100
+        last_pdu_timestamp = self.process_db_query(
+            "SELECT MAX(timestampLastOccurrence) FROM unrecognized_pdus")
+
+        return [("Pcap file path", self.pcap_filepath),
+                ("Total packet count", self.get_packet_count(), "packets"),
+                ("Recognized packets", self.get_packet_count() - pdu_count, "packets"),
+                ("Unrecognized packets", pdu_count, "PDUs"),
+                ("% Recognized packets", 100 - pdu_share, "%"),
+                ("% Unrecognized packets", pdu_share, "%"),
+                ("Last unknown PDU", last_pdu_timestamp),
+                ("Capture duration", self.get_capture_duration(), "seconds"),
+                ("Capture start", "\t" + str(self.get_pcap_timestamp_start())),
+                ("Capture end", "\t" + str(self.get_pcap_timestamp_end()))]
 
     def get_general_file_statistics(self):
         """
@@ -1033,7 +1044,7 @@ class Statistics:
                    ("Share of added packets", added_packets_share, "%"),
                    ("Capture duration", timespan, "seconds")]
 
-        print("\nPOST INJECTION STATISTICS SUMMARY  ----------------------------")
+        print("\nPOST INJECTION STATISTICS SUMMARY  --------------------------")
         self.write_list(summary, print, "")
         print("------------------------------------------------------------")
 
@@ -1054,11 +1065,11 @@ class Statistics:
         timespan = self.get_capture_duration()
 
         summary = [("Total packet count", total_packet_count, "packets"),
-                   ("Recognized packet count", total_packet_count - pdu_count, "packets"),
-                   ("Unrecognized packet count", pdu_count, "PDUs"),
-                   ("Share of recognized packets", 100 - pdu_share, "%"),
-                   ("Share of unrecognized packets", pdu_share, "%"),
-                   ("Last unknown pdu", last_pdu_timestamp, ""),
+                   ("Recognized packets", total_packet_count - pdu_count, "packets"),
+                   ("Unrecognized packets", pdu_count, "PDUs"),
+                   ("% Recognized packets", 100 - pdu_share, "%"),
+                   ("% Unrecognized packets", pdu_share, "%"),
+                   ("Last unknown PDU", last_pdu_timestamp),
                    ("Capture duration", timespan, "seconds")]
 
         print("\nPCAP FILE STATISTICS SUMMARY  ------------------------------")
