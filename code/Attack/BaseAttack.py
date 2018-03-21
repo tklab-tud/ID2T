@@ -320,10 +320,6 @@ class BaseAttack(metaclass=abc.ABCMeta):
         :param value: The value we wish to assign to the specified parameter.
         :return: None.
         """
-        # This function call is valid only if there is a statistics object available.
-        if self.statistics is None:
-            print('Error: Attack parameter added without setting a statistics object first.')
-            exit(1)
 
         # by default no param is valid
         is_valid = False
@@ -343,14 +339,6 @@ class BaseAttack(metaclass=abc.ABCMeta):
         # Verify validity of given value with respect to parameter type
         if param_type is None:
             print('Parameter ' + str(param_name) + ' not available for chosen attack. Skipping parameter.')
-
-        # If value is query -> get value from database
-        elif self.statistics.is_query(value):
-            value = self.statistics.process_db_query(value, False)
-            if value is not None and value is not "":
-                is_valid = True
-            else:
-                print('Error in given parameter value: ' + str(value) + '. Data could not be retrieved.')
 
         # Validate parameter depending on parameter's type
         elif param_type == atkParam.ParameterTypes.TYPE_IP_ADDRESS:
@@ -381,6 +369,11 @@ class BaseAttack(metaclass=abc.ABCMeta):
         elif param_type == atkParam.ParameterTypes.TYPE_BOOLEAN:
             is_valid, value = self._is_boolean(value)
         elif param_type == atkParam.ParameterTypes.TYPE_PACKET_POSITION:
+            # This function call is valid only if there is a statistics object available.
+            if self.statistics is None:
+                print('Error: Statistics-dependent attack parameter added without setting a statistics object first.')
+                exit(1)
+
             ts = pr.pcap_processor(self.statistics.pcap_filepath, "False").get_timestamp_mu_sec(int(value))
             if 0 <= int(value) <= self.statistics.get_packet_count() and ts >= 0:
                 is_valid = True
