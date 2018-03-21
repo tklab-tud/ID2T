@@ -131,7 +131,7 @@ class AttackController:
         Takes as input the name of an attack (classname) and the attack parameters as string. Parses the string of
         attack parameters, creates the attack by writing the attack packets and returns the path of the written pcap.
 
-        :param attack: The classname of the attack to injecect.
+        :param attack: The classname of the attack to inject.
         :param params: The parameters for attack customization, see attack class for supported params.
         :param time: Measure packet generation time or not.
         :return: The file path to the created pcap file.
@@ -148,7 +148,7 @@ class AttackController:
                 params_dict.append(entry.split('='))
             params_dict = dict(params_dict)
             # Check if Parameter.INJECT_AT_TIMESTAMP and Parameter.INJECT_AFTER_PACKET are provided at the same time
-            # if TRUE: delete Paramter.INJECT_AT_TIMESTAMP (lower priority) and use Parameter.INJECT_AFTER_PACKET
+            # if TRUE: delete Parameter.INJECT_AT_TIMESTAMP (lower priority) and use Parameter.INJECT_AFTER_PACKET
             if (atkParam.Parameter.INJECT_AFTER_PACKET.value in params_dict) and (
                         atkParam.Parameter.INJECT_AT_TIMESTAMP.value in params_dict):
                 print("CONFLICT: Parameters", atkParam.Parameter.INJECT_AT_TIMESTAMP.value, "and",

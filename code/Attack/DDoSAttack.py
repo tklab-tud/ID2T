@@ -288,9 +288,9 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
     def generate_attack_pcap(self):
         """
-                Creates a pcap containing the attack packets.
+        Creates a pcap containing the attack packets.
 
-                :return: The location of the generated pcap file.
+        :return: The location of the generated pcap file.
         """
         if len(self.packets) > 0:
             self.packets = sorted(self.packets, key=lambda pkt: pkt.time)

@@ -65,7 +65,7 @@ def get_interval_pps(complement_interval_pps, timestamp):
     for row in complement_interval_pps:
         if timestamp <= row[0]:
             return row[1]
-    return complement_interval_pps[-1][1]  # in case the timstamp > capture max timestamp
+    return complement_interval_pps[-1][1]  # in case the timestamp > capture max timestamp
 
 
 def get_nth_random_element(*element_list):

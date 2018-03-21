@@ -46,7 +46,7 @@ class Statistics:
         statistics are calculated by the PCAP file processor and saved into the newly created database. Otherwise the
         statistics are gathered directly from the existing database.
 
-        :param flag_write_file: Indicates whether the statistics should be written addiotionally into a text file (True)
+        :param flag_write_file: Indicates whether the statistics should be written additionally into a text file (True)
         or not (False)
         :param flag_recalculate_stats: Indicates whether eventually existing statistics should be recalculated
         :param flag_print_statistics: Indicates whether the gathered basic statistics should be printed to the terminal
@@ -222,6 +222,11 @@ class Statistics:
         # self.stats_db.process_user_defined_query output is list of tuples, thus, we ned [0][0] to access data
 
         def count_frequncy(values_list):
+            """
+            TODO : FILL ME
+            :param values_list:
+            :return:
+            """
             values, freq_output = [], []
             for x in values_list:
                 if x in values:
@@ -513,34 +518,62 @@ class Statistics:
         return Util.handle_most_used_outputs(self.process_db_query("most_used(ipAddress)"))
 
     def get_ttl_distribution(self, ip_address: str):
+        """
+        TODO: FILL ME
+        :param ip_address:
+        :return:
+        """
         result = self.process_db_query('SELECT ttlValue, ttlCount from ip_ttl WHERE ipAddress="' + ip_address + '"')
         result_dict = {key: value for (key, value) in result}
         return result_dict
 
     def get_mss_distribution(self, ip_address: str):
+        """
+        TODO: FILL ME
+        :param ip_address:
+        :return:
+        """
         result = self.process_db_query('SELECT mssValue, mssCount from tcp_mss WHERE ipAddress="' + ip_address + '"')
         result_dict = {key: value for (key, value) in result}
         return result_dict
 
     def get_win_distribution(self, ip_address: str):
+        """
+        TODO: FILL ME
+        :param ip_address:
+        :return:
+        """
         result = self.process_db_query('SELECT winSize, winCount from tcp_win WHERE ipAddress="' + ip_address + '"')
         result_dict = {key: value for (key, value) in result}
         return result_dict
 
     def get_tos_distribution(self, ip_address: str):
+        """
+        TODO: FILL ME
+        :param ip_address:
+        :return:
+        """
         result = self.process_db_query('SELECT tosValue, tosCount from ip_tos WHERE ipAddress="' + ip_address + '"')
         result_dict = {key: value for (key, value) in result}
         return result_dict
 
     def get_ip_address_count(self):
+        """
+        TODO: FILL ME
+        :return:
+        """
         return self.process_db_query("SELECT COUNT(*) FROM ip_statistics")
 
     def get_ip_addresses(self):
+        """
+        TODO: FILL ME
+        :return:
+        """
         return self.process_db_query("SELECT ipAddress FROM ip_statistics")
 
     def get_random_ip_address(self, count: int = 1):
         """
-        :param count: The number of IP addreses to return
+        :param count: The number of IP addresses to return
         :return: A randomly chosen IP address from the dataset or iff param count is greater than one, a list of
         randomly chosen IP addresses
         """
@@ -710,6 +743,15 @@ class Statistics:
         """
 
         def plot_distribution(query_output, title, x_label, y_label, file_ending: str):
+            """
+            TODO: FILL ME
+            :param query_output:
+            :param title:
+            :param x_label:
+            :param y_label:
+            :param file_ending:
+            :return:
+            """
             plt.gcf().clear()
             graphx, graphy = [], []
             for row in query_output:
@@ -728,6 +770,11 @@ class Statistics:
             return out
 
         def plot_ttl(file_ending: str):
+            """
+            TODO: FILL ME
+            :param file_ending:
+            :return:
+            """
             query_output = self.stats_db.process_user_defined_query(
                 "SELECT ttlValue, SUM(ttlCount) FROM ip_ttl GROUP BY ttlValue")
             title = "TTL Distribution"
@@ -737,6 +784,11 @@ class Statistics:
                 return plot_distribution(query_output, title, x_label, y_label, file_ending)
 
         def plot_mss(file_ending: str):
+            """
+            TODO: FILL ME
+            :param file_ending:
+            :return:
+            """
             query_output = self.stats_db.process_user_defined_query(
                 "SELECT mssValue, SUM(mssCount) FROM tcp_mss GROUP BY mssValue")
             title = "MSS Distribution"
@@ -746,6 +798,11 @@ class Statistics:
                 return plot_distribution(query_output, title, x_label, y_label, file_ending)
 
         def plot_win(file_ending: str):
+            """
+            TODO: FILL ME
+            :param file_ending:
+            :return:
+            """
             query_output = self.stats_db.process_user_defined_query(
                 "SELECT winSize, SUM(winCount) FROM tcp_win GROUP BY winSize")
             title = "Window Size Distribution"
@@ -755,6 +812,11 @@ class Statistics:
                 return plot_distribution(query_output, title, x_label, y_label, file_ending)
 
         def plot_protocol(file_ending: str):
+            """
+            TODO: FILL ME
+            :param file_ending:
+            :return:
+            """
             plt.gcf().clear()
             result = self.stats_db.process_user_defined_query(
                 "SELECT protocolName, SUM(protocolCount) FROM ip_protocols GROUP BY protocolName")
@@ -784,6 +846,11 @@ class Statistics:
                 print("Error plot protocol: No protocol values found!")
 
         def plot_port(file_ending: str):
+            """
+            TODO: FILL ME
+            :param file_ending:
+            :return:
+            """
             plt.gcf().clear()
             result = self.stats_db.process_user_defined_query(
                 "SELECT portNumber, SUM(portCount) FROM ip_ports GROUP BY portNumber")
@@ -805,6 +872,11 @@ class Statistics:
 
         # This distribution is not drawable for big datasets
         def plot_ip_src(file_ending: str):
+            """
+            TODO: FILL ME
+            :param file_ending:
+            :return:
+            """
             plt.gcf().clear()
             result = self.stats_db.process_user_defined_query(
                 "SELECT ipAddress, pktsSent FROM ip_statistics")
@@ -836,6 +908,11 @@ class Statistics:
 
         # This distribution is not drawable for big datasets
         def plot_ip_dst(file_ending: str):
+            """
+            TODO: FILL ME
+            :param file_ending:
+            :return:
+            """
             plt.gcf().clear()
             result = self.stats_db.process_user_defined_query(
                 "SELECT ipAddress, pktsReceived FROM ip_statistics")
@@ -866,6 +943,15 @@ class Statistics:
             return out
 
         def plot_interval_statistics(query_output, title, x_label, y_label, file_ending: str):
+            """
+            TODO: FILL ME
+            :param query_output:
+            :param title:
+            :param x_label:
+            :param y_label:
+            :param file_ending:
+            :return:
+            """
             plt.gcf().clear()
             graphx, graphy = [], []
             for row in query_output:
@@ -891,6 +977,11 @@ class Statistics:
             return out
 
         def plot_interval_pkt_count(file_ending: str):
+            """
+            TODO: FILL ME
+            :param file_ending:
+            :return:
+            """
             query_output = self.stats_db.process_user_defined_query(
                 "SELECT lastPktTimestamp, pktsCount FROM interval_statistics ORDER BY lastPktTimestamp")
             title = "Packet Rate"
@@ -900,6 +991,11 @@ class Statistics:
                 return plot_interval_statistics(query_output, title, x_label, y_label, file_ending)
 
         def plot_interval_ip_src_ent(file_ending: str):
+            """
+            TODO: FILL ME
+            :param file_ending:
+            :return:
+            """
             query_output = self.stats_db.process_user_defined_query(
                 "SELECT lastPktTimestamp, ipSrcEntropy FROM interval_statistics ORDER BY lastPktTimestamp")
             title = "Source IP Entropy"
@@ -909,6 +1005,11 @@ class Statistics:
                 return plot_interval_statistics(query_output, title, x_label, y_label, file_ending)
 
         def plot_interval_ip_dst_ent(file_ending: str):
+            """
+            TODO: FILL ME
+            :param file_ending:
+            :return:
+            """
             query_output = self.stats_db.process_user_defined_query(
                 "SELECT lastPktTimestamp, ipDstEntropy FROM interval_statistics ORDER BY lastPktTimestamp")
             title = "Destination IP Entropy"
@@ -918,6 +1019,11 @@ class Statistics:
                 return plot_interval_statistics(query_output, title, x_label, y_label, file_ending)
 
         def plot_interval_new_ip(file_ending: str):
+            """
+            TODO: FILL ME
+            :param file_ending:
+            :return:
+            """
             query_output = self.stats_db.process_user_defined_query(
                 "SELECT lastPktTimestamp, newIPCount FROM interval_statistics ORDER BY lastPktTimestamp")
             title = "IP Novelty Distribution"
@@ -927,6 +1033,11 @@ class Statistics:
                 return plot_interval_statistics(query_output, title, x_label, y_label, file_ending)
 
         def plot_interval_new_port(file_ending: str):
+            """
+            TODO: FILL ME
+            :param file_ending:
+            :return:
+            """
             query_output = self.stats_db.process_user_defined_query(
                 "SELECT lastPktTimestamp, newPortCount FROM interval_statistics ORDER BY lastPktTimestamp")
             title = "Port Novelty Distribution"
@@ -936,6 +1047,11 @@ class Statistics:
                 return plot_interval_statistics(query_output, title, x_label, y_label, file_ending)
 
         def plot_interval_new_ttl(file_ending: str):
+            """
+            TODO: FILL ME
+            :param file_ending:
+            :return:
+            """
             query_output = self.stats_db.process_user_defined_query(
                 "SELECT lastPktTimestamp, newTTLCount FROM interval_statistics ORDER BY lastPktTimestamp")
             title = "TTL Novelty Distribution"
@@ -945,6 +1061,11 @@ class Statistics:
                 return plot_interval_statistics(query_output, title, x_label, y_label, file_ending)
 
         def plot_interval_new_tos(file_ending: str):
+            """
+            TODO: FILL ME
+            :param file_ending:
+            :return:
+            """
             query_output = self.stats_db.process_user_defined_query(
                 "SELECT lastPktTimestamp, newToSCount FROM interval_statistics ORDER BY lastPktTimestamp")
             title = "ToS Novelty Distribution"
@@ -954,6 +1075,11 @@ class Statistics:
                 return plot_interval_statistics(query_output, title, x_label, y_label, file_ending)
 
         def plot_interval_new_win_size(file_ending: str):
+            """
+            TODO: FILL ME
+            :param file_ending:
+            :return:
+            """
             query_output = self.stats_db.process_user_defined_query(
                 "SELECT lastPktTimestamp, newWinSizeCount FROM interval_statistics ORDER BY lastPktTimestamp")
             title = "Window Size Novelty Distribution"
@@ -963,6 +1089,11 @@ class Statistics:
                 return plot_interval_statistics(query_output, title, x_label, y_label, file_ending)
 
         def plot_interval_new_mss(file_ending: str):
+            """
+            TODO: FILL ME
+            :param file_ending:
+            :return:
+            """
             query_output = self.stats_db.process_user_defined_query(
                 "SELECT lastPktTimestamp, newMSSCount FROM interval_statistics ORDER BY lastPktTimestamp")
             title = "MSS Novelty Distribution"
@@ -972,6 +1103,11 @@ class Statistics:
                 return plot_interval_statistics(query_output, title, x_label, y_label, file_ending)
 
         def plot_interval_ip_dst_cum_ent(file_ending: str):
+            """
+            TODO: FILL ME
+            :param file_ending:
+            :return:
+            """
             plt.gcf().clear()
             result = self.stats_db.process_user_defined_query(
                 "SELECT lastPktTimestamp, ipDstCumEntropy FROM interval_statistics ORDER BY lastPktTimestamp")
@@ -1004,6 +1140,11 @@ class Statistics:
                 return out
 
         def plot_interval_ip_src_cum_ent(file_ending: str):
+            """
+            TODO: FILL ME
+            :param file_ending:
+            :return:
+            """
             plt.gcf().clear()
 
             result = self.stats_db.process_user_defined_query(
