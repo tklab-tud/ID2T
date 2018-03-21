@@ -62,9 +62,9 @@ testpath="discover -s Test/"
 if [ -e "Test/test_\$1.py" ]; then
     testpath="Test/test_\$1.py"
 fi
-PYTHONWARNINGS="ignore" coverage run --source=. -m unittest \$testpath >/dev/null
-coverage html
-coverage report -m
+PYTHONWARNINGS="ignore" coverage3 run --source=. -m unittest \$testpath >/dev/null
+coverage3 html
+coverage3 report -m
 EOF
 
 # Create the test script
@@ -79,7 +79,7 @@ SCRIPT_PATH=\${ID2T_DIR%/*}
 cd \$SCRIPT_PATH/code
 # Execute tests
 set -e
-python -m unittest Test/efficiency_testing.py
+python3 -m unittest Test/efficiency_testing.py
 EOF
 
 chmod +x ./code/CLI.py
