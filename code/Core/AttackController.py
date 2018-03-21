@@ -31,9 +31,9 @@ class AttackController:
 
     def set_seed(self, seed: int):
         """
-        Sets global seed.
+        Sets rng seed.
 
-        :param seed: random seed
+        :param seed: rng seed
         """
         self.seed = seed
 

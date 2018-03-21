@@ -67,7 +67,10 @@ class Controller:
         i = 0
         for attack in attacks_config:
             if seeds is not None and len(seeds) > i:
-                self.attack_controller.set_seed(seed=seeds[i][0])
+                rng_seed = seeds[i][0]
+            else:
+                rng_seed = os.urandom(16)
+            self.attack_controller.set_seed(seed=rng_seed)
             temp_attack_pcap, duration = self.attack_controller.process_attack(attack[0], attack[1:], time)
             self.durations.append(duration)
             self.added_packets += self.attack_controller.total_packets
