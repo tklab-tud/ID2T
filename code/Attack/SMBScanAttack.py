@@ -86,6 +86,9 @@ class SMBScanAttack(BaseAttack.BaseAttack):
         self.add_param_value(atkParam.Parameter.PROTOCOL_VERSION, "1")
 
     def generate_attack_packets(self):
+        """
+        Creates the attack packets.
+        """
 
         pps = self.get_param_value(atkParam.Parameter.PACKETS_PER_SECOND)
 
@@ -361,7 +364,11 @@ class SMBScanAttack(BaseAttack.BaseAttack):
             timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps)
 
     def generate_attack_pcap(self):
+        """
+        Creates a pcap containing the attack packets.
 
+        :return: The location of the generated pcap file.
+        """
         # store end time of attack
         self.attack_end_utime = self.packets[-1].time
 

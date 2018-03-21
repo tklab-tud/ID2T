@@ -72,6 +72,9 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
         self.add_param_value(atkParam.Parameter.ATTACK_DURATION, 30)
 
     def generate_attack_packets(self):
+        """
+        Creates the attack packets.
+        """
         pps = self.get_param_value(atkParam.Parameter.PACKETS_PER_SECOND)
 
         # Timestamp
@@ -201,6 +204,11 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
                 sport += 1
 
     def generate_attack_pcap(self):
+        """
+        Creates a pcap containing the attack packets.
+
+        :return: The location of the generated pcap file.
+        """
         # store end time of attack
         self.attack_end_utime = self.packets[-1].time
 

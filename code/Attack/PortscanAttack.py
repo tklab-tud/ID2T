@@ -76,6 +76,9 @@ class PortscanAttack(BaseAttack.BaseAttack):
         self.add_param_value(atkParam.Parameter.INJECT_AFTER_PACKET, rnd.randint(0, self.statistics.get_packet_count()))
 
     def generate_attack_packets(self):
+        """
+        Creates the attack packets.
+        """
         mac_source = self.get_param_value(atkParam.Parameter.MAC_SOURCE)
         mac_destination = self.get_param_value(atkParam.Parameter.MAC_DESTINATION)
         pps = self.get_param_value(atkParam.Parameter.PACKETS_PER_SECOND)
@@ -229,6 +232,11 @@ class PortscanAttack(BaseAttack.BaseAttack):
             timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps)
 
     def generate_attack_pcap(self):
+        """
+        Creates a pcap containing the attack packets.
+
+        :return: The location of the generated pcap file.
+        """
         # store end time of attack
         self.attack_end_utime = self.packets[-1].time
 
