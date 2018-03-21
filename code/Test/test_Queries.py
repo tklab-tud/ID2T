@@ -6,12 +6,18 @@ import ID2TLib.TestLibrary as Test
 
 # TODO: improve coverage
 
-controller = Ctrl.Controller(pcap_file_path=Test.test_pcap, do_extra_tests=False)
+controller = Ctrl.Controller(pcap_file_path=Test.test_pcap, do_extra_tests=False, non_verbose=True)
 controller.load_pcap_statistics(flag_write_file=False, flag_recalculate_stats=True, flag_print_statistics=False)
 
-file_information = [('Pcap file', Test.test_pcap),
-                    ('Packets', 1998, 'packets'), ('Capture length', '25.4294414520264', 'seconds'),
-                    ('Capture start', '1970-01-01 01:01:45.647675'), ('Capture end', '1970-01-01 01:08:10.102034')]
+file_information = [('Pcap file path', Test.test_pcap),
+                    ('Total packet count', 1998, 'packets'),
+                    ("Recognized packets", 1988, "packets"),
+                    ("Unrecognized packets", 10, "PDUs"), ("% Recognized packets", 99.49949949949949, "%"),
+                    ("% Unrecognized packets", 0.5005005005005005, "%"),
+                    ("Last unknown PDU", '1970-01-01 01:07:39.604899'),
+                    ('Capture duration', '25.4294414520264', 'seconds'),
+                    ('Capture start', '\t1970-01-01 01:01:45.647675'),
+                    ('Capture end', '\t1970-01-01 01:08:10.102034')]
 
 file_statistics = [('Avg. packet rate', 78.57034301757812, 'packets/sec'), ('Avg. packet size', 0.0, 'kbytes'),
                    ('Avg. packets sent', 90.0, 'packets'), ('Avg. bandwidth in', 9.5290, 'kbit/s'),

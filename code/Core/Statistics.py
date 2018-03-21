@@ -39,7 +39,8 @@ class Statistics:
         # Class instances
         self.stats_db = statsDB.StatsDatabase(self.path_db)
 
-    def load_pcap_statistics(self, flag_write_file: bool, flag_recalculate_stats: bool, flag_print_statistics: bool):
+    def load_pcap_statistics(self, flag_write_file: bool, flag_recalculate_stats: bool, flag_print_statistics: bool,
+                             flag_non_verbose: bool):
         """
         Loads the PCAP statistics for the file specified by pcap_filepath. If the database is not existing yet, the
         statistics are calculated by the PCAP file processor and saved into the newly created database. Otherwise the
@@ -49,6 +50,7 @@ class Statistics:
         or not (False)
         :param flag_recalculate_stats: Indicates whether eventually existing statistics should be recalculated
         :param flag_print_statistics: Indicates whether the gathered basic statistics should be printed to the terminal
+        :param flag_non_verbose: Indicates whether certain prints should be made or not, to reduce terminal clutter
         """
         # Load pcap and get loading time
         time_start = time.clock()
@@ -65,7 +67,7 @@ class Statistics:
             outstring_datasource = "by PCAP file processor."
 
             # only print summary of new db if -s flag not set
-            if not flag_print_statistics:
+            if not flag_print_statistics and not flag_non_verbose:
                 self.stats_summary_new_db()
         else:
             outstring_datasource = "from statistics database."

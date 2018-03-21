@@ -31,7 +31,7 @@ class ID2TAttackTest(unittest.TestCase):
         :param time: Measure time for packet generation.
         """
 
-        controller = Ctrl.Controller(pcap_file_path=pcap, do_extra_tests=False)
+        controller = Ctrl.Controller(pcap_file_path=pcap, do_extra_tests=False, non_verbose=True)
         controller.load_pcap_statistics(flag_write_file, flag_recalculate_stats, flag_print_statistics)
 
         controller.process_attacks(attack_args, [[seed]], time)
@@ -69,7 +69,7 @@ class ID2TAttackTest(unittest.TestCase):
         :param test_sub_dir: create sub-directory for each test-function/case if True
         """
 
-        controller = Ctrl.Controller(pcap_file_path=pcap, do_extra_tests=False)
+        controller = Ctrl.Controller(pcap_file_path=pcap, do_extra_tests=False, non_verbose=True)
         controller.load_pcap_statistics(flag_write_file, flag_recalculate_stats, flag_print_statistics)
 
         if seed is None:
@@ -110,7 +110,7 @@ class ID2TAttackTest(unittest.TestCase):
         :param test_sub_dir: create sub-directory for each test-function/case if True
         """
 
-        controller = Ctrl.Controller(pcap_file_path=pcap, do_extra_tests=False)
+        controller = Ctrl.Controller(pcap_file_path=pcap, do_extra_tests=False, non_verbose=True)
         controller.load_pcap_statistics(flag_write_file, flag_recalculate_stats, flag_print_statistics)
         controller.process_attacks(attack_args, [[seed]])
 
