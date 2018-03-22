@@ -23,8 +23,6 @@ using namespace Tins;
 
 std::string getIPv4Class(std::string ipAddress);
 
-void snifferIteratorIncrement(Tins::SnifferIterator& iterator);
-
 void convertIPv4toArray(std::string IP, unsigned short IP_bytes[]);
 
 void split_str(const std::string& s, char delim,std::vector<std::string>& v);
