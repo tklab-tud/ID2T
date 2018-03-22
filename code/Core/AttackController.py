@@ -2,6 +2,7 @@ import importlib
 import sys
 import difflib
 import pkgutil
+import typing
 
 import Attack.AttackParameters as atkParam
 import Core.LabelManager as LabelManager
@@ -29,13 +30,20 @@ class AttackController:
         self.seed = None
         self.total_packets = 0
 
-    def set_seed(self, seed: int):
+    def set_seed(self, seed: int) -> None:
         """
         Sets rng seed.
 
         :param seed: rng seed
         """
         self.seed = seed
+
+    def get_seed(self) -> typing.Union[int, None]:
+        """
+        Gets rng seed.
+        :return: The current rng seed
+        """
+        return self.seed
 
     @staticmethod
     def choose_attack(input_name):
