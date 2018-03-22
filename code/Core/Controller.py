@@ -11,7 +11,7 @@ import ID2TLib.Utility as Util
 
 
 class Controller:
-    def __init__(self, pcap_file_path: str, do_extra_tests: bool):
+    def __init__(self, pcap_file_path: str, do_extra_tests: bool, non_verbose: bool):
         """
         Creates a new Controller, acting as a central coordinator for the whole application.
 
@@ -22,8 +22,10 @@ class Controller:
         self.pcap_dest_path = ''
         self.written_pcaps = []
         self.do_extra_tests = do_extra_tests
+        self.non_verbose = non_verbose
         self.seed = None
         self.durations = []
+        self.added_packets = 0
 
         # Initialize class instances
         print("Input file: %s" % self.pcap_src_path)
@@ -42,9 +44,11 @@ class Controller:
         :param flag_write_file: Writes the statistics to a file.
         :param flag_recalculate_stats: Forces the recalculation of statistics.
         :param flag_print_statistics: Prints the statistics on the terminal.
+        :param flag_non_verbose: Reduces terminal clutter.
         :return: None
         """
-        self.statistics.load_pcap_statistics(flag_write_file, flag_recalculate_stats, flag_print_statistics)
+        self.statistics.load_pcap_statistics(flag_write_file, flag_recalculate_stats, flag_print_statistics,
+                                             self.non_verbose)
 
     def process_attacks(self, attacks_config: list, seeds=None, time=False):
         """
@@ -58,6 +62,7 @@ class Controller:
         :param seeds: A list of random seeds for the given attacks.
         :param time: Measure time for packet generation.
         """
+
         # load attacks sequentially
         i = 0
         for attack in attacks_config:
@@ -65,6 +70,9 @@ class Controller:
                 self.attack_controller.set_seed(seed=seeds[i][0])
             temp_attack_pcap, duration = self.attack_controller.process_attack(attack[0], attack[1:], time)
             self.durations.append(duration)
+            self.added_packets += self.attack_controller.total_packets
+            if not self.non_verbose:
+                self.statistics.stats_summary_post_attack(self.added_packets)
             self.written_pcaps.append(temp_attack_pcap)
             i += 1
 
@@ -109,6 +117,10 @@ class Controller:
 
         # print status message
         print('\nOutput files created: \n', self.pcap_dest_path, '\n', self.label_manager.label_file_path)
+
+        # print summary statistics
+        if not self.non_verbose:
+            self.statistics.stats_summary_post_attack(self.added_packets)
 
     def process_db_queries(self, query, print_results=False):
         """

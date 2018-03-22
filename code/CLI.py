@@ -69,6 +69,7 @@ class CLI(object):
         parser.add_argument('-S', '--randomSeed', action='append', help='sets random seed for testing or benchmarking',
                             nargs='+', default=[])
         parser.add_argument('-T', '--time', help='measures packet generation time', action='store_true', default=False)
+        parser.add_argument('-V', '--non-verbose', help='reduces terminal clutter', action='store_true', default=False)
 
         # Attack arguments
         parser.add_argument('-a', '--attack', metavar="ATTACK", action='append',
@@ -139,7 +140,7 @@ class CLI(object):
         Evaluates given queries.
         """
         # Create Core Controller
-        controller = Controller(self.args.input, self.args.extraTests)
+        controller = Controller(self.args.input, self.args.extraTests, self.args.non_verbose)
 
         # Load PCAP statistics
         controller.load_pcap_statistics(self.args.export, self.args.recalculate, self.args.statistics)
