@@ -560,13 +560,13 @@ class Statistics:
         :param mac_address: the MAC address of which the IP shall be returned, if existing in DB
         :return: the IP address used in the dataset by a given MAC address
         """
-        return self.process_db_query('ipAddress(macAddress=' + mac_address + ")")
+        return self.process_db_query("SELECT DISTINCT ipAddress FROM ip_mac WHERE macAddress = '" + mac_address + "'")
 
     def get_mac_address(self, ip_address: str):
         """
         :return: The MAC address used in the dataset for the given IP address.
         """
-        return self.process_db_query('macAddress(ipAddress=' + ip_address + ")")
+        return self.process_db_query("SELECT DISTINCT macAddress from ip_mac WHERE ipAddress = '" + ip_address + "'")
 
     def get_most_used_mss(self, ip_address: str):
         """
