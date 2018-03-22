@@ -11,6 +11,7 @@ class LabelManager:
     TAG_ATTACK = 'attack'
     TAG_ATTACK_NAME = 'name'
     TAG_ATTACK_NOTE = 'note'
+    TAG_ATTACK_SEED = 'seed'
     TAG_TIMESTAMP_START = 'timestamp_start'
     TAG_TIMESTAMP_END = 'timestamp_end'
     TAG_TIMESTAMP = 'timestamp'
@@ -119,6 +120,9 @@ class LabelManager:
             attack_note = doc.createElement(self.TAG_ATTACK_NOTE)
             attack_note.appendChild(doc.createTextNode(str(label.attack_note)))
             xml_tree.appendChild(attack_note)
+            attack_seed = doc.createElement(self.TAG_ATTACK_SEED)
+            attack_seed.appendChild(doc.createTextNode(str(label.seed)))
+            xml_tree.appendChild(attack_seed)
 
             # add timestamp_start to XML tree
             xml_tree.appendChild(get_subtree_timestamp(self.TAG_TIMESTAMP_START, label.timestamp_start))
@@ -186,6 +190,7 @@ class LabelManager:
             attack_note = get_value_from_node(a, self.TAG_ATTACK_NOTE, 0)
             timestamp_start = get_value_from_node(a, self.TAG_TIMESTAMP_START, 1, 0)
             timestamp_end = get_value_from_node(a, self.TAG_TIMESTAMP_END, 1, 0)
+            attack_seed = get_value_from_node(a, self.TAG_ATTACK_SEED, 0)
 
             # Instantiate this attack to create a parameter list with the correct types
             attack_module = importlib.import_module("Attack." + attack_name)
@@ -204,7 +209,8 @@ class LabelManager:
                     attack.add_param_value(param_name, param_value, param_userspecified)
 
             # Create the label from the data read
-            label = Label.Label(attack_name, float(timestamp_start), float(timestamp_end), attack.params, attack_note)
+            label = Label.Label(attack_name, float(timestamp_start), float(timestamp_end), attack_seed, attack.params,
+                                attack_note)
             self.labels.append(label)
             count_labels += 1
 

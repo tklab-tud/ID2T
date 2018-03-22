@@ -3,7 +3,7 @@ import functools
 
 @functools.total_ordering
 class Label:
-    def __init__(self, attack_name, timestamp_start, timestamp_end, parameters, attack_note=""):
+    def __init__(self, attack_name, timestamp_start, timestamp_end, seed, parameters, attack_note=""):
         """
         Creates a new attack label
 
@@ -16,6 +16,7 @@ class Label:
         self.attack_name = attack_name
         self.timestamp_start = timestamp_start
         self.timestamp_end = timestamp_end
+        self.seed = seed
         self.attack_note = attack_note
         self.parameters = parameters
 
