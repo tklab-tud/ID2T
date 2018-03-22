@@ -69,7 +69,7 @@ class Controller:
             if seeds is not None and len(seeds) > i:
                 rng_seed = seeds[i][0]
             else:
-                rng_seed = os.urandom(16)
+                rng_seed = int.from_bytes(os.urandom(16), sys.byteorder)
             self.attack_controller.set_seed(seed=rng_seed)
             temp_attack_pcap, duration = self.attack_controller.process_attack(attack[0], attack[1:], time)
             self.durations.append(duration)
