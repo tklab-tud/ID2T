@@ -66,7 +66,7 @@ class CLI(object):
                             help='perform extra tests on the input pcap file, including calculating IP entropy'
                                  'in interval-wise, TCP checksum, and checking payload availability.',
                             action='store_true')
-        parser.add_argument('-S', '--randomSeed', action='append', help='sets random seed for testing or benchmarking',
+        parser.add_argument('-S', '--rngSeed', action='append', help='sets rng seed for testing or benchmarking',
                             nargs='+', default=[])
         parser.add_argument('-T', '--time', help='measures packet generation time', action='store_true', default=False)
         parser.add_argument('-V', '--non-verbose', help='reduces terminal clutter', action='store_true', default=False)
@@ -152,14 +152,14 @@ class CLI(object):
                 do_entropy = True
             controller.create_statistics_plot(self.args.plot, do_entropy)
 
-        # Check random seed
-        if not isinstance(self.args.randomSeed, list):
-            self.args.randomSeed = [self.args.randomSeed]
+        # Check rng seed
+        if not isinstance(self.args.rngSeed, list):
+            self.args.rngSeed = [self.args.rngSeed]
 
         # Process attack(s) with given attack params
         if self.args.attack is not None:
             # If attack is present, load attack with params
-            controller.process_attacks(self.args.attack, self.args.randomSeed, self.args.time)
+            controller.process_attacks(self.args.attack, self.args.rngSeed, self.args.time)
 
         # Parameter -q without arguments was given -> go into query loop
         if self.args.query == [None]:
