@@ -4,10 +4,15 @@ import os.path
 import xml.dom.minidom as minidom
 
 import ID2TLib.Label as Label
+import ID2TLib.TestLibrary as Lib
 
 
 class LabelManager:
     TAG_ROOT = 'labels'
+    TAG_INPUT = 'input'
+    TAG_OUTPUT = 'output'
+    TAG_FILE_NAME = 'filename'
+    TAG_FILE_HASH = 'sha256'
     TAG_ATTACK = 'attack'
     TAG_ATTACK_NAME = 'name'
     TAG_ATTACK_NOTE = 'note'
@@ -30,6 +35,7 @@ class LabelManager:
         :param filepath_pcap: The path to the PCAP file associated to the labels.
         """
         self.labels = list()
+        self.filepath_input_pcap = filepath_pcap
 
         if filepath_pcap is not None:
             self.label_file_path = os.path.splitext(filepath_pcap)[0] + '_labels.xml'
@@ -61,6 +67,25 @@ class LabelManager:
 
         :param filepath: The path where the label file should be written to.
         """
+
+        def get_subtree_fileinfo(xml_tag_root, filename) -> minidom.Element:
+            """
+            Creates the subtree for pcap file information (filename and hash).
+
+            :return: The root node of the XML subtree
+            """
+
+            input_root = doc.createElement(xml_tag_root)
+
+            file = doc.createElement(self.TAG_FILE_NAME)
+            file.appendChild(doc.createTextNode(os.path.split(filename)[-1]))
+            input_root.appendChild(file)
+
+            hash_node = doc.createElement(self.TAG_FILE_HASH)
+            hash_node.appendChild(doc.createTextNode(Lib.get_sha256(filename)))
+            input_root.appendChild(hash_node)
+
+            return input_root
 
         def get_subtree_timestamp(xml_tag_root, timestamp_entry):
             """
@@ -110,6 +135,9 @@ class LabelManager:
         doc = minidom.Document()
         node = doc.createElement(self.TAG_ROOT)
         node.setAttribute(self.ATTR_VERSION, self.ATTR_VERSION_VALUE)
+        node.appendChild(get_subtree_fileinfo(self.TAG_INPUT, self.filepath_input_pcap))
+        node.appendChild(get_subtree_fileinfo(self.TAG_OUTPUT, filepath))
+
         for label in self.labels:
             xml_tree = doc.createElement(self.TAG_ATTACK)
 
@@ -181,6 +209,11 @@ class LabelManager:
                 print(
                     "The file " + self.label_file_path + " was created by another version of ID2TLib.LabelManager. "
                                                          "Ignoring label file.")
+
+        self.input_filename = get_value_from_node(dom, self.TAG_INPUT, 1, 0)
+        self.input_hash = get_value_from_node(dom, self.TAG_INPUT, 3, 0)
+        self.output_filename = get_value_from_node(dom, self.TAG_OUTPUT, 1, 0)
+        self.output_hash = get_value_from_node(dom, self.TAG_OUTPUT, 3, 0)
 
         # Parse attacks from XML file
         attacks = dom.getElementsByTagName(self.TAG_ATTACK)
