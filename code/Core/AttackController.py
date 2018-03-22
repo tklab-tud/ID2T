@@ -108,7 +108,13 @@ class AttackController:
         self.current_attack.set_statistics(self.statistics)
         if seed is not None:
             self.current_attack.set_seed(seed=seed)
+
         self.current_attack.init_params()
+
+        # Unset the user-specified-flag for all parameters set in init_params
+        for k, v in self.current_attack.params.items():
+            self.current_attack.params[k] = self.current_attack.ValuePair(v.value, False)
+
         # Record the attack
         self.added_attacks.append(self.current_attack)
 

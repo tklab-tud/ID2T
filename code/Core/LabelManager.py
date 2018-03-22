@@ -17,6 +17,7 @@ class LabelManager:
     TAG_TIMESTAMP_HR = 'timestamp_hr'
     TAG_PARAMETERS = 'parameters'
     ATTR_VERSION = 'version_parser'
+    ATTR_PARAM_USERSPECIFIED = 'user_specified'
 
     # update this attribute if XML scheme was modified
     ATTR_VERSION_VALUE = '0.3'
@@ -95,7 +96,8 @@ class LabelManager:
 
             for param_key, param_value in parameters.items():
                 param = doc.createElement(param_key.value)
-                param.appendChild(doc.createTextNode(str(param_value)))
+                param.appendChild(doc.createTextNode(str(param_value.value)))
+                param.setAttribute(self.ATTR_PARAM_USERSPECIFIED, str(param_value.user_specified))
                 parameters_root.appendChild(param)
 
             return parameters_root
@@ -195,9 +197,11 @@ class LabelManager:
             for param in param.childNodes:
                 # Skip empty text nodes returned by minidom
                 if not isinstance(param, minidom.Text):
+                    import distutils.util
                     param_name = param.tagName
                     param_value = param.childNodes[0].nodeValue
-                    attack.add_param_value(param_name, param_value)
+                    param_userspecified = bool(distutils.util.strtobool(param.getAttribute(self.ATTR_PARAM_USERSPECIFIED)))
+                    attack.add_param_value(param_name, param_value, param_userspecified)
 
             # Create the label from the data read
             label = Label.Label(attack_name, float(timestamp_start), float(timestamp_end), attack.params, attack_note)

@@ -9,6 +9,7 @@ import socket
 import sys
 import tempfile
 import time
+import collections
 
 # TODO: double check this import
 # does it complain because libpcapreader is not a .py?
@@ -26,6 +27,8 @@ class BaseAttack(metaclass=abc.ABCMeta):
     """
     Abstract base class for all attack classes. Provides basic functionalities, like parameter validation.
     """
+
+    ValuePair = collections.namedtuple('ValuePair', ['value', 'user_specified'])
 
     def __init__(self, name, description, attack_type):
         """
@@ -311,13 +314,14 @@ class BaseAttack(metaclass=abc.ABCMeta):
         """
         return self.finish_time - self.start_time
 
-    def add_param_value(self, param, value):
+    def add_param_value(self, param, value, user_specified: bool = True):
         """
         Adds the pair param : value to the dictionary of attack parameters. Prints and error message and skips the
         parameter if the validation fails.
 
         :param param: Name of the parameter that we wish to modify.
         :param value: The value we wish to assign to the specified parameter.
+        :param user_specified: Whether the value was specified by the user (or left default)
         :return: None.
         """
 
@@ -384,7 +388,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
 
         # add value iff validation was successful
         if is_valid:
-            self.params[param_name] = value
+            self.params[param_name] = self.ValuePair(value, user_specified)
         else:
             print("ERROR: Parameter " + str(param) + " or parameter value " + str(value) +
                   " not valid. Skipping parameter.")
@@ -396,7 +400,24 @@ class BaseAttack(metaclass=abc.ABCMeta):
         :param param: The parameter whose value is wanted.
         :return: The parameter's value.
         """
-        return self.params.get(param)
+        parameter = self.params.get(param)
+        if parameter is not None:
+            return parameter.value
+        else:
+            return None
+
+    def get_param_user_specified(self, param: atkParam.Parameter) -> bool:
+        """
+        Returns whether the parameter value was specified by the user for a given parameter.
+
+        :param param: The parameter whose user-specified flag is wanted.
+        :return: The parameter's user-specified flag.
+        """
+        parameter = self.params.get(param)
+        if parameter is not None:
+            return parameter.user_specified
+        else:
+            return False
 
     def check_parameters(self):
         """
