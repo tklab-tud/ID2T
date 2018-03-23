@@ -235,4 +235,4 @@ class TestQueries(unittest.TestCase):
         self.assertEqual(controller.statistics.process_db_query('all(protocolname)'), ['IPv4', 'TCP', 'UDP'])
 
     def test_nested_query(self):
-        self.assertEqual(controller.statistics.process_db_query('macaddress(ipaddress=most_used(ipaddress))'), '08:00:27:a3:83:43')
+        self.assertEqual(controller.statistics.process_db_query('macaddress(ipaddress in most_used(ipaddress))'), '08:00:27:a3:83:43')

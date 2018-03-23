@@ -3,13 +3,23 @@ import pyparsing as pp
 
 class QueryParser:
     def __init__(self):
+        # TODO: Try to disallow invalid combinations
+        # TODO: Have tests for invalid combinations
+        # TODO: allow lists as input, like: ipaddress(macaddress in [1,2,3])
         extractor = pp.Keyword("random") ^ pp.Keyword("first") ^ pp.Keyword("last")
         selector = pp.Keyword("most_used") ^ pp.Keyword("least_used") ^ pp.Keyword("avg") ^ pp.Keyword("all")
-        attribute = pp.Keyword("ipaddress") ^ pp.Keyword("macaddress") ^ pp.Keyword("portnumber") ^ pp.Keyword("protocolname") ^ pp.Keyword("ttlvalue") ^ pp.Keyword("mssvalue") ^ pp.Keyword("winsize") ^ pp.Keyword("ipclass") ^ pp.Keyword("pktssent") ^ pp.Keyword("pktsreceived") ^ pp.Keyword("mss") ^ pp.Keyword("kbytesreceived") ^ pp.Keyword("kbytessent")
+        attribute = pp.Keyword("ipaddress") ^ pp.Keyword("macaddress") ^ pp.Keyword("portnumber") ^\
+                    pp.Keyword("protocolname") ^ pp.Keyword("ttlvalue") ^ pp.Keyword("mssvalue") ^\
+                    pp.Keyword("winsize") ^ pp.Keyword("ipclass") ^ pp.Keyword("pktssent") ^\
+                    pp.Keyword("pktsreceived") ^ pp.Keyword("mss") ^ pp.Keyword("kbytesreceived") ^\
+                    pp.Keyword("kbytessent")
         simple_selector_query = selector + pp.Suppress("(") + attribute + pp.Suppress(")")
 
-        param_selectors = pp.Keyword("ipaddress").setParseAction(pp.replaceWith("ipaddress_param")) ^ pp.Keyword("macaddress").setParseAction(pp.replaceWith("macaddress_param"))
-        operators = pp.Literal("=") ^ pp.Literal("<=") ^ pp.Literal("<") ^ pp.Literal(">=") ^ pp.Literal(">")
+        param_selectors = pp.Keyword("ipaddress").setParseAction(pp.replaceWith("ipaddress_param")) ^\
+                          pp.Keyword("macaddress").setParseAction(pp.replaceWith("macaddress_param"))
+
+        operators = pp.Literal("<=") ^ pp.Literal("<") ^ pp.Literal("=") ^\
+                    pp.Literal(">=") ^ pp.Literal(">") ^ pp.CaselessLiteral("in")
         expr = pp.Forward()
         comparison = pp.Group(attribute + operators + (pp.Word(pp.alphanums + ".:") ^ expr))
         parameterized_query = param_selectors + pp.Suppress("(") + pp.Group(pp.delimitedList(comparison)) + pp.Suppress(")")
@@ -22,5 +32,5 @@ class QueryParser:
         expr << pp.Group(named_query)
         self.full_query = named_query + pp.Suppress(";")
 
-    def parse_query(self, querystring):
+    def parse_query(self, querystring: str) -> pp.ParseResults:
         return self.full_query.parseString(querystring)

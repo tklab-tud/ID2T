@@ -8,6 +8,7 @@ import Core.LabelManager as LabelManager
 import Core.Statistics as Statistics
 import ID2TLib.PcapFile as PcapFile
 import ID2TLib.Utility as Util
+import Core.StatsDatabase as StatsDB
 
 
 class Controller:
@@ -291,6 +292,9 @@ class Controller:
                         for i in range(1, e.col):
                             sys.stderr.write(" ")
                         sys.stderr.write("^\n\n")
+                    except StatsDB.QueryExecutionException as e:
+                        sys.stderr.write("An error occured: ")
+                        sys.stderr.write(e.args[0] + "\n")
                 buffer = ""
 
         readline.set_history_length(1000)

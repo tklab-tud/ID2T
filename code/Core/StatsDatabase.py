@@ -25,6 +25,10 @@ def dict_gen(curs: sqlite3.Cursor):
             yield dict(zip(field_names, row))
 
 
+class QueryExecutionException(Exception):
+    pass
+
+
 class StatsDatabase:
     def __init__(self, db_path: str):
         """
@@ -170,16 +174,35 @@ class StatsDatabase:
         for key, op, value in param_op_val:
             if isinstance(value, pp.ParseResults):
                 # If we have another query instead of a direct value, execute and replace it
-                value = self._execute_query_list(value)[0][0]
+                rvalue = self._execute_query_list(value)
+
+                # Do we have a comparison operator with a multiple-result query?
+                if op is not "in" and value[0] in ['most_used', 'least_used', 'all']:
+                    raise QueryExecutionException("The extractor '" + value[0] + "' may return more than one result!")
+
+                # Make value contain a simple list with the results of the query
+                value = map(lambda x: str(x[0]), rvalue)
+            else:
+                # Make sure value is a list now to simplify handling
+                value = [value]
+
             # this makes sure that TEXT fields are queried by strings,
             # e.g. ipAddress=192.168.178.1 --is-converted-to--> ipAddress='192.168.178.1'
             if field_types.get(key) == 'TEXT':
-                if not str(value).startswith("'") and not str(value).startswith('"'):
-                    value = "'" + value + "'"
+                def ensure_string(x):
+                    if not str(x).startswith("'") and not str(x).startswith('"'):
+                        return "'" + x + "'"
+                    else:
+                        return x
+                value = map(ensure_string, value)
+
+            # If we have more than one value, join them together, separated by commas
+            value = ",".join(map(str, value))
+
             # this replacement is required to remove ambiguity in SQL query
             if key == 'ipAddress':
                 key = 'ip_mac.ipAddress'
-            conditions.append(key + op + str(value))
+            conditions.append(key + " " + op + " (" + str(value) + ")")
 
         where_clause = " AND ".join(conditions)
         query += where_clause
@@ -246,7 +269,7 @@ class StatsDatabase:
     def _execute_query_list(self, query_list):
         """
         Recursively executes a list of named queries. They are of the following form:
-        ['macaddress_param', [['ipaddress', '=', ['most_used', 'ipaddress']]]]
+        ['macaddress_param', [['ipaddress', 'in', ['most_used', 'ipaddress']]]]
         :param query_list: The query statement list obtained from the query parser
         :return: The result of the query (either a single result or a list).
         """
