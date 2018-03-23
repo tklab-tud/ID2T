@@ -139,14 +139,13 @@ class PortscanAttack(BaseAttack.BaseAttack):
             source_mss_prob_dict = lea.Lea.fromValFreqsDict(source_mss_dist)
             source_mss_value = source_mss_prob_dict.random()
         else:
-            source_mss_value = Util.handle_most_used_outputs(self.statistics.process_db_query("most_used(mssValue)"))
+            source_mss_value = Util.handle_most_used_outputs(self.statistics.get_most_used_mss_value())
         destination_mss_dist = self.statistics.get_mss_distribution(ip_destination)
         if len(destination_mss_dist) > 0:
             destination_mss_prob_dict = lea.Lea.fromValFreqsDict(destination_mss_dist)
             destination_mss_value = destination_mss_prob_dict.random()
         else:
-            destination_mss_value = Util.handle_most_used_outputs(
-                self.statistics.process_db_query("most_used(mssValue)"))
+            destination_mss_value = Util.handle_most_used_outputs(self.statistics.get_most_used_mss_value())
 
         # Set TTL based on TTL distribution of IP address
         source_ttl_dist = self.statistics.get_ttl_distribution(ip_source)
@@ -154,14 +153,13 @@ class PortscanAttack(BaseAttack.BaseAttack):
             source_ttl_prob_dict = lea.Lea.fromValFreqsDict(source_ttl_dist)
             source_ttl_value = source_ttl_prob_dict.random()
         else:
-            source_ttl_value = Util.handle_most_used_outputs(self.statistics.process_db_query("most_used(ttlValue)"))
+            source_ttl_value = Util.handle_most_used_outputs(self.statistics.get_most_used_ttl_value())
         destination_ttl_dist = self.statistics.get_ttl_distribution(ip_destination)
         if len(destination_ttl_dist) > 0:
             destination_ttl_prob_dict = lea.Lea.fromValFreqsDict(destination_ttl_dist)
             destination_ttl_value = destination_ttl_prob_dict.random()
         else:
-            destination_ttl_value = Util.handle_most_used_outputs(
-                self.statistics.process_db_query("most_used(ttlValue)"))
+            destination_ttl_value = Util.handle_most_used_outputs(self.statistics.get_most_used_ttl_value())
 
         # Set Window Size based on Window Size distribution of IP address
         source_win_dist = self.statistics.get_win_distribution(ip_source)
@@ -169,14 +167,13 @@ class PortscanAttack(BaseAttack.BaseAttack):
             source_win_prob_dict = lea.Lea.fromValFreqsDict(source_win_dist)
             source_win_value = source_win_prob_dict.random()
         else:
-            source_win_value = Util.handle_most_used_outputs(self.statistics.process_db_query("most_used(winSize)"))
+            source_win_value = Util.handle_most_used_outputs(self.statistics.get_most_used_win_size())
         destination_win_dist = self.statistics.get_win_distribution(ip_destination)
         if len(destination_win_dist) > 0:
             destination_win_prob_dict = lea.Lea.fromValFreqsDict(destination_win_dist)
             destination_win_value = destination_win_prob_dict.random()
         else:
-            destination_win_value = Util.handle_most_used_outputs(
-                self.statistics.process_db_query("most_used(winSize)"))
+            destination_win_value = Util.handle_most_used_outputs(self.statistics.get_most_used_win_size())
 
         min_delay, max_delay = self.get_reply_delay(ip_destination)
 
