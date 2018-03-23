@@ -7,7 +7,7 @@ from datetime import datetime
 import os
 import sys
 
-import ID2TLib.libbotnetcomm as lb
+import ID2TLib.Botnet.libbotnetcomm as lb
 from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes
@@ -65,10 +65,10 @@ class Message():
 from ID2TLib import FileUtils, Generator
 from ID2TLib.IPv4 import IPAddress
 from ID2TLib.PcapAddressOperations import PcapAddressOperations
-from ID2TLib.CommunicationProcessor import CommunicationProcessor
+from ID2TLib.Botnet.CommunicationProcessor import CommunicationProcessor
 from ID2TLib.Botnet.MessageMapping import MessageMapping
 from ID2TLib.PcapFile import PcapFile
-from ID2TLib.Statistics import Statistics
+from Core.Statistics import Statistics
 from scapy.layers.inet import IP, IPOption_Security
 
 
@@ -286,6 +286,10 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
 
         # Return packets sorted by packet by timestamp and total number of packets (sent)
         return total_pkts , path_attack_pcap
+
+
+    def generate_attack_packets(self):
+        pass
 
 
     def _create_messages(self, context):

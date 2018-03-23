@@ -1,6 +1,6 @@
 from random import choice
 
-from ID2TLib import Statistics
+from Core import Statistics
 from ID2TLib.IPv4 import IPAddress
 
 is_ipv4 = IPAddress.is_ipv4
