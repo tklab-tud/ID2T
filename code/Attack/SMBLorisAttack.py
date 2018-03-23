@@ -48,7 +48,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
         most_used_ip_address = self.statistics.get_most_used_ip_address()
 
         # The most used IP class in background traffic
-        most_used_ip_class = Util.handle_most_used_outputs(self.statistics.process_db_query("most_used(ipClass)"))
+        most_used_ip_class = Util.handle_most_used_outputs(self.statistics.get_most_used_ip_class())
         num_attackers = rnd.randint(1, 16)
         source_ip = self.generate_random_ipv4_address(most_used_ip_class, num_attackers)
 
@@ -89,7 +89,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
         # user supplied atkParam.Parameter.NUMBER_ATTACKERS
         if (num_attackers is not None) and (num_attackers is not 0):
             # The most used IP class in background traffic
-            most_used_ip_class = Util.handle_most_used_outputs(self.statistics.process_db_query("most_used(ipClass)"))
+            most_used_ip_class = Util.handle_most_used_outputs(self.statistics.get_most_used_ip_class())
             # Create random attackers based on user input atkParam.Parameter.NUMBER_ATTACKERS
             ip_source = self.generate_random_ipv4_address(most_used_ip_class, num_attackers)
             mac_source = self.generate_random_mac_address(num_attackers)
