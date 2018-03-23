@@ -111,7 +111,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
             source_ttl_prob_dict = lea.Lea.fromValFreqsDict(source_ttl_dist)
             source_ttl_value = source_ttl_prob_dict.random()
         else:
-            source_ttl_value = Util.handle_most_used_outputs(self.statistics.process_db_query("most_used(ttlValue)"))
+            source_ttl_value = Util.handle_most_used_outputs(self.statistics.get_most_used_ttl_value())
 
         destination_ttl_dist = self.statistics.get_ttl_distribution(ip_destination)
         if len(destination_ttl_dist) > 0:
@@ -119,7 +119,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
             destination_ttl_value = destination_ttl_prob_dict.random()
         else:
             destination_ttl_value = Util.handle_most_used_outputs(
-                self.statistics.process_db_query("most_used(ttlValue)"))
+                self.statistics.get_most_used_ttl_value())
 
         # Inject SQLi Attack
         # Read SQLi Attack pcap file
