@@ -544,7 +544,7 @@ class Statistics:
         :return: A randomly chosen IP address from the dataset or iff param count is greater than one, a list of
         randomly chosen IP addresses
         """
-        ip_address_list = self.process_db_query("all(ipAddress)")
+        ip_address_list = self.process_db_query("SELECT ipAddress from ip_statistics ORDER BY ipAddress ASC")
         if count == 1:
             return random.choice(ip_address_list)
         else:
@@ -567,6 +567,38 @@ class Statistics:
         :return: The MAC address used in the dataset for the given IP address.
         """
         return self.process_db_query("SELECT DISTINCT macAddress from ip_mac WHERE ipAddress = '" + ip_address + "'")
+
+    def get_most_used_ttl_value(self):
+        """
+        :return: The most used TTL value.
+        """
+        return self.process_db_query("SELECT ttlValue FROM (SELECT ttlValue, SUM(ttlCount) as occ FROM ip_ttl GROUP BY "
+                                     "ttlValue) WHERE occ=(SELECT SUM(ttlCount) as occ FROM ip_ttl GROUP BY ttlValue "
+                                     "ORDER BY occ DESC LIMIT 1) ORDER BY ttlValue ASC")
+
+    def get_most_used_ip_class(self):
+        """
+        :return: The most used IP class.
+        """
+        return self.process_db_query("SELECT ipClass FROM (SELECT ipClass, COUNT(*) as occ from ip_statistics GROUP BY "
+                                     "ipClass ORDER BY occ DESC) WHERE occ=(SELECT COUNT(*) as occ from ip_statistics "
+                                     "GROUP BY ipClass ORDER BY occ DESC LIMIT 1) ORDER BY ipClass ASC")
+
+    def get_most_used_win_size(self):
+        """
+        :return: The most used window size.
+        """
+        return self.process_db_query("SELECT winSize FROM (SELECT winSize, SUM(winCount) as occ FROM tcp_win GROUP BY "
+                                     "winSize) WHERE occ=(SELECT SUM(winCount) as occ FROM tcp_win GROUP BY winSize "
+                                     "ORDER BY occ DESC LIMIT 1) ORDER BY winSize ASC")
+
+    def get_most_used_mss_value(self):
+        """
+        :return: The most used mss value.
+        """
+        return self.process_db_query("SELECT mssValue FROM (SELECT mssValue, SUM(mssCount) as occ FROM tcp_mss GROUP BY"
+                                     " mssValue) WHERE occ=(SELECT SUM(mssCount) as occ FROM tcp_mss GROUP BY mssValue "
+                                     "ORDER BY occ DESC LIMIT 1) ORDER BY mssValue ASC")
 
     def get_most_used_mss(self, ip_address: str):
         """
