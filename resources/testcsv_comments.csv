@@ -1,0 +1,664 @@
+Source, Destination, Type, Time
+// 3 Bots initiate contact
+Src: 1, Des: 2, Type: 103, Time: 756.1045
+Src: 1, Des: 3, Type: 103, Time: 756.1045
+Src: 2, Des: 1, Type: 104, Time: 756.2045
+Src: 3, Des: 1, Type: 104, Time: 756.3045
+
+// 5 additional bots contacted by Bot 1
+Src: 1, Des: 10, Type: 103, Time: 756.4045
+Src: 1, Des: 15, Type: 103, Time: 756.4045
+Src: 1, Des: 28, Type: 103, Time: 756.4045
+Src: 1, Des: 12, Type: 103, Time: 756.4045
+Src: 1, Des: 39, Type: 103, Time: 756.4045
+Src: 1, Des: 159, Type: 103, Time: 756.4045 // will not reply
+
+// answers of additional bots for bot 1
+Src: 10, Des: 1, Type: 104, Time: 756.5045
+Src: 15, Des: 1, Type: 104, Time: 756.5045
+Src: 28, Des: 1, Type: 104, Time: 756.5045
+Src: 12, Des: 1, Type: 104, Time: 756.5045
+Src: 39, Des: 1, Type: 104, Time: 756.5045
+Src: 159, Des: 1, Type: 3, Time: 756.8045 // timeout
+
+// 5 additional bots contacted by Bot 2
+Src: 2, Des: 45, Type: 103, Time: 756.5045
+Src: 2, Des: 81, Type: 103, Time: 756.5045
+Src: 2, Des: 57, Type: 103, Time: 756.5045
+Src: 2, Des: 64, Type: 103, Time: 756.5045
+Src: 2, Des: 52, Type: 103, Time: 756.5045
+Src: 2, Des: 11, Type: 103, Time: 756.5045 // will not reply
+
+// answers of additional bots for bot 2
+Src: 45, Des: 2, Type: 104, Time: 756.6045
+Src: 81, Des: 2, Type: 104, Time: 756.6045
+Src: 57, Des: 2, Type: 104, Time: 756.6045
+Src: 64, Des: 2, Type: 104, Time: 756.6045
+Src: 52, Des: 2, Type: 104, Time: 756.6045
+Src: 11, Des: 2, Type: 3, Time: 756.9045 // timeout
+
+// 5 additional bots contacted by Bot 3
+Src: 3, Des: 73, Type: 103, Time: 756.6045
+Src: 3, Des: 219, Type: 103, Time: 756.6045
+Src: 3, Des: 142, Type: 103, Time: 756.6045
+Src: 3, Des: 232, Type: 103, Time: 756.6045
+Src: 3, Des: 115, Type: 103, Time: 756.6045
+Src: 3, Des: 94, Type: 103, Time: 756.6045 // will not reply
+
+// answers of additional bots for bot 3
+Src: 73, Des: 3, Type: 104, Time: 756.7045
+Src: 219, Des: 3, Type: 104, Time: 756.7045
+Src: 142, Des: 3, Type: 104, Time: 756.7045
+Src: 232, Des: 3, Type: 104, Time: 756.7045
+Src: 115, Des: 3, Type: 104, Time: 756.7045
+Src: 94, Des: 3, Type: 3, Time: 757.0045 // timeout
+
+// 2 additional external Bots contacted by all bots
+// and answers of the 2 additional external Bots
+Src: 1, Des: 136, Type: 103, Time: 756.7045
+Src: 136, Des: 1, Type: 104, Time: 756.8045
+
+Src: 1, Des: 31, Type: 103, Time: 756.7045
+Src: 31, Des: 1, Type: 104, Time: 756.8045
+
+Src: 2, Des: 252, Type: 103, Time: 756.7045
+Src: 252, Des: 2, Type: 104, Time: 756.8045
+
+Src: 2, Des: 43, Type: 103, Time: 756.7045
+Src: 43, Des: 2, Type: 104, Time: 756.8045
+
+Src: 3, Des: 177, Type: 103, Time: 756.7045
+Src: 177, Des: 3, Type: 104, Time: 756.8045
+
+Src: 3, Des: 5, Type: 103, Time: 756.7045
+Src: 5, Des: 3, Type: 104, Time: 756.8045
+
+Src: 10, Des: 111, Type: 103, Time: 756.8045
+Src: 111, Des: 10, Type: 104, Time: 756.9045
+
+Src: 10, Des: 79, Type: 103, Time: 756.8045
+Src: 79, Des: 10, Type: 104, Time: 756.9045
+
+Src: 15, Des: 137, Type: 103, Time: 756.8045
+Src: 137, Des: 15, Type: 104, Time: 756.9045
+
+Src: 15, Des: 170, Type: 103, Time: 756.8045
+Src: 170, Des: 15, Type: 104, Time: 756.9045
+
+Src: 28, Des: 119, Type: 103, Time: 756.9045
+Src: 119, Des: 28, Type: 104, Time: 757.0045
+
+Src: 28, Des: 171, Type: 103, Time: 756.9045
+Src: 171, Des: 28, Type: 104, Time: 757.0045
+
+Src: 12, Des: 128, Type: 103, Time: 756.9045
+Src: 128, Des: 12, Type: 104, Time: 757.0045
+
+Src: 12, Des: 251, Type: 103, Time: 756.9045
+Src: 251, Des: 12, Type: 104, Time: 757.0045
+
+Src: 39, Des: 179, Type: 103, Time: 757.0045
+Src: 179, Des: 39, Type: 104, Time: 757.1045
+
+Src: 39, Des: 22, Type: 103, Time: 757.0045
+Src: 22, Des: 39, Type: 104, Time: 757.1045
+
+Src: 45, Des: 242, Type: 103, Time: 757.0045
+Src: 242, Des: 45, Type: 104, Time: 757.1045
+
+Src: 45, Des: 87, Type: 103, Time: 757.0045
+Src: 87, Des: 45, Type: 104, Time: 757.1045
+
+Src: 81, Des: 80, Type: 103, Time: 757.1045
+Src: 80, Des: 81, Type: 104, Time: 757.2045
+
+Src: 81, Des: 166, Type: 103, Time: 757.1045
+Src: 166, Des: 81, Type: 104, Time: 757.2045
+
+Src: 57, Des: 65, Type: 103, Time: 757.1045
+Src: 65, Des: 57, Type: 104, Time: 757.2045
+
+Src: 57, Des: 223, Type: 103, Time: 757.1045
+Src: 223, Des: 57, Type: 104, Time: 757.2045
+
+Src: 64, Des: 235, Type: 103, Time: 757.1045
+Src: 235, Des: 64, Type: 104, Time: 757.2045
+
+Src: 64, Des: 44, Type: 103, Time: 757.1045
+Src: 44, Des: 64, Type: 104, Time: 757.2045
+
+Src: 52, Des: 66, Type: 103, Time: 757.1045
+Src: 66, Des: 52, Type: 104, Time: 757.2045
+
+Src: 52, Des: 215, Type: 103, Time: 757.1045
+Src: 215, Des: 52, Type: 104, Time: 757.2045
+
+Src: 73, Des: 184, Type: 103, Time: 757.1045
+Src: 184, Des: 73, Type: 104, Time: 757.2045
+
+Src: 73, Des: 114, Type: 103, Time: 757.1045
+Src: 114, Des: 73, Type: 104, Time: 757.2045
+
+Src: 219, Des: 156, Type: 103, Time: 757.1045
+Src: 156, Des: 219, Type: 104, Time: 757.2045
+
+Src: 219, Des: 239, Type: 103, Time: 757.1045
+Src: 239, Des: 219, Type: 104, Time: 757.2045
+
+Src: 142, Des: 100, Type: 103, Time: 757.1045
+Src: 100, Des: 142, Type: 104, Time: 757.2045
+
+Src: 142, Des: 181, Type: 103, Time: 757.1045
+Src: 181, Des: 142, Type: 104, Time: 757.2045
+
+Src: 232, Des: 61, Type: 103, Time: 757.1045
+Src: 61, Des: 232, Type: 104, Time: 757.2045
+
+Src: 232, Des: 209, Type: 103, Time: 757.1045
+Src: 209, Des: 232, Type: 104, Time: 757.2045
+
+Src: 115, Des: 140, Type: 103, Time: 757.2045
+Src: 140, Des: 115, Type: 104, Time: 757.3045
+
+Src: 115, Des: 160, Type: 103, Time: 757.2045
+Src: 160, Des: 115, Type: 104, Time: 757.3045
+
+// #############################################
+// First round start - only 103 + reply(104)
+// initiator #1
+Src: 1, Des: 2, Type: 103, Time: 757.3045
+Src: 1, Des: 3, Type: 103, Time: 757.3045
+Src: 1, Des: 10, Type: 103, Time: 757.3045
+Src: 1, Des: 15, Type: 103, Time: 757.3045
+Src: 1, Des: 28, Type: 103, Time: 757.3045
+Src: 1, Des: 12, Type: 103, Time: 757.3045
+Src: 1, Des: 39, Type: 103, Time: 757.3045
+Src: 1, Des: 136, Type: 103, Time: 757.3045
+Src: 1, Des: 31, Type: 103, Time: 757.3045
+
+// reply for initiator #1
+Src: 2, Des: 1, Type: 104, Time: 757.4045
+Src: 3, Des: 1, Type: 104, Time: 757.4045
+Src: 10, Des: 1, Type: 104, Time: 757.4045
+Src: 15, Des: 1, Type: 104, Time: 757.4045
+Src: 28, Des: 1, Type: 104, Time: 757.4045
+Src: 12, Des: 1, Type: 104, Time: 757.4045
+Src: 39, Des: 1, Type: 104, Time: 757.4045
+Src: 136, Des: , Type: 104, Time: 757.4045
+Src: 31, Des: , Type: 104, Time: 757.4045
+
+// initiator #2
+Src: 2, Des: 45, Type: 103, Time: 757.4045
+Src: 2, Des: 81, Type: 103, Time: 757.4045
+Src: 2, Des: 57, Type: 103, Time: 757.4045
+Src: 2, Des: 64, Type: 103, Time: 757.4045
+Src: 2, Des: 52, Type: 103, Time: 757.4045
+Src: 2, Des: 252, Type: 103, Time: 757.4045
+Src: 2, Des: 43, Type: 103, Time: 757.4045
+
+// reply for initiator #2
+Src: 45, Des: 2, Type: 104, Time: 757.5045
+Src: 81, Des: 2, Type: 104, Time: 757.5045
+Src: 57, Des: 2, Type: 104, Time: 757.5045
+Src: 64, Des: 2, Type: 104, Time: 757.5045
+Src: 52, Des: 2, Type: 104, Time: 757.5045
+Src: 252, Des: 2, Type: 104, Time: 757.5045
+Src: 43, Des: 2, Type: 104, Time: 757.5045
+
+// initiator #3 + reply
+Src: 3, Des: 73, Type: 103, Time: 757.4045
+Src: 3, Des: 219, Type: 103, Time: 757.4045
+Src: 3, Des: 142, Type: 103, Time: 757.4045
+Src: 3, Des: 232, Type: 103, Time: 757.4045
+Src: 3, Des: 115, Type: 103, Time: 757.4045
+Src: 3, Des: 177, Type: 103, Time: 757.4045
+Src: 3, Des: 5, Type: 103, Time: 757.4045
+
+// reply for initiator #3
+Src: 73, Des: 3, Type: 104, Time: 757.5045
+Src: 219, Des: 3, Type: 104, Time: 757.5045
+Src: 142, Des: 3, Type: 104, Time: 757.5045
+Src: 232, Des: 3, Type: 104, Time: 757.5045
+Src: 115, Des: 3, Type: 104, Time: 757.5045
+Src: 94, Des: 3, Type: 104, Time: 757.5045
+Src: 177, Des: 3, Type: 104, Time: 757.5045
+
+// initiator #10 + reply
+Src: 10, Des: 111, Type: 103, Time: 757.5045
+Src: 10, Des: 79, Type: 103, Time: 757.5045
+
+Src: 111, Des: 10, Type: 104, Time: 757.6045
+Src: 79, Des: 10, Type: 104, Time: 757.6045
+
+// initiator #15 + reply
+Src: 15, Des: 137, Type: 103, Time: 757.5045
+Src: 15, Des: 170, Type: 103, Time: 757.5045
+
+Src: 137, Des: 15, Type: 104, Time: 757.6045
+Src: 170, Des: 15, Type: 104, Time: 757.6045
+
+// initiator #28 + reply
+Src: 28, Des: 119, Type: 103, Time: 757.6045
+Src: 28, Des: 171, Type: 103, Time: 757.6045
+
+Src: 119, Des: 28, Type: 104, Time: 757.7045
+Src: 171, Des: 28, Type: 104, Time: 757.7045
+
+// initiator #12 + reply
+Src: 12, Des: 128, Type: 103, Time: 757.6045
+Src: 12, Des: 251, Type: 103, Time: 757.6045
+
+Src: 128, Des: 12, Type: 104, Time: 757.7045
+Src: 251, Des: 12, Type: 104, Time: 757.7045
+
+// initiator #39 + reply
+Src: 39, Des: 179, Type: 103, Time: 757.7045
+Src: 39, Des: 22, Type: 103, Time: 757.7045
+
+Src: 179, Des: 39, Type: 104, Time: 757.8045
+Src: 22, Des: 39, Type: 104, Time: 757.8045
+
+// initiator #45 + reply
+Src: 45, Des: 242, Type: 103, Time: 757.7045
+Src: 45, Des: 87, Type: 103, Time: 757.7045
+
+Src: 242, Des: 45, Type: 104, Time: 757.8045
+Src: 87, Des: 45, Type: 104, Time: 757.8045
+
+// initiator #81 + reply
+Src: 81, Des: 80, Type: 103, Time: 757.7045
+Src: 81, Des: 166, Type: 103, Time: 757.7045
+
+Src: 80, Des: 81, Type: 104, Time: 757.8045
+Src: 166, Des: 81, Type: 104, Time: 757.8045
+
+// initiator #57 + reply
+Src: 57, Des: 65, Type: 103, Time: 757.7045
+Src: 57, Des: 223, Type: 103, Time: 757.7045
+
+Src: 65, Des: 57, Type: 104, Time: 757.8045
+Src: 223, Des: 57, Type: 104, Time: 757.8045
+
+// initiator #64 + reply
+Src: 64, Des: 235, Type: 103, Time: 757.6045
+Src: 64, Des: 44, Type: 103, Time: 757.6045
+
+Src: 235, Des: 64, Type: 104, Time: 757.7045
+Src: 44, Des: 64, Type: 104, Time: 757.7045
+
+// initiator #52 + reply
+Src: 52, Des: 66, Type: 103, Time: 757.6045
+Src: 52, Des: 215, Type: 103, Time: 757.6045
+
+Src: 66, Des: 52, Type: 104, Time: 757.7045
+Src: 215, Des: 52, Type: 104, Time: 757.7045
+
+// initiator #73 + reply
+Src: 73, Des: 184, Type: 103, Time: 757.9045
+Src: 73, Des: 114, Type: 103, Time: 757.9045
+
+Src: 184, Des: 73, Type: 104, Time: 758.0045
+Src: 114, Des: 73, Type: 104, Time: 758.0045
+
+// initiator #219 + reply
+Src: 219, Des: 156, Type: 103, Time: 757.9045
+Src: 219, Des: 239, Type: 103, Time: 757.9045
+
+Src: 156, Des: 219, Type: 104, Time: 758.0045
+Src: 239, Des: 219, Type: 104, Time: 758.0045
+
+// initiator #142 + reply
+Src: 142, Des: 100, Type: 103, Time: 757.9045
+Src: 142, Des: 181, Type: 103, Time: 757.9045
+
+Src: 100, Des: 142, Type: 104, Time: 758.0045
+Src: 181, Des: 142, Type: 104, Time: 758.0045
+
+// initiator #232 + reply
+Src: 232, Des: 61, Type: 103, Time: 758.0045
+Src: 232, Des: 209, Type: 103, Time: 758.0045
+
+Src: 61, Des: 232, Type: 104, Time: 758.1045
+Src: 209, Des: 232, Type: 104, Time: 758.1045
+
+// initiator #115 + reply
+Src: 115, Des: 140, Type: 103, Time: 758.0045
+Src: 115, Des: 160, Type: 103, Time: 758.0045
+
+Src: 140, Des: 115, Type: 104, Time: 758.1045
+Src: 160, Des: 115, Type: 104, Time: 758.1045
+
+// ############################################
+// first round end
+// now wait 10min
+
+// #############################################
+// Second round start - only 103 + reply(104) followed by 101+reply(102)
+// initiator #1
+Src: 1, Des: 2, Type: 103, Time: 600757.3045
+Src: 1, Des: 3, Type: 103, Time: 600757.3045
+Src: 1, Des: 10, Type: 103, Time: 600757.3045
+Src: 1, Des: 15, Type: 103, Time: 600757.3045
+Src: 1, Des: 28, Type: 103, Time: 600757.3045
+Src: 1, Des: 12, Type: 103, Time: 600757.3045
+Src: 1, Des: 39, Type: 103, Time: 600757.3045
+Src: 1, Des: 136, Type: 103, Time: 600757.3045
+Src: 1, Des: 31, Type: 103, Time: 600757.3045
+
+// reply for initiator #1
+Src: 2, Des: 1, Type: 104, Time: 600757.4045
+Src: 3, Des: 1, Type: 104, Time: 600757.4045
+Src: 10, Des: 1, Type: 104, Time: 600757.4045
+Src: 15, Des: 1, Type: 104, Time: 600757.4045
+Src: 28, Des: 1, Type: 104, Time: 600757.4045
+Src: 12, Des: 1, Type: 104, Time: 600757.4045
+Src: 39, Des: 1, Type: 104, Time: 600757.4045
+Src: 136, Des: , Type: 104, Time: 600757.4045
+Src: 31, Des: , Type: 104, Time: 600757.4045
+
+// initiator #1 101
+Src: 1, Des: 2, Type: 101, Time: 600757.5045
+Src: 1, Des: 3, Type: 101, Time: 600757.5045
+Src: 1, Des: 10, Type: 101, Time: 600757.5045
+Src: 1, Des: 15, Type: 101, Time: 600757.5045
+Src: 1, Des: 28, Type: 101, Time: 600757.5045
+Src: 1, Des: 12, Type: 101, Time: 600757.5045
+Src: 1, Des: 39, Type: 101, Time: 600757.5045
+Src: 1, Des: 136, Type: 101, Time: 600757.5045
+Src: 1, Des: 31, Type: 101, Time: 600757.5045
+
+// reply 102 for initiator #1
+Src: 2, Des: 1, Type: 102, Time: 600757.6045
+Src: 3, Des: 1, Type: 102, Time: 600757.6045
+Src: 10, Des: 1, Type: 102, Time: 600757.6045
+Src: 15, Des: 1, Type: 102, Time: 600757.6045
+Src: 28, Des: 1, Type: 102, Time: 600757.6045
+Src: 12, Des: 1, Type: 102, Time: 600757.6045
+Src: 39, Des: 1, Type: 102, Time: 600757.6045
+Src: 136, Des: , Type: 102, Time: 600757.6045
+Src: 31, Des: , Type: 102, Time: 600757.6045
+
+// initiator #2
+Src: 2, Des: 45, Type: 103, Time: 600757.4045
+Src: 2, Des: 81, Type: 103, Time: 600757.4045
+Src: 2, Des: 57, Type: 103, Time: 600757.4045
+Src: 2, Des: 64, Type: 103, Time: 600757.4045
+Src: 2, Des: 52, Type: 103, Time: 600757.4045
+Src: 2, Des: 252, Type: 103, Time: 600757.4045
+Src: 2, Des: 43, Type: 103, Time: 600757.4045
+
+// reply for initiator #2
+Src: 45, Des: 2, Type: 104, Time: 600757.5045
+Src: 81, Des: 2, Type: 104, Time: 600757.5045
+Src: 57, Des: 2, Type: 104, Time: 600757.5045
+Src: 64, Des: 2, Type: 104, Time: 600757.5045
+Src: 52, Des: 2, Type: 104, Time: 600757.5045
+Src: 252, Des: 2, Type: 104, Time: 600757.5045
+Src: 43, Des: 2, Type: 104, Time: 600757.5045
+
+// initiator #2
+Src: 2, Des: 45, Type: 101, Time: 600757.6045
+Src: 2, Des: 81, Type: 101, Time: 600757.6045
+Src: 2, Des: 57, Type: 101, Time: 600757.6045
+Src: 2, Des: 64, Type: 101, Time: 600757.6045
+Src: 2, Des: 52, Type: 101, Time: 600757.6045
+Src: 2, Des: 252, Type: 101, Time: 600757.6045
+Src: 2, Des: 43, Type: 101, Time: 600757.6045
+
+// reply for initiator #2
+Src: 45, Des: 2, Type: 102, Time: 600757.7045
+Src: 81, Des: 2, Type: 102, Time: 600757.7045
+Src: 57, Des: 2, Type: 102, Time: 600757.7045
+Src: 64, Des: 2, Type: 102, Time: 600757.7045
+Src: 52, Des: 2, Type: 102, Time: 600757.7045
+Src: 252, Des: 2, Type: 102, Time: 600757.7045
+Src: 43, Des: 2, Type: 102, Time: 600757.7045
+
+// initiator #3 + reply
+Src: 3, Des: 73, Type: 103, Time: 600757.4045
+Src: 3, Des: 219, Type: 103, Time: 600757.4045
+Src: 3, Des: 142, Type: 103, Time: 600757.4045
+Src: 3, Des: 232, Type: 103, Time: 600757.4045
+Src: 3, Des: 115, Type: 103, Time: 600757.4045
+Src: 3, Des: 177, Type: 103, Time: 600757.4045
+Src: 3, Des: 5, Type: 103, Time: 600757.4045
+
+// reply for initiator #3
+Src: 73, Des: 3, Type: 104, Time: 600757.5045
+Src: 219, Des: 3, Type: 104, Time: 600757.5045
+Src: 142, Des: 3, Type: 104, Time: 600757.5045
+Src: 232, Des: 3, Type: 104, Time: 600757.5045
+Src: 115, Des: 3, Type: 104, Time: 600757.5045
+Src: 94, Des: 3, Type: 104, Time: 600757.5045
+Src: 177, Des: 3, Type: 104, Time: 600757.5045
+
+// initiator #3 101
+Src: 3, Des: 73, Type: 101, Time: 600757.6045
+Src: 3, Des: 219, Type: 101, Time: 600757.6045
+Src: 3, Des: 142, Type: 101, Time: 600757.6045
+Src: 3, Des: 232, Type: 101, Time: 600757.6045
+Src: 3, Des: 115, Type: 101, Time: 600757.6045
+Src: 3, Des: 177, Type: 101, Time: 600757.6045
+Src: 3, Des: 5, Type: 101, Time: 600757.6045
+
+// reply 102 for initiator #3
+Src: 73, Des: 3, Type: 102, Time: 600757.7045
+Src: 219, Des: 3, Type: 102, Time: 600757.7045
+Src: 142, Des: 3, Type: 102, Time: 600757.7045
+Src: 232, Des: 3, Type: 102, Time: 600757.7045
+Src: 115, Des: 3, Type: 102, Time: 600757.7045
+Src: 94, Des: 3, Type: 102, Time: 600757.7045
+Src: 177, Des: 3, Type: 102, Time: 600757.7045
+
+// initiator #10 + reply
+Src: 10, Des: 111, Type: 103, Time: 600757.5045
+Src: 10, Des: 79, Type: 103, Time: 600757.5045
+
+Src: 111, Des: 10, Type: 104, Time: 600757.6045
+Src: 79, Des: 10, Type: 104, Time: 600757.6045
+
+// initiator #10 + reply
+Src: 10, Des: 111, Type: 101, Time: 600757.7045
+Src: 10, Des: 79, Type: 101, Time: 600757.7045
+
+Src: 111, Des: 10, Type: 102, Time: 600757.8045
+Src: 79, Des: 10, Type: 102, Time: 600757.8045
+
+// initiator #15 + reply
+Src: 15, Des: 137, Type: 103, Time: 600757.5045
+Src: 15, Des: 170, Type: 103, Time: 600757.5045
+
+Src: 137, Des: 15, Type: 104, Time: 600757.6045
+Src: 170, Des: 15, Type: 104, Time: 600757.6045
+
+// initiator #15 + reply
+Src: 15, Des: 137, Type: 101, Time: 600757.7045
+Src: 15, Des: 170, Type: 101, Time: 600757.7045
+
+Src: 137, Des: 15, Type: 102, Time: 600757.8045
+Src: 170, Des: 15, Type: 102, Time: 600757.8045
+
+// initiator #28 + reply
+Src: 28, Des: 119, Type: 103, Time: 600757.6045
+Src: 28, Des: 171, Type: 103, Time: 600757.6045
+
+Src: 119, Des: 28, Type: 104, Time: 600757.7045
+Src: 171, Des: 28, Type: 104, Time: 600757.7045
+
+// initiator #28 + reply
+Src: 28, Des: 119, Type: 101, Time: 600757.8045
+Src: 28, Des: 171, Type: 101, Time: 600757.8045
+
+Src: 119, Des: 28, Type: 102, Time: 600757.9045
+Src: 171, Des: 28, Type: 102, Time: 600757.9045
+
+// initiator #12 + reply
+Src: 12, Des: 128, Type: 103, Time: 600757.6045
+Src: 12, Des: 251, Type: 103, Time: 600757.6045
+
+Src: 128, Des: 12, Type: 104, Time: 600757.7045
+Src: 251, Des: 12, Type: 104, Time: 600757.7045
+
+// initiator #12 + reply
+Src: 12, Des: 128, Type: 101, Time: 600757.8045
+Src: 12, Des: 251, Type: 101, Time: 600757.8045
+
+Src: 128, Des: 12, Type: 102, Time: 600757.9045
+Src: 251, Des: 12, Type: 102, Time: 600757.9045
+
+// initiator #39 + reply
+Src: 39, Des: 179, Type: 103, Time: 600757.7045
+Src: 39, Des: 22, Type: 103, Time: 600757.7045
+
+Src: 179, Des: 39, Type: 104, Time: 600757.8045
+Src: 22, Des: 39, Type: 104, Time: 600757.8045
+
+// initiator #39 + reply
+Src: 39, Des: 179, Type: 101, Time: 600757.9045
+Src: 39, Des: 22, Type: 101, Time: 600757.9045
+
+Src: 179, Des: 39, Type: 102, Time: 600758.0045
+Src: 22, Des: 39, Type: 102, Time: 600758.0045
+
+// initiator #45 + reply
+Src: 45, Des: 242, Type: 103, Time: 600757.7045
+Src: 45, Des: 87, Type: 103, Time: 600757.7045
+
+Src: 242, Des: 45, Type: 104, Time: 600757.8045
+Src: 87, Des: 45, Type: 104, Time: 600757.8045
+
+// initiator #45 + reply
+Src: 45, Des: 242, Type: 101, Time: 600757.9045
+Src: 45, Des: 87, Type: 101, Time: 600757.9045
+
+Src: 242, Des: 45, Type: 102, Time: 600758.0045
+Src: 87, Des: 45, Type: 102, Time: 600758.0045
+
+// initiator #81 + reply
+Src: 81, Des: 80, Type: 103, Time: 600757.7045
+Src: 81, Des: 166, Type: 103, Time: 600757.7045
+
+Src: 80, Des: 81, Type: 104, Time: 600757.8045
+Src: 166, Des: 81, Type: 104, Time: 600757.8045
+
+// initiator #81 + reply
+Src: 81, Des: 80, Type: 101, Time: 600757.9045
+Src: 81, Des: 166, Type: 101, Time: 600757.9045
+
+Src: 80, Des: 81, Type: 102, Time: 600758.0045
+Src: 166, Des: 81, Type: 102, Time: 600758.0045
+
+// initiator #57 + reply
+Src: 57, Des: 65, Type: 103, Time: 600757.7045
+Src: 57, Des: 223, Type: 103, Time: 600757.7045
+
+Src: 65, Des: 57, Type: 104, Time: 600757.8045
+Src: 223, Des: 57, Type: 104, Time: 600757.8045
+
+// initiator #57 + reply
+Src: 57, Des: 65, Type: 101, Time: 600757.9045
+Src: 57, Des: 223, Type: 101, Time: 600757.9045
+
+Src: 65, Des: 57, Type: 102, Time: 600758.0045
+Src: 223, Des: 57, Type: 102, Time: 600758.0045
+
+// initiator #64 + reply
+Src: 64, Des: 235, Type: 103, Time: 600757.6045
+Src: 64, Des: 44, Type: 103, Time: 600757.6045
+
+Src: 235, Des: 64, Type: 104, Time: 600757.7045
+Src: 44, Des: 64, Type: 104, Time: 600757.7045
+
+// initiator #64 + reply
+Src: 64, Des: 235, Type: 101, Time: 600757.8045
+Src: 64, Des: 44, Type: 101, Time: 600757.8045
+
+Src: 235, Des: 64, Type: 102, Time: 600757.9045
+Src: 44, Des: 64, Type: 102, Time: 600757.9045
+
+// initiator #52 + reply
+Src: 52, Des: 66, Type: 103, Time: 600757.6045
+Src: 52, Des: 215, Type: 103, Time: 600757.6045
+
+Src: 66, Des: 52, Type: 104, Time: 600757.7045
+Src: 215, Des: 52, Type: 104, Time: 600757.7045
+
+// initiator #52 + reply
+Src: 52, Des: 66, Type: 101, Time: 600757.8045
+Src: 52, Des: 215, Type: 101, Time: 600757.8045
+
+Src: 66, Des: 52, Type: 102, Time: 600757.9045
+Src: 215, Des: 52, Type: 102, Time: 600757.9045
+
+// initiator #73 + reply
+Src: 73, Des: 184, Type: 103, Time: 600757.9045
+Src: 73, Des: 114, Type: 103, Time: 600757.9045
+
+Src: 184, Des: 73, Type: 104, Time: 600758.0045
+Src: 114, Des: 73, Type: 104, Time: 600758.0045
+
+// initiator #73 + reply
+Src: 73, Des: 184, Type: 101, Time: 600757.1045
+Src: 73, Des: 114, Type: 101, Time: 600757.1045
+
+Src: 184, Des: 73, Type: 102, Time: 600758.2045
+Src: 114, Des: 73, Type: 102, Time: 600758.2045
+
+// initiator #219 + reply
+Src: 219, Des: 156, Type: 103, Time: 600757.9045
+Src: 219, Des: 239, Type: 103, Time: 600757.9045
+
+Src: 156, Des: 219, Type: 104, Time: 600758.0045
+Src: 239, Des: 219, Type: 104, Time: 600758.0045
+
+// initiator #219 + reply
+Src: 219, Des: 156, Type: 101, Time: 600758.1045
+Src: 219, Des: 239, Type: 101, Time: 600758.1045
+
+Src: 156, Des: 219, Type: 102, Time: 600758.2045
+Src: 239, Des: 219, Type: 102, Time: 600758.2045
+
+// initiator #142 + reply
+Src: 142, Des: 100, Type: 103, Time: 600757.9045
+Src: 142, Des: 181, Type: 103, Time: 600757.9045
+
+Src: 100, Des: 142, Type: 104, Time: 600758.0045
+Src: 181, Des: 142, Type: 104, Time: 600758.0045
+
+// initiator #142 + reply
+Src: 142, Des: 100, Type: 101, Time: 600758.0045
+Src: 142, Des: 181, Type: 101, Time: 600758.0045
+
+Src: 100, Des: 142, Type: 102, Time: 600758.1045
+Src: 181, Des: 142, Type: 102, Time: 600758.1045
+
+// initiator #232 + reply
+Src: 232, Des: 61, Type: 103, Time: 600758.0045
+Src: 232, Des: 209, Type: 103, Time: 600758.0045
+
+Src: 61, Des: 232, Type: 104, Time: 600758.1045
+Src: 209, Des: 232, Type: 104, Time: 600758.1045
+
+// initiator #232 + reply
+Src: 232, Des: 61, Type: 101, Time: 600758.2045
+Src: 232, Des: 209, Type: 101, Time: 600758.2045
+
+Src: 61, Des: 232, Type: 102, Time: 600758.3045
+Src: 209, Des: 232, Type: 102, Time: 600758.3045
+
+// initiator #115 + reply
+Src: 115, Des: 140, Type: 103, Time: 600758.0045
+Src: 115, Des: 160, Type: 103, Time: 600758.0045
+
+Src: 140, Des: 115, Type: 104, Time: 600758.1045
+Src: 160, Des: 115, Type: 104, Time: 600758.1045
+
+// initiator #115 + reply
+Src: 115, Des: 140, Type: 101, Time: 600758.2045
+Src: 115, Des: 160, Type: 101, Time: 600758.2045
+
+Src: 140, Des: 115, Type: 102, Time: 600758.3045
+Src: 160, Des: 115, Type: 102, Time: 600758.3045
+
+// ############################################
+// second round end
