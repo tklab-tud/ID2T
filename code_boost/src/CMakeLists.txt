@@ -25,6 +25,9 @@ SET(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Add the library source files
 SET(SOURCE_FILES cxx/pcap_processor.cpp cxx/pcap_processor.h cxx/statistics.cpp cxx/statistics.h cxx/statistics_db.cpp cxx/statistics_db.h cxx/utilities.h cxx/utilities.cpp)
 
+# Add botnet comm processor source files
+SET(BOT_COMM_PROC_SOURCE cxx/botnet_comm_processor.h cxx/botnet_comm_processor.cpp)
+
 # Include SQLiteCpp library and build it
 option(SQLITECPP_RUN_CPPLINT OFF)
 include_directories(SQLiteCpp/include)
@@ -79,6 +82,9 @@ SET_target_properties(sqlite3 PROPERTIES POSITION_INDEPENDENT_CODE ON)
 ADD_LIBRARY(pcapreader SHARED ${SOURCE_FILES})
 # Libs pthread and dl are prerequisites of SQLiteCpp
 TARGET_LINK_LIBRARIES(pcapreader ${Boost_LIBRARIES} "${TINS_LIBRARY}" ${PYTHON_LIBRARIES} SQLiteCpp sqlite3 pthread dl)
+
+ADD_LIBRARY(botnetcomm SHARED ${BOT_COMM_PROC_SOURCE})
+TARGET_LINK_LIBRARIES(botnetcomm ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
 
 IF (APPLE)
   SET(CMAKE_SHARED_LIBRARY_SUFFIX ".so")

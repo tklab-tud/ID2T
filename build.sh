@@ -25,6 +25,7 @@ fi
 
 if [ $? -eq 0 ]; then
     cp libpcapreader.so ../../../code/ID2TLib/
+    cp libbotnetcomm.so ../../../code/ID2TLib/
 else
     echo "Error: 'make' did not finish successfully."
     exit
