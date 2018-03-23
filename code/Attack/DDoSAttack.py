@@ -55,7 +55,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         # attacker configuration
         num_attackers = rnd.randint(1, 16)
         # The most used IP class in background traffic
-        most_used_ip_class = Util.handle_most_used_outputs(self.statistics.process_db_query("most_used(ipClass)"))
+        most_used_ip_class = Util.handle_most_used_outputs(self.statistics.get_most_used_ip_class())
 
         self.add_param_value(atkParam.Parameter.IP_SOURCE,
                              self.generate_random_ipv4_address(most_used_ip_class, num_attackers))
@@ -82,7 +82,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         if (num_attackers is not None) and (num_attackers is not 0):
             # user supplied atkParam.Parameter.NUMBER_ATTACKERS
             # The most used IP class in background traffic
-            most_used_ip_class = Util.handle_most_used_outputs(self.statistics.process_db_query("most_used(ipClass)"))
+            most_used_ip_class = Util.handle_most_used_outputs(self.statistics.get_most_used_ip_class())
             # Create random attackers based on user input atkParam.Parameter.NUMBER_ATTACKERS
             ip_source_list = self.generate_random_ipv4_address(most_used_ip_class, num_attackers)
             mac_source_list = self.generate_random_mac_address(num_attackers)
@@ -164,14 +164,14 @@ class DDoSAttack(BaseAttack.BaseAttack):
             destination_win_prob_dict = lea.Lea.fromValFreqsDict(destination_win_dist)
             destination_win_value = destination_win_prob_dict.random()
         else:
-            destination_win_value = self.statistics.process_db_query("most_used(winSize)")
+            destination_win_value = self.statistics.get_most_used_win_size()
 
         destination_win_value = Util.handle_most_used_outputs(destination_win_value)
 
         # MSS that was used by IP destination in background traffic
         mss_dst = self.statistics.get_most_used_mss(ip_destination)
         if mss_dst is None:
-            mss_dst = self.statistics.process_db_query("most_used(mssValue)")
+            mss_dst = self.statistics.get_most_used_mss_value()
 
         mss_dst = Util.handle_most_used_outputs(mss_dst)
 
