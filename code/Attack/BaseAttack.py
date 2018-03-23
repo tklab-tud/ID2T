@@ -9,6 +9,7 @@ import socket
 import sys
 import tempfile
 import time
+import collections
 
 # TODO: double check this import
 # does it complain because libpcapreader is not a .py?
@@ -26,6 +27,8 @@ class BaseAttack(metaclass=abc.ABCMeta):
     """
     Abstract base class for all attack classes. Provides basic functionalities, like parameter validation.
     """
+
+    ValuePair = collections.namedtuple('ValuePair', ['value', 'user_specified'])
 
     def __init__(self, name, description, attack_type):
         """
@@ -250,7 +253,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         try:
             import distutils.core
             import distutils.util
-            value = distutils.util.strtobool(value.lower())
+            value = bool(distutils.util.strtobool(value.lower()))
             is_bool = True
         except ValueError:
             is_bool = False
@@ -311,19 +314,16 @@ class BaseAttack(metaclass=abc.ABCMeta):
         """
         return self.finish_time - self.start_time
 
-    def add_param_value(self, param, value):
+    def add_param_value(self, param, value, user_specified: bool = True):
         """
         Adds the pair param : value to the dictionary of attack parameters. Prints and error message and skips the
         parameter if the validation fails.
 
         :param param: Name of the parameter that we wish to modify.
         :param value: The value we wish to assign to the specified parameter.
+        :param user_specified: Whether the value was specified by the user (or left default)
         :return: None.
         """
-        # This function call is valid only if there is a statistics object available.
-        if self.statistics is None:
-            print('Error: Attack parameter added without setting a statistics object first.')
-            exit(1)
 
         # by default no param is valid
         is_valid = False
@@ -343,14 +343,6 @@ class BaseAttack(metaclass=abc.ABCMeta):
         # Verify validity of given value with respect to parameter type
         if param_type is None:
             print('Parameter ' + str(param_name) + ' not available for chosen attack. Skipping parameter.')
-
-        # If value is query -> get value from database
-        elif self.statistics.is_query(value):
-            value = self.statistics.process_db_query(value, False)
-            if value is not None and value is not "":
-                is_valid = True
-            else:
-                print('Error in given parameter value: ' + str(value) + '. Data could not be retrieved.')
 
         # Validate parameter depending on parameter's type
         elif param_type == atkParam.ParameterTypes.TYPE_IP_ADDRESS:
@@ -381,6 +373,11 @@ class BaseAttack(metaclass=abc.ABCMeta):
         elif param_type == atkParam.ParameterTypes.TYPE_BOOLEAN:
             is_valid, value = self._is_boolean(value)
         elif param_type == atkParam.ParameterTypes.TYPE_PACKET_POSITION:
+            # This function call is valid only if there is a statistics object available.
+            if self.statistics is None:
+                print('Error: Statistics-dependent attack parameter added without setting a statistics object first.')
+                exit(1)
+
             ts = pr.pcap_processor(self.statistics.pcap_filepath, "False").get_timestamp_mu_sec(int(value))
             if 0 <= int(value) <= self.statistics.get_packet_count() and ts >= 0:
                 is_valid = True
@@ -391,7 +388,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
 
         # add value iff validation was successful
         if is_valid:
-            self.params[param_name] = value
+            self.params[param_name] = self.ValuePair(value, user_specified)
         else:
             print("ERROR: Parameter " + str(param) + " or parameter value " + str(value) +
                   " not valid. Skipping parameter.")
@@ -403,7 +400,24 @@ class BaseAttack(metaclass=abc.ABCMeta):
         :param param: The parameter whose value is wanted.
         :return: The parameter's value.
         """
-        return self.params.get(param)
+        parameter = self.params.get(param)
+        if parameter is not None:
+            return parameter.value
+        else:
+            return None
+
+    def get_param_user_specified(self, param: atkParam.Parameter) -> bool:
+        """
+        Returns whether the parameter value was specified by the user for a given parameter.
+
+        :param param: The parameter whose user-specified flag is wanted.
+        :return: The parameter's user-specified flag.
+        """
+        parameter = self.params.get(param)
+        if parameter is not None:
+            return parameter.user_specified
+        else:
+            return False
 
     def check_parameters(self):
         """
