@@ -292,6 +292,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         """
         if isinstance(seed, int):
             random.seed(seed)
+            np.random.seed(seed)
 
     def set_start_time(self):
         """
