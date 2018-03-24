@@ -87,7 +87,6 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
             # parameters regarding attack
             Param.INJECT_AT_TIMESTAMP: ParameterTypes.TYPE_FLOAT,
             Param.INJECT_AFTER_PACKET: ParameterTypes.TYPE_PACKET_POSITION,
-            Param.PACKETS_PER_SECOND: ParameterTypes.TYPE_FLOAT,
             Param.PACKETS_LIMIT: ParameterTypes.TYPE_INTEGER_POSITIVE,
             Param.ATTACK_DURATION: ParameterTypes.TYPE_INTEGER_POSITIVE,
 
@@ -121,6 +120,9 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
             Param.INTERVAL_SELECT_STRATEGY: ParameterTypes.TYPE_INTERVAL_SELECT_STRAT,
             Param.INTERVAL_SELECT_START: ParameterTypes.TYPE_INTEGER_POSITIVE,
             Param.INTERVAL_SELECT_END: ParameterTypes.TYPE_INTEGER_POSITIVE,
+
+            # determines whether injected packets are marked with an unused IP option
+            # to easily filter them in e.g. wireshark
             Param.HIDDEN_MARK: ParameterTypes.TYPE_BOOLEAN
         }
 

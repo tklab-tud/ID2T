@@ -345,7 +345,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
             print('Parameter ' + str(param_name) + ' not available for chosen attack. Skipping parameter.')
 
         # If value is query -> get value from database
-        elif self.statistics.is_query(value):
+        elif param_name != atkParam.Parameter.INTERVAL_SELECT_STRATEGY and self.statistics.is_query(value):
             value = self.statistics.process_db_query(value, False)
             if value is not None and value is not "":
                 is_valid = True
@@ -388,6 +388,23 @@ class BaseAttack(metaclass=abc.ABCMeta):
                 value = (ts / 1000000)  # convert microseconds from getTimestampMuSec into seconds
         elif param_type == atkParam.ParameterTypes.TYPE_DOMAIN:
             is_valid = self._is_domain(value)
+        elif param_type == atkParam.ParameterTypes.TYPE_FILEPATH:
+            is_valid = os.path.isfile(value)
+        elif param_type == atkParam.ParameterTypes.TYPE_PERCENTAGE:
+            is_valid_float, value = self._is_float(value)
+            if is_valid_float:
+                is_valid = value >= 0 and value <= 1
+            else:
+                is_valid = False
+        elif param_type == atkParam.ParameterTypes.TYPE_PADDING:
+            if isinstance(value, int):
+                is_valid = value >= 0 and value <= 100
+            elif isinstance(value, str) and value.isdigit():
+                value = int(value)
+                is_valid = value >= 0 and value <= 100
+        elif param_type == atkParam.ParameterTypes.TYPE_INTERVAL_SELECT_STRAT:
+            is_valid = value in {"random", "optimal", "custom"}
+
 
         # add value iff validation was successful
         if is_valid:
