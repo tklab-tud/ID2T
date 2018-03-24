@@ -286,13 +286,23 @@ class BaseAttack(metaclass=abc.ABCMeta):
     #########################################
 
     @staticmethod
-    def set_seed(seed: int):
+    def set_seed(seed):
         """
         :param seed: The random seed to be set.
         """
+        seed_final = None
         if isinstance(seed, int):
-            random.seed(seed)
-            np.random.seed(seed)
+            seed_final = seed
+        elif isinstance(seed, str):
+            if seed.isdigit():
+                seed_final = int(seed)
+            else:
+                hashed_seed = hashlib.sha1(seed.encode()).digest()
+                seed_final = int.from_bytes(hashed_seed, byteorder="little")
+
+        if seed_final:
+            random.seed(seed_final)
+            np.random.seed(seed_final & 0xFFFFFFFF)
 
     def set_start_time(self):
         """
