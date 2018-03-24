@@ -112,7 +112,7 @@ class Controller:
 
         # process/move other created files
         pcap_root = os.path.splitext(self.pcap_dest_path)[0]
-        for k, v in Util.MISC_OUT_FILES:
+        for k, v in Util.MISC_OUT_FILES.items():
             if v is None:
                 created_files.append(k)
             else:
