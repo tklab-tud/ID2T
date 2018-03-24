@@ -16,6 +16,13 @@ class PcapAddressOperations():
         """
         self.statistics = statistics
         self.UNCERTAIN_IPSPACE_MULTIPLIER = uncertain_ip_mult
+
+        stat_result = self.statistics.process_db_query("most_used(macAddress)", print_results=False)
+        if isinstance(stat_result, list):
+            self.probable_router_mac = choice(stat_result)
+        else:
+            self.probable_router_mac = stat_result
+
         self._init_ipaddress_ops()
 
     def get_probable_router_mac(self):
@@ -23,8 +30,7 @@ class PcapAddressOperations():
         Returns the most probable router MAC address based on the most used MAC address in the statistics.
         :return: the MAC address
         """
-        self.probable_router_mac, count = self.statistics.process_db_query("most_used(macAddress)", print_results=False)[0]
-        return self.probable_router_mac     # and count as a measure of certainty?
+        return self.probable_router_mac
 
     def pcap_contains_priv_ips(self):
         """
@@ -79,10 +85,6 @@ class PcapAddressOperations():
         :param count: the number of new local IPs to return
         :return: the newly created local IP addresses
         """
-
-        # add more unused local ips to the pool, if needed
-        while len(self.unused_local_ips) < count and self.expand_unused_local_ips() == True:
-            pass
 
         unused_local_ips = self.unused_local_ips
         uncertain_local_ips = self.uncertain_local_ips
@@ -187,76 +189,21 @@ class PcapAddressOperations():
                 elif (not str(ip) == "255.255.255.255") and (not ip.is_localhost()) and (not ip.is_multicast()) and (not ip.is_reserved()) and (not ip.is_zero_conf()):
                     external_ips.add(ip)
 
+        min_local_ip, max_local_ip = min(local_ips), max(local_ips)
+
         # save the certain unused local IPs of the network
-        # to do that, divide the unused local Addressspace into chunks of (chunks_size) Addresses
-        # initally only the first chunk will be used, but more chunks can be added to the pool of unused_local_ips if needed
-        self.min_local_ip, self.max_local_ip = min(local_ips), max(local_ips)
-        local_ip_range = (self.max_local_ip.to_int()) - (self.min_local_ip.to_int() + 1)
-        if local_ip_range < 0:
-            # for min,max pairs like (1,1), (1,2) there is no free address in between, but for (1,1) local_ip_range may be -1, because 1-(1+1)=-1
-            local_ip_range = 0
-
-        # chunk size can be adjusted if needed
-        self.chunk_size = 200
-
-        self.current_chunk = 1
-        if local_ip_range < self.chunk_size:
-            # there are not more than chunk_size unused IP Addresses to begin with
-            self.chunks = 0
-            self.chunk_remainder = local_ip_range
-        else:
-            # determine how many chunks of (chunk_size) Addresses there are and the save the remainder
-            self.chunks = local_ip_range // self.chunk_size
-            self.chunk_remainder = local_ip_range % self.chunk_size
-
-        # add the first chunk of IP Addresses
-        self.unused_local_ips = set()
-        self.expand_unused_local_ips()
+        unused_local_ips = set()
+        for i in range(min_local_ip.to_int() + 1, max_local_ip.to_int()):
+            ip = IPAddress.from_int(i)
+            if not ip in local_ips:
+                unused_local_ips.add(ip)
 
         # save the gathered information for efficient later use
         self.external_ips = frozenset(external_ips)
         self.remaining_external_ips = external_ips
-        self.max_uncertain_local_ip = self.max_local_ip
+        self.min_local_ip, self.max_local_ip = min_local_ip, max_local_ip
+        self.max_uncertain_local_ip = max_local_ip
         self.local_ips = frozenset(local_ips)
         self.remaining_local_ips = local_ips
+        self.unused_local_ips = unused_local_ips
         self.uncertain_local_ips = set()
-
-    def expand_unused_local_ips(self):
-        """
-        expands the set of unused_local_ips by one chunk_size
-        to illustrate this algorithm: suppose we have a chunksize of 100 and an Address space of 1 to 1000 (1 and 1000 are unused too), we then have 10 chunks
-        every time this method is called, one chunk (100 Addresses) is added, each chunk starts at the base_address + the number of its chunk
-        then, every chunk_amounth'th Address is added. Therefore for 10 chunks, every 10th address is added
-        For the above example for the first, second and last call, we get the following IPs, respectively:
-        first Call:  1+0,  1+10,  1+20,  1+30, ...,  1+990
-        second Call: 2+0,  2+10,  2+20,  2+30, ...,  2+990
-        ten'th Call: 10+0, 10+10, 10+20, 10+30, ..., 10+990
-
-        :return: False if there are no more available unusd local IP Addresses, True otherwise
-        """
-
-        if self.current_chunk == self.chunks+1:
-            # all chunks are used up, therefore add the remainder
-            remainder_base_addr = self.min_local_ip.to_int() + self.chunks*self.chunk_size + 1
-            for i in range(0,self.chunk_remainder):
-                ip = IPAddress.from_int(remainder_base_addr + i)
-                self.unused_local_ips.add(ip)
-
-            self.current_chunk = self.current_chunk + 1
-            return True
-
-        elif self.current_chunk <= self.chunks:
-            # add another chunk
-            # choose IPs from the whole address space, that is available
-            base_address = self.min_local_ip.to_int() + self.current_chunk
-
-            for i in range(0,self.chunk_size):
-                ip = IPAddress.from_int(base_address + i*self.chunks)
-                self.unused_local_ips.add(ip)
-
-            self.current_chunk = self.current_chunk + 1
-            return True
-
-        else:
-            # no free IPs remaining
-            return False
