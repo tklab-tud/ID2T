@@ -152,19 +152,23 @@ unsigned int botnet_comm_processor::parse_xml(const std::string &filepath){
 
 /**
  * Writes the communication messages contained in the class member messages into an XML file (with respective notation).
- * @param filename The name the file should have (without extension).
+ * @param out_dir The directory the file is to be put in.
+ * @param basename The actual name of the file without directories or extension.
  * @return The filepath of the written XML file.
  */
-std::string botnet_comm_processor::write_xml(const std::string &filename){
-    std::string filepath = filename + ".xml";
-
+std::string botnet_comm_processor::write_xml(const std::string &out_dir, const std::string &basename){
+    std::string filepath;
+    if (out_dir[out_dir.length() - 1] == '/')
+        filepath = out_dir + basename + ".xml";
+    else
+        filepath = out_dir + "/" + basename + ".xml";
     std::ofstream xml_file;
     xml_file.open(filepath);
 
     // set number of digits after dot to 11
     xml_file << std::fixed << std::setprecision(11);
 
-    xml_file << "<trace name=\"" << filename << "\">";
+    xml_file << "<trace name=\"" << basename << "\">";
     for (const auto &msg : messages){
         xml_file << "<packet ";
         xml_file << "Src=\"" << msg.src << "\" Dst=\"" << msg.dst << "\" ";

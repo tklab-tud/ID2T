@@ -115,13 +115,13 @@ public:
 
     int get_message_count();
 
-    unsigned int parse_csv(const std::string &);
+    unsigned int parse_csv(const std::string &filepath);
 
-    unsigned int parse_xml(const std::string &);
+    unsigned int parse_xml(const std::string &filepath);
 
     void set_messages(const py::list &messages_pyboost);
 
-    std::string write_xml(const std::string &);
+    std::string write_xml(const std::string &out_dir, const std::string &basename);
 
 private:
     /*

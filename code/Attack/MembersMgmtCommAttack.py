@@ -491,7 +491,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         # --> prefer XML input over CSV input (in case both are given)
         print_updates = False
         if filepath_csv and filepath_xml == self.DEFAULT_XML_PATH:
-            filepath_xml = OUT_DIR + os.path.splitext(os.path.basename(filepath_csv))[0]
+            filename = os.path.splitext(os.path.basename(filepath_csv))[0]
             filesize = os.path.getsize(filepath_csv) / 2**20  # get filesize in MB
             if filesize > 10:
                 print("\nParsing input CSV file...", end=" ")
@@ -502,7 +502,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                 print("done.")
                 print("Writing corresponding XML file...", end=" ")
                 sys.stdout.flush()
-            filepath_xml = cpp_comm_proc.write_xml(filepath_xml)
+            filepath_xml = cpp_comm_proc.write_xml(Util.OUT_DIR, filename)
             Util.MISC_OUT_FILES[filepath_xml] = None
             if print_updates: print("done.")
         else:
