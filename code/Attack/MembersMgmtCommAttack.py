@@ -148,7 +148,6 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         # (values are overwritten if user specifies them)
         self.add_param_value(Param.INJECT_AFTER_PACKET, 1 + randint(0, self.statistics.get_packet_count() // 5))
 
-        self.add_param_value(Param.PACKETS_PER_SECOND, 0)
         self.add_param_value(Param.FILE_XML, self.DEFAULT_XML_PATH)
 
         # Alternatively new attack parameter?
