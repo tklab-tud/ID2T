@@ -12,6 +12,7 @@ import matplotlib
 import Core.StatsDatabase as statsDB
 import ID2TLib.PcapFile as PcapFile
 import ID2TLib.Utility as Util
+from ID2TLib.IPv4 import IPAddress
 
 matplotlib.use('Agg', force=True)
 import matplotlib.pyplot as plt
@@ -607,6 +608,74 @@ class Statistics:
                 return ttl_value[0]
         else:
             return None
+
+    def get_avg_delay_local_ext(self):
+        """
+        Calculates the average delay of a packet for external and local communication, based on the tcp handshakes
+        :return: tuple consisting of avg delay for local and external communication, (local, external)
+        """
+
+        conv_delays = self.stats_db.process_user_defined_query("SELECT ipAddressA, ipAddressB, avgDelay FROM conv_statistics")
+        if(conv_delays):
+            external_conv = []
+            local_conv = []
+
+            for conv in conv_delays:
+                IPA = IPAddress.parse(conv[0])
+                IPB = IPAddress.parse(conv[1])
+
+                #split into local and external conversations
+                if(not IPA.is_private() or not IPB.is_private()):
+                    external_conv.append(conv)
+                else:
+                    local_conv.append(conv)
+   
+            # calculate avg local and external delay by summing up the respective delays and dividing them by the number of conversations
+            avg_delay_external = 0.0
+            avg_delay_local = 0.0
+            default_ext = False
+            default_local = False
+
+            if(local_conv):
+                for conv in local_conv:
+                    avg_delay_local += conv[2]
+                avg_delay_local = (avg_delay_local/len(local_conv)) * 0.001 #ms
+            else:
+                # no local conversations in statistics found
+                avg_delay_local = 0.055
+                default_local = True
+
+            if(external_conv):
+                for conv in external_conv:
+                    avg_delay_external += conv[2]
+                avg_delay_external = (avg_delay_external/len(external_conv)) * 0.001 #ms
+            else:
+                # no external conversations in statistics found
+                avg_delay_external = 0.09
+                default_ext = True
+        else:
+            #if no statistics were found, use these numbers
+            avg_delay_external = 0.09
+            avg_delay_local = 0.055
+            default_ext = True
+            default_local = True
+
+        # check whether delay numbers are consistent
+        if avg_delay_local > avg_delay_external:
+            avg_delay_external = avg_delay_local*1.2
+
+        # print information, that (default) values are used, that are not collected from the Input PCAP
+        if default_ext or default_local:
+            if default_ext and default_local:
+                print("Warning: Could not collect average delays for local or external communication, using following values:")
+            elif default_ext:
+                print("Warning: Could not collect average delays for external communication, using following values:")
+            elif default_local:
+                print("Warning: Could not collect average delays for local communication, using following values:")
+            print("Avg delay of external communication: {0}s,  Avg delay of local communication: {1}s".format(avg_delay_external, avg_delay_local))
+            
+
+        return avg_delay_local, avg_delay_external
 
     def get_rnd_win_size(self, pkts_num):
         """
