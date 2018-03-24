@@ -17,6 +17,7 @@ CODE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/../"
 ROOT_DIR = CODE_DIR + "../"
 RESOURCE_DIR = ROOT_DIR + "resources/"
 TEST_DIR = RESOURCE_DIR + "test/"
+OUT_DIR = None
 
 platforms = {"win7", "win10", "winxp", "win8.1", "macos", "linux", "win8", "winvista", "winnt", "win2000"}
 platform_probability = {"win7": 48.43, "win10": 27.99, "winxp": 6.07, "win8.1": 6.07, "macos": 5.94, "linux": 3.38,
