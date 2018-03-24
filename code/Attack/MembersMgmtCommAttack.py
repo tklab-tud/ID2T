@@ -12,6 +12,7 @@ from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes
 from ID2TLib.Ports import PortSelectors
+import ID2TLib.Utility as Util
 
 class MessageType(Enum):
     """
@@ -176,15 +177,14 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
 
         self.add_param_value(Param.HIDDEN_MARK, False)
 
-    def generate_attack_pcap(self, context):
+    def generate_attack_pcap(self):
         """
         Injects the packets of this attack into a PCAP and stores it as a temporary file.
-        :param context: the context of the attack, containing e.g. files that are to be created
         :return: a tuple of the number packets injected and the path to the temporary attack PCAP
         """
 
         # create the final messages that have to be sent, including all bot configurations
-        messages = self._create_messages(context)
+        messages = self._create_messages()
 
         if messages == []:
             return 0, []
@@ -280,7 +280,10 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                 last_packet = packets[-1]
 
         # write the mapping to a file
-        msg_packet_mapping.write_to(context.allocate_file("_mapping.xml"))
+        current_ts = datetime.now().strftime("%Y%m%d-%H%M%S")
+        mapping_filename = "mapping_" + current_ts 
+        msg_packet_mapping.write_to_file(mapping_filename)
+        Util.MISC_OUT_FILES["mapping.xml"] = mapping_filename
 
         # Store timestamp of last packet
         self.attack_end_utime = last_packet.time
@@ -293,10 +296,9 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         pass
 
 
-    def _create_messages(self, context):
+    def _create_messages(self):
         """
         Creates the messages that are to be injected into the PCAP.
-        :param context: the context of the attack, containing e.g. files that are to be created
         :return: the final messages as a list
         """
 
@@ -478,24 +480,6 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                 else:
                     bot_configs[bot_id]["TTL"] = total_ttl_prob_dict.random()
 
-        def move_xml_to_outdir(filepath_xml: str):
-            """
-            Moves the XML file at filepath_xml to the output directory of the PCAP
-            :param filepath_xml: the filepath to the XML file
-            :return: the new filepath to the XML file
-            """
-
-            pcap_dir = context.get_output_dir()
-            xml_name = os.path.basename(filepath_xml)
-            if pcap_dir.endswith("/"):
-                new_xml_path = pcap_dir + xml_name
-            else:
-                new_xml_path = pcap_dir + "/" + xml_name
-            os.rename(filepath_xml, new_xml_path)
-            context.add_other_created_file(new_xml_path)
-            return new_xml_path
-
-
         # parse input CSV or XML
         filepath_xml = self.get_param_value(Param.FILE_XML)
         filepath_csv = self.get_param_value(Param.FILE_CSV)
@@ -507,7 +491,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         # --> prefer XML input over CSV input (in case both are given)
         print_updates = False
         if filepath_csv and filepath_xml == self.DEFAULT_XML_PATH:
-            filename = os.path.splitext(filepath_csv)[0]
+            filepath_xml = OUT_DIR + os.path.splitext(os.path.basename(filepath_csv))[0]
             filesize = os.path.getsize(filepath_csv) / 2**20  # get filesize in MB
             if filesize > 10:
                 print("\nParsing input CSV file...", end=" ")
@@ -518,8 +502,8 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                 print("done.")
                 print("Writing corresponding XML file...", end=" ")
                 sys.stdout.flush()
-            filepath_xml = cpp_comm_proc.write_xml(filename)
-            filepath_xml = move_xml_to_outdir(filepath_xml)
+            filepath_xml = cpp_comm_proc.write_xml(filepath_xml)
+            Util.MISC_OUT_FILES[filepath_xml] = None
             if print_updates: print("done.")
         else:
             filesize = os.path.getsize(filepath_xml) / 2**20  # get filesize in MB
@@ -529,7 +513,6 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                 print_updates = True
             cpp_comm_proc.parse_xml(filepath_xml)
             if print_updates: print("done.")
-
 
         # find a good communication mapping in the input file that matches the users parameters
         nat = self.get_param_value(Param.NAT_PRESENT)
