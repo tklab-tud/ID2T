@@ -16,6 +16,13 @@ class PcapAddressOperations():
         """
         self.statistics = statistics
         self.UNCERTAIN_IPSPACE_MULTIPLIER = uncertain_ip_mult
+
+        stat_result = self.statistics.process_db_query("most_used(macAddress)", print_results=False)
+        if isinstance(stat_result, list):
+            self.probable_router_mac = choice(stat_result)
+        else:
+            self.probable_router_mac = stat_result
+
         self._init_ipaddress_ops()
 
     def get_probable_router_mac(self):
@@ -23,8 +30,7 @@ class PcapAddressOperations():
         Returns the most probable router MAC address based on the most used MAC address in the statistics.
         :return: the MAC address
         """
-        self.probable_router_mac, count = self.statistics.process_db_query("most_used(macAddress)", print_results=False)[0]
-        return self.probable_router_mac     # and count as a measure of certainty?
+        return self.probable_router_mac
 
     def pcap_contains_priv_ips(self):
         """
