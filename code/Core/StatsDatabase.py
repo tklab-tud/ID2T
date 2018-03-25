@@ -253,6 +253,9 @@ class StatsDatabase:
         "least_used.winsize": "SELECT winSize FROM (SELECT winSize, SUM(winCount) as occ FROM tcp_win GROUP BY "
                               "winSize) WHERE occ=(SELECT SUM(winCount) as occ FROM tcp_win GROUP BY winSize "
                               "ORDER BY occ ASC LIMIT 1) ORDER BY winSize ASC",
+        "least_used.ipclass": "SELECT ipClass FROM (SELECT ipClass, COUNT(*) as occ from ip_statistics GROUP BY "
+                             "ipClass ORDER BY occ DESC) WHERE occ=(SELECT COUNT(*) as occ from ip_statistics "
+                             "GROUP BY ipClass ORDER BY occ ASC LIMIT 1) ORDER BY ipClass ASC",
         "avg.pktsreceived": "SELECT avg(pktsReceived) from ip_statistics",
         "avg.pktssent": "SELECT avg(pktsSent) from ip_statistics",
         "avg.kbytesreceived": "SELECT avg(kbytesReceived) from ip_statistics",
