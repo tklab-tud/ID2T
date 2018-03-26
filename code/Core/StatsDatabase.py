@@ -285,6 +285,9 @@ class StatsDatabase:
             return self.named_query_parameterized("ipaddress", query_list[1])
         else:
             query = self.named_queries.get(query_list[0] + "." + query_list[1])
+            if query is None:
+                raise QueryExecutionException("The requested query '" + query_list[0] + "(" + query_list[1] +
+                                              ")' was not found in the internal query list!")
             self.cursor.execute(str(query))
             last_result = self.cursor.fetchall()
             return last_result
