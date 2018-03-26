@@ -16,8 +16,15 @@ else
 fi
 cmake ..
 
+# Make sure we're able to get the number of cores
+if [ $(uname) = 'Darwin' ]; then
+    NUMCORES=$(sysctl -n hw.logicalcpu)
+else
+    NUMCORES=$(nproc)
+fi
+
 if [ -f Makefile ]; then
-    make
+    make -j$NUMCORES
 else
     echo "Error: 'cmake' did not finish successfully."
     exit
