@@ -17,6 +17,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
     def __init__(self):
         """
         Creates a new instance of the PortscanAttack.
+        This Attack injects TCP Syn Requests into the pcap and simulate related response to the output pcap.
         """
         # Initialize attack
         super(PortscanAttack, self).__init__("Portscan Attack", "Injects a nmap 'regular scan'",
@@ -55,7 +56,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
         self.add_param_value(atkParam.Parameter.MAC_SOURCE, self.statistics.get_mac_address(most_used_ip_address))
 
         random_ip_address = self.statistics.get_random_ip_address()
-        # ip-dst should be valid and not equal to ip.src
+        # ip.dst should be valid and not equal to ip.src
         while not self.is_valid_ip_address(random_ip_address) or random_ip_address == most_used_ip_address:
             random_ip_address = self.statistics.get_random_ip_address()
 
