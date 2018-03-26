@@ -3,10 +3,13 @@ import os
 import random as rnd
 
 import ID2TLib.Utility as Util
-
+# Directory of test resource files
 test_resource_dir = Util.TEST_DIR
+# Path to reference pcap
 test_pcap = Util.TEST_DIR + "reference_1998.pcap"
+# Several ips in the reference pcap
 test_pcap_ips = ["10.0.2.15", "52.85.173.182"]
+# Empty array for testing purposes
 test_pcap_empty = []
 
 """
