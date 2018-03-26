@@ -172,16 +172,26 @@ class StatsDatabase:
         field_types = self.get_field_types('ip_mac', 'ip_ttl', 'ip_ports', 'ip_protocols', 'ip_statistics', 'ip_mac')
         conditions = []
         for key, op, value in param_op_val:
+            # Check whether the value is not a simple value, but another query (or list)
             if isinstance(value, pp.ParseResults):
-                # If we have another query instead of a direct value, execute and replace it
-                rvalue = self._execute_query_list(value)
+                if value[0] == "list":
+                    # We have a list, cut the token off and use the remaining elements
+                    value = value[1:]
 
-                # Do we have a comparison operator with a multiple-result query?
-                if op is not "in" and value[0] in ['most_used', 'least_used', 'all']:
-                    raise QueryExecutionException("The extractor '" + value[0] + "' may return more than one result!")
+                    # Lists can only be used with "in"
+                    if op is not "in":
+                        raise QueryExecutionException("List values require the usage of the 'in' operator!")
+                else:
+                    # If we have another query instead of a direct value, execute and replace it
+                    rvalue = self._execute_query_list(value)
 
-                # Make value contain a simple list with the results of the query
-                value = map(lambda x: str(x[0]), rvalue)
+                    # Do we have a comparison operator with a multiple-result query?
+                    if op is not "in" and value[0] in ['most_used', 'least_used', 'all']:
+                        raise QueryExecutionException("The extractor '" + value[0] +
+                                                      "' may return more than one result!")
+
+                    # Make value contain a simple list with the results of the query
+                    value = map(lambda x: str(x[0]), rvalue)
             else:
                 # Make sure value is a list now to simplify handling
                 value = [value]

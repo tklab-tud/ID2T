@@ -6,7 +6,6 @@ class QueryParser:
         """
         Constructs a parser for all named queries using PyParsing.
         """
-        # TODO: allow lists as input, like: ipaddress(macaddress in [1,2,3])
         extractor = pp.Keyword("random") ^ pp.Keyword("first") ^ pp.Keyword("last")
 
         # Valid selectors - except "avg", because not all attributes can be combined with it
@@ -39,8 +38,17 @@ class QueryParser:
         # Placeholder for nesting in parameterized queries
         expr = pp.Forward()
 
-        # One "attribute-operator-value" triplet. Value can be alphanumeric plus dot and colon, or a nested query
-        comparison = pp.Group(attributes_all + operators + (pp.Word(pp.alphanums + ".:") ^ expr))
+        # Simple values for comparisons inside a parameterized query can be alphanumeric plus dot and colon
+        simple_value = pp.Word(pp.alphanums + ".:")
+
+        # Values in parameterized queries can either be simple values, or a list of them.
+        # If it's a list, we insert a "list"-token to be able to distinguish it
+        parameterized_value = simple_value ^\
+                              (pp.Suppress("[") + pp.Group(pp.Empty().addParseAction(pp.replaceWith('list')) +
+                               pp.delimitedList(simple_value)) + pp.Suppress("]"))
+
+        # One "attribute-operator-value" triplet for parameterized queries
+        comparison = pp.Group(attributes_all + operators + (parameterized_value ^ expr))
 
         # A full parameterized query, consisting of a parameterized selector and a comma-separated list of comparisons
         parameterized_query = param_selectors + pp.Suppress("(") + pp.Group(pp.delimitedList(comparison)) + pp.Suppress(")")
