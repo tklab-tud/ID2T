@@ -268,6 +268,7 @@ class StatsDatabase:
         "all.macaddress": "SELECT DISTINCT macAddress from ip_mac ORDER BY macAddress ASC",
         "all.portnumber": "SELECT DISTINCT portNumber from ip_ports ORDER BY portNumber ASC",
         "all.protocolname": "SELECT DISTINCT protocolName from ip_protocols ORDER BY protocolName ASC",
+        "all.winsize": "SELECT DISTINCT winSize FROM tcp_win ORDER BY winSize ASC",
         "all.ipclass": "SELECT DISTINCT ipClass FROM ip_statistics ORDER BY ipClass ASC"}
 
     def _execute_query_list(self, query_list):
