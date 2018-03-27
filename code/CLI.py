@@ -70,10 +70,12 @@ class CLI(object):
                             nargs='+', default=[])
         parser.add_argument('-T', '--time', help='measures packet generation time', action='store_true', default=False)
         parser.add_argument('-V', '--non-verbose', help='reduces terminal clutter', action='store_true', default=False)
+        parser.add_argument('-o', '--output', metavar="PCAP_FILE", help='path to the output pcap file')
 
         # Attack arguments
         parser.add_argument('-a', '--attack', metavar="ATTACK", action='append',
                             help='injects ATTACK into a PCAP file.', nargs='+')
+
         # Parse arguments
         self.args = parser.parse_args(args)
 
@@ -140,7 +142,7 @@ class CLI(object):
         Evaluates given queries.
         """
         # Create Core Controller
-        controller = Controller(self.args.input, self.args.extraTests, self.args.non_verbose)
+        controller = Controller(self.args.input, self.args.output, self.args.extraTests, self.args.non_verbose)
 
         # Load PCAP statistics
         controller.load_pcap_statistics(self.args.export, self.args.recalculate, self.args.statistics)
