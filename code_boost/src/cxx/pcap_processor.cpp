@@ -317,6 +317,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
             stats.increaseProtocolByteCount(ipAddressSender, "UDP", sizeCurrentPacket);
             stats.incrementPortCount(ipAddressSender, udpPkt.sport(), ipAddressReceiver, udpPkt.dport(), "UDP");
             stats.increasePortByteCount(ipAddressSender, udpPkt.sport(), ipAddressReceiver, udpPkt.dport(), sizeCurrentPacket, "UDP");
+            stats.addConvStatExt(ipAddressSender,udpPkt.sport(), ipAddressReceiver, udpPkt.dport(), "UDP", pkt.timestamp());
           
         } else if (p == PDU::PDUType::ICMP) {
             stats.incrementProtocolCount(ipAddressSender, "ICMP");
