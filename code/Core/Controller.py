@@ -8,6 +8,7 @@ import Core.LabelManager as LabelManager
 import Core.Statistics as Statistics
 import ID2TLib.PcapFile as PcapFile
 import ID2TLib.Utility as Util
+import Core.StatsDatabase as StatsDB
 
 
 class Controller:
@@ -176,7 +177,7 @@ class Controller:
             print()
         elif param == "least_used":
             print("least_used can be used as a selector for the following attributes:")
-            print("ipAddress | macAddress | portNumber | protocolName | ttlValue")
+            print("ipAddress | macAddress | portNumber | protocolName | ttlValue | mssValue | winSize | ipClass")
             print()
         elif param == "avg":
             print("avg can be used as a selector for the following attributes:")
@@ -184,7 +185,7 @@ class Controller:
             print()
         elif param == "all":
             print("all can be used as a selector for the following attributes:")
-            print("ipAddress | ttlValue | mss | macAddress | portNumber | protocolName")
+            print("ipAddress | ttlValue | mss | macAddress | portNumber | protocolName | winSize | ipClass")
             print()
         elif param in ["random", "first", "last"]:
             print("No additional info available for this keyword.")
@@ -197,6 +198,14 @@ class Controller:
                   "macAddress | ttlValue | ttlCount | portDirection | portNumber | portCount | protocolCount\n"
                   "protocolName")
             print()
+            print("The following operators can be used:")
+            print("<= | < | = | >= | > | in")
+            print()
+            print("A value can either be a simple values, a list of simple values separated by commas and enclosed "
+                  "in [] brackets, or another query.")
+            print()
+            print("When VALUE is a list (or a query returning a list), the usage of the 'in' operator is mandatory!")
+            print()
             print("See 'help examples;' for usage examples.")
             print()
         elif param == "macaddress":
@@ -204,6 +213,8 @@ class Controller:
             print("Conditions are of the following form: PARAMETER OPERATOR VALUE")
             print("The following parameters can be specified:")
             print("ipAddress")
+            print()
+            print("See 'help ipAddress' for information on valid operators and values.")
             print()
             print("See 'help examples;' for usage examples.")
             print()
@@ -218,6 +229,8 @@ class Controller:
             print("\tSELECT avg(ttlValue) from ip_ttl;")
             print("Get a random IP address from all addresses that sent and received at least 10 packets:")
             print("\trandom(ipAddress(pktsSent > 10, pktsReceived > 10));")
+            print("Get the IP addresses used with one of the MAC addresses in a list:")
+            print("\tipAddress(macAddress in [08:00:27:a3:83:43, 52:54:00:12:35:02]);")
             print()
         else:
             print("Unknown keyword '" + param + "', try 'help;' to get a list of allowed keywords'")
@@ -291,6 +304,9 @@ class Controller:
                         for i in range(1, e.col):
                             sys.stderr.write(" ")
                         sys.stderr.write("^\n\n")
+                    except StatsDB.QueryExecutionException as e:
+                        sys.stderr.write("An error occured: ")
+                        sys.stderr.write(e.args[0] + "\n")
                 buffer = ""
 
         readline.set_history_length(1000)
