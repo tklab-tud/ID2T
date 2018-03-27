@@ -289,11 +289,11 @@ class StatsDatabase:
         :return: The result of the query (either a single result or a list).
         """
         if query_list[0] == "random":
-            return rnd.choice(self._execute_query_list(query_list[1:]))
+            return [rnd.choice(self._execute_query_list(query_list[1:]))]
         elif query_list[0] == "first":
-            return self._execute_query_list(query_list[1:])[0]
+            return [self._execute_query_list(query_list[1:])[0]]
         elif query_list[0] == "last":
-            return self._execute_query_list(query_list[1:])[-1]
+            return [self._execute_query_list(query_list[1:])[-1]]
         elif query_list[0] == "macaddress_param":
             return self.named_query_parameterized("macaddress", query_list[1])
         elif query_list[0] == "ipaddress_param":
