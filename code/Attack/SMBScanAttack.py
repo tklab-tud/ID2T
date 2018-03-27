@@ -20,7 +20,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
         """
         Creates a new instance of the SMBScanAttack.
         This Attack injects TCP Syn Requests to the port 445 of several ips and related response into the output
-        pcap.
+        pcap file.
         If port 445 is open, it will simulate and inject the SMB Protocol Negotiation too.
         """
         # Initialize attack

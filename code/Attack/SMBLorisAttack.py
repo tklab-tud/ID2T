@@ -18,6 +18,8 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
     def __init__(self):
         """
         Creates a new instance of the SMBLorisAttack.
+        This attack injects special SMB-packets, which exploit the SMBLoris DoS vulnerability, into the output pcap
+        file.
         """
         # Initialize attack
         super(SMBLorisAttack, self).__init__("SMBLoris Attack", "Injects an SMBLoris (D)DoS Attack",
@@ -182,7 +184,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
                 timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps)
                 self.packets.append(ack)
 
-                # send NBT session header paket with maximum LENGTH-field
+                # send NBT session header packet with maximum LENGTH-field
                 req_tcp = inet.TCP(sport=sport, dport=SMBLib.smb_port, seq=attacker_seq, ack=victim_seq, flags='AP',
                                    window=source_win_value, options=[('MSS', source_mss_value)])
                 req_payload = NBTSession(TYPE=0x00, LENGTH=0x1FFFF)

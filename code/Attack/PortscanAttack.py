@@ -17,7 +17,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
     def __init__(self):
         """
         Creates a new instance of the PortscanAttack.
-        This Attack injects TCP Syn Requests into the pcap and simulate related response to the output pcap.
+        This attack injects TCP Syn-requests and respective responses into the output pcap file.
         """
         # Initialize attack
         super(PortscanAttack, self).__init__("Portscan Attack", "Injects a nmap 'regular scan'",
