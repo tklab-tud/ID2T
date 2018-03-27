@@ -11,7 +11,7 @@ import ID2TLib.Utility as Util
 
 
 class Controller:
-    def __init__(self, pcap_file_path: str, do_extra_tests: bool, non_verbose: bool):
+    def __init__(self, pcap_file_path: str, pcap_out_path: str, do_extra_tests: bool, non_verbose: bool):
         """
         Creates a new Controller, acting as a central coordinator for the whole application.
 
@@ -20,6 +20,7 @@ class Controller:
         # Fields
         self.pcap_src_path = pcap_file_path.strip()
         self.pcap_dest_path = ''
+        self.pcap_out_path = pcap_out_path
         self.written_pcaps = []
         self.do_extra_tests = do_extra_tests
         self.non_verbose = non_verbose
@@ -37,7 +38,13 @@ class Controller:
         self.attack_controller = atkCtrl.AttackController(self.pcap_file, self.statistics, self.label_manager)
 
         # Set output directory and create it (if necessary)
-        Util.OUT_DIR = os.path.join(os.path.dirname(pcap_file_path), "ID2T_results") + os.sep
+        if pcap_out_path is not None:
+            out_dir = os.path.dirname(pcap_out_path)
+            if not out_dir:  # if out_dir is cwd
+                out_dir = "."
+            Util.OUT_DIR = out_dir + os.sep
+        else:
+            Util.OUT_DIR = os.path.join(os.path.dirname(pcap_file_path), "ID2T_results") + os.sep
         os.makedirs(Util.OUT_DIR, exist_ok=True)
 
     def load_pcap_statistics(self, flag_write_file: bool, flag_recalculate_stats: bool, flag_print_statistics: bool):
@@ -103,8 +110,13 @@ class Controller:
         sys.stdout.flush()  # force python to print text immediately
         self.pcap_dest_path = self.pcap_file.merge_attack(attacks_pcap_path)
 
-        tmp_path_tuple = self.pcap_dest_path.rpartition("/")
-        result_path = Util.OUT_DIR + tmp_path_tuple[2]
+        if self.pcap_out_path:
+            if not self.pcap_out_path.endswith(".pcap"):
+                self.pcap_out_path += ".pcap"
+            result_path = self.pcap_out_path
+        else:
+            tmp_path_tuple = self.pcap_dest_path.rpartition("/")
+            result_path = Util.OUT_DIR + tmp_path_tuple[2]
 
         os.rename(self.pcap_dest_path, result_path)
         self.pcap_dest_path = result_path
