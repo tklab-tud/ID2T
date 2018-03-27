@@ -179,9 +179,12 @@ void pcap_processor::collect_statistics() {
         }
 
         std::cout << "\n";
-
+        
         // Save timestamp of last packet into statistics
         stats.setTimestampLastPacket(currentPktTimestamp);
+
+        // Create the communication interval statistics from the gathered communication intervals within every extended conversation statistic
+        stats.createCommIntervalStats();
     }
 }
 
@@ -252,7 +255,6 @@ void pcap_processor::process_packets(const Packet &pkt) {
         // Assign IP Address to MAC Address
         stats.assignMacAddress(ipAddressSender, macAddressSender);
         stats.assignMacAddress(ipAddressReceiver, macAddressReceiver);
-
     } //PDU is unrecognized
     else {
         if(!hasUnrecognized) {
@@ -281,16 +283,17 @@ void pcap_processor::process_packets(const Packet &pkt) {
         if (p == PDU::PDUType::TCP) {
             TCP tcpPkt = (const TCP &) *pdu_l4;
             
-          // Check TCP checksum
-          if (pdu_l3_type == PDU::PDUType::IP) {
-            stats.checkTCPChecksum(ipAddressSender, ipAddressReceiver, tcpPkt);
-          }
+            // Check TCP checksum
+            if (pdu_l3_type == PDU::PDUType::IP) {
+              stats.checkTCPChecksum(ipAddressSender, ipAddressReceiver, tcpPkt);
+            }
 
             stats.incrementProtocolCount(ipAddressSender, "TCP");
             stats.increaseProtocolByteCount(ipAddressSender, "TCP", sizeCurrentPacket);
 
             // Conversation statistics
             stats.addConvStat(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), pkt.timestamp());
+            stats.addConvStatExt(ipAddressSender,tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), "TCP", pkt.timestamp());
 
             // Window Size distribution
             int win = tcpPkt.window();
