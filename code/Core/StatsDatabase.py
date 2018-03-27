@@ -186,7 +186,8 @@ class StatsDatabase:
                     rvalue = self._execute_query_list(value)
 
                     # Do we have a comparison operator with a multiple-result query?
-                    if op is not "in" and value[0] in ['most_used', 'least_used', 'all']:
+                    if op is not "in" and value[0] in ['most_used', 'least_used', 'all', 'ipaddress_param',
+                                                       'macaddress_param']:
                         raise QueryExecutionException("The extractor '" + value[0] +
                                                       "' may return more than one result!")
 
