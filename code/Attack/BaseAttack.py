@@ -1,5 +1,6 @@
 import abc
 import csv
+import hashlib
 import ipaddress
 import os
 import random
