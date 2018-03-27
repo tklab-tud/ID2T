@@ -15,6 +15,8 @@
 
 using namespace Tins;
 
+#define COMM_INTERVAL_THRESHOLD 10e6  // in microseconds; i.e. here 10s
+
 /*
  * Definition of structs used in unordered_map fields
  */
@@ -57,6 +59,30 @@ struct conv{
                && portA == other.portA
                &&ipAddressB == other.ipAddressB
                && portB == other.portB;
+    }    
+};
+
+/*
+ * Struct used to represent a conversation by:
+ * - IP address A
+ * - Port A
+ * - IP address B
+ * - Port B
+ * - Protocol
+ */
+struct convWithProt{
+    std::string ipAddressA;
+    int portA;
+    std::string ipAddressB;
+    int portB;
+    std::string protocol;
+
+    bool operator==(const convWithProt &other) const {
+        return ipAddressA == other.ipAddressA
+               && portA == other.portA
+               &&ipAddressB == other.ipAddressB
+               && portB == other.portB
+               && protocol == other.protocol;
     }    
 };
 
@@ -148,6 +174,9 @@ struct entry_ipStat {
     float kbytes_received;
     float kbytes_sent;
     std::string ip_class;
+    int in_degree;
+    int out_degree;
+    int overall_degree;
     // Collects statstics over time interval
     std::vector<float> interval_pkt_rate;
     float max_interval_pkt_rate;
@@ -168,7 +197,6 @@ struct entry_ipStat {
                && pkts_received_timestamp == other.pkts_received_timestamp;
     }
 };
-
 /*
  * Struct used to represent:
  * - Number of transmitted packets
@@ -286,6 +314,63 @@ struct ipAddress_inOut_port {
 };
 
 /*
+ * Struct used to represent a communication interval (for two hosts):
+ * - Timestamp of the first packet in the interval
+ * - Timestamp of the last packet in the interval
+ * - The count of packets within the interval
+ */
+struct commInterval{
+    std::chrono::microseconds start;
+    std::chrono::microseconds end;
+    long pkts_count;
+
+    bool operator==(const commInterval &other) const {
+        return start == other.start
+               && end == other.end
+               && pkts_count == other.pkts_count;
+    }    
+};
+
+/*
+ * Struct used to represent converstaion statistics:
+ * - commnication intervals
+ * - # packets
+ * - Average packet rate
+ * - average # packets per communication interval
+ * - Average time between intervals
+ * - Average duration of a communication interval
+ * - Overall communication duration
+ * - Timestamps of packets
+ * - Inter-arrival time
+ * - Average inter-arrival time
+ */
+struct entry_convStatExt {
+    std::vector<commInterval> comm_intervals;
+    long pkts_count;
+    float avg_pkt_rate;
+    double avg_int_pkts_count;
+    double avg_time_between_ints;
+    double avg_interval_time;
+    double total_comm_duration;
+    std::vector<std::chrono::microseconds> pkts_timestamp;
+    std::vector<std::chrono::microseconds> interarrival_time;
+    std::chrono::microseconds avg_interarrival_time;
+
+    bool operator==(const entry_convStatExt &other) const {
+        return comm_intervals == other.comm_intervals
+               && pkts_count == other.pkts_count
+               && avg_pkt_rate == avg_pkt_rate
+               && avg_int_pkts_count == other.avg_int_pkts_count
+               && avg_time_between_ints == other.avg_time_between_ints
+               && avg_interval_time == other.avg_interval_time
+               && total_comm_duration == other.total_comm_duration
+               && pkts_timestamp == other.pkts_timestamp
+               && interarrival_time == other.interarrival_time
+               && avg_interarrival_time == other.avg_interarrival_time;
+    }
+};
+
+/*
  * Struct used to represent:
  * - Source MAC address
  * - Destination MAC address
@@ -312,7 +397,6 @@ struct unrecognized_PDU_stat {
     int count;
     std::string timestamp_last_occurrence;
 };
-
 
 /*
  * Definition of hash functions for structs used as key in unordered_map
@@ -372,6 +456,20 @@ namespace std {
                      ^ (hash<int>()(k.portA) << 1)) >> 1)
                      ^ ((hash<string>()(k.ipAddressB)
                      ^ (hash<int>()(k.portB) << 1)) >> 1);
+        }
+    };
+
+    template<>
+    struct hash<convWithProt> {
+        std::size_t operator()(const convWithProt &c) const {
+            using std::size_t;
+            using std::hash;
+            using std::string;
+            return ((hash<string>()(c.ipAddressA)
+                     ^ (hash<int>()(c.portA) << 1)) >> 1)
+                     ^ ((hash<string>()(c.ipAddressB)
+                     ^ (hash<int>()(c.portB) << 1)) >> 1)
+                     ^ (hash<string>()(c.protocol));
         }
     };
     
@@ -435,6 +533,10 @@ public:
     void incrementWinCount(std::string ipAddress, int winSize);
 
     void addConvStat(std::string ipAddressSender,int sport,std::string ipAddressReceiver,int dport, std::chrono::microseconds timestamp);
+
+    void addConvStatExt(std::string ipAddressSender,int sport,std::string ipAddressReceiver,int dport,std::string protocol, std::chrono::microseconds timestamp);
+
+    void createCommIntervalStats();
 
     std::vector<float> calculateIPsCumEntropy();
 
@@ -541,6 +643,7 @@ private:
     int intervalCumNovelMSSCount = 0;
     int intervalCumNovelPortCount = 0;
 
+
     /*
      * Data containers
      */
@@ -559,6 +662,11 @@ private:
     // {IP Address A, Port A, IP Address B, Port B,   #packets, packets timestamps, inter-arrival times,
     // average of inter-arrival times}
     std::unordered_map<conv, entry_convStat> conv_statistics;
+
+    // {IP Address A, Port A, IP Address B, Port B,   comm_intervals, #packets, avg. pkt rate, avg. #packets per interval,
+    // avg. time between intervals, avg. interval time, duration, packets timestamps, inter-arrivtal times, average of inter-arrival times}
+    // Also stores conversation with only one exchanged message. In this case avgPktRate, minDelay, maxDelay and avgDelay are -1
+    std::unordered_map<convWithProt, entry_convStatExt> conv_statistics_extended;
 
     // {Last timestamp in the interval, #packets, #bytes, source IP entropy, destination IP entropy,
     // source IP cumulative entropy, destination IP cumulative entropy, #payload, #incorrect TCP checksum,
@@ -579,6 +687,10 @@ private:
 
     // {Port, count}
     std::unordered_map<int, int> port_values;
+
+
+    //{IP Address, contacted IP Addresses}
+    std::unordered_map<std::string, std::vector<std::string>> contacted_ips;
 
     // {IP Address, Protocol,  #count, #Data transmitted in bytes}
     std::unordered_map<ipAddress_protocol, entry_protocolStat> protocol_distribution;

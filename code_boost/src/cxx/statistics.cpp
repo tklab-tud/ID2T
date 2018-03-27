@@ -248,6 +248,101 @@ void statistics::addConvStat(std::string ipAddressSender,int sport,std::string i
 }
 
 /**
+ * Registers statistical data for a sent packet in a given extended conversation (two IPs, two ports, protocol). 
+ * Increments the counter packets_A_B or packets_B_A.
+ * Adds the timestamp of the packet in pkts_A_B_timestamp or pkts_B_A_timestamp.
+ * Updates all other statistics of conv_statistics_extended
+ * @param ipAddressSender The sender IP address.
+ * @param sport The source port.
+ * @param ipAddressReceiver The receiver IP address.
+ * @param dport The destination port.
+ * @param protocol The used protocol.
+ * @param timestamp The timestamp of the packet.
+ */
+void statistics::addConvStatExt(std::string ipAddressSender,int sport,std::string ipAddressReceiver,int dport,std::string protocol, std::chrono::microseconds timestamp){
+    convWithProt f1 = {ipAddressReceiver, dport, ipAddressSender, sport, protocol};
+    convWithProt f2 = {ipAddressSender, sport, ipAddressReceiver, dport, protocol};
+    convWithProt f;
+
+    // if there already exists a communication interval for the specified conversation
+    if (conv_statistics_extended.count(f1) > 0 || conv_statistics_extended.count(f2) > 0){
+
+        // find out which direction of conversation is contained in conv_statistics_extended
+        if (conv_statistics_extended.count(f1) > 0)
+            f = f1;
+        else
+            f = f2;
+
+        // increase pkts count and check on delay
+        conv_statistics_extended[f].pkts_count++;
+        if (conv_statistics_extended[f].pkts_timestamp.size()>0 && conv_statistics_extended[f].pkts_count<=3)
+            conv_statistics_extended[f].interarrival_time.push_back(std::chrono::duration_cast<std::chrono::microseconds> (timestamp - conv_statistics_extended[f].pkts_timestamp.back()));
+        conv_statistics_extended[f].pkts_timestamp.push_back(timestamp);
+
+        // if the time difference has exceeded the threshold, create a new interval with this message
+        if (timestamp - conv_statistics_extended[f].comm_intervals.back().end > (std::chrono::microseconds) ((unsigned long) COMM_INTERVAL_THRESHOLD)) {  // > or >= ?
+            commInterval new_interval = {timestamp, timestamp, 1};
+            conv_statistics_extended[f].comm_intervals.push_back(new_interval);
+        }  
+        // otherwise, set the time of the last interval message to the current timestamp and increase interval packet count by 1
+        else{
+            conv_statistics_extended[f].comm_intervals.back().end = timestamp;
+            conv_statistics_extended[f].comm_intervals.back().pkts_count++;
+        }
+    }
+    // if there does not exist a communication interval for the specified conversation
+    else{
+        // add initial interval entry for this conversation
+        commInterval initial_interval = {timestamp, timestamp, 1};
+
+        entry_convStatExt entry;
+        entry.comm_intervals.push_back(initial_interval);
+        entry.pkts_count = 1;
+        entry.pkts_timestamp.push_back(timestamp);
+        conv_statistics_extended[f2] = entry;
+    }
+}
+
+/**
+ * Aggregate the collected information about all communication intervals within conv_statistics_extended of every conversation.
+ * Do this by computing the average packet rate per interval and the average time between intervals.
+ * Also compute average interval duration and total communication duration (i.e. last_msg.time - first_msg.time)
+ */
+void statistics::createCommIntervalStats(){    
+    // iterate over all <convWithProt, entry_convStatExt> pairs
+    for (auto &cur_elem : conv_statistics_extended) {
+        entry_convStatExt &entry = cur_elem.second;
+        std::vector<commInterval> &intervals = entry.comm_intervals;
+
+        // if there is only one interval, the time between intervals cannot be computed and is therefore set to 0
+        if (intervals.size() == 1){
+            double interval_duration = (double) (intervals[0].end - intervals[0].start).count() / (double) 1e6;
+            entry.avg_int_pkts_count = (double) intervals[0].pkts_count;
+            entry.avg_time_between_ints = (double) 0;
+            entry.avg_interval_time = interval_duration;
+        }
+        // If there is more than one interval, compute the specified averages
+        else if (intervals.size() > 1){
+            long summed_pkts_count = intervals[0].pkts_count;
+            std::chrono::microseconds time_between_ints_sum = (std::chrono::microseconds) 0;
+            std::chrono::microseconds summed_int_duration = intervals[0].end - intervals[0].start;
+
+            for (std::size_t i = 1; i < intervals.size(); i++) {
+                summed_pkts_count += intervals[i].pkts_count;
+                summed_int_duration += intervals[i].end - intervals[i].start;
+                time_between_ints_sum += intervals[i].start - intervals[i - 1].end;
+            }
+
+            entry.avg_int_pkts_count = summed_pkts_count / ((double) intervals.size());
+            entry.avg_time_between_ints = (time_between_ints_sum.count() / (double) (intervals.size() - 1)) / (double) 1e6;
+            entry.avg_interval_time = (summed_int_duration.count() / (double) intervals.size()) / (double) 1e6;
+
+        }
+        entry.total_comm_duration = (double) (entry.pkts_timestamp.back() - entry.pkts_timestamp.front()).count() / (double) 1e6;
+    }
+}
+
+/**
  * Increments the packet counter for the given IP address and MSS value.
  * @param ipAddress The IP address whose MSS packet counter should be incremented.
  * @param mssValue The MSS value of the packet.
@@ -300,7 +395,6 @@ void statistics::incrementProtocolCount(std::string ipAddress, std::string proto
  * Returns the number of packets seen for the given IP address and protocol.
  * @param ipAddress The IP address whose packet count is wanted.
  * @param protocol The protocol whose packet count is wanted.
- * @return an integer: The number of packets
  */
 int statistics::getProtocolCount(std::string ipAddress, std::string protocol) {
     return protocol_distribution[{ipAddress, protocol}].count;
@@ -418,6 +512,24 @@ void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddres
     ip_statistics[ipAddressReceiver].kbytes_received += (float(bytesSent) / 1024);
     ip_statistics[ipAddressReceiver].pkts_received++;
     ip_statistics[ipAddressReceiver].pkts_received_timestamp.push_back(timestamp);
+
+    // Increment Degrees for sender and receiver, if Sender sends its first packet to this receiver
+    std::vector<std::string>::iterator found_receiver = std::find(contacted_ips[ipAddressSender].begin(), contacted_ips[ipAddressSender].end(), ipAddressReceiver);
+    if(found_receiver == contacted_ips[ipAddressSender].end()){
+        // Receiver is NOT contained in the List of IPs, that the Sender has contacted, therefore this is the first packet in this direction
+        ip_statistics[ipAddressSender].out_degree++;
+        ip_statistics[ipAddressReceiver].in_degree++;
+
+        // Increment overall_degree only if this is the first packet for the connection (both directions)
+        // Therefore check, whether Receiver has contacted Sender before
+        std::vector<std::string>::iterator sender_contacted = std::find(contacted_ips[ipAddressReceiver].begin(), contacted_ips[ipAddressReceiver].end(), ipAddressSender);
+        if(sender_contacted == contacted_ips[ipAddressReceiver].end()){
+            ip_statistics[ipAddressSender].overall_degree++;
+            ip_statistics[ipAddressReceiver].overall_degree++;
+        }  
+
+        contacted_ips[ipAddressSender].push_back(ipAddressReceiver);
+    }
 }
 
 /**
@@ -644,12 +756,14 @@ void statistics::writeToDatabase(std::string database_path) {
         db.writeStatisticsIP(ip_statistics);
         db.writeStatisticsTTL(ttl_distribution);
         db.writeStatisticsIpMac(ip_mac_mapping);
+        db.writeStatisticsDegree(ip_statistics);
         db.writeStatisticsPorts(ip_ports);
         db.writeStatisticsProtocols(protocol_distribution);
         db.writeStatisticsMSS(mss_distribution);
         db.writeStatisticsToS(tos_distribution);
         db.writeStatisticsWin(win_distribution);
         db.writeStatisticsConv(conv_statistics);
+        db.writeStatisticsConvExt(conv_statistics_extended);
         db.writeStatisticsInterval(interval_statistics);
         db.writeDbVersion();
         db.writeStatisticsUnrecognizedPDUs(unrecognized_PDUs);
