@@ -75,7 +75,7 @@ install_pkg_darwin()
 
 install_pip()
 {
-    PYTHON_MODULES="pyxdg lea numpy matplotlib scapy-python3 scipy coverage"
+    PYTHON_MODULES="pyxdg lea numpy matplotlib scapy-python3 scipy coverage memory_profiler"
     echo -e "Python modules: Checking..."
 
     # Check first to avoid unnecessary sudo
