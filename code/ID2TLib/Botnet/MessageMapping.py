@@ -30,7 +30,7 @@ class MessageMapping:
         mappings = doc.createElement(self.TAG_MAPPING_GROUP)
         doc.appendChild(mappings)
 
-        for message in self.messages:
+        for message in sorted(self.messages, key=lambda msg: msg.time):
             mapping = doc.createElement(self.TAG_MAPPING)
             mapping.setAttribute(self.ATTR_ID, str(message.msg_id))
             mapping.setAttribute(self.ATTR_LINENO, str(message.line_no))
