@@ -36,35 +36,65 @@ The following packages/libraries are required to compile the ID2T C++ modules
     - arch: (install from AUR, i.e. pacaur -S libtins, or manually from [here](https://github.com/mfontanini/libtins)).
 * ``python`` development libraries
     - ubuntu: apt install python3-dev
-    - arch: pacman -S python
+    - arch: pacman -S python python-pip
 * ``sqlite`` (minimum version 3.0)
     - ubuntu: apt install sqlite3
     - arch: pacman -S sqlite
+* ``tcpdump``
+    - ubuntu: apt install tcpdump
+    - arch: pacman -S tcpdump
 
 #### Required Python Packages
 The following python packages are required to run ID2T. Install the packages with your preferred package manager. For example, you can use pip3 (pip for python 3). Install pip3 in ubuntu with ``apt install python3-pip`` and install the packages with ``sudo pip3 install <packagename>``.
-* ``scapy`` (make sure its the python3 version)
+* ``pyxdg``
+* ``scapy-python3``
 * ``lea``
 * ``numpy``
 * ``matplotlib``
 * ``SciPy Stack`` (see [installation instructions](https://www.scipy.org/install.html))
+* ``coverage``
+* ``memory_profiler``
 
 #### Notes on the Minimum Package Versions
-The minimum version stated in the previous requirements are the versions we have used in the development of ID2T. Other (older) versions might also work; however, we cannot guarantee nor support them. Furthermore, some compilation scripts would need to be manually modified to accommodate these older versions.
+The minimum version stated in the previous requirements are the versions we used in the development of ID2T. Other (older) versions might also work; however, we can neither guarantee nor support them. Furthermore, some compilation scripts would need to be manually modified to accommodate these older versions.
 
+### Dependency installation script
+ID2T provides a dependency installation script, which is called during the execution of ``./build.sh``.
+
+#### Supported Systems
+* Linux Distributions
+    - Arch-based
+    - Debian-based
+* macOS
+
+##### Tested with
+* Arch Linux
+* Antergos
+* Kali
+* macOS (High) Sierra
+* Ubuntu (16.04, 17.10)
+* Zorin OS
 
 ### Compilation and Installation
-Once you satisfy all dependencies, clone the repository to get started with the installation:
+Clone the repository to get started with the installation:
 ``git clone https://git.tk.informatik.tu-darmstadt.de/SPIN/ID2T-toolkit``
 
-After cloning the repository, initialize its submodules with
+Install dependencies, initialize submodules, build the C++ modules and create the ID2T executables:
+``./build.sh``
+
+Or initialize its submodules manually:
     git submodule init
     git submodule update
 
-Build the C++ modules and create the ID2T executable:
-``./build.sh``
+To skip dependency installation use the ``--non-interactive`` argument:
+``./build.sh --non-interactive``
 
 Run ID2T with the command ``./id2t``.
+
+Run unit tests with the command ``./run_tests``.
+
+Run efficiency tests with the command ``./test_efficiency``.
+
 
 ## Usage examples
 In this section, we provide examples on how ID2T is used.
