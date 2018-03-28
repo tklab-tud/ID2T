@@ -316,6 +316,7 @@ class Controller:
         """
         Plots the statistics to a file by using the given customization parameters.
         """
+        print("Statistical plots are being generated", end="", flush=True)
         if params is not None and params[0] is not None:
             # FIXME: cleanup
             params_dict = dict([z.split("=") for z in params])
