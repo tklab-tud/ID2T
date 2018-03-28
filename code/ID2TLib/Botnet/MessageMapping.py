@@ -17,7 +17,9 @@ class MessageMapping:
         self.messages = messages
         self.id_to_packet = {}
         ts_date_format = "%Y-%m-%d %H:%M:%S.%f"
-        self.pcap_start_dt = datetime.datetime.strptime(pcap_start_timestamp_str, ts_date_format)
+        first_msg_dt = datetime.datetime.fromtimestamp(min(messages, key=lambda msg: msg.time).time)
+        orig_pcap_start_dt = datetime.datetime.strptime(pcap_start_timestamp_str, ts_date_format)
+        self.pcap_start_dt = min(first_msg_dt, orig_pcap_start_dt)
 
     def map_message(self, message, packet):
         self.id_to_packet[message.msg_id] = packet
