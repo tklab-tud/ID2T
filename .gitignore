@@ -34,3 +34,7 @@ resources/test/ID2T_results
 id2t
 run_tests
 test_efficiency
+
+# memory_profiler
+*.png
+*.dat
