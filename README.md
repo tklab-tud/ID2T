@@ -180,8 +180,17 @@ There are also parameterizable selectors which take conditions as input. Followi
 	-> returns the MAC address matching the given criteria
 	Supports the field: ipAddress
 
-Parameterizable selectors also allow for specifying another query in the comparison instead of a specific value, like the following example demonstrates:
-	macAddress(ipAddress=most_used(ipAddress))
+Parameterizable selectors also allow for specifying another query in the condition instead of a specific value, like the following example demonstrates:
+	macAddress(ipAddress in most_used(ipAddress))
+
+Conditions inside parameterizable selectors can contain all the usual comparison operators (<, <=, =, >=, >) when the right side of the condition is a single value. If the right side is a list, such as the return value of e.g. most_used(), the `` in ``-operator is to be used instead, unless the list is reduced to a single value by the use of an extractor.
+
+The following examples provide a demonstration of how lists can be used inside parameterizable selectors:
+```
+macAddress(ipAddress in ipAddress(pktssent > 1))         -> Returns the MAC addresses of all IP addresses that sent more than one packet
+macAddress(ipAddress = random(ipAddress(pktssent > 1)))  -> Returns the MAC address of a random IP address out of all IP addresses that sent more than one packet
+macAddress(ipAddress in [192.168.189.1,192.168.189.143]) -> Returns the MAC address of all IP addresses in the provided list
+```
 
 __Extractors__ are to be used on the result of a named query. If the result is a list, applying an extractor reduces the result set to a single element. If the result is already a single element, the extractor is ignored.
 ```
