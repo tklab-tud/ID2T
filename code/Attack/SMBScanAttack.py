@@ -19,6 +19,9 @@ class SMBScanAttack(BaseAttack.BaseAttack):
     def __init__(self):
         """
         Creates a new instance of the SMBScanAttack.
+        This Attack injects TCP Syn Requests to the port 445 of several ips and related response into the output
+        pcap file.
+        If port 445 is open, it will simulate and inject the SMB Protocol Negotiation too.
         """
         # Initialize attack
         super(SMBScanAttack, self).__init__("SmbScan Attack", "Injects an SMB scan",
@@ -86,6 +89,9 @@ class SMBScanAttack(BaseAttack.BaseAttack):
         self.add_param_value(atkParam.Parameter.PROTOCOL_VERSION, "1")
 
     def generate_attack_packets(self):
+        """
+        Creates the attack packets.
+        """
 
         pps = self.get_param_value(atkParam.Parameter.PACKETS_PER_SECOND)
 
@@ -224,6 +230,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     confirm.time = timestamp_confirm
                     self.packets.append(confirm)
 
+                    # 3) Build SMB Negotiation packets
                     smb_mid = rnd.randint(1, 65535)
                     smb_pid = rnd.randint(1, 65535)
                     smb_req_tail_arr = []
@@ -242,6 +249,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                             smb_req_tail_arr.append(SMBNegociate_Protocol_Request_Tail(BufferData=dia))
                             smb_req_tail_size += len(SMBNegociate_Protocol_Request_Tail(BufferData=dia))
 
+                    # Creation of SMB Negotiate Protocol Request packet
                     smb_req_head = SMBNegociate_Protocol_Request_Header(Flags2=0x2801, PID=smb_pid, MID=smb_mid,
                                                                         ByteCount=smb_req_tail_size)
                     smb_req_length = len(smb_req_head) + smb_req_tail_size
@@ -281,8 +289,9 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     end = Util.get_filetime_format(timestamp_smb_rsp - diff * 0.1)
                     system_time = rnd.randint(begin, end)
 
+                    # Creation of SMB Negotiate Protocol Response packets
                     if smb_version is not "1" and hosting_version is not "1":
-                        smb_rsp_paket = SMB2.SMB2_SYNC_Header(Flags=1)
+                        smb_rsp_packet = SMB2.SMB2_SYNC_Header(Flags=1)
                         smb_rsp_negotiate_body =\
                             SMB2.SMB2_Negotiate_Protocol_Response(DialectRevision=0x02ff, SecurityBufferOffset=124,
                                                                   SecurityBufferLength=len(security_blob),
@@ -291,22 +300,22 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                                                                   MaxWriteSize=data_size, SystemTime=system_time,
                                                                   ServerStartTime=server_start_time,
                                                                   ServerGuid=server_guid)
-                        smb_rsp_length = len(smb_rsp_paket) + len(smb_rsp_negotiate_body)
+                        smb_rsp_length = len(smb_rsp_packet) + len(smb_rsp_negotiate_body)
                     else:
-                        smb_rsp_paket =\
+                        smb_rsp_packet =\
                             SMBNegociate_Protocol_Response_Advanced_Security(Start="\xffSMB", PID=smb_pid, MID=smb_mid,
                                                                              DialectIndex=5, SecurityBlob=security_blob)
-                        smb_rsp_length = len(smb_rsp_paket)
+                        smb_rsp_length = len(smb_rsp_packet)
                     smb_rsp_net_bio = NBTSession(TYPE=0x00, LENGTH=smb_rsp_length)
                     smb_rsp_tcp = inet.TCP(sport=SMBLib.smb_port, dport=sport, flags='PA', seq=victim_seq,
                                            ack=attacker_seq)
                     smb_rsp_ip = inet.IP(src=ip, dst=ip_source, ttl=destination_ttl_value)
                     smb_rsp_ether = inet.Ether(src=mac_destination, dst=mac_source)
-                    victim_seq += len(smb_rsp_net_bio) + len(smb_rsp_paket)
+                    victim_seq += len(smb_rsp_net_bio) + len(smb_rsp_packet)
                     if smb_version is not "1" and hosting_version is not "1":
                         victim_seq += len(smb_rsp_negotiate_body)
 
-                    smb_rsp_combined = (smb_rsp_ether / smb_rsp_ip / smb_rsp_tcp / smb_rsp_net_bio / smb_rsp_paket)
+                    smb_rsp_combined = (smb_rsp_ether / smb_rsp_ip / smb_rsp_tcp / smb_rsp_net_bio / smb_rsp_packet)
                     if smb_version is not "1" and hosting_version is not "1":
                         smb_rsp_combined = (smb_rsp_combined / smb_rsp_negotiate_body)
 
@@ -361,7 +370,11 @@ class SMBScanAttack(BaseAttack.BaseAttack):
             timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps)
 
     def generate_attack_pcap(self):
+        """
+        Creates a pcap containing the attack packets.
 
+        :return: The location of the generated pcap file.
+        """
         # store end time of attack
         self.attack_end_utime = self.packets[-1].time
 

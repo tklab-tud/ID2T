@@ -80,6 +80,9 @@ class SQLiAttack(BaseAttack.BaseAttack):
                               self.statistics.get_pps_received(most_used_ip_address)) / 2)
 
     def generate_attack_packets(self):
+        """
+        Creates the attack packets.
+        """
         # Timestamp
         timestamp_next_pkt = self.get_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP)
         pps = self.get_param_value(atkParam.Parameter.PACKETS_PER_SECOND)
@@ -241,7 +244,11 @@ class SQLiAttack(BaseAttack.BaseAttack):
         exploit_raw_packets.close()
 
     def generate_attack_pcap(self):
+        """
+        Creates a pcap containing the attack packets.
 
+        :return: The location of the generated pcap file.
+        """
         # Store timestamp of first packet (for attack label)
         self.attack_start_utime = self.packets[0].time
         self.attack_end_utime = self.packets[-1].time

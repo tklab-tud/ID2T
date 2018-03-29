@@ -467,7 +467,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         """
            Gets the minimum and the maximum reply delay for all the connections of a specific IP.
 
-           :param ip_dst: The IP to reterive its reply delay.
+           :param ip_dst: The IP to retrieve its reply delay.
            :return minDelay: minimum delay
            :return maxDelay: maximum delay
 
@@ -493,7 +493,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
            (IP,port) to host B (IP,port)
 
            :param exploit_raw_packets: A set of packets contains several conversations.
-           :return conversations: A set of arrays, each array contains the packet of specifc conversation
+           :return conversations: A set of arrays, each array contains the packet of specific conversation
            :return orderList_conversations: An array contains the conversations ids (IP_A,port_A, IP_b,port_B) in the
            order they appeared in the original packets.
            """
@@ -672,11 +672,21 @@ class BaseAttack(metaclass=abc.ABCMeta):
         """
 
         def is_invalid(ip_address_param: ipaddress.IPv4Address):
+            """
+            TODO FILL ME
+            :param ip_address_param:
+            :return:
+            """
             return ip_address_param.is_multicast or ip_address_param.is_unspecified or ip_address_param.is_loopback or \
                    ip_address_param.is_link_local or ip_address_param.is_reserved or ip_address_param.is_private
 
         # Generate a random IP from specific class
         def generate_address(ip_class_param):
+            """
+            TODO FILL ME
+            :param ip_class_param:
+            :return:
+            """
             if ip_class_param == "Unknown":
                 return ipaddress.IPv4Address(random.randint(0, 2 ** 32 - 1))
             else:
@@ -718,10 +728,19 @@ class BaseAttack(metaclass=abc.ABCMeta):
         """
 
         def is_invalid(ip_address: ipaddress.IPv6Address):
+            """
+            TODO FILL ME
+            :param ip_address:
+            :return:
+            """
             return ip_address.is_multicast or ip_address.is_unspecified or ip_address.is_loopback or \
                    ip_address.is_link_local or ip_address.is_private or ip_address.is_reserved
 
         def generate_address():
+            """
+            TODO FILL ME
+            :return:
+            """
             return ipaddress.IPv6Address(random.randint(0, 2 ** 128 - 1))
 
         ip_addresses = []
@@ -742,7 +761,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         Generates n random MAC addresses.
 
         :param n: The number of MAC addresses to be generated.
-        :return: A single MAC addres, or if n>1, a list of MAC addresses
+        :return: A single MAC address, or if n>1, a list of MAC addresses
         """
 
         def is_invalid(address_param: str):

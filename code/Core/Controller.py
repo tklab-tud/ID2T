@@ -143,6 +143,11 @@ class Controller:
 
     @staticmethod
     def process_help(params):
+        """
+        TODO: FILL ME
+        :param params:
+        :return:
+        """
         if not params:
             print("Query mode allows you to enter SQL-queries as well as named queries.")
             print()
@@ -243,7 +248,18 @@ class Controller:
         """
 
         def make_completer(vocabulary):
+            """
+            TODO: FILL ME
+            :param vocabulary:
+            :return:
+            """
             def custom_template(text, state):
+                """
+                TODO: FILL ME
+                :param text:
+                :param state:
+                :return:
+                """
                 results = [x for x in vocabulary if x.startswith(text)] + [None]
                 return results[state]
 

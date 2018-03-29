@@ -27,7 +27,7 @@ class PcapFile(object):
 
     def get_file_hash(self):
         """
-        Returns the hash for the loaded PCAP file. The hash is calculated bsaed on:
+        Returns the hash for the loaded PCAP file. The hash is calculated based on:
 
         - the file size in bytes
         - the first 224*40000 bytes of the file

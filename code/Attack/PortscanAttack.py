@@ -17,6 +17,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
     def __init__(self):
         """
         Creates a new instance of the PortscanAttack.
+        This attack injects TCP Syn-requests and respective responses into the output pcap file.
         """
         # Initialize attack
         super(PortscanAttack, self).__init__("Portscan Attack", "Injects a nmap 'regular scan'",
@@ -55,7 +56,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
         self.add_param_value(atkParam.Parameter.MAC_SOURCE, self.statistics.get_mac_address(most_used_ip_address))
 
         random_ip_address = self.statistics.get_random_ip_address()
-        # ip-dst should be valid and not equal to ip.src
+        # ip.dst should be valid and not equal to ip.src
         while not self.is_valid_ip_address(random_ip_address) or random_ip_address == most_used_ip_address:
             random_ip_address = self.statistics.get_random_ip_address()
 
@@ -76,6 +77,9 @@ class PortscanAttack(BaseAttack.BaseAttack):
         self.add_param_value(atkParam.Parameter.INJECT_AFTER_PACKET, rnd.randint(0, self.statistics.get_packet_count()))
 
     def generate_attack_packets(self):
+        """
+        Creates the attack packets.
+        """
         mac_source = self.get_param_value(atkParam.Parameter.MAC_SOURCE)
         mac_destination = self.get_param_value(atkParam.Parameter.MAC_DESTINATION)
         pps = self.get_param_value(atkParam.Parameter.PACKETS_PER_SECOND)
@@ -229,6 +233,11 @@ class PortscanAttack(BaseAttack.BaseAttack):
             timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps)
 
     def generate_attack_pcap(self):
+        """
+        Creates a pcap containing the attack packets.
+
+        :return: The location of the generated pcap file.
+        """
         # store end time of attack
         self.attack_end_utime = self.packets[-1].time
 

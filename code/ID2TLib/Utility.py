@@ -18,21 +18,28 @@ ROOT_DIR = CODE_DIR + "../"
 RESOURCE_DIR = ROOT_DIR + "resources/"
 TEST_DIR = RESOURCE_DIR + "test/"
 
+# List of common operation systems
 platforms = {"win7", "win10", "winxp", "win8.1", "macos", "linux", "win8", "winvista", "winnt", "win2000"}
+# Distribution of common operation systems
 platform_probability = {"win7": 48.43, "win10": 27.99, "winxp": 6.07, "win8.1": 6.07, "macos": 5.94, "linux": 3.38,
                         "win8": 1.35, "winvista": 0.46, "winnt": 0.31}
 
+# List of no-ops
 x86_nops = {b'\x90', b'\xfc', b'\xfd', b'\xf8', b'\xf9', b'\xf5', b'\x9b'}
+# List of pseudo no-ops (includes ops which won't change the state e.g. read access)
 x86_pseudo_nops = {b'\x97', b'\x96', b'\x95', b'\x93', b'\x92', b'\x91', b'\x99', b'\x4d', b'\x48', b'\x47', b'\x4f',
                    b'\x40', b'\x41', b'\x37', b'\x3f', b'\x27', b'\x2f', b'\x46', b'\x4e', b'\x98', b'\x9f', b'\x4a',
                    b'\x44', b'\x42', b'\x43', b'\x49', b'\x4b', b'\x45', b'\x4c', b'\x60', b'\x0e', b'\x1e', b'\x50',
                    b'\x55', b'\x53', b'\x51', b'\x57', b'\x52', b'\x06', b'\x56', b'\x54', b'\x16', b'\x58', b'\x5d',
                    b'\x5b', b'\x59', b'\x5f', b'\x5a', b'\x5e', b'\xd6'}
+# Characters which result in operational behaviour (e.g. FTPWinaXeExploit.py)
 forbidden_chars = [b'\x00', b'\x0a', b'\x0d']
 
+# Used in get_attacker_config
 attacker_port_mapping = {}
+# Used in get_attacker_config
 attacker_ttl_mapping = {}
-
+# Identifier for attacks
 generic_attack_names = {"attack", "exploit"}
 
 
@@ -65,7 +72,7 @@ def get_interval_pps(complement_interval_pps, timestamp):
     for row in complement_interval_pps:
         if timestamp <= row[0]:
             return row[1]
-    return complement_interval_pps[-1][1]  # in case the timstamp > capture max timestamp
+    return complement_interval_pps[-1][1]  # in case the timestamp > capture max timestamp
 
 
 def get_nth_random_element(*element_list):

@@ -75,6 +75,9 @@ class DDoSAttack(BaseAttack.BaseAttack):
         self.add_param_value(atkParam.Parameter.VICTIM_BUFFER, rnd.randint(1000, 10000))
 
     def generate_attack_packets(self):
+        """
+        Creates the attack packets.
+        """
         buffer_size = 1000
 
         # Determine source IP and MAC address
@@ -284,6 +287,11 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 self.packets = []
 
     def generate_attack_pcap(self):
+        """
+        Creates a pcap containing the attack packets.
+
+        :return: The location of the generated pcap file.
+        """
         if len(self.packets) > 0:
             self.packets = sorted(self.packets, key=lambda pkt: pkt.time)
             self.path_attack_pcap = self.write_attack_pcap(self.packets, True, self.path_attack_pcap)

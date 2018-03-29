@@ -2,7 +2,7 @@ import scapy.packet as packet
 import scapy.fields as field
 import scapy.layers.netbios as netbios
 
-
+# TODO: FILL ME
 class SMB2_SYNC_Header(packet.Packet):
     namez = "SMB2Negociate Protocol Response Header"
     fields_desc = [field.StrFixedLenField("Start", "\xfeSMB", 4),
@@ -21,7 +21,7 @@ class SMB2_SYNC_Header(packet.Packet):
                    field.LELongField("Signature2", 0)]
 
 
-# No Support of Security Buffer , Padding or Dialect Revision 0x0311
+# TODO: FILL ME Description was not correct anymore
 class SMB2_Negotiate_Protocol_Response(packet.Packet):
     namez = "SMB2Negociate Protocol Response"
     fields_desc = [field.LEShortField("StructureSize", 65),
