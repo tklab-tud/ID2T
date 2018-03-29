@@ -59,7 +59,7 @@ install_pkg_ubuntu()
 
 install_pkg_darwin()
 {
-    BREW_PKGS="cmake python coreutils libdnet libtins boost boost-python --with-python3"
+    BREW_PKGS="cmake python coreutils libdnet libtins sqlite boost boost-python --with-python3"
 
     # Check first to avoid unnecessary update
     echo -e "Packages: Checking..."
