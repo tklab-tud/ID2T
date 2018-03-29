@@ -226,6 +226,16 @@ The [SemVer](http://semver.org/spec/v2.0.0.html) is used for versioning. For cur
 
 - __Patrick Jattke__ - _development of first public release as part of his Bachelor Thesis_
 
+- __Stefano Acquaviti__
+
+- __Jens Keim__
+
+- __Roey Regev__
+
+- __Stefan Schmidt__
+
+- __Jonathan Speth__
+
 ## License
 
 Distributed under the MIT license. See [LICENSE](LICENSE.md) for more information.
