@@ -13,7 +13,7 @@ import ID2TLib.Utility as Util
 
 
 class Controller:
-    def __init__(self, pcap_file_path: str, pcap_out_path: str, do_extra_tests: bool, non_verbose: bool):
+    def __init__(self, pcap_file_path: str, do_extra_tests: bool, non_verbose: bool, pcap_out_path: str=None):
         """
         Creates a new Controller, acting as a central coordinator for the whole application.
 

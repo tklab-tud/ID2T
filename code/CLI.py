@@ -144,7 +144,7 @@ class CLI(object):
         Evaluates given queries.
         """
         # Create Core Controller
-        controller = Controller(self.args.input, self.args.output, self.args.extraTests, self.args.non_verbose)
+        controller = Controller(self.args.input, self.args.extraTests, self.args.non_verbose, self.args.output)
 
         # Load PCAP statistics
         controller.load_pcap_statistics(self.args.export, self.args.recalculate, self.args.statistics)
