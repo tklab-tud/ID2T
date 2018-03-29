@@ -68,13 +68,17 @@ cd \$SCRIPT_PATH
 cd code
 # Execute tests
 set -e
+PRINT_COV=true
 testpath="discover -s Test/"
 if [ -e "Test/test_\$1.py" ]; then
     testpath="Test/test_\$1.py"
+    PRINT_COV=false
 fi
 PYTHONWARNINGS="ignore" coverage3 run --source=. -m unittest \$testpath >/dev/null
-coverage3 html
-coverage3 report -m
+if \$PRINT_COV ; then
+    coverage3 html
+    coverage3 report -m
+fi
 EOF
 
 # Create the test script
