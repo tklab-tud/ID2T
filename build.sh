@@ -88,6 +88,7 @@ ID2T_DIR=\$(readlink -f \$0)
 SCRIPT_PATH=\${ID2T_DIR%/*}
 TEST_DIR=\${SCRIPT_PATH}/resources/test/
 TEST_PCAP=\${TEST_DIR}reference_1998.pcap
+PLOT_DIR=\${TEST_DIR}/plot/
 cd \${SCRIPT_PATH}/code
 error=0
 # Execute tests
@@ -95,6 +96,7 @@ set +e
 python3 -m unittest Test/efficiency_testing.py
 error=\$?
 cd \$SCRIPT_PATH
+mkdir \$PLOT_DIR
 smbloris="SMBLorisAttack attackers.count=4 packets.per-second=8.0"
 smbscan1="SMBScanAttack ip.src=192.168.178.1 ip.dst=192.168.178.10-192.168.179.253"
 smbscan2="SMBScanAttack ip.src=192.168.178.1 ip.dst=192.168.178.10-192.168.178.109 hosting.ip=192.168.178.10-192.168.178.109"
@@ -109,8 +111,8 @@ ms17="MS17Scan ip.src=192.168.178.1"
 eb="EternalBlue"
 for i in "\$smbloris" "\$smbscan1" "\$smbscan2" "\$ftp" "\$porto" "\$portc" "\$sqli" "\$joomla" "\$sality" "\$ddos" "\$ms17" "\$eb"; do
     mprof run ./id2t -i \${TEST_PCAP} -a \${i}
-    mprof plot -t "\${i}" -o "\${TEST_DIR}\${i}.png"
-    mv mprofile_* "\${TEST_DIR}\${i}.dat"
+    mprof plot -t "\${i}" -o "\${PLOT_DIR}\${i}.png"
+    mv mprofile_* "\${PLOT_DIR}\${i}.dat"
 done
 echo "\nPlotted images can be found in \"\${TEST_DIR}\"."
 echo "By executing \"mprof plot <file>.dat\" you can get a more detailed look."

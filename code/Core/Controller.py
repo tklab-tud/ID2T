@@ -12,7 +12,7 @@ import Core.StatsDatabase as StatsDB
 
 
 class Controller:
-    def __init__(self, pcap_file_path: str, do_extra_tests: bool, non_verbose: bool):
+    def __init__(self, pcap_file_path: str, do_extra_tests: bool, non_verbose: bool=True):
         """
         Creates a new Controller, acting as a central coordinator for the whole application.
 
@@ -123,7 +123,7 @@ class Controller:
         print('\nOutput files created: \n', self.pcap_dest_path, '\n', self.label_manager.label_file_path)
 
         # print summary statistics
-        if not self.non_verbose:
+        if not self.non_verbose and len(attacks_config) is not 1:
             self.statistics.stats_summary_post_attack(self.added_packets)
 
     def process_db_queries(self, query, print_results=False):
@@ -332,6 +332,7 @@ class Controller:
         """
         Plots the statistics to a file by using the given customization parameters.
         """
+        print("Statistical plots are being generated", end="", flush=True)
         if params is not None and params[0] is not None:
             # FIXME: cleanup
             params_dict = dict([z.split("=") for z in params])
