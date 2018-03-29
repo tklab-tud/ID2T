@@ -1,6 +1,8 @@
 import os
 import readline
 import sys
+import shutil
+import time
 
 import pyparsing as pp
 import Core.AttackController as atkCtrl
@@ -61,17 +63,18 @@ class Controller:
         self.statistics.load_pcap_statistics(flag_write_file, flag_recalculate_stats, flag_print_statistics,
                                              self.non_verbose)
 
-    def process_attacks(self, attacks_config: list, seeds=None, time=False):
+    def process_attacks(self, attacks_config: list, seeds=None, time_value: bool=False, inject_empty: bool=False):
         """
         Creates the attack based on the attack name and the attack parameters given in the attacks_config. The
         attacks_config is a list of attacks.
         e.g. [['PortscanAttack', 'ip.src="192.168.178.2",'dst.port=80'],['PortscanAttack', 'ip.src="10.10.10.2"]].
         Merges the individual temporary attack pcaps into one single pcap and merges this single pcap with the
-        input dataset.
+        input dataset if desired.
 
         :param attacks_config: A list of attacks with their attack parameters.
         :param seeds: A list of random seeds for the given attacks.
-        :param time: Measure time for packet generation.
+        :param time_value: Measure time for packet generation.
+        :param inject_empty: if flag is set, Attack PCAPs will not be merged with the base PCAP, ie. Attacks are injected into an empty PCAP
         """
 
         # load attacks sequentially
@@ -82,7 +85,7 @@ class Controller:
             else:
                 rng_seed = int.from_bytes(os.urandom(16), sys.byteorder)
             self.attack_controller.set_seed(seed=rng_seed)
-            temp_attack_pcap, duration = self.attack_controller.process_attack(attack[0], attack[1:], time)
+            temp_attack_pcap, duration = self.attack_controller.process_attack(attack[0], attack[1:], time_value)
             self.durations.append(duration)
             self.added_packets += self.attack_controller.total_packets
             if not self.non_verbose:
@@ -105,10 +108,19 @@ class Controller:
         else:
             attacks_pcap_path = self.written_pcaps[0]
 
-        # merge single attack pcap with all attacks into base pcap
-        print("Merging base pcap with single attack pcap...", end=" ")
-        sys.stdout.flush()  # force python to print text immediately
-        self.pcap_dest_path = self.pcap_file.merge_attack(attacks_pcap_path)
+        if inject_empty:
+            # copy the attack pcap to the directory of the base PCAP instead of merging them
+            print("Copying single attack pcap to location of base pcap...", end=" ")
+            sys.stdout.flush()  # force python to print text immediately
+
+            timestamp = '_' + time.strftime("%Y%m%d") + '-' + time.strftime("%X").replace(':', '')
+            self.pcap_dest_path = self.pcap_src_path.replace(".pcap", timestamp + '.pcap')
+            shutil.copy(attacks_pcap_path, self.pcap_dest_path)
+        else:
+            # merge single attack pcap with all attacks into base pcap
+            print("Merging base pcap with single attack pcap...", end=" ")
+            sys.stdout.flush()  # force python to print text immediately
+            self.pcap_dest_path = self.pcap_file.merge_attack(attacks_pcap_path)
 
         if self.pcap_out_path:
             if not self.pcap_out_path.endswith(".pcap"):
