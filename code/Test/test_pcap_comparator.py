@@ -75,7 +75,7 @@ class PcapComparison(unittest.TestCase):
             self.do_test_round(input_pcap, seed, params)
 
     def do_test_round(self, input_pcap, seed, additional_params):
-        command_args = [self.ID2T_LOCATION, "-i", input_pcap, "--seed", seed, "-a", "MembersMgmtCommAttack"] + additional_params
+        command_args = [self.ID2T_LOCATION, "-i", input_pcap, "-S", seed, "-a", "MembersMgmtCommAttack"] + additional_params
         command = " ".join(map(shlex.quote, command_args))
         self.print_warning("The command that gets executed is:", command)
 
@@ -118,8 +118,9 @@ class PcapComparison(unittest.TestCase):
         self.assertIn(self.OUTPUT_FILES_PREFIX_LINE, lines,
                 "The magic string is not in the program output anymore, has the program output structure changed?")
         index = lines.index(self.OUTPUT_FILES_PREFIX_LINE)
+        next_empty_line_index = lines.index("", index) if "" in lines[index:] else len(lines)
 
-        return lines[index + 1:]
+        return lines[index + 1:next_empty_line_index]
 
     def find_pcap(self, files: "list[str]") -> str:
         return next(file for file in files if file.endswith(".pcap"))

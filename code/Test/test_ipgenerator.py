@@ -1,4 +1,4 @@
-from ID2TLib.OldLibs.IPGenerator import IPGenerator
+from ID2TLib.Generator import IPGenerator
 import unittest
 
 class IPGeneratorTestCase(unittest.TestCase):
