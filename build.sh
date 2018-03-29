@@ -62,7 +62,10 @@ if [ $(uname) = 'Darwin' ]; then
 fi
 ID2T_DIR=\$(readlink -f \$0)
 SCRIPT_PATH=\${ID2T_DIR%/*}
-cd \$SCRIPT_PATH/code
+cd \$SCRIPT_PATH
+# Regenerate the statistics DB
+./id2t -i resources/test/reference_1998.pcap -r >/dev/null
+cd code
 # Execute tests
 set -e
 testpath="discover -s Test/"
