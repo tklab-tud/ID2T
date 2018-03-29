@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+This file contains the information on how to recreate the files used for
+regression testing. For every file there is a test that contains the file, the
+rng-seed, a name for the test and a list of parameters. The regression test
+will attempt to recreate all of these files via the parameters given and
+compare the newly created files to the existing ones.
+
+Paths are relative to this files location
+-->
+<tests>
+    <test name="first_test" infile="../../../resources/telnet-raw.pcap" outfile="telnet_regression.pcap" seed="42">
+        <param key="hidden_mark" value="True"/>
+    </test>
+</tests>
