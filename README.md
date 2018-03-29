@@ -28,21 +28,29 @@ The following packages/libraries are required to compile the ID2T C++ modules
 * ``cmake`` (minimum version 2.8)
     - ubuntu: apt install build-essential cmake
     - arch: pacman -S cmake
+    - macos: brew install cmake
 * ``boost`` with the ``python`` component (minimum version 1.54)
     - ubuntu: apt install libboost-dev libboost-python-dev
     - arch: pacman -S boost boost-libs
+    - macos: brew install boost boost-python --with-python3
 * ``libtins`` (minimum version 3.4)
     - ubuntu: apt install libtins-dev (if you cannot find it in the official repository, install it manually from [here](https://github.com/mfontanini/libtins))
     - arch: (install from AUR, i.e. pacaur -S libtins, or manually from [here](https://github.com/mfontanini/libtins)).
+    - macos: brew install libtins
 * ``python`` development libraries
     - ubuntu: apt install python3-dev
     - arch: pacman -S python python-pip
+    - macos: brew install python
 * ``sqlite`` (minimum version 3.0)
     - ubuntu: apt install sqlite3
     - arch: pacman -S sqlite
+    - macos: brew install sqlite
 * ``tcpdump``
     - ubuntu: apt install tcpdump
     - arch: pacman -S tcpdump
+    - macos: brew install libdnet
+* ``coreutils`` (needed for greadlink)
+    - macos: brew install coreutils
 
 #### Required Python Packages
 The following python packages are required to run ID2T. Install the packages with your preferred package manager. For example, you can use pip3 (pip for python 3). Install pip3 in ubuntu with ``apt install python3-pip`` and install the packages with ``sudo pip3 install <packagename>``.
