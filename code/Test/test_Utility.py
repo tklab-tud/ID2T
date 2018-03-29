@@ -201,14 +201,11 @@ class TestUtility(unittest.TestCase):
         self.assertEqual(Utility.handle_most_used_outputs(test_input), 0)
 
     def test_check_payload_len_exceeded(self):
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(ValueError):
             Utility.check_payload_len(10, 5)
 
     def test_check_payload_len_valid(self):
-        try:
-            Utility.check_payload_len(5, 10)
-        except SystemExit:
-            self.fail()
+        Utility.check_payload_len(5, 10)
 
     def test_remove_generic_ending_attack(self):
         self.assertEqual(Utility.remove_generic_ending("someattack"), "some")
