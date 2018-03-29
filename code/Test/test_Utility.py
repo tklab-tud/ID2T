@@ -53,13 +53,10 @@ class TestUtility(unittest.TestCase):
         self.assertIn(Utility.get_rnd_os(), Utility.platforms)
 
     def test_check_platform_valid(self):
-        try:
             Utility.check_platform("linux")
-        except SystemExit:
-            self.fail()
 
     def test_check_platform_invalid(self):
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(ValueError):
             Utility.check_platform("abc")
 
     def test_get_ip_range_forwards(self):
@@ -81,7 +78,7 @@ class TestUtility(unittest.TestCase):
         self.assertEqual(Utility.get_ip_range(start, end), result)
 
     def test_generate_source_port_from_platform_invalid(self):
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(ValueError):
             Utility.generate_source_port_from_platform("abc")
 
     def test_generate_source_port_from_platform_oldwin_firstport(self):
@@ -108,7 +105,7 @@ class TestUtility(unittest.TestCase):
     # TODO: get_filetime_format Test
 
     def test_get_rnd_boot_time_invalid(self):
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(ValueError):
             Utility.get_rnd_boot_time(10, "abc")
 
     def test_get_rnd_boot_time_linux(self):

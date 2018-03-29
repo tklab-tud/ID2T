@@ -6,7 +6,6 @@ import ID2TLib.Utility as Utility
 
 class TestSMBLib(unittest.TestCase):
     def test_get_smb_version_all(self):
-
         for platform in Utility.platforms:
             with self.subTest(platform):
                 result = SMBLib.get_smb_version(platform)
@@ -14,15 +13,13 @@ class TestSMBLib(unittest.TestCase):
                                  result in SMBLib.smb_versions_per_samba.values()))
 
     def test_get_smb_version_invalid(self):
-
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(ValueError):
             SMBLib.get_smb_version("abc")
 
     def test_get_smb_version_mac(self):
         self.assertEqual(SMBLib.get_smb_version("macos"), "2.1")
 
     def test_get_smb_version_win(self):
-
         win_platforms = {'win7', 'win10', 'winxp', 'win8.1', 'win8', 'winvista', 'winnt', "win2000"}
 
         for platform in win_platforms:
@@ -33,8 +30,7 @@ class TestSMBLib(unittest.TestCase):
         self.assertIn(SMBLib.get_smb_version("linux"), SMBLib.smb_versions_per_samba.values())
 
     def test_get_smb_platform_data_invalid(self):
-
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(ValueError):
             SMBLib.get_smb_platform_data("abc", 0)
 
     def test_get_smb_platform_data_linux(self):

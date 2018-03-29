@@ -110,7 +110,7 @@ def get_rnd_os():
     return os_dist.random()
 
 
-def check_platform(platform: str):
+def check_platform(platform: str) -> None:
     """
     Checks if the given platform is currently supported
     if not exits with error
@@ -118,9 +118,8 @@ def check_platform(platform: str):
     :param platform: the platform, which should be validated
     """
     if platform not in platforms:
-        print("\nERROR: Invalid platform: " + platform + "." +
-              "\n Please select one of the following platforms: ", platforms)
-        exit(1)
+        raise ValueError("ERROR: Invalid platform: " + platform + "." +
+                         "\n Please select one of the following platforms: " + ",".join(platforms))
 
 
 def get_ip_range(start_ip: str, end_ip: str):
