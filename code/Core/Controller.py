@@ -105,61 +105,66 @@ class Controller:
                 os.remove(self.written_pcaps[i + 1])  # remove merged pcap
                 self.written_pcaps[i + 1] = attacks_pcap_path
             print("done.")
-        else:
+        elif len(self.written_pcaps) == 1:
             attacks_pcap_path = self.written_pcaps[0]
 
-        if inject_empty:
-            # copy the attack pcap to the directory of the base PCAP instead of merging them
-            print("Copying single attack pcap to location of base pcap...", end=" ")
-            sys.stdout.flush()  # force python to print text immediately
+        if attacks_pcap_path:
+            if inject_empty:
+                # copy the attack pcap to the directory of the base PCAP instead of merging them
+                print("Copying single attack pcap to location of base pcap...", end=" ")
+                sys.stdout.flush()  # force python to print text immediately
 
-            timestamp = '_' + time.strftime("%Y%m%d") + '-' + time.strftime("%X").replace(':', '')
-            self.pcap_dest_path = self.pcap_src_path.replace(".pcap", timestamp + '.pcap')
-            shutil.copy(attacks_pcap_path, self.pcap_dest_path)
-        else:
-            # merge single attack pcap with all attacks into base pcap
-            print("Merging base pcap with single attack pcap...", end=" ")
-            sys.stdout.flush()  # force python to print text immediately
-            self.pcap_dest_path = self.pcap_file.merge_attack(attacks_pcap_path)
-
-        if self.pcap_out_path:
-            if not self.pcap_out_path.endswith(".pcap"):
-                self.pcap_out_path += ".pcap"
-            result_path = self.pcap_out_path
-        else:
-            tmp_path_tuple = self.pcap_dest_path.rpartition("/")
-            result_path = Util.OUT_DIR + tmp_path_tuple[2]
-
-        os.rename(self.pcap_dest_path, result_path)
-        self.pcap_dest_path = result_path
-        created_files = [self.pcap_dest_path]
-
-        # process/move other created files
-        pcap_root = os.path.splitext(self.pcap_dest_path)[0]
-        for k, v in Util.MISC_OUT_FILES.items():
-            if v is None:
-                created_files.append(k)
+                timestamp = '_' + time.strftime("%Y%m%d") + '-' + time.strftime("%X").replace(':', '')
+                self.pcap_dest_path = self.pcap_src_path.replace(".pcap", timestamp + '.pcap')
+                shutil.copy(attacks_pcap_path, self.pcap_dest_path)
             else:
-                outpath = pcap_root + "_" + k
-                os.rename(v, outpath)
-                created_files.append(outpath)
+                # merge single attack pcap with all attacks into base pcap
+                print("Merging base pcap with single attack pcap...", end=" ")
+                sys.stdout.flush()  # force python to print text immediately
+                self.pcap_dest_path = self.pcap_file.merge_attack(attacks_pcap_path)
 
-        print("done.")
+            if self.pcap_out_path:
+                if not self.pcap_out_path.endswith(".pcap"):
+                    self.pcap_out_path += ".pcap"
+                result_path = self.pcap_out_path
+            else:
+                tmp_path_tuple = self.pcap_dest_path.rpartition("/")
+                result_path = Util.OUT_DIR + tmp_path_tuple[2]
 
-        # delete intermediate PCAP files
-        print('Deleting intermediate attack pcap...', end=" ")
-        sys.stdout.flush()  # force python to print text immediately
-        os.remove(attacks_pcap_path)
-        print("done.")
+            os.rename(self.pcap_dest_path, result_path)
+            self.pcap_dest_path = result_path
+            created_files = [self.pcap_dest_path]
 
-        # write label file with attacks
-        self.label_manager.write_label_file(self.pcap_dest_path)
-        created_files.insert(1, self.label_manager.label_file_path)
+            # process/move other created files
+            pcap_root = os.path.splitext(self.pcap_dest_path)[0]
+            for k, v in Util.MISC_OUT_FILES.items():
+                if v is None:
+                    created_files.append(k)
+                else:
+                    outpath = pcap_root + "_" + k
+                    os.rename(v, outpath)
+                    created_files.append(outpath)
 
-        # print status message
-        print('\nOutput files created:')
-        for filepath in created_files:
-            print(filepath)
+            print("done.")
+
+            # delete intermediate PCAP files
+            print('Deleting intermediate attack pcap...', end=" ")
+            sys.stdout.flush()  # force python to print text immediately
+            os.remove(attacks_pcap_path)
+            print("done.")
+
+            # write label file with attacks
+            self.label_manager.write_label_file(self.pcap_dest_path)
+            created_files.insert(1, self.label_manager.label_file_path)
+
+            # print status message
+            print('\nOutput files created:')
+            for filepath in created_files:
+                print(filepath)
+        else:
+            print("done.")
+            print('\nOutput files created:')
+            print("--> No packets were injected. Therefore no output files were created.")
 
         # print summary statistics
         if not self.non_verbose:
