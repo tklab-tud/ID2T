@@ -265,6 +265,7 @@ class Controller:
                     print("Attack number:   " + str(i))
                     print("Attack name:     " + str(label.attack_name))
                     print("Attack note:     " + str(label.attack_note))
+                    print("Attack seed:     " + str(label.seed))
                     print("Start timestamp: " + str(label.timestamp_start))
                     print("End timestamp:   " + str(label.timestamp_end))
                     print()
