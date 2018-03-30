@@ -188,11 +188,10 @@ class Controller:
             self.statisticsDB.process_db_query(query, print_results)
 
     @staticmethod
-    def process_help(params):
+    def process_help(params) -> None:
         """
-        TODO: FILL ME
-        :param params:
-        :return:
+        Prints either general help messages, or information about specific commands.
+        :param params: A list of parameters for the help command (can be empty).
         """
         if not params:
             print("Query mode allows you to enter SQL-queries as well as named queries.")
