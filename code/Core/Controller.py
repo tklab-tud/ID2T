@@ -270,6 +270,12 @@ class Controller:
                     print()
             print()
             return True
+        elif cmd == "set":
+            if len(params) == 3:
+                if params[0].lower() == "attack_note":
+                    i = int(params[1])
+                    self.label_manager.labels[i].attack_note = params[2]
+                return True
         elif cmd == "tables":
             self.statisticsDB.process_db_query("SELECT name FROM sqlite_master WHERE type='table';", True)
             return True
