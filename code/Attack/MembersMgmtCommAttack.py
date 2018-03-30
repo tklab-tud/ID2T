@@ -187,7 +187,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         messages = self._create_messages()
 
         if messages == []:
-            return 0, []
+            return 0, None
 
         # Setup (initial) parameters for packet creation loop
         BUFFER_SIZE = 1000
