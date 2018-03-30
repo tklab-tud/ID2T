@@ -59,7 +59,6 @@ class Controller:
         :param flag_write_file: Writes the statistics to a file.
         :param flag_recalculate_stats: Forces the recalculation of statistics.
         :param flag_print_statistics: Prints the statistics on the terminal.
-        :param flag_non_verbose: Reduces terminal clutter.
         :return: None
         """
         self.statistics.load_pcap_statistics(flag_write_file, flag_recalculate_stats, flag_print_statistics,
