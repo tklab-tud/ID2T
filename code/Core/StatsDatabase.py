@@ -1,6 +1,6 @@
 import os.path
 import random as rnd
-import re
+import typing
 import sqlite3
 import sys
 
@@ -360,23 +360,23 @@ class StatsDatabase:
                 for i in range(0, len(result)):
                     print(str(self.cursor.description[i][0]) + ": " + str(result[i]))
             else:
-                self._print_query_results(query_string_in, result)
+                self._print_query_results(query_string_in, result if isinstance(result, list) else [result])
 
         return result
 
-    def _print_query_results(self, query_string_in: str, result):
+    def _print_query_results(self, query_string_in: str, result: typing.List[typing.Union[str, float, int]]) -> None:
         """
         Prints the results of a query.
         Based on http://stackoverflow.com/a/20383011/3017719.
 
         :param query_string_in: The query the results belong to
-        :param result: The results of the query
+        :param result: The list of query results
         """
         # Print number of results according to type of result
-        if isinstance(result, list):
-            print("Query returned " + str(len(result)) + " records:\n")
-        else:
+        if len(result) == 1:
             print("Query returned 1 record:\n")
+        else:
+            print("Query returned " + str(len(result)) + " records:\n")
 
         # Print query results
         if query_string_in.lstrip().upper().startswith(
@@ -385,8 +385,13 @@ class StatsDatabase:
             columns = []
             tavnit = '|'
             separator = '+'
-            for cd in self.cursor.description:
-                widths.append(len(cd) + 10)
+            for index, cd in enumerate(self.cursor.description):
+                max_col_length = 0
+                if len(result) > 0:
+                    max_col_length = max(list(map(lambda x:
+                                                  len(str(x[index] if len(self.cursor.description) > 1 else x)),
+                                                  result)))
+                widths.append(max(len(cd[0]), max_col_length))
                 columns.append(cd[0])
             for w in widths:
                 tavnit += " %-" + "%ss |" % (w,)
@@ -394,11 +399,8 @@ class StatsDatabase:
             print(separator)
             print(tavnit % tuple(columns))
             print(separator)
-            if isinstance(result, list):
-                for row in result:
-                    print(tavnit % row)
-            else:
-                print(tavnit % result)
+            for row in result:
+                print(tavnit % row)
             print(separator)
         else:
             print(result)
