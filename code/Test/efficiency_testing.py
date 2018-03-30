@@ -50,6 +50,9 @@ class EfficiencyTests(Test.ID2TAttackTest):
     def test_MS17(self):
         self.temporal_efficiency_test([['MS17Scan', 'ip.src=192.168.178.1']], time_limit=1.5, factor=1000)
 
+    def test_MemcrashedSpoofer(self):
+        self.temporal_efficiency_test([['MemcrashedSpoofer']], time_limit=1.5, factor=1000)
+
     # FIXME: improve EternalBlue efficiency
     @ut.skip("EternalBlue needs performance improvements to pass the efficiency test")
     def test_EternalBlue(self):
