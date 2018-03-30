@@ -78,7 +78,7 @@ class UnitTestNamedQueries(unittest.TestCase):
     def test_least_used_mssvalue(self):
         self.assertEqual(controller.statistics.process_db_query('least_used(mssvalue)'), 1460)
 
-    def least_used_winsize(self):
+    def test_least_used_winsize(self):
         self.assertEqual(controller.statistics.process_db_query('least_used(winsize)'), leastUsedWinASize)
 
     def test_least_used_ipclass(self):
