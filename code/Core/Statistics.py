@@ -677,6 +677,25 @@ class Statistics:
 
         return avg_delay_local, avg_delay_external
 
+    def get_filtered_degree(self, degree_type: str):
+        """
+        gets the desired type of degree statistics and filters IPs with degree value zero
+
+        :param degree_type: the desired type of degrees, one of the following: inDegree, outDegree, overallDegree
+        :return: the filtered degrees
+        """
+
+        degrees_raw = self.stats_db.process_user_defined_query(
+                "SELECT ipAddress, %s FROM ip_degrees" % degree_type)
+
+        degrees = []
+        if(degrees_raw):
+            for deg in degrees_raw:
+                if int(deg[1]) > 0:
+                    degrees.append(deg)
+        
+        return degrees
+
     def get_rnd_win_size(self, pkts_num):
         """
         :param pkts_num: maximum number of window sizes, that should be returned
@@ -1073,6 +1092,164 @@ class Statistics:
                 plt.savefig(out, dpi=500)
                 return out
 
+        def plot_in_degree(file_ending: str):
+            """
+            Creates a Plot, visualizing the in-degree for every IP Address
+
+            :param file_ending: The file extension for the output file containing the plot, e.g. "pdf"
+            :return: A filepath to the file containing the created plot
+            """
+
+            plt.gcf().clear()
+
+            # retrieve data
+            in_degree = self.get_filtered_degree("inDegree")
+
+            graphx, graphy = [], []
+            for entry in in_degree:
+                # degree values
+                graphx.append(entry[1])
+                # IP labels
+                graphy.append(entry[0])
+
+            # set labels
+            plt.title("Indegree per IP Address")
+            plt.ylabel('IpAddress')
+            plt.xlabel('Indegree')
+
+            #set width of the bars
+            width = 0.3
+
+            # set scalings
+            plt.figure(figsize=(int(len(graphx))/20 + 5, int(len(graphy)/5) + 5))  # these proportions just worked well
+
+            #set limits of the axis
+            plt.ylim([0, len(graphy)])
+            plt.xlim([0, max(graphx) + 10])
+
+            # display numbers at each bar
+            for i, v in enumerate(graphx):
+                plt.text(v + 1, i + .1, str(v), color='blue', fontweight='bold')
+
+            # display grid for better visuals
+            plt.grid(True)
+
+            # plot the bar
+            labels = graphy
+            graphy = list(range(len(graphx)))
+            plt.barh(graphy, graphx, width, align='center', linewidth=1, color='red', edgecolor='red')
+            plt.yticks(graphy, labels)
+            out = self.pcap_filepath.replace('.pcap', '_plot-In Degree of an IP' + file_ending)
+            plt.tight_layout()
+            plt.savefig(out,dpi=500)
+
+            return out
+
+        def plot_out_degree(file_ending: str):
+            """
+            Creates a Plot, visualizing the out-degree for every IP Address
+
+            :param file_ending: The file extension for the output file containing the plot, e.g. "pdf"
+            :return: A filepath to the file containing the created plot
+            """
+
+            plt.gcf().clear()
+
+            # retrieve data
+            out_degree = self.get_filtered_degree("outDegree")
+
+            graphx, graphy = [], []
+            for entry in out_degree:
+                # degree values
+                graphx.append(entry[1])
+                # IP labels
+                graphy.append(entry[0])
+
+            # set labels
+            plt.title("Outdegree per IP Address")
+            plt.ylabel('IpAddress')
+            plt.xlabel('Outdegree')
+
+            #set width of the bars
+            width = 0.3
+
+            # set scalings
+            plt.figure(figsize=(int(len(graphx))/20 + 5, int(len(graphy)/5) + 5))  # these proportions just worked well
+
+            #set limits of the axis
+            plt.ylim([0, len(graphy)])
+            plt.xlim([0, max(graphx) + 10])
+
+            # display numbers at each bar
+            for i, v in enumerate(graphx):
+                plt.text(v + 1, i + .1, str(v), color='blue', fontweight='bold')
+
+            # display grid for better visuals
+            plt.grid(True)
+
+            # plot the bar
+            labels = graphy
+            graphy = list(range(len(graphx)))
+            plt.barh(graphy, graphx, width, align='center', linewidth=1, color='red', edgecolor='red')
+            plt.yticks(graphy, labels)
+            out = self.pcap_filepath.replace('.pcap', '_plot-Out Degree of an IP' + file_ending)
+            plt.tight_layout()
+            plt.savefig(out,dpi=500)
+
+            return out
+
+        def plot_overall_degree(file_ending: str):
+            """
+            Creates a Plot, visualizing the overall-degree for every IP Address
+
+            :param file_ending: The file extension for the output file containing the plot, e.g. "pdf"
+            :return: A filepath to the file containing the created plot
+            """
+
+            plt.gcf().clear()
+
+            # retrieve data
+            overall_degree = self.get_filtered_degree("overallDegree")
+
+            graphx, graphy = [], []
+            for entry in overall_degree:
+                # degree values
+                graphx.append(entry[1])
+                # IP labels
+                graphy.append(entry[0])
+
+            # set labels
+            plt.title("Overalldegree per IP Address")
+            plt.ylabel('IpAddress')
+            plt.xlabel('Overalldegree')
+
+            #set width of the bars
+            width = 0.3
+
+            # set scalings
+            plt.figure(figsize=(int(len(graphx))/20 + 5, int(len(graphy)/5) + 5))  # these proportions just worked well
+
+            #set limits of the axis
+            plt.ylim([0, len(graphy)])
+            plt.xlim([0, max(graphx) + 10])
+
+            # display numbers at each bar
+            for i, v in enumerate(graphx):
+                plt.text(v + 1, i + .1, str(v), color='blue', fontweight='bold')
+
+            # display grid for better visuals
+            plt.grid(True)
+
+            # plot the bar
+            labels = graphy
+            graphy = list(range(len(graphx)))
+            plt.barh(graphy, graphx, width, align='center', linewidth=1, color='red', edgecolor='red')
+            plt.yticks(graphy, labels)
+            out = self.pcap_filepath.replace('.pcap', '_plot-Overall Degree of an IP' + file_ending)
+            plt.tight_layout()
+            plt.savefig(out,dpi=500)
+            return out
+
         ttl_out_path = plot_ttl('.' + file_format)
         mss_out_path = plot_mss('.' + file_format)
         win_out_path = plot_win('.' + file_format)
@@ -1089,6 +1266,9 @@ class Statistics:
         plot_interval_new_tos = plot_interval_new_tos('.' + file_format)
         plot_interval_new_win_size = plot_interval_new_win_size('.' + file_format)
         plot_interval_new_mss = plot_interval_new_mss('.' + file_format)
+        plot_out_degree = plot_out_degree('.' + file_format)
+        plot_in_degree = plot_in_degree('.' + file_format)
+        plot_overall_degree = plot_overall_degree('.' + file_format)
 
         # Time consuming plot
         # port_out_path = plot_port('.' + format)
