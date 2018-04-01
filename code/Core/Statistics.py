@@ -1,6 +1,7 @@
 import os
 import random
 import time
+import numpy
 from math import sqrt, ceil, log
 from operator import itemgetter
 
@@ -1412,6 +1413,105 @@ class Statistics:
             # plot data and return outpath
             return plot_big_conv_ext_stat("totalConversationDuration", title, 'Duration', suffix)
 
+        def plot_comm_histogram(attr:str, title:str, label:str, suffix:str):
+            """
+            Plots a histogram about the specified attribute for communications.
+            :param attr: The statistics attribute for this histogram
+            :param title: The title of the histogram
+            :param label: The xlabel of the histogram
+            :param suffix: The file suffix
+            :return: The path to the created plot
+            """
+
+            plt.gcf().clear()
+            result_raw = self.stats_db.process_user_defined_query(
+                "SELECT %s FROM conv_statistics_extended" % attr)
+
+            # return without plotting if no data available
+            if not result_raw:
+                return None
+
+            result = []
+            for entry in result_raw:
+                result.append(entry[0])
+
+            # if title would be cut off, set minimum width
+            plt_size = plt.gcf().get_size_inches()
+            min_width = len(title) * 0.12
+            if plt_size[0] < min_width:
+                plt.gcf().set_size_inches(min_width, plt_size[1])  # set plot size
+
+            # set additional plot parameters
+            plt.title(title)
+            plt.ylabel("Relative frequency of connections")
+            plt.xlabel(label)
+            width = 0.5
+            plt.grid(True)
+
+            # create 11 bins
+            bins = []
+            max_val = max(result)
+            for i in range(0, 11):
+                bins.append(i * max_val/10)
+
+            # set weights normalize histogram
+            weights = numpy.ones_like(result)/float(len(result))
+
+            # plot the above data, first use plain numbers as graphy to maintain sorting
+            plt.hist(result, bins=bins, weights=weights, color='red', edgecolor='red', align="mid", rwidth=0.5)
+            plt.xticks(bins)
+
+            # save created figure
+            out = self.pcap_filepath.replace('.pcap', suffix)
+            plt.savefig(out, dpi=500)
+            return out
+
+        def plot_histogram_degree(degree_type:str, title:str, label:str, suffix:str):          
+            """
+            Plots a histogram about the specified type for the degree of an IP.
+            :param degree_type: The type of degree, i.e. inDegree, outDegree or overallDegree
+            :param title: The title of the histogram
+            :param label: The xlabel of the histogram
+            :param suffix: The file suffix
+            :return: The path to the created plot
+            """  
+            
+            plt.gcf().clear()
+            result_raw = self.get_filtered_degree(degree_type)
+
+            # return without plotting if no data available
+            if not result_raw:
+                return None
+
+            result = []
+            for entry in result_raw:
+                result.append(entry[1])
+
+            # set additional plot parameters
+            plt.title(title)
+            plt.ylabel("Relative frequency of IPs")
+            plt.xlabel(label)
+            width = 0.5
+            plt.grid(True)
+
+            # create 11 bins
+            bins = []
+            max_val = max(result)
+            for i in range(0, 11):
+                bins.append(int(i * max_val/10))
+
+            # set weights normalize histogram
+            weights = numpy.ones_like(result)/float(len(result))
+
+            # plot the above data, first use plain numbers as graphy to maintain sorting
+            plt.hist(result, bins=bins, weights=weights, color='red', edgecolor='red', align="mid", rwidth=0.5)
+            plt.xticks(bins)
+
+            # save created figure
+            out = self.pcap_filepath.replace('.pcap', suffix)
+            plt.savefig(out, dpi=500)
+            return out
+
         ttl_out_path = plot_ttl('.' + file_format)
         mss_out_path = plot_mss('.' + file_format)
         win_out_path = plot_win('.' + file_format)
@@ -1428,6 +1528,22 @@ class Statistics:
         plot_interval_new_tos = plot_interval_new_tos('.' + file_format)
         plot_interval_new_win_size = plot_interval_new_win_size('.' + file_format)
         plot_interval_new_mss = plot_interval_new_mss('.' + file_format)
+        plot_hist_indegree_out = plot_histogram_degree("inDegree", "Histogram - Ingoing degree per IP Address",
+            "Ingoing degree", "_plot-Histogram Ingoing Degree per IP" + file_format)
+        plot_hist_outdegree_out = plot_histogram_degree("outDegree", "Histogram - Outgoing degree per IP Address",
+            "Outgoing degree", "_plot-Histogram Outgoing Degree per IP" + file_format)
+        plot_hist_overalldegree_out = plot_histogram_degree("overallDegree", "Histogram - Overall degree per IP Address",
+            "Overall degree", "_plot-Histogram Overall Degree per IP" + file_format)
+        plot_hist_pkts_per_connection_out = plot_comm_histogram("pktsCount", "Histogram - Number of exchanged packets per connection",
+            "Number of packets", "_plot-Histogram PktCount per Connection" + "." + file_format)
+        plot_hist_avgpkts_per_commint_out = plot_comm_histogram("avgIntervalPktCount", "Histogram - Average number of exchanged packets per communication interval",
+            "Average number of packets", "_plot-Histogram Avg PktCount per Interval per Connection" + "." + file_format)
+        plot_hist_avgtime_betw_commints_out = plot_comm_histogram("avgTimeBetweenIntervals", "Histogram - Average time between communication intervals in seconds",
+            "Average time between intervals", "_plot-Histogram Avg Time Between Intervals per Connection" + "." + file_format)
+        plot_hist_avg_int_time_per_connection_out = plot_comm_histogram("avgIntervalTime", "Histogram - Average duration of a communication interval in seconds",
+            "Average interval time", "_plot-Histogram Avg Interval Time per Connection" + "." + file_format)
+        plot_hist_total_comm_duration_out = plot_comm_histogram("totalConversationDuration", "Histogram - Total communication duration in seconds",
+            "Duration", "_plot-Histogram Communication Duration per Connection" + "." + file_format)
         plot_out_degree = plot_out_degree('.' + file_format)
         plot_in_degree = plot_in_degree('.' + file_format)
         plot_overall_degree = plot_overall_degree('.' + file_format)
