@@ -1250,6 +1250,168 @@ class Statistics:
             plt.savefig(out,dpi=500)
             return out
 
+        def plot_big_conv_ext_stat(attr:str, title:str, xlabel:str, suffix:str):
+            """
+            Plots the desired statistc per connection as horizontal bar plot. 
+            Included are 'half-open' connections, where only one packet is exchanged.
+            The given statistics table has to have at least the attributes 'ipAddressA', 'portA', 'ipAddressB',
+            'portB' and the specified additional attribute.
+            Note: there may be cutoff/scaling problems within the plot if there is too little data.
+
+            :param attr: The desired statistic, named with respect to its attribute in the given statistics table
+            :param table: The statistics table 
+            :param title: The title of the created plot
+            :param xlabel: The name of the x-axis of the created plot
+            :param suffix: The suffix of the created file, including file extension
+            :return: A filepath to the file containing the created plot
+            """
+            plt.gcf().clear()
+            result = self.stats_db.process_user_defined_query(
+                "SELECT ipAddressA, portA, ipAddressB, portB, %s FROM conv_statistics_extended" % attr)
+
+            if (result):
+                graphy, graphx = [], []
+                # plot data in descending order
+                result = sorted(result, key=lambda row: row[4])
+
+                # compute plot data
+                for i, row in enumerate(result):
+                    addr1, addr2 = "%s:%d" % (row[0], row[1]), "%s:%d" % (row[2], row[3])
+                    # adjust the justification of strings to improve appearance
+                    len_max = max(len(addr1), len(addr2))
+                    addr1 = addr1.ljust(len_max)
+                    addr2 = addr2.ljust(len_max)
+                    # add plot data
+                    graphy.append("%s\n%s" % (addr1, addr2))
+                    graphx.append(row[4])
+
+
+            # have x axis and its label appear at the top (instead of bottom)
+            fig, ax = plt.subplots()
+            ax.xaxis.tick_top()
+            ax.xaxis.set_label_position("top")
+
+            # compute plot height in inches for scaling the plot
+            dist_mult_height, dist_mult_width = 0.55, 0.07  # these values turned out to work well
+
+            # use static scale along the conversation axis, if there are too little entries to use dynamic scaling numbers
+            if len(graphy) < 10:
+                plt_height = 7.5
+            # otherwise use the numbers above
+            else:
+                plt_height = len(graphy) * dist_mult_height
+
+            # use static scale along the x axis, if the x values are all 0
+            if max(graphx) < 200:  
+                plt_width = 7.5  # 7.5 as static width worked well
+                if max(graphx) == 0:
+                    ax.set_xlim(0, 10)
+            # otherwise use the numbers above
+            else:
+                plt_width = max(graphx) * dist_mult_width
+
+            title_distance = 1 + 0.012*52.8/plt_height  # orginally, a good title distance turned out to be 1.012 with a plot height of 52.8
+
+            # if title would be cut off, set minimum width
+            min_width = len(title) * 0.15
+            if plt_width < min_width:
+                plt_width = min_width
+
+            plt.gcf().set_size_inches(plt_width, plt_height)  # set plot size
+
+            # set additional plot parameters
+            plt.title(title, y=title_distance)
+            plt.xlabel(xlabel)
+            plt.ylabel('Connection')
+            width = 0.5
+            plt.grid(True)
+            plt.gca().margins(y=0)  # removes the space between data and x-axis within the plot
+
+            # plot the above data, first use plain numbers as graphy to maintain sorting
+            plt.barh(range(len(graphy)), graphx, width, align='center', linewidth=0.5, color='red', edgecolor='red')
+            # now change the y numbers to the respective address labels
+            plt.yticks(range(len(graphy)), graphy)
+            # try to use tight layout to cut off unnecessary space
+            try:
+                plt.tight_layout(pad=4)
+            except (ValueError, numpy.linalg.linalg.LinAlgError):
+                pass
+
+            # save created figure
+            out = self.pcap_filepath.replace('.pcap', suffix)
+            plt.savefig(out, dpi=500)
+            return out
+
+        def plot_packets_per_connection(file_ending: str):
+            """
+            Plots the total number of exchanged packets per connection. 
+
+            :param file_ending: The file extension for the output file containing the plot
+            :return: A filepath to the file containing the created plot
+            """
+
+            title = 'Number of exchanged packets per connection'
+            suffix = '_plot-PktCount per Connection Distribution' + file_ending
+
+            # plot data and return outpath
+            return plot_big_conv_ext_stat("pktsCount", title, "Number of packets", suffix)
+
+        def plot_avg_pkts_per_comm_interval(file_ending: str):
+            """
+            Plots the average number of exchanged packets per communication interval for every connection. 
+
+            :param file_ending: The file extension for the output file containing the plot
+            :return: A filepath to the file containing the created plot
+            """
+
+            title = 'Average number of exchanged packets per communication interval'
+            suffix = '_plot-Avg PktCount Communication Interval Distribution' + file_ending
+
+            # plot data and return outpath
+            return plot_big_conv_ext_stat("avgIntervalPktCount", title, "Number of packets", suffix)
+
+        def plot_avg_time_between_comm_interval(file_ending: str):
+            """
+            Plots the average time between the communication intervals of every connection. 
+
+            :param file_ending: The file extension for the output file containing the plot
+            :return: A filepath to the file containing the created plot
+            """
+
+            title = 'Average time between communication intervals in seconds'
+            suffix = '_plot-Avg Time Between Communication Intervals Distribution' + file_ending
+
+            # plot data and return outpath
+            return plot_big_conv_ext_stat("avgTimeBetweenIntervals", title, 'Average time between intervals', suffix)
+
+        def plot_avg_comm_interval_time(file_ending: str):
+            """
+            Plots the average duration of a communication interval of every connection. 
+
+            :param file_ending: The file extension for the output file containing the plot
+            :return: A filepath to the file containing the created plot
+            """
+
+            title = 'Average duration of a communication interval in seconds'
+            suffix = '_plot-Avg Duration Communication Interval Distribution' + file_ending
+
+            # plot data and return outpath
+            return plot_big_conv_ext_stat("avgIntervalTime", title, 'Average interval time', suffix)
+
+        def plot_total_comm_duration(file_ending: str):
+            """
+            Plots the total communication duration of every connection. 
+
+            :param file_ending: The file extension for the output file containing the plot
+            :return: A filepath to the file containing the created plot
+            """
+
+            title = 'Total communication duration in seconds'
+            suffix = '_plot-Total Communication Duration Distribution' + file_ending
+
+            # plot data and return outpath
+            return plot_big_conv_ext_stat("totalConversationDuration", title, 'Duration', suffix)
+
         ttl_out_path = plot_ttl('.' + file_format)
         mss_out_path = plot_mss('.' + file_format)
         win_out_path = plot_win('.' + file_format)
@@ -1269,6 +1431,11 @@ class Statistics:
         plot_out_degree = plot_out_degree('.' + file_format)
         plot_in_degree = plot_in_degree('.' + file_format)
         plot_overall_degree = plot_overall_degree('.' + file_format)
+        plot_packets_per_connection_out = plot_packets_per_connection('.' + file_format)
+        plot_avg_pkts_per_comm_interval_out = plot_avg_pkts_per_comm_interval('.' + file_format)
+        plot_avg_time_between_comm_interval_out = plot_avg_time_between_comm_interval('.' + file_format)
+        plot_avg_comm_interval_time_out = plot_avg_comm_interval_time("." + file_format)
+        plot_total_comm_duration_out = plot_total_comm_duration("." + file_format)
 
         # Time consuming plot
         # port_out_path = plot_port('.' + format)
