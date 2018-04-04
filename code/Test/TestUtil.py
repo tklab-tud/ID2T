@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
-import scapy.all
 import scapy.packet
+import scapy.utils
 import shlex
 import subprocess
 import os
@@ -11,7 +11,7 @@ import os
 # where exactly pcaps differ
 class PcapComparator:
     def compare_files(self, file: str, other_file: str):
-        self.compare_captures(scapy.all.rdpcap(file), scapy.all.rdpcap(other_file))
+        self.compare_captures(scapy.utils.rdpcap(file), scapy.utils.rdpcap(other_file))
 
     def compare_captures(self, packetsA, packetsB):
         if len(packetsA) != len(packetsB):

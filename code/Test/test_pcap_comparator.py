@@ -6,7 +6,6 @@ import time
 import unittest
 import random
 
-import scapy.all
 from Test.TestUtil import PcapComparator, ID2TExecution
 
 # this dictionary holds the generators (functions) for the parameters
