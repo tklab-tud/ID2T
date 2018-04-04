@@ -178,7 +178,9 @@ void pcap_processor::collect_statistics() {
             }
         }
 
-        std::cout << "\n";
+        std::cout << "\rInspected packets: ";
+        std::cout << "100.0% (" << totalPackets << "/" << totalPackets << ")" << std::endl;
+
         // Save timestamp of last packet into statistics
         stats.setTimestampLastPacket(currentPktTimestamp);
 
