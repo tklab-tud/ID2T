@@ -14,20 +14,33 @@ else
     echo "Error: The 'build' directory was not found."
     exit
 fi
-cmake ..
 
-# Make sure we're able to get the number of cores
-if [ $(uname) = 'Darwin' ]; then
-    NUMCORES=$(sysctl -n hw.logicalcpu)
-else
-    NUMCORES=$(nproc)
-fi
+which ninja &>/dev/null
+if [ $? != 0 ]; then
+    cmake ..
 
-if [ -f Makefile ]; then
-    make -j$NUMCORES
+    # Make sure we're able to get the number of cores
+    if [ $(uname) = 'Darwin' ]; then
+        NUMCORES=$(sysctl -n hw.logicalcpu)
+    else
+        NUMCORES=$(nproc)
+    fi
+
+    if [ -f Makefile ]; then
+        make -j$NUMCORES
+    else
+        echo "Error: 'cmake' did not finish successfully."
+        exit
+    fi
 else
-    echo "Error: 'cmake' did not finish successfully."
-    exit
+    cmake .. -G Ninja
+
+    if [ -f build.ninja ]; then
+        ninja
+    else
+        echo "Error: 'cmake' did not finish successfully."
+        exit
+    fi
 fi
 
 if [ $? -eq 0 ]; then
