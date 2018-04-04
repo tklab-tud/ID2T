@@ -2,6 +2,7 @@ import abc
 import csv
 import hashlib
 import ipaddress
+import math
 import os
 import random
 import random as rnd
@@ -478,11 +479,12 @@ class BaseAttack(metaclass=abc.ABCMeta):
 
         return destination
 
-    def get_reply_delay(self, ip_dst):
+    def get_reply_delay(self, ip_dst, default = 2000):
         """
            Gets the minimum and the maximum reply delay for all the connections of a specific IP.
 
            :param ip_dst: The IP to reterive its reply delay.
+           :param default: The default value to return if no delay could be fount. If < 0 raise an exception instead
            :return minDelay: minimum delay
            :return maxDelay: maximum delay
 
@@ -497,6 +499,14 @@ class BaseAttack(metaclass=abc.ABCMeta):
             min_delay = np.median(all_min_delays)
             all_max_delays = self.statistics.process_db_query("SELECT maxDelay FROM conv_statistics LIMIT 500;")
             max_delay = np.median(all_max_delays)
+
+            if math.isnan(min_delay): # max_delay is nan too then
+                if default < 0:
+                    raise ValueError("Could not calculate min/max_delay")
+
+                min_delay = default
+                max_delay = default
+
         min_delay = int(min_delay) * 10 ** -6  # convert from micro to seconds
         max_delay = int(max_delay) * 10 ** -6
         return min_delay, max_delay
