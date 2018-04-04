@@ -361,10 +361,14 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                 else: # Set varying TTl for external Bots
                     bot_ttl_dist = self.statistics.get_ttl_distribution(bot_configs[bot]["IP"])
                     if len(bot_ttl_dist) > 0:
-                         source_ttl_prob_dict = Lea.fromValFreqsDict(bot_ttl_dist)
-                         bot_configs[bot]["TTL"] = source_ttl_prob_dict.random()
+                        source_ttl_prob_dict = Lea.fromValFreqsDict(bot_ttl_dist)
+                        bot_configs[bot]["TTL"] = source_ttl_prob_dict.random()
                     else:
-                         bot_configs[bot]["TTL"] = self.statistics.process_db_query("most_used(ttlValue)")
+                        most_used_ttl = self.statistics.process_db_query("most_used(ttlValue)")
+                        if isinstance(most_used_ttl, list):
+                            bot_configs[bot]["TTL"] = choice(self.statistics.process_db_query("most_used(ttlValue)"))
+                        else:
+                            bot_configs[bot]["TTL"] = self.statistics.process_db_query("most_used(ttlValue)")
 
         def assign_realistic_timestamps(messages: list, external_ids: set, local_ids: set, avg_delay_local:float, avg_delay_external: float, zero_reference:float):
             """
