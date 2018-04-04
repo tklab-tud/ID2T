@@ -44,7 +44,7 @@ class PcapComparison(unittest.TestCase):
     PCAP_ENVIRONMENT_VALUE = "ID2T_SRC_PCAP"
     SEED_ENVIRONMENT_VALUE = "ID2T_SEED"
 
-    DEFAULT_PCAP = "resources/telnet-raw.pcap"
+    DEFAULT_PCAP = "resources/test/telnet-raw.pcap"
     DEFAULT_SEED = "42"
 
     OUTPUT_FILES_PREFIX_LINE = "Output files created:"

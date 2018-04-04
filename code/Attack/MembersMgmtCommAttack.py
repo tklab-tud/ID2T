@@ -141,7 +141,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         :param statistics: Reference to a statistics object.
         """
         # set class constants
-        self.DEFAULT_XML_PATH = "resources/MembersMgmtComm_example.xml"
+        self.DEFAULT_XML_PATH = "resources/Botnet/MembersMgmtComm_example.xml"
         # probability for responder ID to be local if comm_type is mixed
         self.PROB_RESPND_IS_LOCAL = 0
 
