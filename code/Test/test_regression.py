@@ -7,8 +7,8 @@ from Test.TestUtil import PcapComparator, ID2TExecution
 
 
 class RegressionTest(unittest.TestCase):
-    REGRESSION_DIRECTORY = "../code/Test/regression_files"
-    REGRESSION_DIRECTORY_ID2T_RELATIVE = "code/Test/regression_files"
+    REGRESSION_DIRECTORY = "../resources/test/Botnet/regression_files"
+    REGRESSION_DIRECTORY_ID2T_RELATIVE = "resources/test/Botnet/regression_files"
     ID2T_RELATIVE_TO_LOCAL_PREFIX = "../"
 
     META_FILE = "fileinfo.xml"

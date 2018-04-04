@@ -9,7 +9,7 @@ compare the newly created files to the existing ones.
 Paths are relative to this files location
 -->
 <tests>
-    <test name="first_test" infile="../../../resources/telnet-raw.pcap" outfile="telnet_regression.pcap" seed="42">
+    <test name="first_test" infile="../telnet-raw.pcap" outfile="telnet_regression.pcap" seed="42">
         <param key="hidden_mark" value="True"/>
     </test>
 </tests>
