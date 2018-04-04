@@ -37,7 +37,7 @@ class PcapComparison(unittest.TestCase):
     ID2T_LOCATION = ID2T_PATH + "/" + "id2t"
 
     NUM_ITERATIONS_PER_PARAMS = 3
-    NUM_ITERATIONS = 5
+    NUM_ITERATIONS = 4
 
     PCAP_ENVIRONMENT_VALUE = "ID2T_SRC_PCAP"
     SEED_ENVIRONMENT_VALUE = "ID2T_SEED"
@@ -86,13 +86,17 @@ class PcapComparison(unittest.TestCase):
             self.print_warning(execution.get_output())
 
             pcap = execution.get_pcap_filename()
+
             if generated_pcap is not None:
-                try:
-                    self.compare_pcaps(generated_pcap, pcap)
-                except AssertionError as e:
-                    execution.keep_file(pcap)
-                    self.executions[-2].keep_file(generated_pcap)
-                    raise e
+                if "No packets were injected." in pcap or "No packets were injected." in generated_pcap:
+                    self.assertEqual(pcap, generated_pcap)
+                else:
+                    try:
+                        self.compare_pcaps(generated_pcap, pcap)
+                    except AssertionError as e:
+                        execution.keep_file(pcap)
+                        self.executions[-2].keep_file(generated_pcap)
+                        raise e
             else:
                 generated_pcap = pcap
 

@@ -126,9 +126,13 @@ class ID2TExecution:
 
     def get_files_for_deletion(self):
         self._require_run()
-        return [file for file in self.generated_files if file not in self.keep_files]
+        return [file for file in self.generated_files if file not in self.keep_files and not "No packets were injected." in file]
 
     def _find_pcap(self) -> str:
+        for gen_file in self.generated_files:
+            if "No packets were injected." in gen_file:
+                return "No packets were injected."
+
         return next(file for file in self.generated_files if file.endswith(".pcap"))
 
     def _require_run(self):
@@ -140,6 +144,9 @@ class ID2TExecution:
             id2t_relative = os.path.dirname(self.id2t_path)
 
             for file in self.get_files_for_deletion():
+                if "No packets were injected." in file:
+                    pass
+
                 try:
                     os.unlink(id2t_relative + "/" + file)
                 except: pass
