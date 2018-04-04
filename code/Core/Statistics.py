@@ -1274,7 +1274,6 @@ class Statistics:
                 graphy, graphx = [], []
                 # plot data in descending order
                 result = sorted(result, key=lambda row: row[4])
-
                 # compute plot data
                 for i, row in enumerate(result):
                     addr1, addr2 = "%s:%d" % (row[0], row[1]), "%s:%d" % (row[2], row[3])
@@ -1286,39 +1285,18 @@ class Statistics:
                     graphy.append("%s\n%s" % (addr1, addr2))
                     graphx.append(row[4])
 
-
             # have x axis and its label appear at the top (instead of bottom)
             fig, ax = plt.subplots()
             ax.xaxis.tick_top()
             ax.xaxis.set_label_position("top")
 
             # compute plot height in inches for scaling the plot
-            dist_mult_height, dist_mult_width = 0.55, 0.07  # these values turned out to work well
-
-            # use static scale along the conversation axis, if there are too little entries to use dynamic scaling numbers
-            if len(graphy) < 10:
-                plt_height = 7.5
-            # otherwise use the numbers above
-            else:
-                plt_height = len(graphy) * dist_mult_height
-
-            # use static scale along the x axis, if the x values are all 0
-            if max(graphx) < 200:  
-                plt_width = 7.5  # 7.5 as static width worked well
-                if max(graphx) == 0:
-                    ax.set_xlim(0, 10)
-            # otherwise use the numbers above
-            else:
-                plt_width = max(graphx) * dist_mult_width
-
+            dist_mult_height = 0.55  # this value turned out to work well
+            plt_height = len(graphy) * dist_mult_height
             title_distance = 1 + 0.012*52.8/plt_height  # orginally, a good title distance turned out to be 1.012 with a plot height of 52.8
 
-            # if title would be cut off, set minimum width
-            min_width = len(title) * 0.15
-            if plt_width < min_width:
-                plt_width = min_width
-
-            plt.gcf().set_size_inches(plt_width, plt_height)  # set plot size
+            plt.gcf().set_size_inches(plt.gcf().get_size_inches()[0], plt_height)  # set plot height
+            plt.gcf().subplots_adjust(left=0.35)
 
             # set additional plot parameters
             plt.title(title, y=title_distance)
@@ -1332,15 +1310,10 @@ class Statistics:
             plt.barh(range(len(graphy)), graphx, width, align='center', linewidth=0.5, color='red', edgecolor='red')
             # now change the y numbers to the respective address labels
             plt.yticks(range(len(graphy)), graphy)
-            # try to use tight layout to cut off unnecessary space
-            try:
-                plt.tight_layout(pad=4)
-            except (ValueError, numpy.linalg.linalg.LinAlgError):
-                pass
 
             # save created figure
             out = self.pcap_filepath.replace('.pcap', suffix)
-            plt.savefig(out, dpi=500)
+            plt.savefig(out, dpi=500, bbox_inches='tight', pad=0.2)
             return out
 
         def plot_packets_per_connection(file_ending: str):
@@ -1463,7 +1436,7 @@ class Statistics:
 
             # save created figure
             out = self.pcap_filepath.replace('.pcap', suffix)
-            plt.savefig(out, dpi=500)
+            plt.savefig(out, dpi=500, bbox_inches='tight', pad=0.2)
             return out
 
         def plot_histogram_degree(degree_type:str, title:str, label:str, suffix:str):          
@@ -1509,7 +1482,7 @@ class Statistics:
 
             # save created figure
             out = self.pcap_filepath.replace('.pcap', suffix)
-            plt.savefig(out, dpi=500)
+            plt.savefig(out, dpi=500, bbox_inches='tight', pad=0.2)
             return out
 
         ttl_out_path = plot_ttl('.' + file_format)
