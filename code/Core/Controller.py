@@ -63,7 +63,7 @@ class Controller:
         self.statistics.load_pcap_statistics(flag_write_file, flag_recalculate_stats, flag_print_statistics,
                                              self.non_verbose)
 
-    def process_attacks(self, attacks_config: list, seeds=None, measure_time: bool=False, inject_empty: bool=False):
+    def process_attacks(self, attacks_config: list, seeds=None, time: bool=False, inject_empty: bool=False):
         """
         Creates the attack based on the attack name and the attack parameters given in the attacks_config. The
         attacks_config is a list of attacks.
@@ -73,7 +73,7 @@ class Controller:
 
         :param attacks_config: A list of attacks with their attack parameters.
         :param seeds: A list of random seeds for the given attacks.
-        :param measure_time: Measure time for packet generation.
+        :param time: Measure time for packet generation.
         :param inject_empty: if flag is set, Attack PCAPs will not be merged with the base PCAP, ie. Attacks are injected into an empty PCAP
         """
 
@@ -85,7 +85,7 @@ class Controller:
             else:
                 rng_seed = int.from_bytes(os.urandom(16), sys.byteorder)
             self.attack_controller.set_seed(seed=rng_seed)
-            temp_attack_pcap, duration = self.attack_controller.process_attack(attack[0], attack[1:], measure_time)
+            temp_attack_pcap, duration = self.attack_controller.process_attack(attack[0], attack[1:], time)
             self.durations.append(duration)
             self.added_packets += self.attack_controller.total_packets
             if not self.non_verbose:
