@@ -16,21 +16,18 @@ from Test.TestUtil import PcapComparator, ID2TExecution
 # get converted to string correctly
 _random_bool = lambda: random.random() < 0.5
 ID2T_PARAMETER_GENERATORS = {
-    "bots.count": lambda: random.randint(3, 6),
-#    "file.csv":,
-#    "file.xml":,
+    "bots.count": lambda: random.randint(1, 6),
     "hidden_mark": _random_bool,
-#    "interval.selection.end":,
-#    "interval.selection.start":,
-#    "interval.selection.strategy":,
-#    "ip.reuse.external":,
-#    "ip.reuse.local":,
-#    "ip.reuse.total":,
+    "interval.selection.end": lambda: random.randint(100, 1501),  # values are taken from default trace
+    "interval.selection.start": lambda: random.randint(0, 1401),
+    "interval.selection.strategy": lambda: random.choice(["optimal", "custom", "random"]),
+    "ip.reuse.external": lambda: random.uniform(0, 1),
+    "ip.reuse.local": lambda: random.uniform(0, 1),
+    "ip.reuse.total": lambda: random.uniform(0, 1),
     "multiport": _random_bool,
     "nat.present": _random_bool,
     "packet.padding": lambda: random.randint(0, 100),
-    "packets.limit": lambda: random.randint(50, 150),
-    "packets.per-second": lambda: random.randint(1000, 2000) / 100,
+    "packets.limit": lambda: random.randint(50, 250),
     "ttl.from.caida": _random_bool,
 }
 
