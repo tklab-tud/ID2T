@@ -152,8 +152,6 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         """
         # set class constants
         self.DEFAULT_XML_PATH = "resources/Botnet/MembersMgmtComm_example.xml"
-        # probability for responder ID to be local if comm_type is mixed
-        self.PROB_RESPND_IS_LOCAL = 0
 
         # PARAMETERS: initialize with default values
         # (values are overwritten if user specifies them)
