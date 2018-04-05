@@ -179,6 +179,16 @@ The [SemVer](http://semver.org/spec/v2.0.0.html) is used for versioning. For cur
 
 - __Patrick Jattke__ - _development of first public release as part of his Bachelor Thesis_
 
+- __Dustin Born__ - _development of Membership Management Communication Attack_
+
+- __Christof Jugel__ - _development of Membership Management Communication Attack_
+
+- __Marcel Juschak__ - _development of Membership Management Communication Attack_
+
+- __Joshua Kühlberg__ - _development of Membership Management Communication Attack_
+
+- __Denis Waßmann__ - _development of Membership Management Communication Attack_
+
 ## License
 
 Distributed under the MIT license. See [LICENSE](LICENSE.md) for more information.
