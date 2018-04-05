@@ -336,15 +336,6 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                 bot_configs[random_id] = {"Type": idtype, "IP": ip, "MAC": mac}
                 ids.remove(random_id)
 
-        def index_increment(number: int, max: int):
-            """
-            Number increment with rollover.
-            """
-            if number + 1 < max:
-                return number + 1
-            else:
-                return 0
-
         def assign_realistic_ttls(bot_configs:list):
             '''
             Assigns a realisitic ttl to each bot from @param: bot_configs. Uses statistics and distribution to be able
