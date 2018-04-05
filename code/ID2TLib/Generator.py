@@ -12,10 +12,9 @@ from Attack.MembersMgmtCommAttack import MessageType
 from . import IPv4 as ip
 
 
-
-
-'''PaddingGenerator
-'''
+#################################################
+######## Functions operating on payloads ########
+#################################################
 
 def add_padding(packet, bytes_padding:int = 0, user_padding:bool=True, rnd:bool = False):
     '''
@@ -66,8 +65,6 @@ def equal_length(list_of_packets:list, length:int = 0, padding:int = 0, force_le
 
     return list_of_packets
 
-'''PayloadGenerator
-'''
 
 def generate_payload(size:int=0):
 
@@ -83,8 +80,9 @@ def generate_payload(size:int=0):
 	return payload
 
 
-'''PortGenerator
-'''
+#################################################
+########    Generation of random port    ########
+#################################################
 
 def gen_random_server_port(offset: int=2199):
     """
@@ -97,9 +95,9 @@ def gen_random_server_port(offset: int=2199):
     return (offset + ord(firstLetter) * ord(lastLetter));
 
 
-'''MacAddressGenerator
-'''
-
+#################################################
+########     MAC address generation      ########
+#################################################
 
 class MacAddressGenerator:
     def __init__(self, include_broadcast_macs=False, include_virtual_macs=False):
@@ -140,10 +138,9 @@ class MacAddressGenerator:
         return ":".join("%02X" % b for b in mac_bytes)
 
 
-
-'''PacketGenerator
-'''
-
+#################################################
+########    UDP/TCP Packet generation    ########
+#################################################
 
 class PacketGenerator():
     """
@@ -283,9 +280,10 @@ def generate_udp_packet(ip_src: str = "192.168.64.32", ip_dst: str = "192.168.64
     packet = ether / ip / udp / Raw(load=payload)
     return packet
 
-'''IPGenerator
-'''
 
+#################################################
+########     IP address generation       ########
+#################################################
 
 class IPChooser:
     def random_ip(self):
