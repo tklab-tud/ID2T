@@ -3,15 +3,6 @@ from random import randrange
 from Attack.MembersMgmtCommAttack import MessageType
 from Attack.MembersMgmtCommAttack import Message
 
-# needed because of machine inprecision. E.g A time difference of 0.1s is stored as >0.1s
-EPS_TOLERANCE = 1e-13  # works for a difference of 0.1, no less
-
-def greater_than(a: float, b: float):
-    """
-    A greater than operator desgined to handle slight machine inprecision up to EPS_TOLERANCE.
-    :return: True if a > b, otherwise False
-    """
-    return b - a < -EPS_TOLERANCE
 
 class CommunicationProcessor():
     """
