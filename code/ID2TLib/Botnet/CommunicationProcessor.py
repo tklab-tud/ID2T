@@ -12,7 +12,6 @@ class CommunicationProcessor():
     def __init__(self, mtypes:dict, nat:bool):
         """
         Creates an instance of CommunicationProcessor.
-        :param packets: the list of abstract packets
         :param mtypes: a dict containing an int to EnumType mapping of MessageTypes
         :param nat: whether NAT is present in this network
         """

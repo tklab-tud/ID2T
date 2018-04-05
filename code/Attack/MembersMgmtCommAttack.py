@@ -26,9 +26,19 @@ class MessageType(Enum):
     SALITY_HELLO_REPLY = 104
 
     def is_request(mtype):
+        """
+        Checks whether the given message type is a request or not.
+        :param mtype: the message type to check
+        :return: True if it is a request, False otherwise
+        """
         return mtype in {MessageType.SALITY_HELLO, MessageType.SALITY_NL_REQUEST}
 
     def is_response(mtype):
+        """
+        Checks whether the given message type is a response or not.
+        :param mtype: the message type to check
+        :return: True if it is a response, False otherwise
+        """
         return mtype in {MessageType.SALITY_HELLO_REPLY, MessageType.SALITY_NL_REPLY}
 
 class Message():
