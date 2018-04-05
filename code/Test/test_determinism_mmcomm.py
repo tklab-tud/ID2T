@@ -60,14 +60,19 @@ class PcapComparison(unittest.TestCase):
         self.executions = []
 
     def test_determinism(self):
+        self.print_warning("\n")  # print initial new line
+        self.print_warning("Conducting test for determinism of Membership Management Communication Attack:\n")
         input_pcap = os.environ.get(self.PCAP_ENVIRONMENT_VALUE, self.DEFAULT_PCAP)
         seed = os.environ.get(self.SEED_ENVIRONMENT_VALUE, self.DEFAULT_SEED)
 
         if self.id2t_params is None:
             self.id2t_params = self.random_id2t_params()
 
-        for params in self.id2t_params:
+        for i, params in enumerate(self.id2t_params):
+            self.print_warning("Test round %d:" % (i+1))
+            self.print_warning("=================================")
             self.do_test_round(input_pcap, seed, params)
+            self.print_warning()
 
     def do_test_round(self, input_pcap, seed, additional_params):
         generated_pcap = None
@@ -114,7 +119,8 @@ class PcapComparison(unittest.TestCase):
         self.print_warning("Done")
 
         kept = [file for file in id2t_run.get_kept_files() for id2t_run in self.executions]
-        self.print_warning("The following files have been kept: " + ", ".join(kept))
+        if kept:
+            self.print_warning("The following files have been kept: " + ", ".join(kept))
 
     def compare_pcaps(self, one: str, other: str):
         PcapComparator().compare_files(self.ID2T_PATH + "/" + one, self.ID2T_PATH + "/" + other)

@@ -14,6 +14,7 @@ class RegressionTest(unittest.TestCase):
     META_FILE = "fileinfo.xml"
 
     def test_regression(self):
+        self.print_warning("\n")  # print initial new line
         config_location = self.REGRESSION_DIRECTORY + os.sep + self.META_FILE
         xml_root = xml.etree.ElementTree.parse(config_location).getroot()
         comparator = PcapComparator()
@@ -36,6 +37,7 @@ class RegressionTest(unittest.TestCase):
             outfile = os.path.join(self.REGRESSION_DIRECTORY, test.get("outfile"))
 
             execution = ID2TExecution(infile, seed=test.get("seed"))
+            self.print_warning("Running %s with command:" % test.get("name"))
             self.print_warning(execution.get_run_command(params))
             execution.run(params)
 
@@ -46,9 +48,9 @@ class RegressionTest(unittest.TestCase):
                 comparator.compare_files(new_file, old_file)
             except AssertionError as e:
                 execution.cleanup()
-                raise AssertionError("Test %s failed" % test.get("name")) from e
+                raise AssertionError("Test failed") from e
 
-            self.print_warning("Regression-test %s passed" % test.get("name"))
+            self.print_warning("Test passed")
 
     def assertXMLTagHasAttribute(self, tag, attribute, msg=None):
         self.assertIsNotNone(tag.get(attribute), msg)
