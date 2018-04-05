@@ -40,14 +40,17 @@ def add_padding(packet, bytes_padding:int = 0, user_padding:bool=True, rnd:bool 
 def equal_length(list_of_packets:list, length:int = 0, padding:int = 0, force_len:bool = False):
     '''
     Equals the length of all packets of a given list of packets to the given length. If the given length is smaller than the largest
-    packet, all the other packets are extended to the largest packet's length. Add additional padding
+    packet, all the other packets are extended to the largest packet's length. Adds additional padding
     afterwards to create realism.
-    :param list_of_packets: The given set of packet.
+    :param list_of_packets: The given list of packet.
     :param length: The length each packet should have. Can be redundant, if the largest packet has more bytes
     :param force_len: if true, all packets are forced to take on the length of param length
     than length.
+    :param padding: The amount of bytes that can be appended at most by the second add, that creates realism.
+    (The called function will randomly chose a value between zero and padding.)
     :return: The list of extended packets.
     '''
+
     if not force_len:
         largest_packet = length
         for packet in list_of_packets:
@@ -89,6 +92,8 @@ def gen_random_server_port(offset: int=2199):
     Generates a valid random first and last character for a bots hostname
     and computes a port from these two characters.
     The default offset is chosen from a Sality implementation in 2011
+    :param offset: port base for calculation
+    :return: the generated server port
     """
     firstLetter = random.choice(string.ascii_letters);
     lastLetter = random.choice(string.ascii_letters + string.digits);
