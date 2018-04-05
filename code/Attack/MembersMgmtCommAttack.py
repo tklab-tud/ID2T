@@ -355,7 +355,6 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
             ids = sorted(bot_configs.keys())
             for pos,bot in enumerate(ids):
                 bot_type = bot_configs[bot]["Type"]
-                # print(bot_type)
                 if(bot_type == "local"): # Set fix TTL for local Bots
                     bot_configs[bot]["TTL"] = 128
                     # Set TTL based on TTL distribution of IP address
@@ -548,7 +547,6 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
 
         # retrieve the mapping information
         mapped_ids, packet_start_idx, packet_end_idx = comm_interval["IDs"], comm_interval["Start"], comm_interval["End"]
-        # print(mapped_ids)
         while len(mapped_ids) > number_init_bots:
             rm_idx = randrange(0, len(mapped_ids))
             del mapped_ids[rm_idx]
@@ -562,11 +560,6 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         messages = comm_proc.det_id_roles_and_msgs()
         # use the previously detetermined roles to assign the locality of all IDs
         local_ids, external_ids = comm_proc.det_ext_and_local_ids()
-
-        # print start and end time of mapped interval
-        # print(abstract_packets[packet_start_idx]["Time"])
-        # print(abstract_packets[packet_end_idx]["Time"])
-        # print(mapped_ids)
 
         # determine number of reused local and external IPs
         reuse_percent_total = self.get_param_value(Param.IP_REUSE_TOTAL)
