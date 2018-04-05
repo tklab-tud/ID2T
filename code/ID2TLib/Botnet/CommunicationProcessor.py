@@ -151,12 +151,13 @@ class CommunicationProcessor():
                 # convert the abstract message into a message object to handle it better
                 msg_str = "{0}-{1}".format(id_dst, id_src)
                 # find the request message ID for this response and set its reference index
-                refer_idx = prev_reqs[msg_str]
-                msgs[refer_idx].refer_msg_id = msg_id
+                refer_idx = prev_reqs.get(msg_str, -1)
+                if refer_idx != -1:
+                    msgs[refer_idx].refer_msg_id = msg_id
+                    del(prev_reqs[msg_str])
                 msg = Message(msg_id, id_src, id_dst, msg_type, time, refer_idx, lineno)
                 msgs.append(msg)
                 # remove the request to this response from storage
-                del(prev_reqs[msg_str])
                 msg_id += 1
 
             elif msg_type == MessageType.TIMEOUT and id_src in local_init_ids and not self.nat:
