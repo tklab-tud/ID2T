@@ -152,7 +152,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         self.add_param_value(Param.FILE_XML, self.DEFAULT_XML_PATH)
 
         # Alternatively new attack parameter?
-        duration = int(float(self._get_capture_duration()))
+        duration = int(float(self.statistics.get_capture_duration()))
         self.add_param_value(Param.ATTACK_DURATION, duration)
         self.add_param_value(Param.NUMBER_INITIATOR_BOTS, 1)
         # NAT on by default
@@ -646,15 +646,3 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
             final_messages.append(msg)
 
         return final_messages
-
-
-    def _get_capture_duration(self):
-        """
-        Returns the duration of the input PCAP (since statistics duration seems to be incorrect)
-        """
-        ts_date_format = "%Y-%m-%d %H:%M:%S.%f"
-        ts_first_date = datetime.strptime(self.statistics.get_pcap_timestamp_start(), ts_date_format)
-        ts_last_date = datetime.strptime(self.statistics.get_pcap_timestamp_end(), ts_date_format)
-        diff_date = ts_last_date - ts_first_date
-        duration = "%d.%d" % (diff_date.total_seconds(), diff_date.microseconds)
-        return duration
