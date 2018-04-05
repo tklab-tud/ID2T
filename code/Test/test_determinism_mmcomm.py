@@ -45,6 +45,8 @@ class PcapComparison(unittest.TestCase):
     DEFAULT_PCAP = "resources/test/Botnet/telnet-raw.pcap"
     DEFAULT_SEED = "42"
 
+    VERBOSE = False
+
     def __init__(self, *args, **kwargs):
         unittest.TestCase.__init__(self, *args, **kwargs)
 
@@ -52,6 +54,7 @@ class PcapComparison(unittest.TestCase):
         # do a round of testing for each list[str] we get
         # if none generate some params itself
         self.id2t_params = None
+        self.printed_newline = False
 
     def set_id2t_params(self, params: "list[list[str]]"):
         self.id2t_params = params
@@ -60,7 +63,6 @@ class PcapComparison(unittest.TestCase):
         self.executions = []
 
     def test_determinism(self):
-        self.print_warning("\n")  # print initial new line
         self.print_warning("Conducting test for determinism of Membership Management Communication Attack:\n")
         input_pcap = os.environ.get(self.PCAP_ENVIRONMENT_VALUE, self.DEFAULT_PCAP)
         seed = os.environ.get(self.SEED_ENVIRONMENT_VALUE, self.DEFAULT_SEED)
@@ -126,7 +128,11 @@ class PcapComparison(unittest.TestCase):
         PcapComparator().compare_files(self.ID2T_PATH + "/" + one, self.ID2T_PATH + "/" + other)
 
     def print_warning(self, *text):
-        print(*text, file=sys.stderr)
+        if self.VERBOSE:
+            if not self.printed_newline:
+                print("\n", file=sys.stderr)
+                self.printed_newline = True
+            print(*text, file=sys.stderr)
 
     def random_id2t_params(self):
         """
