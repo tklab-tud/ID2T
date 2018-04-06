@@ -226,6 +226,8 @@ The [SemVer](http://semver.org/spec/v2.0.0.html) is used for versioning. For cur
 
 - __Patrick Jattke__ - _development of first public release as part of his Bachelor Thesis_
 
+- __Aidmar Wainakh__ - _Analyzing and developing attacks as part of his Master Thesis_
+
 - __Stefano Acquaviti__
 
 - __Jens Keim__
