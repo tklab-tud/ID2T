@@ -175,6 +175,8 @@ The [SemVer](http://semver.org/spec/v2.0.0.html) is used for versioning. For cur
 
 - __Carlos Garcia__ - _ID2T idea, guidance and suggestions during development_
 
+- __Leon Böck__ - _guidance and suggestions during development of Membership Management Communication Attack_
+
 - __Nikolay Milanov__ - _development of first prototype within his Master Thesis_
 
 - __Patrick Jattke__ - _development of first public release as part of his Bachelor Thesis_
