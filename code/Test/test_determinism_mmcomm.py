@@ -65,14 +65,18 @@ class PcapComparison(unittest.TestCase):
     def test_determinism(self):
         self.print_warning("Conducting test for determinism of Membership Management Communication Attack:\n")
         input_pcap = os.environ.get(self.PCAP_ENVIRONMENT_VALUE, self.DEFAULT_PCAP)
-        seed = os.environ.get(self.SEED_ENVIRONMENT_VALUE, self.DEFAULT_SEED)
+        seed = os.environ.get(self.SEED_ENVIRONMENT_VALUE, None)
 
         if self.id2t_params is None:
             self.id2t_params = self.random_id2t_params()
 
+        use_random_seeds = not bool(seed)
+
         for i, params in enumerate(self.id2t_params):
             self.print_warning("Test round %d:" % (i+1))
             self.print_warning("=================================")
+            if use_random_seeds:
+                seed = random.randint(0, 0x7FFFFFFF)
             self.do_test_round(input_pcap, seed, params)
             self.print_warning()
 
