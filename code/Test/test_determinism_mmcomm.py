@@ -16,7 +16,7 @@ from Test.TestUtil import PcapComparator, ID2TExecution
 # get converted to string correctly
 _random_bool = lambda: random.random() < 0.5
 ID2T_PARAMETER_GENERATORS = {
-    "bots.count": lambda: random.randint(1, 3),
+    "bots.count": lambda: random.randint(1, 6),
     "hidden_mark": _random_bool,
     "interval.selection.end": lambda: random.randint(100, 1501),  # values are taken from default trace
     "interval.selection.start": lambda: random.randint(0, 1401),
