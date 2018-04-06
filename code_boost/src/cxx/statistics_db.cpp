@@ -64,6 +64,39 @@ void statistics_db::writeStatisticsIP(std::unordered_map<std::string, entry_ipSt
 }
 
 /**
+ * Writes the IP Degrees into the database.
+ * @param ipStatistics The IP statistics from class statistics. Degree Statistics are supposed to be integrated into the ip_statistics table later on,
+ *        therefore they use the same parameter. But for now they are inserted into their own table.
+ */
+void statistics_db::writeStatisticsDegree(std::unordered_map<std::string, entry_ipStat> ipStatistics){
+    try {
+        db->exec("DROP TABLE IF EXISTS ip_degrees");
+        SQLite::Transaction transaction(*db);
+        const char *createTable = "CREATE TABLE ip_degrees ( "
+                "ipAddress TEXT, "
+                "inDegree INTEGER, "
+                "outDegree INTEGER, "
+                "overallDegree INTEGER, "
+                "PRIMARY KEY(ipAddress));";
+        db->exec(createTable);
+        SQLite::Statement query(*db, "INSERT INTO ip_degrees VALUES (?, ?, ?, ?)");
+        for (auto it = ipStatistics.begin(); it != ipStatistics.end(); ++it) {
+            entry_ipStat e = it->second;
+            query.bind(1, it->first);
+            query.bind(2, e.in_degree);
+            query.bind(3, e.out_degree);
+            query.bind(4, e.overall_degree);
+            query.exec();
+            query.reset();
+        }
+        transaction.commit();
+    }
+    catch (std::exception &e) {
+        std::cout << "Exception in statistics_db: " << e.what() << std::endl;
+    }
+}
+
+/**
  * Writes the TTL distribution into the database.
  * @param ttlDistribution The TTL distribution from class statistics.
  */
@@ -393,6 +426,108 @@ void statistics_db::writeStatisticsConv(std::unordered_map<conv, entry_convStat>
                 query.exec();
                 query.reset();
             }
+        }
+        transaction.commit();
+    }
+    catch (std::exception &e) {
+        std::cout << "Exception in statistics_db: " << e.what() << std::endl;
+    }
+}
+
+/**
+ * Writes the extended statistics for every conversation into the database.
+ * @param conv_statistics_extended The extended conversation statistics from class statistics.
+ */
+void statistics_db::writeStatisticsConvExt(std::unordered_map<convWithProt, entry_convStatExt> conv_statistics_extended){
+    try {
+        db->exec("DROP TABLE IF EXISTS conv_statistics_extended");
+        SQLite::Transaction transaction(*db);
+        const char *createTable = "CREATE TABLE conv_statistics_extended ("
+                "ipAddressA TEXT,"
+                "portA INTEGER,"
+                "ipAddressB TEXT,"              
+                "portB INTEGER,"
+                "protocol TEXT,"
+                "pktsCount INTEGER,"
+                "avgPktRate REAL,"
+                "avgDelay INTEGER,"
+                "minDelay INTEGER,"
+                "maxDelay INTEGER,"
+                "avgIntervalPktCount REAL,"
+                "avgTimeBetweenIntervals REAL,"
+                "avgIntervalTime REAL,"
+                "totalConversationDuration REAL,"
+                "PRIMARY KEY(ipAddressA,portA,ipAddressB,portB,protocol));";
+        db->exec(createTable);
+        SQLite::Statement query(*db, "INSERT INTO conv_statistics_extended VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        // iterate over every conversation and interval aggregation pair and store the respective values in the database
+        for (auto it = conv_statistics_extended.begin(); it != conv_statistics_extended.end(); ++it) {
+            convWithProt f = it->first;
+            entry_convStatExt e = it->second;
+
+            int sumDelay = 0;
+            int minDelay = -1;
+            int maxDelay = -1;
+
+            if (e.pkts_count > 1 && f.protocol == "TCP"){
+                for (int i = 0; (unsigned) i < e.interarrival_time.size(); i++) {
+                    sumDelay += e.interarrival_time[i].count();
+                    if (maxDelay < e.interarrival_time[i].count())
+                        maxDelay = e.interarrival_time[i].count();
+                    if (minDelay > e.interarrival_time[i].count() || minDelay == -1)
+                        minDelay = e.interarrival_time[i].count();
+                }
+                if (e.interarrival_time.size() > 0)
+                    e.avg_interarrival_time = (std::chrono::microseconds) sumDelay / e.interarrival_time.size(); // average
+                else 
+                    e.avg_interarrival_time = (std::chrono::microseconds) 0;
+            }
+
+            if (e.total_comm_duration == 0) 
+                e.avg_pkt_rate = e.pkts_count; // pkt per sec
+            else 
+                e.avg_pkt_rate = e.pkts_count / e.total_comm_duration;
+
+            if (e.avg_int_pkts_count > 0){
+                query.bind(1, f.ipAddressA);
+                query.bind(2, f.portA);
+                query.bind(3, f.ipAddressB);
+                query.bind(4, f.portB);
+                query.bind(5, f.protocol);
+                query.bind(6, (int) e.pkts_count);
+                query.bind(7, (float) e.avg_pkt_rate);
+                query.bind(8, (int) e.avg_interarrival_time.count());
+                query.bind(9, minDelay);
+                query.bind(10, maxDelay);
+                query.bind(11, e.avg_int_pkts_count);
+                query.bind(12, e.avg_time_between_ints);
+                query.bind(13, e.avg_interval_time);
+                query.bind(14, e.total_comm_duration);
+                query.exec();
+
+                std::string primary_where = "WHERE ipAddressA=\"" + f.ipAddressA + "\" AND portA=" + std::to_string(f.portA) + " AND ipAddressB=\"";
+                primary_where += f.ipAddressB + "\" AND portB=" + std::to_string(f.portB) + " AND protocol=\"" + f.protocol + "\";";
+                std::string update_stmt;
+
+                // replace -1 with null
+                if (minDelay == -1){
+                    update_stmt = "UPDATE conv_statistics_extended SET minDelay=NULL " + primary_where;
+                    db->exec(update_stmt);
+                }
+
+                if (maxDelay == -1){
+                    update_stmt = "UPDATE conv_statistics_extended SET maxDelay=NULL " + primary_where;
+                    db->exec(update_stmt);
+                }
+
+                if (f.protocol == "UDP" || (f.protocol == "TCP" && e.pkts_count < 2)){
+                    update_stmt = "UPDATE conv_statistics_extended SET avgDelay=NULL " + primary_where;
+                    db->exec(update_stmt);
+                }
+
+                query.reset();
+            }
+            
         }
         transaction.commit();
     }

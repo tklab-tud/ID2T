@@ -12,7 +12,6 @@
 #include <SQLiteCpp/SQLiteCpp.h>
 #include <unordered_map>
 
-
 class statistics_db {
 public:
     /*
@@ -29,6 +28,8 @@ public:
      * Methods for writing values into database
      */
     void writeStatisticsIP(std::unordered_map<std::string, entry_ipStat> ipStatistics);
+
+    void writeStatisticsDegree(std::unordered_map<std::string, entry_ipStat> ipStatistics);
 
     void writeStatisticsTTL(std::unordered_map<ipAddress_ttl, int> ttlDistribution);
 
@@ -50,6 +51,8 @@ public:
 
     void writeStatisticsConv(std::unordered_map<conv, entry_convStat> convStatistics);
 
+    void writeStatisticsConvExt(std::unordered_map<convWithProt, entry_convStatExt> conv_statistics_extended);
+
     void writeStatisticsInterval(std::unordered_map<std::string, entry_intervalStat> intervalStatistics);
 
     void writeDbVersion();
@@ -62,12 +65,14 @@ public:
 
     void writeStatisticsUnrecognizedPDUs(std::unordered_map<unrecognized_PDU, unrecognized_PDU_stat> unrecognized_PDUs);
 
+
 private:
     // Pointer to the SQLite database
     std::unique_ptr<SQLite::Database> db;
 
     // Vector which contains all ports and their corresponding services
     std::unordered_map<int, std::string> portServices;
+
 };
 
 

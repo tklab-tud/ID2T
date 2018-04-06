@@ -1,6 +1,8 @@
 import abc
 import csv
+import hashlib
 import ipaddress
+import math
 import os
 import random
 import random as rnd
@@ -289,12 +291,23 @@ class BaseAttack(metaclass=abc.ABCMeta):
     #########################################
 
     @staticmethod
-    def set_seed(seed: int):
+    def set_seed(seed):
         """
         :param seed: The random seed to be set.
         """
+        seed_final = None
         if isinstance(seed, int):
-            random.seed(seed)
+            seed_final = seed
+        elif isinstance(seed, str):
+            if seed.isdigit():
+                seed_final = int(seed)
+            else:
+                hashed_seed = hashlib.sha1(seed.encode()).digest()
+                seed_final = int.from_bytes(hashed_seed, byteorder="little")
+
+        if seed_final:
+            random.seed(seed_final)
+            np.random.seed(seed_final & 0xFFFFFFFF)
 
     def set_start_time(self):
         """
@@ -344,6 +357,14 @@ class BaseAttack(metaclass=abc.ABCMeta):
         if param_type is None:
             print('Parameter ' + str(param_name) + ' not available for chosen attack. Skipping parameter.')
 
+        # If value is query -> get value from database
+        elif param_name != atkParam.Parameter.INTERVAL_SELECT_STRATEGY and self.statistics.is_query(value):
+            value = self.statistics.process_db_query(value, False)
+            if value is not None and value is not "":
+                is_valid = True
+            else:
+                print('Error in given parameter value: ' + str(value) + '. Data could not be retrieved.')
+
         # Validate parameter depending on parameter's type
         elif param_type == atkParam.ParameterTypes.TYPE_IP_ADDRESS:
             is_valid, value = self._is_ip_address(value)
@@ -385,6 +406,23 @@ class BaseAttack(metaclass=abc.ABCMeta):
                 value = (ts / 1000000)  # convert microseconds from getTimestampMuSec into seconds
         elif param_type == atkParam.ParameterTypes.TYPE_DOMAIN:
             is_valid = self._is_domain(value)
+        elif param_type == atkParam.ParameterTypes.TYPE_FILEPATH:
+            is_valid = os.path.isfile(value)
+        elif param_type == atkParam.ParameterTypes.TYPE_PERCENTAGE:
+            is_valid_float, value = self._is_float(value)
+            if is_valid_float:
+                is_valid = value >= 0 and value <= 1
+            else:
+                is_valid = False
+        elif param_type == atkParam.ParameterTypes.TYPE_PADDING:
+            if isinstance(value, int):
+                is_valid = value >= 0 and value <= 100
+            elif isinstance(value, str) and value.isdigit():
+                value = int(value)
+                is_valid = value >= 0 and value <= 100
+        elif param_type == atkParam.ParameterTypes.TYPE_INTERVAL_SELECT_STRAT:
+            is_valid = value in {"random", "optimal", "custom"}
+
 
         # add value iff validation was successful
         if is_valid:
@@ -463,11 +501,12 @@ class BaseAttack(metaclass=abc.ABCMeta):
 
         return destination
 
-    def get_reply_delay(self, ip_dst):
+    def get_reply_delay(self, ip_dst, default = 2000):
         """
            Gets the minimum and the maximum reply delay for all the connections of a specific IP.
 
-           :param ip_dst: The IP to retrieve its reply delay.
+           :param ip_dst: The IP to reterive its reply delay.
+           :param default: The default value to return if no delay could be fount. If < 0 raise an exception instead
            :return minDelay: minimum delay
            :return maxDelay: maximum delay
 
@@ -482,6 +521,14 @@ class BaseAttack(metaclass=abc.ABCMeta):
             min_delay = np.median(all_min_delays)
             all_max_delays = self.statistics.process_db_query("SELECT maxDelay FROM conv_statistics LIMIT 500;")
             max_delay = np.median(all_max_delays)
+
+            if math.isnan(min_delay): # max_delay is nan too then
+                if default < 0:
+                    raise ValueError("Could not calculate min/max_delay")
+
+                min_delay = default
+                max_delay = default
+
         min_delay = int(min_delay) * 10 ** -6  # convert from micro to seconds
         max_delay = int(max_delay) * 10 ** -6
         return min_delay, max_delay

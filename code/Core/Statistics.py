@@ -1,6 +1,7 @@
 import os
 import random
 import time
+import numpy
 from math import sqrt, ceil, log
 from operator import itemgetter
 
@@ -12,6 +13,7 @@ import matplotlib
 import Core.StatsDatabase as statsDB
 import ID2TLib.PcapFile as PcapFile
 import ID2TLib.Utility as Util
+from ID2TLib.IPv4 import IPAddress
 
 matplotlib.use('Agg', force=True)
 import matplotlib.pyplot as plt
@@ -673,6 +675,93 @@ class Statistics:
         else:
             return None
 
+    def get_avg_delay_local_ext(self):
+        """
+        Calculates the average delay of a packet for external and local communication, based on the tcp handshakes
+        :return: tuple consisting of avg delay for local and external communication, (local, external)
+        """
+
+        conv_delays = self.stats_db.process_user_defined_query("SELECT ipAddressA, ipAddressB, avgDelay FROM conv_statistics")
+        if(conv_delays):
+            external_conv = []
+            local_conv = []
+
+            for conv in conv_delays:
+                IPA = IPAddress.parse(conv[0])
+                IPB = IPAddress.parse(conv[1])
+
+                #split into local and external conversations
+                if(not IPA.is_private() or not IPB.is_private()):
+                    external_conv.append(conv)
+                else:
+                    local_conv.append(conv)
+   
+            # calculate avg local and external delay by summing up the respective delays and dividing them by the number of conversations
+            avg_delay_external = 0.0
+            avg_delay_local = 0.0
+            default_ext = False
+            default_local = False
+
+            if(local_conv):
+                for conv in local_conv:
+                    avg_delay_local += conv[2]
+                avg_delay_local = (avg_delay_local/len(local_conv)) * 0.001 #ms
+            else:
+                # no local conversations in statistics found
+                avg_delay_local = 0.055
+                default_local = True
+
+            if(external_conv):
+                for conv in external_conv:
+                    avg_delay_external += conv[2]
+                avg_delay_external = (avg_delay_external/len(external_conv)) * 0.001 #ms
+            else:
+                # no external conversations in statistics found
+                avg_delay_external = 0.09
+                default_ext = True
+        else:
+            #if no statistics were found, use these numbers
+            avg_delay_external = 0.09
+            avg_delay_local = 0.055
+            default_ext = True
+            default_local = True
+
+        # check whether delay numbers are consistent
+        if avg_delay_local > avg_delay_external:
+            avg_delay_external = avg_delay_local*1.2
+
+        # print information, that (default) values are used, that are not collected from the Input PCAP
+        if default_ext or default_local:
+            if default_ext and default_local:
+                print("Warning: Could not collect average delays for local or external communication, using following values:")
+            elif default_ext:
+                print("Warning: Could not collect average delays for external communication, using following values:")
+            elif default_local:
+                print("Warning: Could not collect average delays for local communication, using following values:")
+            print("Avg delay of external communication: {0}s,  Avg delay of local communication: {1}s".format(avg_delay_external, avg_delay_local))
+            
+
+        return avg_delay_local, avg_delay_external
+
+    def get_filtered_degree(self, degree_type: str):
+        """
+        gets the desired type of degree statistics and filters IPs with degree value zero
+
+        :param degree_type: the desired type of degrees, one of the following: inDegree, outDegree, overallDegree
+        :return: the filtered degrees
+        """
+
+        degrees_raw = self.stats_db.process_user_defined_query(
+                "SELECT ipAddress, %s FROM ip_degrees" % degree_type)
+
+        degrees = []
+        if(degrees_raw):
+            for deg in degrees_raw:
+                if int(deg[1]) > 0:
+                    degrees.append(deg)
+        
+        return degrees
+
     def get_rnd_win_size(self, pkts_num):
         """
         :param pkts_num: maximum number of window sizes, that should be returned
@@ -1177,6 +1266,398 @@ class Statistics:
                 plt.savefig(out, dpi=500)
                 return out
 
+        def plot_in_degree(file_ending: str):
+            """
+            Creates a Plot, visualizing the in-degree for every IP Address
+
+            :param file_ending: The file extension for the output file containing the plot, e.g. "pdf"
+            :return: A filepath to the file containing the created plot
+            """
+
+            plt.gcf().clear()
+
+            # retrieve data
+            in_degree = self.get_filtered_degree("inDegree")
+
+            graphx, graphy = [], []
+            for entry in in_degree:
+                # degree values
+                graphx.append(entry[1])
+                # IP labels
+                graphy.append(entry[0])
+
+            # set labels
+            plt.title("Indegree per IP Address")
+            plt.ylabel('IpAddress')
+            plt.xlabel('Indegree')
+
+            #set width of the bars
+            width = 0.3
+
+            # set scalings
+            plt.figure(figsize=(int(len(graphx))/20 + 5, int(len(graphy)/5) + 5))  # these proportions just worked well
+
+            #set limits of the axis
+            plt.ylim([0, len(graphy)])
+            plt.xlim([0, max(graphx) + 10])
+
+            # display numbers at each bar
+            for i, v in enumerate(graphx):
+                plt.text(v + 1, i + .1, str(v), color='blue', fontweight='bold')
+
+            # display grid for better visuals
+            plt.grid(True)
+
+            # plot the bar
+            labels = graphy
+            graphy = list(range(len(graphx)))
+            plt.barh(graphy, graphx, width, align='center', linewidth=1, color='red', edgecolor='red')
+            plt.yticks(graphy, labels)
+            out = self.pcap_filepath.replace('.pcap', '_plot-In Degree of an IP' + file_ending)
+            plt.tight_layout()
+            plt.savefig(out,dpi=500)
+
+            return out
+
+        def plot_out_degree(file_ending: str):
+            """
+            Creates a Plot, visualizing the out-degree for every IP Address
+
+            :param file_ending: The file extension for the output file containing the plot, e.g. "pdf"
+            :return: A filepath to the file containing the created plot
+            """
+
+            plt.gcf().clear()
+
+            # retrieve data
+            out_degree = self.get_filtered_degree("outDegree")
+
+            graphx, graphy = [], []
+            for entry in out_degree:
+                # degree values
+                graphx.append(entry[1])
+                # IP labels
+                graphy.append(entry[0])
+
+            # set labels
+            plt.title("Outdegree per IP Address")
+            plt.ylabel('IpAddress')
+            plt.xlabel('Outdegree')
+
+            #set width of the bars
+            width = 0.3
+
+            # set scalings
+            plt.figure(figsize=(int(len(graphx))/20 + 5, int(len(graphy)/5) + 5))  # these proportions just worked well
+
+            #set limits of the axis
+            plt.ylim([0, len(graphy)])
+            plt.xlim([0, max(graphx) + 10])
+
+            # display numbers at each bar
+            for i, v in enumerate(graphx):
+                plt.text(v + 1, i + .1, str(v), color='blue', fontweight='bold')
+
+            # display grid for better visuals
+            plt.grid(True)
+
+            # plot the bar
+            labels = graphy
+            graphy = list(range(len(graphx)))
+            plt.barh(graphy, graphx, width, align='center', linewidth=1, color='red', edgecolor='red')
+            plt.yticks(graphy, labels)
+            out = self.pcap_filepath.replace('.pcap', '_plot-Out Degree of an IP' + file_ending)
+            plt.tight_layout()
+            plt.savefig(out,dpi=500)
+
+            return out
+
+        def plot_overall_degree(file_ending: str):
+            """
+            Creates a Plot, visualizing the overall-degree for every IP Address
+
+            :param file_ending: The file extension for the output file containing the plot, e.g. "pdf"
+            :return: A filepath to the file containing the created plot
+            """
+
+            plt.gcf().clear()
+
+            # retrieve data
+            overall_degree = self.get_filtered_degree("overallDegree")
+
+            graphx, graphy = [], []
+            for entry in overall_degree:
+                # degree values
+                graphx.append(entry[1])
+                # IP labels
+                graphy.append(entry[0])
+
+            # set labels
+            plt.title("Overalldegree per IP Address")
+            plt.ylabel('IpAddress')
+            plt.xlabel('Overalldegree')
+
+            #set width of the bars
+            width = 0.3
+
+            # set scalings
+            plt.figure(figsize=(int(len(graphx))/20 + 5, int(len(graphy)/5) + 5))  # these proportions just worked well
+
+            #set limits of the axis
+            plt.ylim([0, len(graphy)])
+            plt.xlim([0, max(graphx) + 10])
+
+            # display numbers at each bar
+            for i, v in enumerate(graphx):
+                plt.text(v + 1, i + .1, str(v), color='blue', fontweight='bold')
+
+            # display grid for better visuals
+            plt.grid(True)
+
+            # plot the bar
+            labels = graphy
+            graphy = list(range(len(graphx)))
+            plt.barh(graphy, graphx, width, align='center', linewidth=1, color='red', edgecolor='red')
+            plt.yticks(graphy, labels)
+            out = self.pcap_filepath.replace('.pcap', '_plot-Overall Degree of an IP' + file_ending)
+            plt.tight_layout()
+            plt.savefig(out,dpi=500)
+            return out
+
+        def plot_big_conv_ext_stat(attr:str, title:str, xlabel:str, suffix:str):
+            """
+            Plots the desired statistc per connection as horizontal bar plot. 
+            Included are 'half-open' connections, where only one packet is exchanged.
+            The given statistics table has to have at least the attributes 'ipAddressA', 'portA', 'ipAddressB',
+            'portB' and the specified additional attribute.
+            Note: there may be cutoff/scaling problems within the plot if there is too little data.
+
+            :param attr: The desired statistic, named with respect to its attribute in the given statistics table
+            :param table: The statistics table 
+            :param title: The title of the created plot
+            :param xlabel: The name of the x-axis of the created plot
+            :param suffix: The suffix of the created file, including file extension
+            :return: A filepath to the file containing the created plot
+            """
+            plt.gcf().clear()
+            result = self.stats_db.process_user_defined_query(
+                "SELECT ipAddressA, portA, ipAddressB, portB, %s FROM conv_statistics_extended" % attr)
+
+            if (result):
+                graphy, graphx = [], []
+                # plot data in descending order
+                result = sorted(result, key=lambda row: row[4])
+                # compute plot data
+                for i, row in enumerate(result):
+                    addr1, addr2 = "%s:%d" % (row[0], row[1]), "%s:%d" % (row[2], row[3])
+                    # adjust the justification of strings to improve appearance
+                    len_max = max(len(addr1), len(addr2))
+                    addr1 = addr1.ljust(len_max)
+                    addr2 = addr2.ljust(len_max)
+                    # add plot data
+                    graphy.append("%s\n%s" % (addr1, addr2))
+                    graphx.append(row[4])
+
+            # have x axis and its label appear at the top (instead of bottom)
+            fig, ax = plt.subplots()
+            ax.xaxis.tick_top()
+            ax.xaxis.set_label_position("top")
+
+            # compute plot height in inches for scaling the plot
+            dist_mult_height = 0.55  # this value turned out to work well
+            plt_height = len(graphy) * dist_mult_height
+            title_distance = 1 + 0.012*52.8/plt_height  # orginally, a good title distance turned out to be 1.012 with a plot height of 52.8
+
+            plt.gcf().set_size_inches(plt.gcf().get_size_inches()[0], plt_height)  # set plot height
+            plt.gcf().subplots_adjust(left=0.35)
+
+            # set additional plot parameters
+            plt.title(title, y=title_distance)
+            plt.xlabel(xlabel)
+            plt.ylabel('Connection')
+            width = 0.5
+            plt.grid(True)
+            plt.gca().margins(y=0)  # removes the space between data and x-axis within the plot
+
+            # plot the above data, first use plain numbers as graphy to maintain sorting
+            plt.barh(range(len(graphy)), graphx, width, align='center', linewidth=0.5, color='red', edgecolor='red')
+            # now change the y numbers to the respective address labels
+            plt.yticks(range(len(graphy)), graphy)
+
+            # save created figure
+            out = self.pcap_filepath.replace('.pcap', suffix)
+            plt.savefig(out, dpi=500, bbox_inches='tight', pad=0.2)
+            return out
+
+        def plot_packets_per_connection(file_ending: str):
+            """
+            Plots the total number of exchanged packets per connection. 
+
+            :param file_ending: The file extension for the output file containing the plot
+            :return: A filepath to the file containing the created plot
+            """
+
+            title = 'Number of exchanged packets per connection'
+            suffix = '_plot-PktCount per Connection Distribution' + file_ending
+
+            # plot data and return outpath
+            return plot_big_conv_ext_stat("pktsCount", title, "Number of packets", suffix)
+
+        def plot_avg_pkts_per_comm_interval(file_ending: str):
+            """
+            Plots the average number of exchanged packets per communication interval for every connection. 
+
+            :param file_ending: The file extension for the output file containing the plot
+            :return: A filepath to the file containing the created plot
+            """
+
+            title = 'Average number of exchanged packets per communication interval'
+            suffix = '_plot-Avg PktCount Communication Interval Distribution' + file_ending
+
+            # plot data and return outpath
+            return plot_big_conv_ext_stat("avgIntervalPktCount", title, "Number of packets", suffix)
+
+        def plot_avg_time_between_comm_interval(file_ending: str):
+            """
+            Plots the average time between the communication intervals of every connection. 
+
+            :param file_ending: The file extension for the output file containing the plot
+            :return: A filepath to the file containing the created plot
+            """
+
+            title = 'Average time between communication intervals in seconds'
+            suffix = '_plot-Avg Time Between Communication Intervals Distribution' + file_ending
+
+            # plot data and return outpath
+            return plot_big_conv_ext_stat("avgTimeBetweenIntervals", title, 'Average time between intervals', suffix)
+
+        def plot_avg_comm_interval_time(file_ending: str):
+            """
+            Plots the average duration of a communication interval of every connection. 
+
+            :param file_ending: The file extension for the output file containing the plot
+            :return: A filepath to the file containing the created plot
+            """
+
+            title = 'Average duration of a communication interval in seconds'
+            suffix = '_plot-Avg Duration Communication Interval Distribution' + file_ending
+
+            # plot data and return outpath
+            return plot_big_conv_ext_stat("avgIntervalTime", title, 'Average interval time', suffix)
+
+        def plot_total_comm_duration(file_ending: str):
+            """
+            Plots the total communication duration of every connection. 
+
+            :param file_ending: The file extension for the output file containing the plot
+            :return: A filepath to the file containing the created plot
+            """
+
+            title = 'Total communication duration in seconds'
+            suffix = '_plot-Total Communication Duration Distribution' + file_ending
+
+            # plot data and return outpath
+            return plot_big_conv_ext_stat("totalConversationDuration", title, 'Duration', suffix)
+
+        def plot_comm_histogram(attr:str, title:str, label:str, suffix:str):
+            """
+            Plots a histogram about the specified attribute for communications.
+            :param attr: The statistics attribute for this histogram
+            :param title: The title of the histogram
+            :param label: The xlabel of the histogram
+            :param suffix: The file suffix
+            :return: The path to the created plot
+            """
+
+            plt.gcf().clear()
+            result_raw = self.stats_db.process_user_defined_query(
+                "SELECT %s FROM conv_statistics_extended" % attr)
+
+            # return without plotting if no data available
+            if not result_raw:
+                return None
+
+            result = []
+            for entry in result_raw:
+                result.append(entry[0])
+
+            # if title would be cut off, set minimum width
+            plt_size = plt.gcf().get_size_inches()
+            min_width = len(title) * 0.12
+            if plt_size[0] < min_width:
+                plt.gcf().set_size_inches(min_width, plt_size[1])  # set plot size
+
+            # set additional plot parameters
+            plt.title(title)
+            plt.ylabel("Relative frequency of connections")
+            plt.xlabel(label)
+            width = 0.5
+            plt.grid(True)
+
+            # create 11 bins
+            bins = []
+            max_val = max(result)
+            for i in range(0, 11):
+                bins.append(i * max_val/10)
+
+            # set weights normalize histogram
+            weights = numpy.ones_like(result)/float(len(result))
+
+            # plot the above data, first use plain numbers as graphy to maintain sorting
+            plt.hist(result, bins=bins, weights=weights, color='red', edgecolor='red', align="mid", rwidth=0.5)
+            plt.xticks(bins)
+
+            # save created figure
+            out = self.pcap_filepath.replace('.pcap', suffix)
+            plt.savefig(out, dpi=500, bbox_inches='tight', pad=0.2)
+            return out
+
+        def plot_histogram_degree(degree_type:str, title:str, label:str, suffix:str):          
+            """
+            Plots a histogram about the specified type for the degree of an IP.
+            :param degree_type: The type of degree, i.e. inDegree, outDegree or overallDegree
+            :param title: The title of the histogram
+            :param label: The xlabel of the histogram
+            :param suffix: The file suffix
+            :return: The path to the created plot
+            """  
+            
+            plt.gcf().clear()
+            result_raw = self.get_filtered_degree(degree_type)
+
+            # return without plotting if no data available
+            if not result_raw:
+                return None
+
+            result = []
+            for entry in result_raw:
+                result.append(entry[1])
+
+            # set additional plot parameters
+            plt.title(title)
+            plt.ylabel("Relative frequency of IPs")
+            plt.xlabel(label)
+            width = 0.5
+            plt.grid(True)
+
+            # create 11 bins
+            bins = []
+            max_val = max(result)
+            for i in range(0, 11):
+                bins.append(int(i * max_val/10))
+
+            # set weights normalize histogram
+            weights = numpy.ones_like(result)/float(len(result))
+
+            # plot the above data, first use plain numbers as graphy to maintain sorting
+            plt.hist(result, bins=bins, weights=weights, color='red', edgecolor='red', align="mid", rwidth=0.5)
+            plt.xticks(bins)
+
+            # save created figure
+            out = self.pcap_filepath.replace('.pcap', suffix)
+            plt.savefig(out, dpi=500, bbox_inches='tight', pad=0.2)
+            return out
+
         ttl_out_path = plot_ttl('.' + file_format)
         print(".", end="", flush=True)
         mss_out_path = plot_mss('.' + file_format)
@@ -1207,6 +1688,46 @@ class Statistics:
         plot_interval_new_win_size = plot_interval_new_win_size('.' + file_format)
         print(".", end="", flush=True)
         plot_interval_new_mss = plot_interval_new_mss('.' + file_format)
+        print(".", end="", flush=True)
+        plot_hist_indegree_out = plot_histogram_degree("inDegree", "Histogram - Ingoing degree per IP Address",
+            "Ingoing degree", "_plot-Histogram Ingoing Degree per IP" + file_format)
+        print(".", end="", flush=True)
+        plot_hist_outdegree_out = plot_histogram_degree("outDegree", "Histogram - Outgoing degree per IP Address",
+            "Outgoing degree", "_plot-Histogram Outgoing Degree per IP" + file_format)
+        print(".", end="", flush=True)
+        plot_hist_overalldegree_out = plot_histogram_degree("overallDegree", "Histogram - Overall degree per IP Address",
+            "Overall degree", "_plot-Histogram Overall Degree per IP" + file_format)
+        print(".", end="", flush=True)
+        plot_hist_pkts_per_connection_out = plot_comm_histogram("pktsCount", "Histogram - Number of exchanged packets per connection",
+            "Number of packets", "_plot-Histogram PktCount per Connection" + "." + file_format)
+        print(".", end="", flush=True)
+        plot_hist_avgpkts_per_commint_out = plot_comm_histogram("avgIntervalPktCount", "Histogram - Average number of exchanged packets per communication interval",
+            "Average number of packets", "_plot-Histogram Avg PktCount per Interval per Connection" + "." + file_format)
+        print(".", end="", flush=True)
+        plot_hist_avgtime_betw_commints_out = plot_comm_histogram("avgTimeBetweenIntervals", "Histogram - Average time between communication intervals in seconds",
+            "Average time between intervals", "_plot-Histogram Avg Time Between Intervals per Connection" + "." + file_format)
+        print(".", end="", flush=True)
+        plot_hist_avg_int_time_per_connection_out = plot_comm_histogram("avgIntervalTime", "Histogram - Average duration of a communication interval in seconds",
+            "Average interval time", "_plot-Histogram Avg Interval Time per Connection" + "." + file_format)
+        print(".", end="", flush=True)
+        plot_hist_total_comm_duration_out = plot_comm_histogram("totalConversationDuration", "Histogram - Total communication duration in seconds",
+            "Duration", "_plot-Histogram Communication Duration per Connection" + "." + file_format)
+        print(".", end="", flush=True)
+        plot_out_degree = plot_out_degree('.' + file_format)
+        print(".", end="", flush=True)
+        plot_in_degree = plot_in_degree('.' + file_format)
+        print(".", end="", flush=True)
+        plot_overall_degree = plot_overall_degree('.' + file_format)
+        print(".", end="", flush=True)
+        plot_packets_per_connection_out = plot_packets_per_connection('.' + file_format)
+        print(".", end="", flush=True)
+        plot_avg_pkts_per_comm_interval_out = plot_avg_pkts_per_comm_interval('.' + file_format)
+        print(".", end="", flush=True)
+        plot_avg_time_between_comm_interval_out = plot_avg_time_between_comm_interval('.' + file_format)
+        print(".", end="", flush=True)
+        plot_avg_comm_interval_time_out = plot_avg_comm_interval_time("." + file_format)
+        print(".", end="", flush=True)
+        plot_total_comm_duration_out = plot_total_comm_duration("." + file_format)
         print(" done.")
 
         # Time consuming plot

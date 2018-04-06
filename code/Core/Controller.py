@@ -1,6 +1,8 @@
 import os
 import readline
 import sys
+import shutil
+import time
 import re
 
 import pyparsing as pp
@@ -13,7 +15,7 @@ import Core.StatsDatabase as StatsDB
 
 
 class Controller:
-    def __init__(self, pcap_file_path: str, do_extra_tests: bool, non_verbose: bool=True):
+    def __init__(self, pcap_file_path: str, do_extra_tests: bool, non_verbose: bool=True, pcap_out_path: str=None):
         """
         Creates a new Controller, acting as a central coordinator for the whole application.
 
@@ -22,6 +24,7 @@ class Controller:
         # Fields
         self.pcap_src_path = pcap_file_path.strip()
         self.pcap_dest_path = ''
+        self.pcap_out_path = pcap_out_path
         self.written_pcaps = []
         self.do_extra_tests = do_extra_tests
         self.non_verbose = non_verbose
@@ -38,6 +41,16 @@ class Controller:
         self.statisticsDB = self.statistics.get_statistics_database()
         self.attack_controller = atkCtrl.AttackController(self.pcap_file, self.statistics, self.label_manager)
 
+        # Set output directory and create it (if necessary)
+        if pcap_out_path is not None:
+            out_dir = os.path.dirname(pcap_out_path)
+            if not out_dir:  # if out_dir is cwd
+                out_dir = "."
+            Util.OUT_DIR = out_dir + os.sep
+        else:
+            Util.OUT_DIR = os.path.join(os.path.dirname(pcap_file_path), "ID2T_results") + os.sep
+        os.makedirs(Util.OUT_DIR, exist_ok=True)
+
     def load_pcap_statistics(self, flag_write_file: bool, flag_recalculate_stats: bool, flag_print_statistics: bool):
         """
         Loads the PCAP statistics either from the database, if the statistics were calculated earlier, or calculates
@@ -52,17 +65,18 @@ class Controller:
         self.statistics.load_pcap_statistics(flag_write_file, flag_recalculate_stats, flag_print_statistics,
                                              self.non_verbose)
 
-    def process_attacks(self, attacks_config: list, seeds=None, time=False):
+    def process_attacks(self, attacks_config: list, seeds=None, time: bool=False, inject_empty: bool=False):
         """
         Creates the attack based on the attack name and the attack parameters given in the attacks_config. The
         attacks_config is a list of attacks.
         e.g. [['PortscanAttack', 'ip.src="192.168.178.2",'dst.port=80'],['PortscanAttack', 'ip.src="10.10.10.2"]].
         Merges the individual temporary attack pcaps into one single pcap and merges this single pcap with the
-        input dataset.
+        input dataset if desired.
 
         :param attacks_config: A list of attacks with their attack parameters.
         :param seeds: A list of random seeds for the given attacks.
         :param time: Measure time for packet generation.
+        :param inject_empty: if flag is set, Attack PCAPs will not be merged with the base PCAP, ie. Attacks are injected into an empty PCAP
         """
 
         # load attacks sequentially
@@ -93,35 +107,66 @@ class Controller:
                 os.remove(self.written_pcaps[i + 1])  # remove merged pcap
                 self.written_pcaps[i + 1] = attacks_pcap_path
             print("done.")
-        else:
+        elif len(self.written_pcaps) == 1:
             attacks_pcap_path = self.written_pcaps[0]
 
-        # merge single attack pcap with all attacks into base pcap
-        print("Merging base pcap with single attack pcap...", end=" ")
-        sys.stdout.flush()  # force python to print text immediately
-        self.pcap_dest_path = self.pcap_file.merge_attack(attacks_pcap_path)
+        if attacks_pcap_path:
+            if inject_empty:
+                # copy the attack pcap to the directory of the base PCAP instead of merging them
+                print("Copying single attack pcap to location of base pcap...", end=" ")
+                sys.stdout.flush()  # force python to print text immediately
 
-        tmp_path_tuple = self.pcap_dest_path.rpartition("/")
-        result_dir = tmp_path_tuple[0] + tmp_path_tuple[1] + "ID2T_results/"
-        result_path = result_dir + tmp_path_tuple[2]
+                timestamp = '_' + time.strftime("%Y%m%d") + '-' + time.strftime("%X").replace(':', '')
+                self.pcap_dest_path = self.pcap_src_path.replace(".pcap", timestamp + '.pcap')
+                shutil.copy(attacks_pcap_path, self.pcap_dest_path)
+            else:
+                # merge single attack pcap with all attacks into base pcap
+                print("Merging base pcap with single attack pcap...", end=" ")
+                sys.stdout.flush()  # force python to print text immediately
+                self.pcap_dest_path = self.pcap_file.merge_attack(attacks_pcap_path)
 
-        os.makedirs(result_dir, exist_ok=True)
-        os.rename(self.pcap_dest_path, result_path)
-        self.pcap_dest_path = result_path
+            if self.pcap_out_path:
+                if not self.pcap_out_path.endswith(".pcap"):
+                    self.pcap_out_path += ".pcap"
+                result_path = self.pcap_out_path
+            else:
+                tmp_path_tuple = self.pcap_dest_path.rpartition("/")
+                result_path = Util.OUT_DIR + tmp_path_tuple[2]
 
-        print("done.")
+            os.rename(self.pcap_dest_path, result_path)
+            self.pcap_dest_path = result_path
+            created_files = [self.pcap_dest_path]
 
-        # delete intermediate PCAP files
-        print('Deleting intermediate attack pcap...', end=" ")
-        sys.stdout.flush()  # force python to print text immediately
-        os.remove(attacks_pcap_path)
-        print("done.")
+            # process/move other created files
+            pcap_root = os.path.splitext(self.pcap_dest_path)[0]
+            for k, v in Util.MISC_OUT_FILES.items():
+                if v is None:
+                    created_files.append(k)
+                else:
+                    outpath = pcap_root + "_" + k
+                    os.rename(v, outpath)
+                    created_files.append(outpath)
 
-        # write label file with attacks
-        self.label_manager.write_label_file(self.pcap_dest_path)
+            print("done.")
 
-        # print status message
-        print('\nOutput files created: \n', self.pcap_dest_path, '\n', self.label_manager.label_file_path)
+            # delete intermediate PCAP files
+            print('Deleting intermediate attack pcap...', end=" ")
+            sys.stdout.flush()  # force python to print text immediately
+            os.remove(attacks_pcap_path)
+            print("done.")
+
+            # write label file with attacks
+            self.label_manager.write_label_file(self.pcap_dest_path)
+            created_files.insert(1, self.label_manager.label_file_path)
+
+            # print status message
+            print('\nOutput files created:')
+            for filepath in created_files:
+                print(filepath)
+        else:
+            print("done.")
+            print('\nOutput files created:')
+            print("--> No packets were injected. Therefore no output files were created.")
 
         # print summary statistics
         if not self.non_verbose and len(attacks_config) is not 1:

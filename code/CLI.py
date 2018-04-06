@@ -70,10 +70,14 @@ class CLI(object):
                             nargs='+', default=[])
         parser.add_argument('-T', '--time', help='measures packet generation time', action='store_true', default=False)
         parser.add_argument('-V', '--non-verbose', help='reduces terminal clutter', action='store_true', default=False)
+        parser.add_argument('-o', '--output', metavar="PCAP_FILE", help='path to the output pcap file')
+        parser.add_argument('-ie', '--inject_empty', action='store_true',
+                                       help='injects ATTACK into an EMPTY PCAP file, using the statistics of the input PCAP.')
 
         # Attack arguments
         parser.add_argument('-a', '--attack', metavar="ATTACK", action='append',
                             help='injects ATTACK into a PCAP file.', nargs='+')
+
         # Parse arguments
         self.args = parser.parse_args(args)
 
@@ -140,7 +144,7 @@ class CLI(object):
         Evaluates given queries.
         """
         # Create Core Controller
-        controller = Controller(self.args.input, self.args.extraTests, self.args.non_verbose)
+        controller = Controller(self.args.input, self.args.extraTests, self.args.non_verbose, self.args.output)
 
         # Load PCAP statistics
         controller.load_pcap_statistics(self.args.export, self.args.recalculate, self.args.statistics)
@@ -159,7 +163,7 @@ class CLI(object):
         # Process attack(s) with given attack params
         if self.args.attack is not None:
             # If attack is present, load attack with params
-            controller.process_attacks(self.args.attack, self.args.rngSeed, self.args.time)
+            controller.process_attacks(self.args.attack, self.args.rngSeed, self.args.time, self.args.inject_empty)
 
         # Parameter -q without arguments was given -> go into query loop
         if self.args.query == [None]:

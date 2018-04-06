@@ -141,14 +141,14 @@ void pcap_processor::collect_statistics() {
         std::chrono::microseconds lastTimestamp = lastpkt->timestamp();
         std::chrono::microseconds captureDuration = lastTimestamp - firstTimestamp;
         if(captureDuration.count()<=0){
-            std::cout<<"ERROR: PCAP file is empty!"<<"\n";
+            std::cout << "ERROR: PCAP file is empty!" << std::endl;
             return;
         }
         long timeInterval_microsec = captureDuration.count() / timeIntervalsNum;
         std::chrono::duration<int, std::micro> timeInterval(timeInterval_microsec);
         std::chrono::microseconds barrier = timeInterval;
 
-        std::cout << "\n";
+        std::cout << std::endl;
         std::chrono::system_clock::time_point lastPrinted = std::chrono::system_clock::now();
 
         // Iterate over all packets and collect statistics
@@ -183,6 +183,9 @@ void pcap_processor::collect_statistics() {
 
         // Save timestamp of last packet into statistics
         stats.setTimestampLastPacket(currentPktTimestamp);
+
+        // Create the communication interval statistics from the gathered communication intervals within every extended conversation statistic
+        stats.createCommIntervalStats();
 
         if(hasUnrecognized) {
             std::cout << "Unrecognized PDUs detected: Check 'unrecognized_pdus' table!" << std::endl;
@@ -257,7 +260,6 @@ void pcap_processor::process_packets(const Packet &pkt) {
         // Assign IP Address to MAC Address
         stats.assignMacAddress(ipAddressSender, macAddressSender);
         stats.assignMacAddress(ipAddressReceiver, macAddressReceiver);
-
     } //PDU is unrecognized
     else {
         hasUnrecognized = true;
@@ -282,17 +284,18 @@ void pcap_processor::process_packets(const Packet &pkt) {
 
         if (p == PDU::PDUType::TCP) {
             TCP tcpPkt = (const TCP &) *pdu_l4;
-
-          // Check TCP checksum
-          if (pdu_l3_type == PDU::PDUType::IP) {
-            stats.checkTCPChecksum(ipAddressSender, ipAddressReceiver, tcpPkt);
-          }
+            
+            // Check TCP checksum
+            if (pdu_l3_type == PDU::PDUType::IP) {
+                stats.checkTCPChecksum(ipAddressSender, ipAddressReceiver, tcpPkt);
+            }
 
             stats.incrementProtocolCount(ipAddressSender, "TCP");
             stats.increaseProtocolByteCount(ipAddressSender, "TCP", sizeCurrentPacket);
 
             // Conversation statistics
             stats.addConvStat(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), pkt.timestamp());
+            stats.addConvStatExt(ipAddressSender,tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), "TCP", pkt.timestamp());
 
             // Window Size distribution
             int win = tcpPkt.window();
@@ -316,7 +319,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
             stats.increaseProtocolByteCount(ipAddressSender, "UDP", sizeCurrentPacket);
             stats.incrementPortCount(ipAddressSender, udpPkt.sport(), ipAddressReceiver, udpPkt.dport(), "UDP");
             stats.increasePortByteCount(ipAddressSender, udpPkt.sport(), ipAddressReceiver, udpPkt.dport(), sizeCurrentPacket, "UDP");
-
+            stats.addConvStatExt(ipAddressSender,udpPkt.sport(), ipAddressReceiver, udpPkt.dport(), "UDP", pkt.timestamp());
         } else if (p == PDU::PDUType::ICMP) {
             stats.incrementProtocolCount(ipAddressSender, "ICMP");
             stats.increaseProtocolByteCount(ipAddressSender, "ICMP", sizeCurrentPacket);

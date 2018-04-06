@@ -222,21 +222,33 @@ The [SemVer](http://semver.org/spec/v2.0.0.html) is used for versioning. For cur
 
 - __Carlos Garcia__ - _ID2T idea, guidance and suggestions during development_
 
+- __Aidmar Wainakh__ - _analysis and development of attacks as part of his Master Thesis_
+
+- __Leon Böck__ - _guidance and suggestions during development of Membership Management Communication Attack_
+
 - __Nikolay Milanov__ - _development of first prototype within his Master Thesis_
 
 - __Patrick Jattke__ - _development of first public release as part of his Bachelor Thesis_
 
-- __Aidmar Wainakh__ - _Analyzing and developing attacks as part of his Master Thesis_
+- __Dustin Born__ - _development of Membership Management Communication Attack_
 
-- __Stefano Acquaviti__
+- __Christof Jugel__ - _development of Membership Management Communication Attack_
 
-- __Jens Keim__
+- __Marcel Juschak__ - _development of Membership Management Communication Attack_
 
-- __Roey Regev__
+- __Joshua Kühlberg__ - _development of Membership Management Communication Attack_
 
-- __Stefan Schmidt__
+- __Denis Waßmann__ - _development of Membership Management Communication Attack_
 
-- __Jonathan Speth__
+- __Stefano Acquaviti__ - _development of multiple attacks and general improvements_
+
+- __Jens Keim__ - _development of multiple attacks and general improvements_
+
+- __Roey Regev__ - _development of multiple attacks and general improvements_
+
+- __Stefan Schmidt__ - _development of multiple attacks and general improvements_
+
+- __Jonathan Speth__ - _development of multiple attacks and general improvements_
 
 ## License
 
