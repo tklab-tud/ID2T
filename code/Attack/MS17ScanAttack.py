@@ -78,7 +78,9 @@ class MS17ScanAttack(BaseAttack.BaseAttack):
         self.add_param_value(atkParam.Parameter.INJECT_AFTER_PACKET, rnd.randint(0, self.statistics.get_packet_count()))
 
     def generate_attack_packets(self):
-
+        """
+        Creates the attack packets.
+        """
         # Timestamp
         timestamp_next_pkt = self.get_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP)
         pps = self.get_param_value(atkParam.Parameter.PACKETS_PER_SECOND)
@@ -104,7 +106,7 @@ class MS17ScanAttack(BaseAttack.BaseAttack):
             source_ttl_prob_dict = lea.Lea.fromValFreqsDict(source_ttl_dist)
             source_ttl_value = source_ttl_prob_dict.random()
         else:
-            source_ttl_value = Util.handle_most_used_outputs(self.statistics.process_db_query("most_used(ttlValue)"))
+            source_ttl_value = Util.handle_most_used_outputs(self.statistics.get_most_used_ttl_value())
 
         destination_ttl_dist = self.statistics.get_ttl_distribution(ip_destination)
         if len(destination_ttl_dist) > 0:
@@ -112,7 +114,7 @@ class MS17ScanAttack(BaseAttack.BaseAttack):
             destination_ttl_value = destination_ttl_prob_dict.random()
         else:
             destination_ttl_value = Util.handle_most_used_outputs(
-                self.statistics.process_db_query("most_used(ttlValue)"))
+                self.statistics.get_most_used_ttl_value())
 
         # Set Window Size based on Window Size distribution of IP address
         source_win_dist = self.statistics.get_win_distribution(ip_source)
@@ -130,7 +132,7 @@ class MS17ScanAttack(BaseAttack.BaseAttack):
             destination_win_prob_dict = lea.Lea.fromValFreqsDict(destination_win_dist)
 
         # Set MSS (Maximum Segment Size) based on MSS distribution of IP address
-        mss_value = Util.handle_most_used_outputs(self.statistics.process_db_query("most_used(mssValue)"))
+        mss_value = Util.handle_most_used_outputs(self.statistics.get_most_used_mss_value())
         if not mss_value:
             mss_value = 1465
 
@@ -219,6 +221,11 @@ class MS17ScanAttack(BaseAttack.BaseAttack):
         exploit_raw_packets.close()
 
     def generate_attack_pcap(self):
+        """
+        Creates a pcap containing the attack packets.
+
+        :return: The location of the generated pcap file.
+        """
         # Store timestamp of first packet (for attack label)
         self.attack_start_utime = self.packets[0].time
         self.attack_end_utime = self.packets[-1].time

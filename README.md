@@ -28,43 +28,81 @@ The following packages/libraries are required to compile the ID2T C++ modules
 * ``cmake`` (minimum version 2.8)
     - ubuntu: apt install build-essential cmake
     - arch: pacman -S cmake
+    - macos: brew install cmake
 * ``boost`` with the ``python`` component (minimum version 1.54)
     - ubuntu: apt install libboost-dev libboost-python-dev
     - arch: pacman -S boost boost-libs
+    - macos: brew install boost boost-python --with-python3
 * ``libtins`` (minimum version 3.4)
     - ubuntu: apt install libtins-dev (if you cannot find it in the official repository, install it manually from [here](https://github.com/mfontanini/libtins))
     - arch: (install from AUR, i.e. pacaur -S libtins, or manually from [here](https://github.com/mfontanini/libtins)).
+    - macos: brew install libtins
 * ``python`` development libraries
     - ubuntu: apt install python3-dev
-    - arch: pacman -S python
+    - arch: pacman -S python python-pip
+    - macos: brew install python
 * ``sqlite`` (minimum version 3.0)
     - ubuntu: apt install sqlite3
     - arch: pacman -S sqlite
+    - macos: brew install sqlite
+* ``tcpdump``
+    - ubuntu: apt install tcpdump
+    - arch: pacman -S tcpdump
+    - macos: brew install libdnet
+* ``coreutils`` (needed for greadlink)
+    - macos: brew install coreutils
 
 #### Required Python Packages
 The following python packages are required to run ID2T. Install the packages with your preferred package manager. For example, you can use pip3 (pip for python 3). Install pip3 in ubuntu with ``apt install python3-pip`` and install the packages with ``sudo pip3 install <packagename>``.
-* ``scapy`` (make sure its the python3 version)
+* ``pyxdg``
+* ``scapy-python3``
 * ``lea``
 * ``numpy``
 * ``matplotlib``
 * ``SciPy Stack`` (see [installation instructions](https://www.scipy.org/install.html))
+* ``coverage``
+* ``memory_profiler``
 
 #### Notes on the Minimum Package Versions
-The minimum version stated in the previous requirements are the versions we have used in the development of ID2T. Other (older) versions might also work; however, we cannot guarantee nor support them. Furthermore, some compilation scripts would need to be manually modified to accommodate these older versions.
+The minimum version stated in the previous requirements are the versions we used in the development of ID2T. Other (older) versions might also work; however, we can neither guarantee nor support them. Furthermore, some compilation scripts would need to be manually modified to accommodate these older versions.
 
+### Dependency installation script
+ID2T provides a dependency installation script, which is called during the execution of ``./build.sh``.
+
+#### Supported Systems
+* Linux Distributions
+    - Arch-based
+    - Debian-based
+* macOS
+
+##### Tested with
+* Arch Linux
+* Antergos
+* Kali
+* macOS (High) Sierra
+* Ubuntu (16.04, 17.10)
+* Zorin OS
 
 ### Compilation and Installation
-Once you satisfy all dependencies, clone the repository to get started with the installation:
+Clone the repository to get started with the installation:
 ``git clone https://git.tk.informatik.tu-darmstadt.de/SPIN/ID2T-toolkit``
 
-After cloning the repository, initialize its submodules with
+Install dependencies, initialize submodules, build the C++ modules and create the ID2T executables:
+``./build.sh``
+
+Or initialize its submodules manually:
     git submodule init
     git submodule update
 
-Build the C++ modules and create the ID2T executable:
-``./build.sh``
+To skip dependency installation use the ``--non-interactive`` argument:
+``./build.sh --non-interactive``
 
 Run ID2T with the command ``./id2t``.
+
+Run unit tests with the command ``./run_tests``.
+
+Run efficiency tests with the command ``./test_efficiency``.
+
 
 ## Usage examples
 In this section, we provide examples on how ID2T is used.
@@ -150,8 +188,17 @@ There are also parameterizable selectors which take conditions as input. Followi
 	-> returns the MAC address matching the given criteria
 	Supports the field: ipAddress
 
-Parameterizable selectors also allow for specifying another query in the comparison instead of a specific value, like the following example demonstrates:
-	macAddress(ipAddress=most_used(ipAddress))
+Parameterizable selectors also allow for specifying another query in the condition instead of a specific value, like the following example demonstrates:
+	macAddress(ipAddress in most_used(ipAddress))
+
+Conditions inside parameterizable selectors can contain all the usual comparison operators (<, <=, =, >=, >) when the right side of the condition is a single value. If the right side is a list, such as the return value of e.g. most_used(), the `` in ``-operator is to be used instead, unless the list is reduced to a single value by the use of an extractor.
+
+The following examples provide a demonstration of how lists can be used inside parameterizable selectors:
+```
+macAddress(ipAddress in ipAddress(pktssent > 1))         -> Returns the MAC addresses of all IP addresses that sent more than one packet
+macAddress(ipAddress = random(ipAddress(pktssent > 1)))  -> Returns the MAC address of a random IP address out of all IP addresses that sent more than one packet
+macAddress(ipAddress in [192.168.189.1,192.168.189.143]) -> Returns the MAC address of all IP addresses in the provided list
+```
 
 __Extractors__ are to be used on the result of a named query. If the result is a list, applying an extractor reduces the result set to a single element. If the result is already a single element, the extractor is ignored.
 ```
@@ -175,6 +222,8 @@ The [SemVer](http://semver.org/spec/v2.0.0.html) is used for versioning. For cur
 
 - __Carlos Garcia__ - _ID2T idea, guidance and suggestions during development_
 
+- __Aidmar Wainakh__ - _analysis and development of attacks as part of his Master Thesis_
+
 - __Leon Böck__ - _guidance and suggestions during development of Membership Management Communication Attack_
 
 - __Nikolay Milanov__ - _development of first prototype within his Master Thesis_
@@ -190,6 +239,16 @@ The [SemVer](http://semver.org/spec/v2.0.0.html) is used for versioning. For cur
 - __Joshua Kühlberg__ - _development of Membership Management Communication Attack_
 
 - __Denis Waßmann__ - _development of Membership Management Communication Attack_
+
+- __Stefano Acquaviti__ - _development of multiple attacks and general improvements_
+
+- __Jens Keim__ - _development of multiple attacks and general improvements_
+
+- __Roey Regev__ - _development of multiple attacks and general improvements_
+
+- __Stefan Schmidt__ - _development of multiple attacks and general improvements_
+
+- __Jonathan Speth__ - _development of multiple attacks and general improvements_
 
 ## License
 

@@ -1,6 +1,6 @@
 import os.path
 import random as rnd
-import re
+import typing
 import sqlite3
 import sys
 
@@ -23,6 +23,10 @@ def dict_gen(curs: sqlite3.Cursor):
             return
         for row in rows:
             yield dict(zip(field_names, row))
+
+
+class QueryExecutionException(Exception):
+    pass
 
 
 class StatsDatabase:
@@ -168,18 +172,48 @@ class StatsDatabase:
         field_types = self.get_field_types('ip_mac', 'ip_ttl', 'ip_ports', 'ip_protocols', 'ip_statistics', 'ip_mac')
         conditions = []
         for key, op, value in param_op_val:
+            # Check whether the value is not a simple value, but another query (or list)
             if isinstance(value, pp.ParseResults):
-                # If we have another query instead of a direct value, execute and replace it
-                value = self._execute_query_list(value)[0][0]
+                if value[0] == "list":
+                    # We have a list, cut the token off and use the remaining elements
+                    value = value[1:]
+
+                    # Lists can only be used with "in"
+                    if op is not "in":
+                        raise QueryExecutionException("List values require the usage of the 'in' operator!")
+                else:
+                    # If we have another query instead of a direct value, execute and replace it
+                    rvalue = self._execute_query_list(value)
+
+                    # Do we have a comparison operator with a multiple-result query?
+                    if op is not "in" and value[0] in ['most_used', 'least_used', 'all', 'ipaddress_param',
+                                                       'macaddress_param']:
+                        raise QueryExecutionException("The extractor '" + value[0] +
+                                                      "' may return more than one result!")
+
+                    # Make value contain a simple list with the results of the query
+                    value = map(lambda x: str(x[0]), rvalue)
+            else:
+                # Make sure value is a list now to simplify handling
+                value = [value]
+
             # this makes sure that TEXT fields are queried by strings,
             # e.g. ipAddress=192.168.178.1 --is-converted-to--> ipAddress='192.168.178.1'
             if field_types.get(key) == 'TEXT':
-                if not str(value).startswith("'") and not str(value).startswith('"'):
-                    value = "'" + value + "'"
+                def ensure_string(x):
+                    if not str(x).startswith("'") and not str(x).startswith('"'):
+                        return "'" + x + "'"
+                    else:
+                        return x
+                value = map(ensure_string, value)
+
+            # If we have more than one value, join them together, separated by commas
+            value = ",".join(map(str, value))
+
             # this replacement is required to remove ambiguity in SQL query
             if key == 'ipAddress':
                 key = 'ip_mac.ipAddress'
-            conditions.append(key + op + str(value))
+            conditions.append(key + " " + op + " (" + str(value) + ")")
 
         where_clause = " AND ".join(conditions)
         query += where_clause
@@ -230,6 +264,9 @@ class StatsDatabase:
         "least_used.winsize": "SELECT winSize FROM (SELECT winSize, SUM(winCount) as occ FROM tcp_win GROUP BY "
                               "winSize) WHERE occ=(SELECT SUM(winCount) as occ FROM tcp_win GROUP BY winSize "
                               "ORDER BY occ ASC LIMIT 1) ORDER BY winSize ASC",
+        "least_used.ipclass": "SELECT ipClass FROM (SELECT ipClass, COUNT(*) as occ from ip_statistics GROUP BY "
+                             "ipClass ORDER BY occ DESC) WHERE occ=(SELECT COUNT(*) as occ from ip_statistics "
+                             "GROUP BY ipClass ORDER BY occ ASC LIMIT 1) ORDER BY ipClass ASC",
         "avg.pktsreceived": "SELECT avg(pktsReceived) from ip_statistics",
         "avg.pktssent": "SELECT avg(pktsSent) from ip_statistics",
         "avg.kbytesreceived": "SELECT avg(kbytesReceived) from ip_statistics",
@@ -241,27 +278,32 @@ class StatsDatabase:
         "all.mss": "SELECT DISTINCT mssValue from tcp_mss ORDER BY mssValue ASC",
         "all.macaddress": "SELECT DISTINCT macAddress from ip_mac ORDER BY macAddress ASC",
         "all.portnumber": "SELECT DISTINCT portNumber from ip_ports ORDER BY portNumber ASC",
-        "all.protocolname": "SELECT DISTINCT protocolName from ip_protocols ORDER BY protocolName ASC"}
+        "all.protocolname": "SELECT DISTINCT protocolName from ip_protocols ORDER BY protocolName ASC",
+        "all.winsize": "SELECT DISTINCT winSize FROM tcp_win ORDER BY winSize ASC",
+        "all.ipclass": "SELECT DISTINCT ipClass FROM ip_statistics ORDER BY ipClass ASC"}
 
     def _execute_query_list(self, query_list):
         """
         Recursively executes a list of named queries. They are of the following form:
-        ['macaddress_param', [['ipaddress', '=', ['most_used', 'ipaddress']]]]
+        ['macaddress_param', [['ipaddress', 'in', ['most_used', 'ipaddress']]]]
         :param query_list: The query statement list obtained from the query parser
         :return: The result of the query (either a single result or a list).
         """
         if query_list[0] == "random":
-            return rnd.choice(self._execute_query_list(query_list[1:]))
+            return [rnd.choice(self._execute_query_list(query_list[1:]))]
         elif query_list[0] == "first":
-            return self._execute_query_list(query_list[1:])[0]
+            return [self._execute_query_list(query_list[1:])[0]]
         elif query_list[0] == "last":
-            return self._execute_query_list(query_list[1:])[-1]
+            return [self._execute_query_list(query_list[1:])[-1]]
         elif query_list[0] == "macaddress_param":
             return self.named_query_parameterized("macaddress", query_list[1])
         elif query_list[0] == "ipaddress_param":
             return self.named_query_parameterized("ipaddress", query_list[1])
         else:
             query = self.named_queries.get(query_list[0] + "." + query_list[1])
+            if query is None:
+                raise QueryExecutionException("The requested query '" + query_list[0] + "(" + query_list[1] +
+                                              ")' was not found in the internal query list!")
             self.cursor.execute(str(query))
             last_result = self.cursor.fetchall()
             return last_result
@@ -318,23 +360,23 @@ class StatsDatabase:
                 for i in range(0, len(result)):
                     print(str(self.cursor.description[i][0]) + ": " + str(result[i]))
             else:
-                self._print_query_results(query_string_in, result)
+                self._print_query_results(query_string_in, result if isinstance(result, list) else [result])
 
         return result
 
-    def _print_query_results(self, query_string_in: str, result):
+    def _print_query_results(self, query_string_in: str, result: typing.List[typing.Union[str, float, int]]) -> None:
         """
         Prints the results of a query.
         Based on http://stackoverflow.com/a/20383011/3017719.
 
         :param query_string_in: The query the results belong to
-        :param result: The results of the query
+        :param result: The list of query results
         """
         # Print number of results according to type of result
-        if isinstance(result, list):
-            print("Query returned " + str(len(result)) + " records:\n")
-        else:
+        if len(result) == 1:
             print("Query returned 1 record:\n")
+        else:
+            print("Query returned " + str(len(result)) + " records:\n")
 
         # Print query results
         if query_string_in.lstrip().upper().startswith(
@@ -343,8 +385,13 @@ class StatsDatabase:
             columns = []
             tavnit = '|'
             separator = '+'
-            for cd in self.cursor.description:
-                widths.append(len(cd) + 10)
+            for index, cd in enumerate(self.cursor.description):
+                max_col_length = 0
+                if len(result) > 0:
+                    max_col_length = max(list(map(lambda x:
+                                                  len(str(x[index] if len(self.cursor.description) > 1 else x)),
+                                                  result)))
+                widths.append(max(len(cd[0]), max_col_length))
                 columns.append(cd[0])
             for w in widths:
                 tavnit += " %-" + "%ss |" % (w,)
@@ -352,11 +399,8 @@ class StatsDatabase:
             print(separator)
             print(tavnit % tuple(columns))
             print(separator)
-            if isinstance(result, list):
-                for row in result:
-                    print(tavnit % row)
-            else:
-                print(tavnit % result)
+            for row in result:
+                print(tavnit % row)
             print(separator)
         else:
             print(result)

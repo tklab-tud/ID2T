@@ -59,7 +59,7 @@ install_pkg_ubuntu()
 
 install_pkg_darwin()
 {
-    BREW_PKGS="cmake python coreutils libdnet libtins boost boost-python --with-python3"
+    BREW_PKGS="cmake python coreutils libdnet libtins sqlite boost boost-python --with-python3"
 
     # Check first to avoid unnecessary update
     echo -e "Packages: Checking..."
@@ -75,7 +75,7 @@ install_pkg_darwin()
 
 install_pip()
 {
-    PYTHON_MODULES="pyxdg lea numpy matplotlib scapy-python3 scipy coverage"
+    PYTHON_MODULES="pyxdg lea numpy matplotlib scapy-python3 scipy coverage memory_profiler"
     echo -e "Python modules: Checking..."
 
     # Check first to avoid unnecessary sudo

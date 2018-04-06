@@ -2,6 +2,7 @@ import importlib
 import sys
 import difflib
 import pkgutil
+import typing
 
 import Attack.AttackParameters as atkParam
 import Core.LabelManager as LabelManager
@@ -29,13 +30,20 @@ class AttackController:
         self.seed = None
         self.total_packets = 0
 
-    def set_seed(self, seed: int):
+    def set_seed(self, seed: int) -> None:
         """
         Sets rng seed.
 
         :param seed: rng seed
         """
         self.seed = seed
+
+    def get_seed(self) -> typing.Union[int, None]:
+        """
+        Gets rng seed.
+        :return: The current rng seed
+        """
+        return self.seed
 
     @staticmethod
     def choose_attack(input_name):
@@ -108,7 +116,13 @@ class AttackController:
         self.current_attack.set_statistics(self.statistics)
         if seed is not None:
             self.current_attack.set_seed(seed=seed)
+
         self.current_attack.init_params()
+
+        # Unset the user-specified-flag for all parameters set in init_params
+        for k, v in self.current_attack.params.items():
+            self.current_attack.params[k] = self.current_attack.ValuePair(v.value, False)
+
         # Record the attack
         self.added_attacks.append(self.current_attack)
 
@@ -117,7 +131,7 @@ class AttackController:
         Takes as input the name of an attack (classname) and the attack parameters as string. Parses the string of
         attack parameters, creates the attack by writing the attack packets and returns the path of the written pcap.
 
-        :param attack: The classname of the attack to injecect.
+        :param attack: The classname of the attack to inject.
         :param params: The parameters for attack customization, see attack class for supported params.
         :param time: Measure packet generation time or not.
         :return: The file path to the created pcap file.
@@ -134,7 +148,7 @@ class AttackController:
                 params_dict.append(entry.split('='))
             params_dict = dict(params_dict)
             # Check if Parameter.INJECT_AT_TIMESTAMP and Parameter.INJECT_AFTER_PACKET are provided at the same time
-            # if TRUE: delete Paramter.INJECT_AT_TIMESTAMP (lower priority) and use Parameter.INJECT_AFTER_PACKET
+            # if TRUE: delete Parameter.INJECT_AT_TIMESTAMP (lower priority) and use Parameter.INJECT_AFTER_PACKET
             if (atkParam.Parameter.INJECT_AFTER_PACKET.value in params_dict) and (
                         atkParam.Parameter.INJECT_AT_TIMESTAMP.value in params_dict):
                 print("CONFLICT: Parameters", atkParam.Parameter.INJECT_AT_TIMESTAMP.value, "and",
@@ -169,8 +183,8 @@ class AttackController:
         print(".)")
 
         # Store label into LabelManager
-        label = Label.Label(attack, self.get_attack_start_utime(),
-                            self.get_attack_end_utime(), attack_note)
+        label = Label.Label(attack, self.get_attack_start_utime(), self.get_attack_end_utime(),
+                            self.seed, self.current_attack.params, attack_note)
         self.label_mgr.add_labels(label)
 
         return temp_attack_pcap_path, duration

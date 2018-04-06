@@ -97,8 +97,8 @@ std::string pcap_processor::merge_pcaps(const std::string pcap_path) {
             }
             iterator_base++;
         }
-    }    
-    
+    }
+
     // This may happen if the base PCAP is smaller than the attack PCAP
     // In this case append the remaining packets of the attack PCAP
     for (; iterator_attack != sniffer_attack.end(); iterator_attack++) {
@@ -121,8 +121,8 @@ void pcap_processor::collect_statistics() {
         std::cout << "Loading pcap..." << std::endl;
         FileSniffer sniffer(filePath);
         FileSniffer snifferOverview(filePath);
-        
-        SnifferIterator i = sniffer.begin();                
+
+        SnifferIterator i = sniffer.begin();
         std::chrono::microseconds currentPktTimestamp;
 
         // Save timestamp of first packet
@@ -135,20 +135,20 @@ void pcap_processor::collect_statistics() {
         std::chrono::microseconds firstTimestamp = stats.getTimestampFirstPacket();
 
         // An empty loop to know the capture duration, then choose a suitable time interval
-        SnifferIterator lastpkt; 
+        SnifferIterator lastpkt;
         for (SnifferIterator j = snifferOverview.begin(); j != snifferOverview.end(); ++j, ++totalPackets) {lastpkt = j;}
 
-        std::chrono::microseconds lastTimestamp = lastpkt->timestamp();                  
+        std::chrono::microseconds lastTimestamp = lastpkt->timestamp();
         std::chrono::microseconds captureDuration = lastTimestamp - firstTimestamp;
         if(captureDuration.count()<=0){
-            std::cout<<"ERROR: PCAP file is empty!"<<"\n";
+            std::cout << "ERROR: PCAP file is empty!" << std::endl;
             return;
         }
         long timeInterval_microsec = captureDuration.count() / timeIntervalsNum;
         std::chrono::duration<int, std::micro> timeInterval(timeInterval_microsec);
         std::chrono::microseconds barrier = timeInterval;
 
-        std::cout << "\n";
+        std::cout << std::endl;
         std::chrono::system_clock::time_point lastPrinted = std::chrono::system_clock::now();
 
         // Iterate over all packets and collect statistics
@@ -178,13 +178,18 @@ void pcap_processor::collect_statistics() {
             }
         }
 
-        std::cout << "\n";
-        
+        std::cout << "\rInspected packets: ";
+        std::cout << "100.0% (" << totalPackets << "/" << totalPackets << ")" << std::endl;
+
         // Save timestamp of last packet into statistics
         stats.setTimestampLastPacket(currentPktTimestamp);
 
         // Create the communication interval statistics from the gathered communication intervals within every extended conversation statistic
         stats.createCommIntervalStats();
+
+        if(hasUnrecognized) {
+            std::cout << "Unrecognized PDUs detected: Check 'unrecognized_pdus' table!" << std::endl;
+        }
     }
 }
 
@@ -212,7 +217,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
     const PDU::PDUType pdu_l3_type = pdu_l3->pdu_type();
     std::string ipAddressSender;
     std::string ipAddressReceiver;
-    
+
     // PDU is IPv4
     if (pdu_l3_type == PDU::PDUType::IP) {
         const IP &ipLayer = (const IP &) *pdu_l3;
@@ -235,7 +240,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
         // Assign IP Address to MAC Address
         stats.assignMacAddress(ipAddressSender, macAddressSender);
         stats.assignMacAddress(ipAddressReceiver, macAddressReceiver);
-        
+
     } // PDU is IPv6
     else if (pdu_l3_type == PDU::PDUType::IPv6) {
         const IPv6 &ipLayer = (const IPv6 &) *pdu_l3;
@@ -257,10 +262,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
         stats.assignMacAddress(ipAddressReceiver, macAddressReceiver);
     } //PDU is unrecognized
     else {
-        if(!hasUnrecognized) {
-            std::cerr << "Unrecognized PDUs detected: Check 'unrecognized_pdus' table!" << std::endl;
-            hasUnrecognized = true;
-        }
+        hasUnrecognized = true;
 
         EthernetII eth = (const EthernetII &) *pdu_l2;
         Tins::Timestamp ts = pkt.timestamp();
@@ -273,8 +275,8 @@ void pcap_processor::process_packets(const Packet &pkt) {
     const PDU *pdu_l4 = pdu_l3->inner_pdu();
     if (pdu_l4 != 0) {
         // Protocol distribution - layer 4
-        PDU::PDUType p = pdu_l4->pdu_type();  
-        
+        PDU::PDUType p = pdu_l4->pdu_type();
+
         // Check for IPv4: payload
         if (pdu_l3_type == PDU::PDUType::IP) {
             stats.checkPayload(pdu_l4);
@@ -285,7 +287,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
             
             // Check TCP checksum
             if (pdu_l3_type == PDU::PDUType::IP) {
-              stats.checkTCPChecksum(ipAddressSender, ipAddressReceiver, tcpPkt);
+                stats.checkTCPChecksum(ipAddressSender, ipAddressReceiver, tcpPkt);
             }
 
             stats.incrementProtocolCount(ipAddressSender, "TCP");
@@ -299,7 +301,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
             int win = tcpPkt.window();
             stats.incrementWinCount(ipAddressSender, win);
 
-            try {                                                                
+            try {
                 int val = tcpPkt.mss();
 
                 // MSS distribution
@@ -309,7 +311,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
             }
             stats.incrementPortCount(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), "TCP");
             stats.increasePortByteCount(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), sizeCurrentPacket, "TCP");
-            
+
           // UDP Packet
         } else if (p == PDU::PDUType::UDP) {
             const UDP udpPkt = (const UDP &) *pdu_l4;
@@ -318,7 +320,6 @@ void pcap_processor::process_packets(const Packet &pkt) {
             stats.incrementPortCount(ipAddressSender, udpPkt.sport(), ipAddressReceiver, udpPkt.dport(), "UDP");
             stats.increasePortByteCount(ipAddressSender, udpPkt.sport(), ipAddressReceiver, udpPkt.dport(), sizeCurrentPacket, "UDP");
             stats.addConvStatExt(ipAddressSender,udpPkt.sport(), ipAddressReceiver, udpPkt.dport(), "UDP", pkt.timestamp());
-          
         } else if (p == PDU::PDUType::ICMP) {
             stats.incrementProtocolCount(ipAddressSender, "ICMP");
             stats.increaseProtocolByteCount(ipAddressSender, "ICMP", sizeCurrentPacket);

@@ -11,6 +11,7 @@ import socket
 import sys
 import tempfile
 import time
+import collections
 
 # TODO: double check this import
 # does it complain because libpcapreader is not a .py?
@@ -28,6 +29,8 @@ class BaseAttack(metaclass=abc.ABCMeta):
     """
     Abstract base class for all attack classes. Provides basic functionalities, like parameter validation.
     """
+
+    ValuePair = collections.namedtuple('ValuePair', ['value', 'user_specified'])
 
     def __init__(self, name, description, attack_type):
         """
@@ -252,7 +255,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         try:
             import distutils.core
             import distutils.util
-            value = distutils.util.strtobool(value.lower())
+            value = bool(distutils.util.strtobool(value.lower()))
             is_bool = True
         except ValueError:
             is_bool = False
@@ -324,19 +327,16 @@ class BaseAttack(metaclass=abc.ABCMeta):
         """
         return self.finish_time - self.start_time
 
-    def add_param_value(self, param, value):
+    def add_param_value(self, param, value, user_specified: bool = True):
         """
         Adds the pair param : value to the dictionary of attack parameters. Prints and error message and skips the
         parameter if the validation fails.
 
         :param param: Name of the parameter that we wish to modify.
         :param value: The value we wish to assign to the specified parameter.
+        :param user_specified: Whether the value was specified by the user (or left default)
         :return: None.
         """
-        # This function call is valid only if there is a statistics object available.
-        if self.statistics is None:
-            print('Error: Attack parameter added without setting a statistics object first.')
-            exit(1)
 
         # by default no param is valid
         is_valid = False
@@ -394,6 +394,11 @@ class BaseAttack(metaclass=abc.ABCMeta):
         elif param_type == atkParam.ParameterTypes.TYPE_BOOLEAN:
             is_valid, value = self._is_boolean(value)
         elif param_type == atkParam.ParameterTypes.TYPE_PACKET_POSITION:
+            # This function call is valid only if there is a statistics object available.
+            if self.statistics is None:
+                print('Error: Statistics-dependent attack parameter added without setting a statistics object first.')
+                exit(1)
+
             ts = pr.pcap_processor(self.statistics.pcap_filepath, "False").get_timestamp_mu_sec(int(value))
             if 0 <= int(value) <= self.statistics.get_packet_count() and ts >= 0:
                 is_valid = True
@@ -421,7 +426,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
 
         # add value iff validation was successful
         if is_valid:
-            self.params[param_name] = value
+            self.params[param_name] = self.ValuePair(value, user_specified)
         else:
             print("ERROR: Parameter " + str(param) + " or parameter value " + str(value) +
                   " not valid. Skipping parameter.")
@@ -433,7 +438,24 @@ class BaseAttack(metaclass=abc.ABCMeta):
         :param param: The parameter whose value is wanted.
         :return: The parameter's value.
         """
-        return self.params.get(param)
+        parameter = self.params.get(param)
+        if parameter is not None:
+            return parameter.value
+        else:
+            return None
+
+    def get_param_user_specified(self, param: atkParam.Parameter) -> bool:
+        """
+        Returns whether the parameter value was specified by the user for a given parameter.
+
+        :param param: The parameter whose user-specified flag is wanted.
+        :return: The parameter's user-specified flag.
+        """
+        parameter = self.params.get(param)
+        if parameter is not None:
+            return parameter.user_specified
+        else:
+            return False
 
     def check_parameters(self):
         """
@@ -518,7 +540,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
            (IP,port) to host B (IP,port)
 
            :param exploit_raw_packets: A set of packets contains several conversations.
-           :return conversations: A set of arrays, each array contains the packet of specifc conversation
+           :return conversations: A set of arrays, each array contains the packet of specific conversation
            :return orderList_conversations: An array contains the conversations ids (IP_A,port_A, IP_b,port_B) in the
            order they appeared in the original packets.
            """
@@ -697,11 +719,21 @@ class BaseAttack(metaclass=abc.ABCMeta):
         """
 
         def is_invalid(ip_address_param: ipaddress.IPv4Address):
+            """
+            TODO FILL ME
+            :param ip_address_param:
+            :return:
+            """
             return ip_address_param.is_multicast or ip_address_param.is_unspecified or ip_address_param.is_loopback or \
                    ip_address_param.is_link_local or ip_address_param.is_reserved or ip_address_param.is_private
 
         # Generate a random IP from specific class
         def generate_address(ip_class_param):
+            """
+            TODO FILL ME
+            :param ip_class_param:
+            :return:
+            """
             if ip_class_param == "Unknown":
                 return ipaddress.IPv4Address(random.randint(0, 2 ** 32 - 1))
             else:
@@ -743,10 +775,19 @@ class BaseAttack(metaclass=abc.ABCMeta):
         """
 
         def is_invalid(ip_address: ipaddress.IPv6Address):
+            """
+            TODO FILL ME
+            :param ip_address:
+            :return:
+            """
             return ip_address.is_multicast or ip_address.is_unspecified or ip_address.is_loopback or \
                    ip_address.is_link_local or ip_address.is_private or ip_address.is_reserved
 
         def generate_address():
+            """
+            TODO FILL ME
+            :return:
+            """
             return ipaddress.IPv6Address(random.randint(0, 2 ** 128 - 1))
 
         ip_addresses = []
@@ -767,7 +808,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         Generates n random MAC addresses.
 
         :param n: The number of MAC addresses to be generated.
-        :return: A single MAC addres, or if n>1, a list of MAC addresses
+        :return: A single MAC address, or if n>1, a list of MAC addresses
         """
 
         def is_invalid(address_param: str):

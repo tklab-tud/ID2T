@@ -50,9 +50,8 @@ class ID2TAttackTest(unittest.TestCase):
             Lib.rename_test_result_files(controller, caller_function, attack_sub_dir, test_sub_dir)
 
     def temporal_efficiency_test(self, attack_args, time_limit=15, factor=1, seed=None, cleanup=True,
-                                 pcap=Lib.test_pcap,
-                                 flag_write_file=False, flag_recalculate_stats=False, flag_print_statistics=False,
-                                 attack_sub_dir=True, test_sub_dir=True):
+                                 pcap=Lib.test_pcap, flag_write_file=False, flag_recalculate_stats=False,
+                                 flag_print_statistics=False, attack_sub_dir=True, test_sub_dir=True):
         """
         Runs the attack with given aruments and monitors time efficiency.
 

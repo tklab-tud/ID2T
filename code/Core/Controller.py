@@ -3,6 +3,7 @@ import readline
 import sys
 import shutil
 import time
+import re
 
 import pyparsing as pp
 import Core.AttackController as atkCtrl
@@ -10,10 +11,11 @@ import Core.LabelManager as LabelManager
 import Core.Statistics as Statistics
 import ID2TLib.PcapFile as PcapFile
 import ID2TLib.Utility as Util
+import Core.StatsDatabase as StatsDB
 
 
 class Controller:
-    def __init__(self, pcap_file_path: str, do_extra_tests: bool, non_verbose: bool, pcap_out_path: str=None):
+    def __init__(self, pcap_file_path: str, do_extra_tests: bool, non_verbose: bool=True, pcap_out_path: str=None):
         """
         Creates a new Controller, acting as a central coordinator for the whole application.
 
@@ -167,7 +169,7 @@ class Controller:
             print("--> No packets were injected. Therefore no output files were created.")
 
         # print summary statistics
-        if not self.non_verbose:
+        if not self.non_verbose and len(attacks_config) is not 1:
             self.statistics.stats_summary_post_attack(self.added_packets)
 
     def process_db_queries(self, query, print_results=False):
@@ -187,6 +189,11 @@ class Controller:
 
     @staticmethod
     def process_help(params):
+        """
+        TODO: FILL ME
+        :param params:
+        :return:
+        """
         if not params:
             print("Query mode allows you to enter SQL-queries as well as named queries.")
             print()
@@ -221,7 +228,7 @@ class Controller:
             print()
         elif param == "least_used":
             print("least_used can be used as a selector for the following attributes:")
-            print("ipAddress | macAddress | portNumber | protocolName | ttlValue")
+            print("ipAddress | macAddress | portNumber | protocolName | ttlValue | mssValue | winSize | ipClass")
             print()
         elif param == "avg":
             print("avg can be used as a selector for the following attributes:")
@@ -229,7 +236,7 @@ class Controller:
             print()
         elif param == "all":
             print("all can be used as a selector for the following attributes:")
-            print("ipAddress | ttlValue | mss | macAddress | portNumber | protocolName")
+            print("ipAddress | ttlValue | mss | macAddress | portNumber | protocolName | winSize | ipClass")
             print()
         elif param in ["random", "first", "last"]:
             print("No additional info available for this keyword.")
@@ -242,6 +249,14 @@ class Controller:
                   "macAddress | ttlValue | ttlCount | portDirection | portNumber | portCount | protocolCount\n"
                   "protocolName")
             print()
+            print("The following operators can be used:")
+            print("<= | < | = | >= | > | in")
+            print()
+            print("A value can either be a simple values, a list of simple values separated by commas and enclosed "
+                  "in [] brackets, or another query.")
+            print()
+            print("When VALUE is a list (or a query returning a list), the usage of the 'in' operator is mandatory!")
+            print()
             print("See 'help examples;' for usage examples.")
             print()
         elif param == "macaddress":
@@ -249,6 +264,8 @@ class Controller:
             print("Conditions are of the following form: PARAMETER OPERATOR VALUE")
             print("The following parameters can be specified:")
             print("ipAddress")
+            print()
+            print("See 'help ipAddress' for information on valid operators and values.")
             print()
             print("See 'help examples;' for usage examples.")
             print()
@@ -263,10 +280,59 @@ class Controller:
             print("\tSELECT avg(ttlValue) from ip_ttl;")
             print("Get a random IP address from all addresses that sent and received at least 10 packets:")
             print("\trandom(ipAddress(pktsSent > 10, pktsReceived > 10));")
+            print("Get the IP addresses used with one of the MAC addresses in a list:")
+            print("\tipAddress(macAddress in [08:00:27:a3:83:43, 52:54:00:12:35:02]);")
             print()
         else:
             print("Unknown keyword '" + param + "', try 'help;' to get a list of allowed keywords'")
             print()
+
+    def internal_command(self, query: str) -> bool:
+        # Strip off semicolon, split into command and parameters
+        query = query.strip(";").split(" ", 1)
+        cmd = query[0].strip().lower()
+        if len(query) > 1:
+            params = [p for p in re.split("(,|\\\".*?\\\"|'.*?')", query[1]) if p.strip(",").strip()]
+            params = list(map(lambda x: x.strip().strip("\"'"), params))
+        else:
+            params = []
+
+        if cmd == "help":
+            self.process_help(params)
+            return True
+        elif cmd == "labels":
+            if not self.label_manager.labels:
+                print("No labels found.")
+            else:
+                print("Attacks listed in the label file:")
+                print()
+                for i, label in enumerate(self.label_manager.labels):
+                    print("Attack number:   " + str(i))
+                    print("Attack name:     " + str(label.attack_name))
+                    print("Attack note:     " + str(label.attack_note))
+                    print("Attack seed:     " + str(label.seed))
+                    print("Start timestamp: " + str(label.timestamp_start))
+                    print("End timestamp:   " + str(label.timestamp_end))
+                    print()
+            print()
+            return True
+        elif cmd == "set":
+            if len(params) == 3:
+                if params[0].lower() == "attack_note":
+                    i = int(params[1])
+                    self.label_manager.labels[i].attack_note = params[2]
+                return True
+        elif cmd == "tables":
+            self.statisticsDB.process_db_query("SELECT name FROM sqlite_master WHERE type='table';", True)
+            return True
+        elif cmd == "columns":
+            self.statisticsDB.process_db_query("SELECT * FROM " + params[0].lower(), False)
+            columns = self.statisticsDB.get_field_types(params[0].lower())
+            for column in columns:
+                print(column + ": " + columns[column])
+            return True
+
+        return False
 
     def enter_query_mode(self):
         """
@@ -275,7 +341,18 @@ class Controller:
         """
 
         def make_completer(vocabulary):
+            """
+            TODO: FILL ME
+            :param vocabulary:
+            :return:
+            """
             def custom_template(text, state):
+                """
+                TODO: FILL ME
+                :param text:
+                :param state:
+                :return:
+                """
                 results = [x for x in vocabulary if x.startswith(text)] + [None]
                 return results[state]
 
@@ -301,30 +378,7 @@ class Controller:
             import sqlite3
             if sqlite3.complete_statement(buffer):
                 buffer = buffer.strip()
-                if buffer.lower().startswith('help'):
-                    buffer = buffer.strip(';')
-                    self.process_help(buffer.split(' ')[1:])
-                elif buffer.lower().strip() == 'labels;':
-                    if not self.label_manager.labels:
-                        print("No labels found.")
-                    else:
-                        print("Attacks listed in the label file:")
-                        print()
-                        for label in self.label_manager.labels:
-                            print("Attack name:     " + str(label.attack_name))
-                            print("Attack note:     " + str(label.attack_note))
-                            print("Start timestamp: " + str(label.timestamp_start))
-                            print("End timestamp:   " + str(label.timestamp_end))
-                            print()
-                    print()
-                elif buffer.lower().strip() == 'tables;':
-                    self.statisticsDB.process_db_query("SELECT name FROM sqlite_master WHERE type='table';", True)
-                elif buffer.lower().strip().startswith('columns '):
-                    self.statisticsDB.process_db_query("SELECT * FROM " + buffer.lower()[8:], False)
-                    columns = self.statisticsDB.get_field_types(buffer.lower()[8:].strip(";"))
-                    for column in columns:
-                        print(column + ": " + columns[column])
-                else:
+                if not self.internal_command(buffer):
                     try:
                         self.statisticsDB.process_db_query(buffer, True)
                     except sqlite3.Error as e:
@@ -336,15 +390,22 @@ class Controller:
                         for i in range(1, e.col):
                             sys.stderr.write(" ")
                         sys.stderr.write("^\n\n")
+                    except StatsDB.QueryExecutionException as e:
+                        sys.stderr.write("An error occured: ")
+                        sys.stderr.write(e.args[0] + "\n")
                 buffer = ""
 
         readline.set_history_length(1000)
         readline.write_history_file(history_file)
 
+        # Save the label file, in case content has changed
+        self.label_manager.write_label_file(self.pcap_src_path)
+
     def create_statistics_plot(self, params: str, entropy: bool):
         """
         Plots the statistics to a file by using the given customization parameters.
         """
+        print("Statistical plots are being generated", end="", flush=True)
         if params is not None and params[0] is not None:
             # FIXME: cleanup
             params_dict = dict([z.split("=") for z in params])
