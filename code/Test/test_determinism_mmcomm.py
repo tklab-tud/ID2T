@@ -16,7 +16,7 @@ from Test.TestUtil import PcapComparator, ID2TExecution
 # get converted to string correctly
 _random_bool = lambda: random.random() < 0.5
 ID2T_PARAMETER_GENERATORS = {
-    "bots.count": lambda: random.randint(1, 6),
+    "bots.count": lambda: random.randint(1, 3),
     "hidden_mark": _random_bool,
     "interval.selection.end": lambda: random.randint(100, 1501),  # values are taken from default trace
     "interval.selection.start": lambda: random.randint(0, 1401),
@@ -102,7 +102,11 @@ class PcapComparison(unittest.TestCase):
                         self.compare_pcaps(generated_pcap, pcap)
                     except AssertionError as e:
                         execution.keep_file(pcap)
-                        self.executions[-2].keep_file(generated_pcap)
+                        for ex in self.executions:
+                            try:
+                                ex.keep_file(generated_pcap)
+                            except ValueError:
+                                pass
                         raise e
             else:
                 generated_pcap = pcap
@@ -120,9 +124,11 @@ class PcapComparison(unittest.TestCase):
 
         self.print_warning("Done")
 
-        kept = [file for file in id2t_run.get_kept_files() for id2t_run in self.executions]
-        if kept:
-            self.print_warning("The following files have been kept: " + ", ".join(kept))
+        if any(e.get_kept_files() for e in self.executions):
+            self.print_warning("The following files have been kept:")
+            for e in self.executions:
+                for file in e.get_kept_files():
+                    self.print_warning(file)
 
     def compare_pcaps(self, one: str, other: str):
         PcapComparator().compare_files(self.ID2T_PATH + "/" + one, self.ID2T_PATH + "/" + other)
