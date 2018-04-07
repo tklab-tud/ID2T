@@ -111,6 +111,9 @@ class PcapComparison(unittest.TestCase):
                                 ex.keep_file(generated_pcap)
                             except ValueError:
                                 pass
+
+                        e.args += tuple(("Command was: %s" % execution.get_run_command(additional_params),))
+                        e.args += tuple(("Files are: %s, %s" % (generated_pcap, pcap),))
                         raise e
             else:
                 generated_pcap = pcap
