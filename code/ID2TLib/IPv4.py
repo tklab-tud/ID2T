@@ -200,7 +200,8 @@ class IPAddressBlock:
         return IPAddress.from_int(self.ipnum + self.block_size() - 1)
 
     def _bitmask(self, netmask: int) -> int:
-        ones = lambda x: (1 << x) - 1
+        def ones(x: int) -> int:
+            return (1 << x) - 1
 
         return ones(32) ^ ones(32 - netmask)
 
