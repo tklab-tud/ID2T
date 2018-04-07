@@ -1,4 +1,5 @@
 import re
+from typing import List, Union, Tuple, Optional, cast
 
 
 class IPAddress:
@@ -13,7 +14,7 @@ class IPAddress:
     # 4 numbers between 0 and 255, joined together with dots
     IP_REGEXP = r"{0}\.{0}\.{0}\.{0}".format(_IP_NUMBER_REGEXP)
 
-    def __init__(self, intlist: "list[int]") -> None:
+    def __init__(self, intlist: List[int]) -> None:
         """
         Construct an ipv4-address with a list of 4 integers, e.g. to construct the ip 10.0.0.0 pass [10, 0, 0, 0]
         """
@@ -69,7 +70,7 @@ class IPAddress:
         """
         return ReservedIPBlocks.is_private(self)
 
-    def get_private_segment(self) -> bool:
+    def get_private_segment(self) -> "IPAddressBlock":
         """
         Return the private ip-segment the ip-address belongs to (there are several)
         If this ip does not belong to a private ip-segment a ValueError is raised
@@ -101,8 +102,8 @@ class IPAddress:
         """
         return ReservedIPBlocks.is_zero_conf(self)
 
-    def _tuple(self) -> (int, int, int, int):
-        return tuple(self.ipnum.to_bytes(4, "big"))
+    def _tuple(self) -> Tuple[int, int, int, int]:
+        return cast(Tuple[int, int, int, int], tuple(self.ipnum.to_bytes(4, "big")))
 
     def __repr__(self) -> str:
         """
@@ -133,7 +134,7 @@ class IPAddress:
 
         return self.ipnum < other.ipnum
 
-    def __int__(self) -> bool:
+    def __int__(self) -> int:
         return self.ipnum
 
 
@@ -147,7 +148,7 @@ class IPAddressBlock:
     # this regex describes CIDR-notation (an ip-address plus "/XX", whereas XX is a number between 1 and 32)
     CIDR_REGEXP = IPAddress.IP_REGEXP + r"(\/(3[0-2]|[12]?\d)|)?"
 
-    def __init__(self, ip: "Union(str, list, IPAddress)", netmask=32) -> None:
+    def __init__(self, ip: Union[str, List[int], IPAddress], netmask: int=32) -> None:
         """
         Construct a ip-block given a ip-address and a netmask. Given an ip and a netmask,
         the constructed ip-block will describe the range ip/netmask (e.g. 127.0.0.1/8)
@@ -246,7 +247,7 @@ class ReservedIPBlocks:
         return any(ip in block for block in ReservedIPBlocks.PRIVATE_IP_SEGMENTS)
 
     @staticmethod
-    def get_private_segment(ip: IPAddress) -> "Optional[IPAddressBlock]":
+    def get_private_segment(ip: IPAddress) -> Optional[IPAddressBlock]:
         if not ReservedIPBlocks.is_private(ip):
             raise ValueError("%s is not part of a private IP segment" % ip)
 
@@ -254,12 +255,14 @@ class ReservedIPBlocks:
             if ip in block:
                 return block
 
+        return None
+
     @staticmethod
     def is_localhost(ip: IPAddress) -> bool:
         return ip in ReservedIPBlocks.LOCALHOST_SEGMENT
 
     @staticmethod
-    def is_multicast(ip: IPAddressBlock) -> bool:
+    def is_multicast(ip: IPAddress) -> bool:
         return ip in ReservedIPBlocks.MULTICAST_SEGMENT
 
     @staticmethod
@@ -267,5 +270,5 @@ class ReservedIPBlocks:
         return ip in ReservedIPBlocks.RESERVED_SEGMENT
 
     @staticmethod
-    def is_zero_conf(ip: IPAddressBlock) -> bool:
+    def is_zero_conf(ip: IPAddress) -> bool:
         return ip in ReservedIPBlocks.ZERO_CONF_SEGMENT
