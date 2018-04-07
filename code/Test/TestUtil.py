@@ -1,5 +1,17 @@
 #!/usr/bin/python3
 
+import scapy.main
+
+# This import is needed, otherwise scapy throws warnings. When reading a pcap scapy will not
+# find the layer-type 1 (ethernet) because it has not been loaded at the time. To circumvent
+# this we explicitely load the ethernet-type here.
+# For the curious guys and gals, the exact error message is:
+# "RawPcapReader: unknown LL type [%i]/[%#x]. Using Raw packets" % the_missing_ll_number
+# If the same problems happens with other ll-types feel free to load ALL imaginable layers
+# with the following line.
+# import scapy.layers.all
+import scapy.layers.l2
+
 import scapy.packet
 import scapy.utils
 import shlex
