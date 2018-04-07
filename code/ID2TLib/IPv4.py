@@ -13,7 +13,7 @@ class IPAddress:
     # 4 numbers between 0 and 255, joined together with dots
     IP_REGEXP = r"{0}\.{0}\.{0}\.{0}".format(_IP_NUMBER_REGEXP)
 
-    def __init__(self, intlist: "list[int]") -> "IPAddress":
+    def __init__(self, intlist: "list[int]") -> None:
         """
         Construct an ipv4-address with a list of 4 integers, e.g. to construct the ip 10.0.0.0 pass [10, 0, 0, 0]
         """
@@ -147,7 +147,7 @@ class IPAddressBlock:
     # this regex describes CIDR-notation (an ip-address plus "/XX", whereas XX is a number between 1 and 32)
     CIDR_REGEXP = IPAddress.IP_REGEXP + r"(\/(3[0-2]|[12]?\d)|)?"
 
-    def __init__(self, ip: "Union(str, list, IPAddress)", netmask=32) -> "IPAddressBlock":
+    def __init__(self, ip: "Union(str, list, IPAddress)", netmask=32) -> None:
         """
         Construct a ip-block given a ip-address and a netmask. Given an ip and a netmask,
         the constructed ip-block will describe the range ip/netmask (e.g. 127.0.0.1/8)
