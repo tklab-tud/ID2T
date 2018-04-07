@@ -27,13 +27,13 @@ class PcapComparator:
 
     def compare_captures(self, packetsA, packetsB):
         if len(packetsA) != len(packetsB):
-            self.fail("Both pcap's have to have the same amount of packets")
+            self.fail("Both pcaps have to have the same amount of packets")
 
         for i in range(len(packetsA)):
             p, p2 = packetsA[i], packetsB[i]
 
             if abs(p.time - p2.time) > (10 ** -7):
-                self.fail("Packets no %i in the pcap's don't appear at the same time" % (i + 1))
+                self.fail("Packets no %i in the pcaps don't appear at the same time" % (i + 1))
             self.compare_packets(p, p2, i + 1)
 
     def compare_packets(self, p: scapy.packet.BasePacket, p2: scapy.packet.BasePacket, packet_number: int):
