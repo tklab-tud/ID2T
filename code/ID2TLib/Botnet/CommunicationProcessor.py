@@ -4,12 +4,12 @@ from Attack.MembersMgmtCommAttack import MessageType
 from Attack.MembersMgmtCommAttack import Message
 
 
-class CommunicationProcessor():
+class CommunicationProcessor:
     """
     Class to process parsed input CSV/XML data and retrieve a mapping or other information.
     """
 
-    def __init__(self, mtypes:dict, nat:bool):
+    def __init__(self, mtypes: dict, nat: bool):
         """
         Creates an instance of CommunicationProcessor.
         :param mtypes: a dict containing an int to EnumType mapping of MessageTypes
@@ -18,6 +18,12 @@ class CommunicationProcessor():
         self.packets = []
         self.mtypes = mtypes
         self.nat = nat
+        self.messages = []
+        self.respnd_ids = set()
+        self.external_init_ids = set()
+        self.local_init_ids = dict()
+        self.local_ids = dict()
+        self.external_ids = set()
 
     def set_mapping(self, packets: list, mapped_ids: dict):
         """
@@ -29,7 +35,9 @@ class CommunicationProcessor():
         self.packets = packets
         self.local_init_ids = set(mapped_ids)
 
-    def get_comm_interval(self, cpp_comm_proc, strategy: str, number_ids: int, max_int_time: int, start_idx: int, end_idx: int):
+    @staticmethod
+    def get_comm_interval(cpp_comm_proc, strategy: str, number_ids: int, max_int_time: int, start_idx: int,
+                          end_idx: int):
         """
         Finds a communication interval with respect to the given strategy. The interval is maximum of the given seconds 
         and has at least number_ids communicating initiators in it.
@@ -78,7 +86,8 @@ class CommunicationProcessor():
                 start_idx -= 1  # because message indices start with 1 (for the user)
                 interval = cpp_comm_proc.find_interval_from_startidx(start_idx, number_ids, max_int_time)
             elif start_idx and end_idx:
-                start_idx -= 1; end_idx -= 1
+                start_idx -= 1
+                end_idx -= 1
                 ids = cpp_comm_proc.get_interval_init_ids(start_idx, end_idx)
                 if not ids:
                     return {}
@@ -104,8 +113,9 @@ class CommunicationProcessor():
         msgs, msg_id = [], 0
         # keep track of previous request to find connections
         prev_reqs = {}
-        # used to determine whether a request has been seen yet, so that replies before the first request are skipped and do not throw an error by
-        # accessing the empty dict prev_reqs (this is not a perfect solution, but it works most of the time)
+        # used to determine whether a request has been seen yet, so that replies before the first request are skipped
+        # and do not throw an error by accessing the empty dict prev_reqs (this is not a perfect solution, but it works
+        # most of the time)
         req_seen = False
         local_init_ids = self.local_init_ids
         external_init_ids = set()
@@ -132,7 +142,7 @@ class CommunicationProcessor():
                     respnd_ids.add(id_dst)
                 # convert the abstract message into a message object to handle it better
                 msg_str = "{0}-{1}".format(id_src, id_dst)
-                msg = Message(msg_id, id_src, id_dst, msg_type, time, line_no = lineno)
+                msg = Message(msg_id, id_src, id_dst, msg_type, time, line_no=lineno)
                 msgs.append(msg)
                 prev_reqs[msg_str] = msg_id
                 msg_id += 1
@@ -188,7 +198,6 @@ class CommunicationProcessor():
         """
         Map the given IDs to a locality (i.e. local or external} considering the given probabilities.
 
-        :param comm_type: the type of communication (i.e. local, external or mixed)
         :param prob_rspnd_local: the probabilty that a responder is local
         """
         external_ids = set()
