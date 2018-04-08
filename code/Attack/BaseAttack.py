@@ -12,6 +12,7 @@ import sys
 import tempfile
 import time
 import collections
+import typing as t
 
 # TODO: double check this import
 # does it complain because libpcapreader is not a .py?
@@ -97,7 +98,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
     ################################################
 
     @staticmethod
-    def _is_mac_address(mac_address: str):
+    def _is_mac_address(mac_address: t.Union[str, t.List[str]]) -> bool:
         """
         Verifies if the given string is a valid MAC address.
         Accepts the formats 00:80:41:ae:fd:7e and 00-80-41-ae-fd-7e.
@@ -117,7 +118,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         return True
 
     @staticmethod
-    def _is_ip_address(ip_address: str):
+    def _is_ip_address(ip_address: t.Union[str, t.List[str]]) -> t.Tuple[bool, t.Union[str, t.List[str]]]:
         """
         Verifies that the given string or list of IP addresses (strings) is a valid IPv4/IPv6 address.
         Accepts comma-separated lists of IP addresses, like "192.169.178.1, 192.168.178.2"
@@ -126,7 +127,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         :return: True if all IP addresses are valid, otherwise False. And a list of IP addresses as string.
         """
 
-        def append_ips(ip_address_input):
+        def append_ips(ip_address_input: t.List[str]) -> t.Tuple[bool, t.List[str]]:
             """
             Recursive appending function to handle lists and ranges of IP addresses.
 
@@ -161,7 +162,8 @@ class BaseAttack(metaclass=abc.ABCMeta):
             return result, ip_address_output
 
     @staticmethod
-    def _is_port(ports_input: str):
+    def _is_port(ports_input: t.Union[t.List[str], t.List[int], str, int])\
+            -> t.Union[bool, t.Tuple[bool, t.List[t.Union[int, str]]]]:
         """
         Verifies if the given value is a valid port. Accepts port ranges, like 80-90, 80..99, 80...99.
 
@@ -171,7 +173,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         and a list of int is returned.
         """
 
-        def _is_invalid_port(num):
+        def _is_invalid_port(num: int) -> bool:
             """
             Checks whether the port number is invalid.
 
@@ -224,7 +226,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
             return True, ports_output
 
     @staticmethod
-    def _is_timestamp(timestamp: str):
+    def _is_timestamp(timestamp: str) -> bool:
         """
         Checks whether the given value is in a valid timestamp format. The accepted format is:
         YYYY-MM-DD h:m:s, whereas h, m, s may be one or two digits.
@@ -276,7 +278,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
             return False, value
 
     @staticmethod
-    def _is_domain(val: str):
+    def _is_domain(val: str) -> bool:
         """
         Verifies that the given string is a valid URI.
 
@@ -309,25 +311,25 @@ class BaseAttack(metaclass=abc.ABCMeta):
             random.seed(seed_final)
             np.random.seed(seed_final & 0xFFFFFFFF)
 
-    def set_start_time(self):
+    def set_start_time(self) -> None:
         """
         Set the current time as global starting time.
         """
         self.start_time = time.time()
 
-    def set_finish_time(self):
+    def set_finish_time(self) -> None:
         """
         Set the current time as global finishing time.
         """
         self.finish_time = time.time()
 
-    def get_packet_generation_time(self):
+    def get_packet_generation_time(self) -> float:
         """
         :return difference between starting and finishing time.
         """
         return self.finish_time - self.start_time
 
-    def add_param_value(self, param, value, user_specified: bool = True):
+    def add_param_value(self, param, value, user_specified: bool = True) -> None:
         """
         Adds the pair param : value to the dictionary of attack parameters. Prints and error message and skips the
         parameter if the validation fails.
