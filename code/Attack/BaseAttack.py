@@ -14,8 +14,6 @@ import time
 import collections
 import typing as t
 
-# TODO: double check this import
-# does it complain because libpcapreader is not a .py?
 import ID2TLib.libpcapreader as pr
 import lea
 import numpy as np
@@ -413,18 +411,17 @@ class BaseAttack(metaclass=abc.ABCMeta):
         elif param_type == atkParam.ParameterTypes.TYPE_PERCENTAGE:
             is_valid_float, value = self._is_float(value)
             if is_valid_float:
-                is_valid = value >= 0 and value <= 1
+                is_valid = 0 <= value <= 1
             else:
                 is_valid = False
         elif param_type == atkParam.ParameterTypes.TYPE_PADDING:
             if isinstance(value, int):
-                is_valid = value >= 0 and value <= 100
+                is_valid = 0 <= value <= 100
             elif isinstance(value, str) and value.isdigit():
                 value = int(value)
-                is_valid = value >= 0 and value <= 100
+                is_valid = 0 <= value <= 100
         elif param_type == atkParam.ParameterTypes.TYPE_INTERVAL_SELECT_STRAT:
             is_valid = value in {"random", "optimal", "custom"}
-
 
         # add value iff validation was successful
         if is_valid:
@@ -503,7 +500,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
 
         return destination
 
-    def get_reply_delay(self, ip_dst, default = 2000):
+    def get_reply_delay(self, ip_dst, default=2000):
         """
            Gets the minimum and the maximum reply delay for all the connections of a specific IP.
 
@@ -524,7 +521,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
             all_max_delays = self.statistics.process_db_query("SELECT maxDelay FROM conv_statistics LIMIT 500;")
             max_delay = np.median(all_max_delays)
 
-            if math.isnan(min_delay): # max_delay is nan too then
+            if math.isnan(min_delay):  # max_delay is nan too then
                 if default < 0:
                     raise ValueError("Could not calculate min/max_delay")
 
