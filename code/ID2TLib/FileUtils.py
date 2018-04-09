@@ -4,13 +4,14 @@ import os
 
 
 def parse_xml(filepath: str):
-    '''
+    """
     Parses an XML File
-    It is assumed, that packets are placed on the second hierarchical level and packetinformation is encoded as attributes
+    It is assumed, that packets are placed on the second hierarchical level and packet-information is encoded
+    as attributes
 
     :param filepath: the path to the XML file to be parsed
     :return: a List of Dictionaries, each Dictionary contains the information of one packet
-    '''
+    """
 
     tree = ElementTree.parse(filepath)
     root = tree.getroot()
@@ -24,12 +25,13 @@ def parse_xml(filepath: str):
 
 
 def parse_csv_to_xml(filepath: str):
-    '''
-    Converts a CSV file into an XML file. Every entry is converted to a child with respective attributes of the root node
+    """
+    Converts a CSV file into an XML file. Every entry is converted to a child with respective attributes of the
+    root node
 
     :param filepath: the path to the CSV file to be parsed
     :return: a path to the newly created XML file
-    '''
+    """
 
     filename = os.path.splitext(filepath)[0]
     # build a tree structure
