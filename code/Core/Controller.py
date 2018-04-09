@@ -59,7 +59,6 @@ class Controller:
         :param flag_write_file: Writes the statistics to a file.
         :param flag_recalculate_stats: Forces the recalculation of statistics.
         :param flag_print_statistics: Prints the statistics on the terminal.
-        :param flag_non_verbose: Reduces terminal clutter.
         :return: None
         """
         self.statistics.load_pcap_statistics(flag_write_file, flag_recalculate_stats, flag_print_statistics,
@@ -188,11 +187,10 @@ class Controller:
             self.statisticsDB.process_db_query(query, print_results)
 
     @staticmethod
-    def process_help(params):
+    def process_help(params) -> None:
         """
-        TODO: FILL ME
-        :param params:
-        :return:
+        Prints either general help messages, or information about specific commands.
+        :param params: A list of parameters for the help command (can be empty).
         """
         if not params:
             print("Query mode allows you to enter SQL-queries as well as named queries.")

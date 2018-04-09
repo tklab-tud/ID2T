@@ -53,13 +53,10 @@ class TestUtility(unittest.TestCase):
         self.assertIn(Utility.get_rnd_os(), Utility.platforms)
 
     def test_check_platform_valid(self):
-        try:
             Utility.check_platform("linux")
-        except SystemExit:
-            self.fail()
 
     def test_check_platform_invalid(self):
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(ValueError):
             Utility.check_platform("abc")
 
     def test_get_ip_range_forwards(self):
@@ -81,7 +78,7 @@ class TestUtility(unittest.TestCase):
         self.assertEqual(Utility.get_ip_range(start, end), result)
 
     def test_generate_source_port_from_platform_invalid(self):
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(ValueError):
             Utility.generate_source_port_from_platform("abc")
 
     def test_generate_source_port_from_platform_oldwin_firstport(self):
@@ -108,7 +105,7 @@ class TestUtility(unittest.TestCase):
     # TODO: get_filetime_format Test
 
     def test_get_rnd_boot_time_invalid(self):
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(ValueError):
             Utility.get_rnd_boot_time(10, "abc")
 
     def test_get_rnd_boot_time_linux(self):
@@ -126,40 +123,29 @@ class TestUtility(unittest.TestCase):
 
     def test_get_rnd_x86_nop_with_sideeffects(self):
         result = Utility.get_rnd_x86_nop(1000, False)
-        correct = True
-        for byte in result:
-            if byte.to_bytes(1, "little") not in Utility.x86_nops \
-                    and byte.to_bytes(1, "little") not in Utility.x86_pseudo_nops:
-                correct = False
-                break
-        self.assertTrue(correct)
+        for i in range(0, len(result)):
+            with self.subTest(i=i):
+                self.assertTrue(result[i].to_bytes(1, "little") in Utility.x86_nops or
+                                result[i].to_bytes(1, "little") in Utility.x86_pseudo_nops)
 
     def test_get_rnd_x86_nop_without_sideeffects(self):
         result = Utility.get_rnd_x86_nop(1000, True)
-        correct = True
-        for byte in result:
-            if byte.to_bytes(1, "little") in Utility.x86_pseudo_nops:
-                correct = False
-                break
-        self.assertTrue(correct)
+        for i in range(0, len(result)):
+            with self.subTest(i=i):
+                self.assertIn(result[i].to_bytes(1, "little"), Utility.x86_nops)
+                self.assertNotIn(result[i].to_bytes(1, "little"), Utility.x86_pseudo_nops)
 
     def test_get_rnd_x86_nop_filter(self):
         result = Utility.get_rnd_x86_nop(1000, False, Utility.x86_nops.copy())
-        correct = True
-        for byte in result:
-            if byte.to_bytes(1, "little") in Utility.x86_nops:
-                correct = False
-                break
-        self.assertTrue(correct)
+        for i in range(0, len(result)):
+            with self.subTest(i=i):
+                self.assertNotIn(result[i].to_bytes(1, "little"), Utility.x86_nops)
 
     def test_get_rnd_x86_nop_single_filter(self):
         result = Utility.get_rnd_x86_nop(1000, False, b'\x20')
-        correct = True
-        for byte in result:
-            if byte.to_bytes(1, "little") == b'\x20':
-                correct = False
-                break
-        self.assertTrue(correct)
+        for i in range(0, len(result)):
+            with self.subTest(i=i):
+                self.assertNotEqual(result[i].to_bytes(1, "little"), b'\x20')
 
     def test_get_rnd_bytes_number(self):
         result = Utility.get_rnd_bytes(1000)
@@ -167,11 +153,9 @@ class TestUtility(unittest.TestCase):
 
     def test_get_rnd_bytes_filter(self):
         result = Utility.get_rnd_bytes(1000, Utility.x86_pseudo_nops.copy())
-        correct = True
-        for byte in result:
-            if byte.to_bytes(1, "little") in Utility.x86_pseudo_nops:
-                correct = False
-        self.assertTrue(correct)
+        for i in range(0, len(result)):
+            with self.subTest(i=i):
+                self.assertNotIn(result[i].to_bytes(1, "little"), Utility.x86_pseudo_nops)
 
     def test_get_bytes_from_file_invalid_path(self):
         with self.assertRaises(SystemExit):
@@ -217,14 +201,11 @@ class TestUtility(unittest.TestCase):
         self.assertEqual(Utility.handle_most_used_outputs(test_input), 0)
 
     def test_check_payload_len_exceeded(self):
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(ValueError):
             Utility.check_payload_len(10, 5)
 
     def test_check_payload_len_valid(self):
-        try:
-            Utility.check_payload_len(5, 10)
-        except SystemExit:
-            self.fail()
+        Utility.check_payload_len(5, 10)
 
     def test_remove_generic_ending_attack(self):
         self.assertEqual(Utility.remove_generic_ending("someattack"), "some")

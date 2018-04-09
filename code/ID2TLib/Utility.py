@@ -110,7 +110,7 @@ def get_rnd_os():
     return os_dist.random()
 
 
-def check_platform(platform: str):
+def check_platform(platform: str) -> None:
     """
     Checks if the given platform is currently supported
     if not exits with error
@@ -118,9 +118,8 @@ def check_platform(platform: str):
     :param platform: the platform, which should be validated
     """
     if platform not in platforms:
-        print("\nERROR: Invalid platform: " + platform + "." +
-              "\n Please select one of the following platforms: ", platforms)
-        exit(1)
+        raise ValueError("ERROR: Invalid platform: " + platform + "." +
+                         "\n Please select one of the following platforms: " + ",".join(platforms))
 
 
 def get_ip_range(start_ip: str, end_ip: str):
@@ -248,7 +247,7 @@ def get_rnd_bytes(count=1, ignore=None):
     return result
 
 
-def check_payload_len(payload_len: int, limit: int):
+def check_payload_len(payload_len: int, limit: int) -> None:
     """
     Checks if the len of the payload exceeds a given limit
 
@@ -257,8 +256,8 @@ def check_payload_len(payload_len: int, limit: int):
     """
 
     if payload_len > limit:
-        print("\nCustom payload too long: ", payload_len, " bytes. Should be a maximum of ", limit, " bytes.")
-        exit(1)
+        raise ValueError("Custom payload too long: " + str(payload_len) +
+                         " bytes. Should be a maximum of " + str(limit) + " bytes.")
 
 
 def get_bytes_from_file(filepath):
