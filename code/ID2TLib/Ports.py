@@ -1,4 +1,6 @@
-import random, copy
+import random
+import copy
+
 
 # information taken from https://www.cymru.com/jtk/misc/ephemeralports.html
 class PortRanges:
@@ -15,6 +17,7 @@ class PortRanges:
     WINDOWS_8 = DYNAMIC_PORTS
     WINDOWS_VISTA = DYNAMIC_PORTS
     WINDOWS_XP = range(1024, 5001)
+
 
 # This class uses classes instead of functions so deepcloning works
 class PortSelectionStrategy:
@@ -35,13 +38,14 @@ class PortSelectionStrategy:
                 self.counter = port_range.start
 
             return port
+
     class random:
         def __call__(self, port_range, *args):
             return random.randrange(port_range.start, port_range.stop)
 
     class linux_kernel:
         """
-        A port-selectioin-strategy oriented on the linux-kernel
+        A port-selection-strategy oriented on the linux-kernel
         The implementation follows https://github.com/torvalds/linux/blob/master/net/ipv4/inet_connection_sock.c#L173
         as much as possible when converting from one language to another (The newest file was used
         by the time of writing, make sure you select the correct one when following the link!)
@@ -60,7 +64,6 @@ class PortSelectionStrategy:
             :param args: Not used for now
             :return: A port number
             """
-            port = 0
             low, high = port_range.start, port_range.stop
 
             # this var tells us if we should use the upper or lower port-range-half, or the whole range if
@@ -74,7 +77,7 @@ class PortSelectionStrategy:
                 if high - low < 4:
                     attempt_half = None
                 if attempt_half is not None:
-                    # appearently a fast method to find a number close to the real half
+                    # apparently a fast method to find a number close to the real half
                     # unless the difference between high and low is 4 (see above, note the 2-shift below)
                     # this does not work
                     half = low + (((high - low) >> 2) << 1)
@@ -86,12 +89,12 @@ class PortSelectionStrategy:
 
                 remaining = high - low
                 if remaining > 1:
-                    remaining &= ~1 # flip the 1-bit
+                    remaining &= ~1  # flip the 1-bit
 
                 offset = random.randrange(0, remaining)
-                offset |= 1;
+                offset |= 1
 
-                attempt_half_before = attempt_half # slight hack to keep track of change
+                attempt_half_before = attempt_half  # slight hack to keep track of change
                 while True:
                     port = low + offset
 
@@ -113,12 +116,13 @@ class PortSelectionStrategy:
                         attempt_half = False
                         break
 
-                if attempt_half_before: # we still got ports to search, attemp_half was just set to False
+                if attempt_half_before:  # we still got ports to search, attemp_half was just set to False
                     continue
-                if not attempt_half: # the port-range is exhausted
+                if not attempt_half:  # the port-range is exhausted
                     break
 
             raise ValueError("Could not find suitable port")
+
 
 class PortSelector:
     """
@@ -148,7 +152,8 @@ class PortSelector:
     def select_port(self):
         # do this check to avoid endless loops
         if len(self.generated) == len(self.port_range):
-            raise RuntimeError("All %i port numbers were already generated, no more can be generated" % len(self.port_range))
+            raise RuntimeError("All %i port numbers were already generated, no more can be generated"
+                               % len(self.port_range))
 
         while True:
             port = self._select_port(self.port_range, self)
@@ -182,6 +187,7 @@ class PortSelector:
     def clone(self):
         return copy.deepcopy(self)
 
+
 class ProtocolPortSelector:
     """
     This class contains a method to select ports for udp and tcp. It generally consists of the port-selectors, one
@@ -190,7 +196,7 @@ class ProtocolPortSelector:
     protocolPortSelector.clear() will call clear for both port-selectors.
     """
 
-    def __init__(self, port_range, select_tcp, select_udp = None):
+    def __init__(self, port_range, select_tcp, select_udp=None):
         self.tcp = PortSelector(port_range, select_tcp)
         self.udp = PortSelector(port_range, select_udp or select_tcp)
 
@@ -213,7 +219,9 @@ class ProtocolPortSelector:
         return self.udp.is_port_in_use(port)
 
     def clone(self):
-        class Tmp: pass
+        class Tmp:
+            pass
+
         clone = Tmp()
         clone.__class__ = type(self)
 
@@ -225,27 +233,28 @@ class ProtocolPortSelector:
     def __getattr__(self, attr):
         val = getattr(self.tcp, attr)
 
-        if callable(val): # we proprably got a method here
+        if callable(val):  # we proprably got a method here
             tcp_meth = val
             udp_meth = getattr(self.udp, attr)
 
             def double_method(*args, **kwargs):
-                return (tcp_meth(*args, **kwargs), udp_meth(*args, **kwargs))
+                return tcp_meth(*args, **kwargs), udp_meth(*args, **kwargs)
 
-            return double_method # calling this function will call the method for both port-selectors
-        else: # we have found a simple value, return a tuple containing the attribute-value from both port-selectors
-            return (val, getattr(self.udp, attr))
+            return double_method  # calling this function will call the method for both port-selectors
+        else:  # we have found a simple value, return a tuple containing the attribute-value from both port-selectors
+            return val, getattr(self.udp, attr)
+
 
 class PortSelectors:
     """
-    To save some time this class contains some of the port-selection-strategies found in the wild. It is recommend to use
-    .clone() to get your personal copy, otherwise two parts of your code might select ports on the same port-selector which
-    is something your might want to avoid.
+    To save some time this class contains some of the port-selection-strategies found in the wild. It is recommended
+    to use .clone() to get your personal copy, otherwise two parts of your code might select ports on the same
+    port-selector which is something you might want to avoid.
     """
     LINUX = ProtocolPortSelector(PortRanges.LINUX, PortSelectionStrategy.random())
     APPLE = ProtocolPortSelector(PortRanges.DYNAMIC_PORTS,
                                  PortSelectionStrategy.sequential(),
                                  PortSelectionStrategy.random())
     FREEBSD = ProtocolPortSelector(PortRanges.FREEBSD, PortSelectionStrategy.random())
-    WINDOWS = ProtocolPortSelector(PortRanges.WINDOWS_7, PortSelectionStrategy.random()) # the selection strategy is a guess as i can't find more info on it
-
+    # the selection strategy is a guess as i can't find more info on it
+    WINDOWS = ProtocolPortSelector(PortRanges.WINDOWS_7, PortSelectionStrategy.random())
