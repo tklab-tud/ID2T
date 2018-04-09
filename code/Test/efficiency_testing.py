@@ -1,3 +1,4 @@
+import unittest as ut
 import unittest.mock as mock
 
 import ID2TLib.TestLibrary as Lib
@@ -50,5 +51,6 @@ class EfficiencyTests(Test.ID2TAttackTest):
         self.temporal_efficiency_test([['MS17Scan', 'ip.src=192.168.178.1']], time_limit=1.5, factor=1000)
 
     # FIXME: improve EternalBlue efficiency
-    #def test_EternalBlue(self):
-    #    self.temporal_efficiency_test([['EternalBlue']], time_limit=1.5, factor=1000)
+    @ut.skip("EternalBlue needs performance improvements to pass the efficiency test")
+    def test_EternalBlue(self):
+        self.temporal_efficiency_test([['EternalBlue']], time_limit=1.5, factor=1000)

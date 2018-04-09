@@ -21,7 +21,7 @@ class Label:
         self.parameters = parameters
 
     def __eq__(self, other):
-        return self.timestamp == other.timestamp
+        return self.timestamp_start == other.timestamp_start
 
     def __lt__(self, other):
         return self.timestamp_start < other.timestamp_start
