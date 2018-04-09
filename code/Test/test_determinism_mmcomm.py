@@ -65,14 +65,18 @@ class PcapComparison(unittest.TestCase):
     def test_determinism(self):
         self.print_warning("Conducting test for determinism of Membership Management Communication Attack:\n")
         input_pcap = os.environ.get(self.PCAP_ENVIRONMENT_VALUE, self.DEFAULT_PCAP)
-        seed = os.environ.get(self.SEED_ENVIRONMENT_VALUE, self.DEFAULT_SEED)
+        seed = os.environ.get(self.SEED_ENVIRONMENT_VALUE, None)
 
         if self.id2t_params is None:
             self.id2t_params = self.random_id2t_params()
 
+        use_random_seeds = not bool(seed)
+
         for i, params in enumerate(self.id2t_params):
             self.print_warning("Test round %d:" % (i+1))
             self.print_warning("=================================")
+            if use_random_seeds:
+                seed = random.randint(0, 0x7FFFFFFF)
             self.do_test_round(input_pcap, seed, params)
             self.print_warning()
 
@@ -102,7 +106,14 @@ class PcapComparison(unittest.TestCase):
                         self.compare_pcaps(generated_pcap, pcap)
                     except AssertionError as e:
                         execution.keep_file(pcap)
-                        self.executions[-2].keep_file(generated_pcap)
+                        for ex in self.executions:
+                            try:
+                                ex.keep_file(generated_pcap)
+                            except ValueError:
+                                pass
+
+                        e.args += tuple(("Command was: %s" % execution.get_run_command(additional_params),))
+                        e.args += tuple(("Files are: %s, %s" % (generated_pcap, pcap),))
                         raise e
             else:
                 generated_pcap = pcap
@@ -120,9 +131,11 @@ class PcapComparison(unittest.TestCase):
 
         self.print_warning("Done")
 
-        kept = [file for file in id2t_run.get_kept_files() for id2t_run in self.executions]
-        if kept:
-            self.print_warning("The following files have been kept: " + ", ".join(kept))
+        if any(e.get_kept_files() for e in self.executions):
+            self.print_warning("The following files have been kept:")
+            for e in self.executions:
+                for file in e.get_kept_files():
+                    self.print_warning(file)
 
     def compare_pcaps(self, one: str, other: str):
         PcapComparator().compare_files(self.ID2T_PATH + "/" + one, self.ID2T_PATH + "/" + other)
