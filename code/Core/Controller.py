@@ -32,6 +32,7 @@ class Controller:
         self.seed = None
         self.durations = []
         self.added_packets = 0
+        self.created_files = []
         self.debug = debug
 
         # Initialize class instances
@@ -136,17 +137,14 @@ class Controller:
 
             os.rename(self.pcap_dest_path, result_path)
             self.pcap_dest_path = result_path
-            created_files = [self.pcap_dest_path]
+            self.created_files = [self.pcap_dest_path]
 
             # process/move other created files
-            pcap_root = os.path.splitext(self.pcap_dest_path)[0]
-            for k, v in Util.MISC_OUT_FILES.items():
-                if v is None:
-                    created_files.append(k)
-                else:
-                    outpath = pcap_root + "_" + k
-                    os.rename(v, outpath)
-                    created_files.append(outpath)
+            pcap_basename = os.path.splitext(self.pcap_dest_path)[0]
+            for x in self.attack_controller.additional_files:
+                outpath = pcap_basename + "_" + x
+                os.rename(x, outpath)
+                self.created_files.append(outpath)
 
             print("done.")
 
@@ -161,11 +159,11 @@ class Controller:
 
             # write label file with attacks
             self.label_manager.write_label_file(self.pcap_dest_path)
-            created_files.insert(1, self.label_manager.label_file_path)
+            self.created_files.insert(1, self.label_manager.label_file_path)
 
             # print status message
             print('\nOutput files created:')
-            for filepath in created_files:
+            for filepath in self.created_files:
                 print(filepath)
         else:
             print("done.")

@@ -29,6 +29,7 @@ class AttackController:
         self.added_attacks = []
         self.seed = None
         self.total_packets = 0
+        self.additional_files = []
 
     def set_seed(self, seed: int) -> None:
         """
@@ -176,7 +177,12 @@ class AttackController:
         if time:
             self.current_attack.set_finish_time()
         duration = self.current_attack.get_packet_generation_time()
-        self.total_packets, temp_attack_pcap_path = self.current_attack.generate_attack_pcap()
+        attack_result = self.current_attack.generate_attack_pcap()
+        self.total_packets = attack_result[0]
+        temp_attack_pcap_path = attack_result[1]
+        if len(attack_result) == 3:
+            # Extract the list of additional files, if available
+            self.additional_files += attack_result[2]
         print("done. (total: " + str(self.total_packets) + " pkts", end="")
         if time:
             print(" in ", duration, " seconds", end="")

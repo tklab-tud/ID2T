@@ -130,7 +130,8 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
     def generate_attack_pcap(self):
         """
         Injects the packets of this attack into a PCAP and stores it as a temporary file.
-        :return: a tuple of the number packets injected and the path to the temporary attack PCAP
+        :return: a tuple of the number packets injected, the path to the temporary attack PCAP
+        and a list of additionally created files
         """
 
         # create the final messages that have to be sent, including all bot configurations
@@ -231,15 +232,14 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
 
         # write the mapping to a file
         current_ts = datetime.now().strftime("%Y%m%d-%H%M%S")
-        mapping_filename = "mapping_" + current_ts 
+        mapping_filename = "mapping_" + current_ts + ".xml"
         msg_packet_mapping.write_to_file(mapping_filename)
-        Util.MISC_OUT_FILES["mapping.xml"] = mapping_filename
 
         # Store timestamp of last packet
         self.attack_end_utime = last_packet.time
 
         # Return packets sorted by packet by timestamp and total number of packets (sent)
-        return total_pkts , path_attack_pcap
+        return total_pkts , path_attack_pcap, [mapping_filename]
 
 
     def generate_attack_packets(self):
@@ -447,7 +447,6 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                 print("Writing corresponding XML file...", end=" ")
                 sys.stdout.flush()
             filepath_xml = cpp_comm_proc.write_xml(Util.OUT_DIR, filename)
-            Util.MISC_OUT_FILES[filepath_xml] = None
             if print_updates: print("done.")
         else:
             filesize = os.path.getsize(filepath_xml) / 2**20  # get filesize in MB

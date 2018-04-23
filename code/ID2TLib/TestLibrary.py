@@ -41,8 +41,8 @@ def clean_up(controller):
 
     :param controller: controller which created output files
     """
-    os.remove(controller.pcap_dest_path)
-    os.remove(controller.label_manager.label_file_path)
+    for file in controller.created_files:
+        os.remove(file)
 
 
 def rename_test_result_files(controller, caller_function: str, attack_sub_dir=False, test_sub_dir=False):
