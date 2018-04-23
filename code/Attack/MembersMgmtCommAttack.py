@@ -93,7 +93,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         :param statistics: Reference to a statistics object.
         """
         # set class constants
-        self.DEFAULT_XML_PATH = "resources/Botnet/MembersMgmtComm_example.xml"
+        self.DEFAULT_XML_PATH = Util.RESOURCE_DIR + "Botnet/MembersMgmtComm_example.xml"
 
         # PARAMETERS: initialize with default values
         # (values are overwritten if user specifies them)
@@ -545,7 +545,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         assign_realistic_timestamps(messages, external_ids, local_ids, avg_delay_local, avg_delay_external, zero_reference)
 
         portSelector = PortSelectors.LINUX
-        reserved_ports = set(int(line.strip()) for line in open("resources/reserved_ports.txt").readlines())
+        reserved_ports = set(int(line.strip()) for line in open(Util.RESOURCE_DIR + "reserved_ports.txt").readlines())
         def filter_reserved(get_port):
             port = get_port()
             while port in reserved_ports:
