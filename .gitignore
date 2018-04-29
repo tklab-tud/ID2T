@@ -39,4 +39,7 @@ test_efficiency
 *.png
 *.dat
 
+# Python environment
+.venv
+
 .DS_Store

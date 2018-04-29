@@ -5,6 +5,19 @@ if [ "$1" != '--non-interactive' ]; then
     ./resources/install_dependencies.sh
 fi
 
+# Create a new venv
+rm -Rf .venv
+python3 -m venv .venv
+
+# Activate the venv
+source .venv/bin/activate
+
+# Install python packages
+pip3 install -r resources/requirements.txt
+
+# Deactivate the venv
+deactivate
+
 # Create the Makefile using cmake, from a clean build directory
 cd code_boost/src/build/
 if [ ${PWD##*/} = 'build' ]; then
@@ -65,7 +78,9 @@ fi
 SCRIPT_PATH=\${ID2T_DIR%/*}
 cd \$SCRIPT_PATH
 # Execute ID2T
+source .venv/bin/activate
 exec ./code/CLI.py "\$@"
+deactivate
 EOF
 
 # Create the test script
@@ -79,6 +94,7 @@ else
 fi
 SCRIPT_PATH=\${ID2T_DIR%/*}
 cd \$SCRIPT_PATH
+source .venv/bin/activate
 # Regenerate the statistics DB
 ./id2t -i resources/test/reference_1998.pcap -r >/dev/null
 cd code
@@ -90,11 +106,12 @@ if [ -e "Test/test_\$1.py" ]; then
     testpath="Test/test_\$1.py"
     PRINT_COV=false
 fi
-PYTHONWARNINGS="ignore" coverage3 run --source=. -m unittest \$testpath >/dev/null
+PYTHONWARNINGS="ignore" python3 -m coverage run --source=. -m unittest \$testpath >/dev/null
 if \$PRINT_COV ; then
-    coverage3 html
-    coverage3 report -m
+    python3 -m coverage html
+    python3 -m coverage report -m
 fi
+deactivate
 EOF
 
 # Create the test script
@@ -117,6 +134,7 @@ set +e
 python3 -m unittest Test/efficiency_testing.py
 error=\$?
 cd \$SCRIPT_PATH
+source .venv/bin/activate
 mkdir \$PLOT_DIR
 smbloris="SMBLorisAttack attackers.count=4 packets.per-second=8.0"
 smbscan1="SMBScanAttack ip.src=192.168.178.1 ip.dst=192.168.178.10-192.168.179.253"
@@ -137,6 +155,7 @@ for i in "\$smbloris" "\$smbscan1" "\$smbscan2" "\$ftp" "\$porto" "\$portc" "\$s
 done
 echo "\nPlotted images can be found in \"\${TEST_DIR}\"."
 echo "By executing \"mprof plot <file>.dat\" you can get a more detailed look."
+deactivate
 exit \$error
 EOF
 
