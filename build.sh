@@ -55,12 +55,13 @@ cd ../../../
 
 # Create the ID2T script
 cat >./id2t  <<EOF
-#!/bin/sh
+#!/bin/bash
 # Find the executable
 if [ $(uname) = 'Darwin' ]; then
-    alias readlink='greadlink'
+    ID2T_DIR=\$(greadlink -f \$0)
+else
+    ID2T_DIR=\$(readlink -f \$0)
 fi
-ID2T_DIR=\$(readlink -f \$0)
 SCRIPT_PATH=\${ID2T_DIR%/*}
 cd \$SCRIPT_PATH
 # Execute ID2T
@@ -69,12 +70,13 @@ EOF
 
 # Create the test script
 cat >./run_tests  <<EOF
-#!/bin/sh
+#!/bin/bash
 # Find the executable
 if [ $(uname) = 'Darwin' ]; then
-    alias readlink='greadlink'
+    ID2T_DIR=\$(greadlink -f \$0)
+else
+    ID2T_DIR=\$(readlink -f \$0)
 fi
-ID2T_DIR=\$(readlink -f \$0)
 SCRIPT_PATH=\${ID2T_DIR%/*}
 cd \$SCRIPT_PATH
 # Regenerate the statistics DB
@@ -97,12 +99,13 @@ EOF
 
 # Create the test script
 cat >./test_efficiency  <<EOF
-#!/bin/sh
+#!/bin/bash
 # Find the executable
 if [ $(uname) = 'Darwin' ]; then
-    alias readlink='greadlink'
+    ID2T_DIR=\$(greadlink -f \$0)
+else
+    ID2T_DIR=\$(readlink -f \$0)
 fi
-ID2T_DIR=\$(readlink -f \$0)
 SCRIPT_PATH=\${ID2T_DIR%/*}
 TEST_DIR=\${SCRIPT_PATH}/resources/test/
 TEST_PCAP=\${TEST_DIR}reference_1998.pcap
