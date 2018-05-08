@@ -43,7 +43,7 @@ install_pkg_arch()
 
 install_pkg_ubuntu()
 {
-    APT_PKGS="build-essential libboost-dev libboost-python-dev cmake python3-dev python3-pip sqlite tcpdump libtins-dev libpcap-dev"
+    APT_PKGS="build-essential libboost-dev libboost-python-dev cmake python3-dev python3-pip python3-venv sqlite tcpdump libtins-dev libpcap-dev"
 
     # Check first to avoid unnecessary sudo
     echo -e "Packages: Checking..."
@@ -73,27 +73,6 @@ install_pkg_darwin()
     fi
 }
 
-install_pip()
-{
-    PYTHON_MODULES="pyxdg lea numpy matplotlib scapy-python3 scipy coverage memory_profiler"
-    echo -e "Python modules: Checking..."
-
-    # Check first to avoid unnecessary sudo
-    echo $PYTHON_MODULES | xargs -n 1 pip3 show >/dev/null
-    if [ $? == 0 ]; then
-        echo -e "Python modules: Found."
-        return
-    fi
-
-    # Install all missing packages
-    echo -e "Python modules: Installing..."
-    if [ $KERNEL == 'Darwin' ]; then
-        pip3 install $PYTHON_MODULES
-    else
-        sudo pip3 install $PYTHON_MODULES
-    fi
-}
-
 # Make sure the SQLiteCpp submodule is there
 echo -e "Updating SQLiteCpp"
 git submodule update --init
@@ -110,7 +89,6 @@ if [ "$KERNEL" = 'Darwin' ]; then
     fi
 
     install_pkg_darwin
-    install_pip
     exit 0
 elif [ "$KERNEL" = 'Linux' ]; then
     # Kernel is Linux, check for supported distributions
@@ -120,12 +98,10 @@ elif [ "$KERNEL" = 'Linux' ]; then
     if [ "$OS_LIKE" = 'archlinux' ]; then
         echo -e "Detected OS: Arch Linux"
         install_pkg_arch
-        install_pip
         exit 0
     elif [ "$OS_LIKE" = 'debian' ]; then
         echo -e "Detected OS: Debian"
         install_pkg_ubuntu
-        install_pip
         exit 0
     fi
 fi
