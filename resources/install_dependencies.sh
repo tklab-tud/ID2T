@@ -95,6 +95,11 @@ elif [ "$KERNEL" = 'Linux' ]; then
     OS=$(awk '/DISTRIB_ID=/' /etc/*-release | sed 's/DISTRIB_ID=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]')
     OS_LIKE=$(awk '/ID_LIKE=/' /etc/*-release | sed 's/ID_LIKE=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]')
 
+    if [ -z "$OS_LIKE" ]; then
+        # This distribution is missing the os-release file, so try lsb_release
+        OS_LIKE=$(lsb_release -si | tr '[:upper:]' '[:lower:]')
+    fi
+
     if [ "$OS_LIKE" = 'archlinux' ]; then
         echo -e "Detected OS: Arch Linux"
         install_pkg_arch
