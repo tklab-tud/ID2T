@@ -43,7 +43,15 @@ install_pkg_arch()
 
 install_pkg_ubuntu()
 {
-    APT_PKGS="build-essential libboost-dev libboost-python-dev cmake python3-dev python3-pip python3-venv sqlite tcpdump libtins-dev libpcap-dev"
+    APT_PKGS='build-essential libboost-dev libboost-python-dev cmake python3-dev python3-pip python3-venv sqlite tcpdump libtins-dev libpcap-dev'
+
+    which sudo >/dev/null
+    if [ $? != 0 ]; then
+        # sudo wasn't found, so we use su
+        SUDO="su -c "
+    else
+        SUDO=sudo
+    fi
 
     # Check first to avoid unnecessary sudo
     echo -e "Packages: Checking..."
@@ -51,7 +59,7 @@ install_pkg_ubuntu()
     if [ $? != 0 ]; then
         # Install all missing packages
         echo -e "Packages: Installing..."
-        sudo apt-get install $APT_PKGS
+        $SUDO "apt-get install $APT_PKGS"
     else
         echo -e "Packages: Found."
     fi
