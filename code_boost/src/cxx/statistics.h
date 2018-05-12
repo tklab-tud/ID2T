@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 #include <list>
 #include <tuple>
 #include <tins/timestamp.h>
@@ -690,7 +691,7 @@ private:
 
 
     //{IP Address, contacted IP Addresses}
-    std::unordered_map<std::string, std::vector<std::string>> contacted_ips;
+    std::unordered_map<std::string, std::unordered_set<std::string>> contacted_ips;
 
     // {IP Address, Protocol,  #count, #Data transmitted in bytes}
     std::unordered_map<ipAddress_protocol, entry_protocolStat> protocol_distribution;

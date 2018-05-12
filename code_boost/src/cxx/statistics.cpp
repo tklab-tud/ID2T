@@ -514,7 +514,7 @@ void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddres
     ip_statistics[ipAddressReceiver].pkts_received_timestamp.push_back(timestamp);
 
     // Increment Degrees for sender and receiver, if Sender sends its first packet to this receiver
-    std::vector<std::string>::iterator found_receiver = std::find(contacted_ips[ipAddressSender].begin(), contacted_ips[ipAddressSender].end(), ipAddressReceiver);
+    std::unordered_set<std::string>::const_iterator found_receiver = contacted_ips[ipAddressSender].find(ipAddressReceiver);
     if(found_receiver == contacted_ips[ipAddressSender].end()){
         // Receiver is NOT contained in the List of IPs, that the Sender has contacted, therefore this is the first packet in this direction
         ip_statistics[ipAddressSender].out_degree++;
@@ -522,13 +522,13 @@ void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddres
 
         // Increment overall_degree only if this is the first packet for the connection (both directions)
         // Therefore check, whether Receiver has contacted Sender before
-        std::vector<std::string>::iterator sender_contacted = std::find(contacted_ips[ipAddressReceiver].begin(), contacted_ips[ipAddressReceiver].end(), ipAddressSender);
+        std::unordered_set<std::string>::const_iterator sender_contacted = contacted_ips[ipAddressReceiver].find(ipAddressSender);
         if(sender_contacted == contacted_ips[ipAddressReceiver].end()){
             ip_statistics[ipAddressSender].overall_degree++;
             ip_statistics[ipAddressReceiver].overall_degree++;
         }  
 
-        contacted_ips[ipAddressSender].push_back(ipAddressReceiver);
+        contacted_ips[ipAddressSender].insert(ipAddressReceiver);
     }
 }
 
