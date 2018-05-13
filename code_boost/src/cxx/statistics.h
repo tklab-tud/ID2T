@@ -529,13 +529,13 @@ public:
 
     void calculateIPIntervalPacketRate(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp);
 
-    void incrementMSScount(std::string ipAddress, int mssValue);
+    void incrementMSScount(const std::string &ipAddress, int mssValue);
 
-    void incrementWinCount(std::string ipAddress, int winSize);
+    void incrementWinCount(const std::string &ipAddress, int winSize);
 
-    void addConvStat(std::string ipAddressSender,int sport,std::string ipAddressReceiver,int dport, std::chrono::microseconds timestamp);
+    void addConvStat(const std::string &ipAddressSender,int sport, const std::string &ipAddressReceiver,int dport, std::chrono::microseconds timestamp);
 
-    void addConvStatExt(std::string ipAddressSender,int sport,std::string ipAddressReceiver,int dport,std::string protocol, std::chrono::microseconds timestamp);
+    void addConvStatExt(const std::string &ipAddressSender,int sport, const std::string &ipAddressReceiver,int dport, const std::string &protocol, std::chrono::microseconds timestamp);
 
     void createCommIntervalStats();
 
@@ -547,30 +547,30 @@ public:
 
     void checkPayload(const PDU *pdu_l4);
 
-    void checkTCPChecksum(std::string ipAddressSender, std::string ipAddressReceiver, TCP tcpPkt);
+    void checkTCPChecksum(const std::string &ipAddressSender, const std::string &ipAddressReceiver, TCP tcpPkt);
 
     void checkToS(uint8_t ToS);
 
-    void incrementToScount(std::string ipAddress, int tosValue);
+    void incrementToScount(const std::string &ipAddress, int tosValue);
 
-    void incrementTTLcount(std::string ipAddress, int ttlValue);
+    void incrementTTLcount(const std::string &ipAddress, int ttlValue);
 
-    void incrementProtocolCount(std::string ipAddress, std::string protocol);
+    void incrementProtocolCount(const std::string &ipAddress, const std::string &protocol);
 
-    void increaseProtocolByteCount(std::string ipAddress, std::string protocol, long bytesSent);
+    void increaseProtocolByteCount(const std::string &ipAddress, const std::string &protocol, long bytesSent);
 
-    void incrementUnrecognizedPDUCount(std::string srcMac, std::string dstMac, uint32_t typeNumber,
-                                       std::string timestamp);
+    void incrementUnrecognizedPDUCount(const std::string &srcMac, const std::string &dstMac, uint32_t typeNumber,
+                                       const std::string &timestamp);
 
-    void incrementPortCount(std::string ipAddressSender, int outgoingPort, std::string ipAddressReceiver,
-                            int incomingPort, std::string protocol);
+    void incrementPortCount(const std::string &ipAddressSender, int outgoingPort, const std::string &ipAddressReceiver,
+                            int incomingPort, const std::string &protocol);
 
-    void increasePortByteCount(std::string ipAddressSender, int outgoingPort, std::string ipAddressReceiver,
-                               int incomingPort, long bytesSent, std::string protocol);
+    void increasePortByteCount(const std::string &ipAddressSender, int outgoingPort, const std::string &ipAddressReceiver,
+                               int incomingPort, long bytesSent, const std::string &protocol);
 
-    int getProtocolCount(std::string ipAddress, std::string protocol);
+    int getProtocolCount(const std::string &ipAddress, const std::string &protocol);
 
-    float getProtocolByteCount(std::string ipAddress, std::string protocol);
+    float getProtocolByteCount(const std::string &ipAddress, const std::string &protocol);
 
     void setTimestampFirstPacket(Tins::Timestamp ts);
 
@@ -579,15 +579,15 @@ public:
     Tins::Timestamp getTimestampFirstPacket();
     Tins::Timestamp getTimestampLastPacket();
 
-    void assignMacAddress(std::string ipAddress, std::string macAddress);
+    void assignMacAddress(const std::string &ipAddress, const std::string &macAddress);
     
-    void addIpStat_packetSent(std::string ipAddressSender, std::string ipAddressReceiver, long bytesSent, std::chrono::microseconds timestamp);
+    void addIpStat_packetSent(const std::string &ipAddressSender, const std::string &ipAddressReceiver, long bytesSent, std::chrono::microseconds timestamp);
 
     int getPacketCount();
 
     int getSumPacketSize();
 
-    void addMSS(std::string ipAddress, int MSSvalue);
+    void addMSS(const std::string &ipAddress, int MSSvalue);
 
     void writeToDatabase(std::string database_path);
 
@@ -599,7 +599,7 @@ public:
 
     float getAvgPacketSize() const;
 
-    void printStats(std::string ipAddress);
+    void printStats(const std::string &ipAddress);
 
     bool getDoExtraTests();
 
@@ -608,7 +608,7 @@ public:
     /*
      * IP Address-specific statistics
      */
-    ip_stats getStatsForIP(std::string ipAddress);
+    ip_stats getStatsForIP(const std::string &ipAddress);
 
 private:
     /*

@@ -33,7 +33,7 @@ void split_str(const std::string& s, char delim,std::vector<std::string>& v) {
  * Get the class (A,B,C,D,E) of IP address.
  * @param ipAddress IP that we get its class.
  */
-std::string getIPv4Class(std::string ipAddress){
+std::string getIPv4Class(const std::string &ipAddress){
     std::string ipClass="Unknown";
     
     std::vector<std::string> ipBytes;
@@ -79,7 +79,7 @@ std::string getIPv4Class(std::string ipAddress){
  * @param IP to convert.
  * @param IP_bytes to be filled and retrieved.
  */
-void convertIPv4toArray(std::string IP, unsigned short IP_bytes[]){
+void convertIPv4toArray(const std::string &IP, unsigned short IP_bytes[]){
     std::vector<std::string> temp_v;
     split_str(IP,'.',temp_v);
     IP_bytes[0] = std::stoi(temp_v[0]);
@@ -150,7 +150,7 @@ u16 tcp_sum_calc(u16 len_tcp, u16 src_addr[],u16 dest_addr[], bool padding, u16 
  * @param ipAddressReceiver The destination IP.
  * @param tcpPkt The packet to get checked.
  */
-bool check_tcpChecksum(std::string ipAddressSender, std::string ipAddressReceiver, TCP tcpPkt){
+bool check_tcpChecksum(const std::string &ipAddressSender, const std::string &ipAddressReceiver, TCP tcpPkt){
     uint16_t checksum = tcpPkt.checksum();
 
     unsigned short calculatedChecsum = 0;
