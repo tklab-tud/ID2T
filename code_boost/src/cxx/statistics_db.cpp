@@ -27,7 +27,7 @@ statistics_db::statistics_db(std::string database_path) {
  * Writes the IP statistics into the database.
  * @param ipStatistics The IP statistics from class statistics.
  */
-void statistics_db::writeStatisticsIP(std::unordered_map<std::string, entry_ipStat> ipStatistics) {
+void statistics_db::writeStatisticsIP(const std::unordered_map<std::string, entry_ipStat> &ipStatistics) {
     try {
         db->exec("DROP TABLE IF EXISTS ip_statistics");
         SQLite::Transaction transaction(*db);
@@ -68,7 +68,7 @@ void statistics_db::writeStatisticsIP(std::unordered_map<std::string, entry_ipSt
  * @param ipStatistics The IP statistics from class statistics. Degree Statistics are supposed to be integrated into the ip_statistics table later on,
  *        therefore they use the same parameter. But for now they are inserted into their own table.
  */
-void statistics_db::writeStatisticsDegree(std::unordered_map<std::string, entry_ipStat> ipStatistics){
+void statistics_db::writeStatisticsDegree(const std::unordered_map<std::string, entry_ipStat> &ipStatistics){
     try {
         db->exec("DROP TABLE IF EXISTS ip_degrees");
         SQLite::Transaction transaction(*db);
@@ -100,7 +100,7 @@ void statistics_db::writeStatisticsDegree(std::unordered_map<std::string, entry_
  * Writes the TTL distribution into the database.
  * @param ttlDistribution The TTL distribution from class statistics.
  */
-void statistics_db::writeStatisticsTTL(std::unordered_map<ipAddress_ttl, int> ttlDistribution) {
+void statistics_db::writeStatisticsTTL(const std::unordered_map<ipAddress_ttl, int> &ttlDistribution) {
     try {
         db->exec("DROP TABLE IF EXISTS ip_ttl");
         SQLite::Transaction transaction(*db);
@@ -130,7 +130,7 @@ void statistics_db::writeStatisticsTTL(std::unordered_map<ipAddress_ttl, int> tt
  * Writes the MSS distribution into the database.
  * @param mssDistribution The MSS distribution from class statistics.
  */
-void statistics_db::writeStatisticsMSS(std::unordered_map<ipAddress_mss, int> mssDistribution) {
+void statistics_db::writeStatisticsMSS(const std::unordered_map<ipAddress_mss, int> &mssDistribution) {
     try {
         db->exec("DROP TABLE IF EXISTS tcp_mss");
         SQLite::Transaction transaction(*db);
@@ -160,7 +160,7 @@ void statistics_db::writeStatisticsMSS(std::unordered_map<ipAddress_mss, int> ms
  * Writes the ToS distribution into the database.
  * @param tosDistribution The ToS distribution from class statistics.
  */
-void statistics_db::writeStatisticsToS(std::unordered_map<ipAddress_tos, int> tosDistribution) {
+void statistics_db::writeStatisticsToS(const std::unordered_map<ipAddress_tos, int> &tosDistribution) {
     try {
         db->exec("DROP TABLE IF EXISTS ip_tos");
         SQLite::Transaction transaction(*db);
@@ -190,7 +190,7 @@ void statistics_db::writeStatisticsToS(std::unordered_map<ipAddress_tos, int> to
  * Writes the window size distribution into the database.
  * @param winDistribution The window size distribution from class statistics.
  */
-void statistics_db::writeStatisticsWin(std::unordered_map<ipAddress_win, int> winDistribution) {
+void statistics_db::writeStatisticsWin(const std::unordered_map<ipAddress_win, int> &winDistribution) {
     try {
         db->exec("DROP TABLE IF EXISTS tcp_win");
         SQLite::Transaction transaction(*db);
@@ -220,7 +220,7 @@ void statistics_db::writeStatisticsWin(std::unordered_map<ipAddress_win, int> wi
  * Writes the protocol distribution into the database.
  * @param protocolDistribution The protocol distribution from class statistics.
  */
-void statistics_db::writeStatisticsProtocols(std::unordered_map<ipAddress_protocol, entry_protocolStat> protocolDistribution) {
+void statistics_db::writeStatisticsProtocols(const std::unordered_map<ipAddress_protocol, entry_protocolStat> &protocolDistribution) {
     try {
         db->exec("DROP TABLE IF EXISTS ip_protocols");
         SQLite::Transaction transaction(*db);
@@ -252,7 +252,7 @@ void statistics_db::writeStatisticsProtocols(std::unordered_map<ipAddress_protoc
  * Writes the port statistics into the database.
  * @param portsStatistics The ports statistics from class statistics.
  */
-void statistics_db::writeStatisticsPorts(std::unordered_map<ipAddress_inOut_port, entry_portStat> portsStatistics) {
+void statistics_db::writeStatisticsPorts(const std::unordered_map<ipAddress_inOut_port, entry_portStat> &portsStatistics) {
     try {
         db->exec("DROP TABLE IF EXISTS ip_ports");
         SQLite::Transaction transaction(*db);
@@ -297,7 +297,7 @@ void statistics_db::writeStatisticsPorts(std::unordered_map<ipAddress_inOut_port
  *  Writes the IP address -> MAC address mapping into the database.
  * @param IpMacStatistics The IP address -> MAC address mapping from class statistics.
  */
-void statistics_db::writeStatisticsIpMac(std::unordered_map<std::string, std::string> IpMacStatistics) {
+void statistics_db::writeStatisticsIpMac(const std::unordered_map<std::string, std::string> &IpMacStatistics) {
     try {
         db->exec("DROP TABLE IF EXISTS ip_mac");
         SQLite::Transaction transaction(*db);
@@ -372,7 +372,7 @@ void statistics_db::writeStatisticsFile(int packetCount, float captureDuration, 
  * Writes the conversation statistics into the database.
  * @param convStatistics The conversation from class statistics.
  */
-void statistics_db::writeStatisticsConv(std::unordered_map<conv, entry_convStat> convStatistics){          
+void statistics_db::writeStatisticsConv(const std::unordered_map<conv, entry_convStat> &convStatistics){
     try {
         db->exec("DROP TABLE IF EXISTS conv_statistics");
         SQLite::Transaction transaction(*db);
@@ -438,7 +438,7 @@ void statistics_db::writeStatisticsConv(std::unordered_map<conv, entry_convStat>
  * Writes the extended statistics for every conversation into the database.
  * @param conv_statistics_extended The extended conversation statistics from class statistics.
  */
-void statistics_db::writeStatisticsConvExt(std::unordered_map<convWithProt, entry_convStatExt> conv_statistics_extended){
+void statistics_db::writeStatisticsConvExt(const std::unordered_map<convWithProt, entry_convStatExt> &conv_statistics_extended){
     try {
         db->exec("DROP TABLE IF EXISTS conv_statistics_extended");
         SQLite::Transaction transaction(*db);
@@ -540,7 +540,7 @@ void statistics_db::writeStatisticsConvExt(std::unordered_map<convWithProt, entr
  * Writes the interval statistics into the database.
  * @param intervalStatistics The interval entries from class statistics.
  */
-void statistics_db::writeStatisticsInterval(std::unordered_map<std::string, entry_intervalStat> intervalStatistics){          
+void statistics_db::writeStatisticsInterval(const std::unordered_map<std::string, entry_intervalStat> &intervalStatistics){
     try {        
         db->exec("DROP TABLE IF EXISTS interval_statistics");
         SQLite::Transaction transaction(*db);
@@ -707,8 +707,8 @@ bool statistics_db::pathExists(std::string path)
  * Writes the unrecognized PDUs into the database.
  * @param unrecognized_PDUs The unrecognized PDUs from class statistics.
  */
-void statistics_db::writeStatisticsUnrecognizedPDUs(std::unordered_map<unrecognized_PDU, unrecognized_PDU_stat>
-                                                    unrecognized_PDUs) {
+void statistics_db::writeStatisticsUnrecognizedPDUs(const std::unordered_map<unrecognized_PDU, unrecognized_PDU_stat>
+                                                    &unrecognized_PDUs) {
     try {
         db->exec("DROP TABLE IF EXISTS unrecognized_pdus");
         SQLite::Transaction transaction(*db);
