@@ -447,7 +447,7 @@ void statistics_db::writeStatisticsConvExt(const std::unordered_map<convWithProt
                 "portA INTEGER,"
                 "ipAddressB TEXT,"              
                 "portB INTEGER,"
-                "protocol TEXT,"
+                "protocol TEXT COLLATE NOCASE,"
                 "pktsCount INTEGER,"
                 "avgPktRate REAL,"
                 "avgDelay INTEGER,"
