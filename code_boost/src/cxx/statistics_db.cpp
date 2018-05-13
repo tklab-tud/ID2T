@@ -496,35 +496,27 @@ void statistics_db::writeStatisticsConvExt(const std::unordered_map<convWithProt
                 query.bind(5, f.protocol);
                 query.bind(6, (int) e.pkts_count);
                 query.bind(7, (float) e.avg_pkt_rate);
-                query.bind(8, (int) e.avg_interarrival_time.count());
-                query.bind(9, minDelay);
-                query.bind(10, maxDelay);
+
+                if (f.protocol == "UDP" || (f.protocol == "TCP" && e.pkts_count < 2))
+                    query.bind(8);
+                else
+                    query.bind(8, (int) e.avg_interarrival_time.count());
+
+                if (minDelay == -1)
+                    query.bind(9);
+                else
+                    query.bind(9, minDelay);
+
+                if (maxDelay == -1)
+                    query.bind(10);
+                else
+                    query.bind(10, maxDelay);
+
                 query.bind(11, e.avg_int_pkts_count);
                 query.bind(12, e.avg_time_between_ints);
                 query.bind(13, e.avg_interval_time);
                 query.bind(14, e.total_comm_duration);
                 query.exec();
-
-                std::string primary_where = "WHERE ipAddressA=\"" + f.ipAddressA + "\" AND portA=" + std::to_string(f.portA) + " AND ipAddressB=\"";
-                primary_where += f.ipAddressB + "\" AND portB=" + std::to_string(f.portB) + " AND protocol=\"" + f.protocol + "\";";
-                std::string update_stmt;
-
-                // replace -1 with null
-                if (minDelay == -1){
-                    update_stmt = "UPDATE conv_statistics_extended SET minDelay=NULL " + primary_where;
-                    db->exec(update_stmt);
-                }
-
-                if (maxDelay == -1){
-                    update_stmt = "UPDATE conv_statistics_extended SET maxDelay=NULL " + primary_where;
-                    db->exec(update_stmt);
-                }
-
-                if (f.protocol == "UDP" || (f.protocol == "TCP" && e.pkts_count < 2)){
-                    update_stmt = "UPDATE conv_statistics_extended SET avgDelay=NULL " + primary_where;
-                    db->exec(update_stmt);
-                }
-
                 query.reset();
             }
             
