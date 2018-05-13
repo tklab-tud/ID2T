@@ -49,9 +49,9 @@ public:
                              std::string timestampLastPkt, float avgPacketRate, float avgPacketSize,
                              float avgPacketsSentPerHost, float avgBandwidthIn, float avgBandwidthOut);
 
-    void writeStatisticsConv(const std::unordered_map<conv, entry_convStat> &convStatistics);
+    void writeStatisticsConv(std::unordered_map<conv, entry_convStat> &convStatistics);
 
-    void writeStatisticsConvExt(const std::unordered_map<convWithProt, entry_convStatExt> &conv_statistics_extended);
+    void writeStatisticsConvExt(std::unordered_map<convWithProt, entry_convStatExt> &conv_statistics_extended);
 
     void writeStatisticsInterval(const std::unordered_map<std::string, entry_intervalStat> &intervalStatistics);
 

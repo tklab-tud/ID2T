@@ -44,15 +44,15 @@ void statistics_db::writeStatisticsIP(const std::unordered_map<std::string, entr
         db->exec(createTable);
         SQLite::Statement query(*db, "INSERT INTO ip_statistics VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
         for (auto it = ipStatistics.begin(); it != ipStatistics.end(); ++it) {
-            entry_ipStat e = it->second;
-            query.bind(1, it->first);
+            const entry_ipStat &e = it->second;
+            query.bindNoCopy(1, it->first);
             query.bind(2, (int) e.pkts_received);
             query.bind(3, (int) e.pkts_sent);
             query.bind(4, e.kbytes_received);
             query.bind(5, e.kbytes_sent);
             query.bind(6, e.max_interval_pkt_rate);
             query.bind(7, e.min_interval_pkt_rate);
-            query.bind(8, e.ip_class);
+            query.bindNoCopy(8, e.ip_class);
             query.exec();
             query.reset();
         }
@@ -81,8 +81,8 @@ void statistics_db::writeStatisticsDegree(const std::unordered_map<std::string, 
         db->exec(createTable);
         SQLite::Statement query(*db, "INSERT INTO ip_degrees VALUES (?, ?, ?, ?)");
         for (auto it = ipStatistics.begin(); it != ipStatistics.end(); ++it) {
-            entry_ipStat e = it->second;
-            query.bind(1, it->first);
+            const entry_ipStat &e = it->second;
+            query.bindNoCopy(1, it->first);
             query.bind(2, e.in_degree);
             query.bind(3, e.out_degree);
             query.bind(4, e.overall_degree);
@@ -112,8 +112,8 @@ void statistics_db::writeStatisticsTTL(const std::unordered_map<ipAddress_ttl, i
         db->exec(createTable);
         SQLite::Statement query(*db, "INSERT INTO ip_ttl VALUES (?, ?, ?)");
         for (auto it = ttlDistribution.begin(); it != ttlDistribution.end(); ++it) {
-            ipAddress_ttl e = it->first;
-            query.bind(1, e.ipAddress);
+            const ipAddress_ttl &e = it->first;
+            query.bindNoCopy(1, e.ipAddress);
             query.bind(2, e.ttlValue);
             query.bind(3, it->second);
             query.exec();
@@ -142,8 +142,8 @@ void statistics_db::writeStatisticsMSS(const std::unordered_map<ipAddress_mss, i
         db->exec(createTable);
         SQLite::Statement query(*db, "INSERT INTO tcp_mss VALUES (?, ?, ?)");
         for (auto it = mssDistribution.begin(); it != mssDistribution.end(); ++it) {
-            ipAddress_mss e = it->first;
-            query.bind(1, e.ipAddress);
+            const ipAddress_mss &e = it->first;
+            query.bindNoCopy(1, e.ipAddress);
             query.bind(2, e.mssValue);
             query.bind(3, it->second);
             query.exec();
@@ -172,8 +172,8 @@ void statistics_db::writeStatisticsToS(const std::unordered_map<ipAddress_tos, i
         db->exec(createTable);
         SQLite::Statement query(*db, "INSERT INTO ip_tos VALUES (?, ?, ?)");
         for (auto it = tosDistribution.begin(); it != tosDistribution.end(); ++it) {
-            ipAddress_tos e = it->first;
-            query.bind(1, e.ipAddress);
+            const ipAddress_tos &e = it->first;
+            query.bindNoCopy(1, e.ipAddress);
             query.bind(2, e.tosValue);
             query.bind(3, it->second);
             query.exec();
@@ -202,8 +202,8 @@ void statistics_db::writeStatisticsWin(const std::unordered_map<ipAddress_win, i
         db->exec(createTable);
         SQLite::Statement query(*db, "INSERT INTO tcp_win VALUES (?, ?, ?)");
         for (auto it = winDistribution.begin(); it != winDistribution.end(); ++it) {
-            ipAddress_win e = it->first;
-            query.bind(1, e.ipAddress);
+            const ipAddress_win &e = it->first;
+            query.bindNoCopy(1, e.ipAddress);
             query.bind(2, e.winSize);
             query.bind(3, it->second);
             query.exec();
@@ -233,9 +233,9 @@ void statistics_db::writeStatisticsProtocols(const std::unordered_map<ipAddress_
         db->exec(createTable);
         SQLite::Statement query(*db, "INSERT INTO ip_protocols VALUES (?, ?, ?, ?)");
         for (auto it = protocolDistribution.begin(); it != protocolDistribution.end(); ++it) {
-            ipAddress_protocol e = it->first;
-            query.bind(1, e.ipAddress);
-            query.bind(2, e.protocol);
+            const ipAddress_protocol &e = it->first;
+            query.bindNoCopy(1, e.ipAddress);
+            query.bindNoCopy(2, e.protocol);
             query.bind(3, it->second.count);
             query.bind(4, it->second.byteCount);
             query.exec();
@@ -268,7 +268,7 @@ void statistics_db::writeStatisticsPorts(const std::unordered_map<ipAddress_inOu
         db->exec(createTable);
         SQLite::Statement query(*db, "INSERT INTO ip_ports VALUES (?, ?, ?, ?, ?, ?, ?)");
         for (auto it = portsStatistics.begin(); it != portsStatistics.end(); ++it) {
-            ipAddress_inOut_port e = it->first;
+            const ipAddress_inOut_port &e = it->first;
 
             std::string portService = portServices[e.portNumber];
             if(portService.empty()) {
@@ -276,13 +276,13 @@ void statistics_db::writeStatisticsPorts(const std::unordered_map<ipAddress_inOu
                 else {portService = "unknown";}
             }
 
-            query.bind(1, e.ipAddress);
-            query.bind(2, e.trafficDirection);
+            query.bindNoCopy(1, e.ipAddress);
+            query.bindNoCopy(2, e.trafficDirection);
             query.bind(3, e.portNumber);
             query.bind(4, it->second.count);
             query.bind(5, it->second.byteCount);
-            query.bind(6, e.protocol);
-            query.bind(7, portService);
+            query.bindNoCopy(6, e.protocol);
+            query.bindNoCopy(7, portService);
             query.exec();
             query.reset();
         }
@@ -308,8 +308,8 @@ void statistics_db::writeStatisticsIpMac(const std::unordered_map<std::string, s
         db->exec(createTable);
         SQLite::Statement query(*db, "INSERT INTO ip_mac VALUES (?, ?)");
         for (auto it = IpMacStatistics.begin(); it != IpMacStatistics.end(); ++it) {
-            query.bind(1, it->first);
-            query.bind(2, it->second);
+            query.bindNoCopy(1, it->first);
+            query.bindNoCopy(2, it->second);
             query.exec();
             query.reset();
         }
@@ -372,7 +372,7 @@ void statistics_db::writeStatisticsFile(int packetCount, float captureDuration, 
  * Writes the conversation statistics into the database.
  * @param convStatistics The conversation from class statistics.
  */
-void statistics_db::writeStatisticsConv(const std::unordered_map<conv, entry_convStat> &convStatistics){
+void statistics_db::writeStatisticsConv(std::unordered_map<conv, entry_convStat> &convStatistics){
     try {
         db->exec("DROP TABLE IF EXISTS conv_statistics");
         SQLite::Transaction transaction(*db);
@@ -392,8 +392,8 @@ void statistics_db::writeStatisticsConv(const std::unordered_map<conv, entry_con
 
         // Calculate average of inter-arrival times and average packet rate
         for (auto it = convStatistics.begin(); it != convStatistics.end(); ++it) {
-            conv f = it->first;
-            entry_convStat e = it->second;
+            const conv &f = it->first;
+            entry_convStat &e = it->second;
             if (e.pkts_count > 1){
                 int sumDelay = 0;
                 int minDelay = -1;
@@ -414,9 +414,9 @@ void statistics_db::writeStatisticsConv(const std::unordered_map<conv, entry_con
                 std::chrono::microseconds conn_duration = end_timesttamp - start_timesttamp;
                 e.avg_pkt_rate = (float) e.pkts_count * 1000000 / conn_duration.count(); // pkt per sec
 
-                query.bind(1, f.ipAddressA);
+                query.bindNoCopy(1, f.ipAddressA);
                 query.bind(2, f.portA);
-                query.bind(3, f.ipAddressB);
+                query.bindNoCopy(3, f.ipAddressB);
                 query.bind(4, f.portB);
                 query.bind(5, (int) e.pkts_count);
                 query.bind(6, (float) e.avg_pkt_rate);
@@ -438,7 +438,7 @@ void statistics_db::writeStatisticsConv(const std::unordered_map<conv, entry_con
  * Writes the extended statistics for every conversation into the database.
  * @param conv_statistics_extended The extended conversation statistics from class statistics.
  */
-void statistics_db::writeStatisticsConvExt(const std::unordered_map<convWithProt, entry_convStatExt> &conv_statistics_extended){
+void statistics_db::writeStatisticsConvExt(std::unordered_map<convWithProt, entry_convStatExt> &conv_statistics_extended){
     try {
         db->exec("DROP TABLE IF EXISTS conv_statistics_extended");
         SQLite::Transaction transaction(*db);
@@ -462,8 +462,8 @@ void statistics_db::writeStatisticsConvExt(const std::unordered_map<convWithProt
         SQLite::Statement query(*db, "INSERT INTO conv_statistics_extended VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         // iterate over every conversation and interval aggregation pair and store the respective values in the database
         for (auto it = conv_statistics_extended.begin(); it != conv_statistics_extended.end(); ++it) {
-            convWithProt f = it->first;
-            entry_convStatExt e = it->second;
+            const convWithProt &f = it->first;
+            entry_convStatExt &e = it->second;
 
             int sumDelay = 0;
             int minDelay = -1;
@@ -489,11 +489,11 @@ void statistics_db::writeStatisticsConvExt(const std::unordered_map<convWithProt
                 e.avg_pkt_rate = e.pkts_count / e.total_comm_duration;
 
             if (e.avg_int_pkts_count > 0){
-                query.bind(1, f.ipAddressA);
+                query.bindNoCopy(1, f.ipAddressA);
                 query.bind(2, f.portA);
-                query.bind(3, f.ipAddressB);
+                query.bindNoCopy(3, f.ipAddressB);
                 query.bind(4, f.portB);
-                query.bind(5, f.protocol);
+                query.bindNoCopy(5, f.protocol);
                 query.bind(6, (int) e.pkts_count);
                 query.bind(7, (float) e.avg_pkt_rate);
 
@@ -557,10 +557,9 @@ void statistics_db::writeStatisticsInterval(const std::unordered_map<std::string
         db->exec(createTable);
         SQLite::Statement query(*db, "INSERT INTO interval_statistics VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         for (auto it = intervalStatistics.begin(); it != intervalStatistics.end(); ++it) {
-            std::string t = it->first;
-            entry_intervalStat e = it->second;        
+            const entry_intervalStat &e = it->second;
             
-            query.bind(1, t);
+            query.bindNoCopy(1, it->first);
             query.bind(2, (int)e.pkts_count);
             query.bind(3, e.kbytes);
             query.bind(4, e.ip_src_entropy);
@@ -714,12 +713,12 @@ void statistics_db::writeStatisticsUnrecognizedPDUs(const std::unordered_map<unr
         db->exec(createTable);
         SQLite::Statement query(*db, "INSERT INTO unrecognized_pdus VALUES (?, ?, ?, ?, ?)");
         for (auto it = unrecognized_PDUs.begin(); it != unrecognized_PDUs.end(); ++it) {
-            unrecognized_PDU e = it->first;
-            query.bind(1, e.srcMacAddress);
-            query.bind(2, e.dstMacAddress);
+            const unrecognized_PDU &e = it->first;
+            query.bindNoCopy(1, e.srcMacAddress);
+            query.bindNoCopy(2, e.dstMacAddress);
             query.bind(3, e.typeNumber);
             query.bind(4, it->second.count);
-            query.bind(5, it->second.timestamp_last_occurrence);
+            query.bindNoCopy(5, it->second.timestamp_last_occurrence);
             query.exec();
             query.reset();
         }
