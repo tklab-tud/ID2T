@@ -204,7 +204,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
     const PDU *pdu_l2 = pkt.pdu();
     uint32_t sizeCurrentPacket = pdu_l2->size();
     if (pdu_l2->pdu_type() == PDU::ETHERNET_II) {
-        EthernetII eth = (const EthernetII &) *pdu_l2;
+        const EthernetII &eth = (const EthernetII &) *pdu_l2;
         macAddressSender = eth.src_addr().to_string();
         macAddressReceiver = eth.dst_addr().to_string();
         sizeCurrentPacket = eth.size();
@@ -264,7 +264,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
     else {
         hasUnrecognized = true;
 
-        EthernetII eth = (const EthernetII &) *pdu_l2;
+        const EthernetII &eth = (const EthernetII &) *pdu_l2;
         Tins::Timestamp ts = pkt.timestamp();
         std::string timestamp_pkt = stats.getFormattedTimestamp(ts.seconds(), ts.microseconds());
 
@@ -283,7 +283,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
           }
 
         if (p == PDU::PDUType::TCP) {
-            TCP tcpPkt = (const TCP &) *pdu_l4;
+            const TCP &tcpPkt = (const TCP &) *pdu_l4;
             
             // Check TCP checksum
             if (pdu_l3_type == PDU::PDUType::IP) {
@@ -314,7 +314,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
 
           // UDP Packet
         } else if (p == PDU::PDUType::UDP) {
-            const UDP udpPkt = (const UDP &) *pdu_l4;
+            const UDP &udpPkt = (const UDP &) *pdu_l4;
             stats.incrementProtocolCount(ipAddressSender, "UDP");
             stats.increaseProtocolByteCount(ipAddressSender, "UDP", sizeCurrentPacket);
             stats.incrementPortCount(ipAddressSender, udpPkt.sport(), ipAddressReceiver, udpPkt.dport(), "UDP");
