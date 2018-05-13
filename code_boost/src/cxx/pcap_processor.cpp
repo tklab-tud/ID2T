@@ -83,7 +83,7 @@ std::string pcap_processor::merge_pcaps(const std::string pcap_path) {
         if (!all_attack_pkts_processed && tstmp_attack <= tstmp_base) {
             try {
                 writer.write(*iterator_attack);
-            } catch (serialization_error) {
+            } catch (serialization_error&) {
                 std::cout << std::setprecision(15) << "Could not serialize attack packet with timestamp " << tstmp_attack << std::endl;
             }
             iterator_attack++;
@@ -92,7 +92,7 @@ std::string pcap_processor::merge_pcaps(const std::string pcap_path) {
         } else {
             try {
                 writer.write(*iterator_base);
-            } catch (serialization_error) {
+            } catch (serialization_error&) {
                     std::cout << "Could not serialize base packet with timestamp " << std::setprecision(15) << tstmp_attack << std::endl;
             }
             iterator_base++;
@@ -104,7 +104,7 @@ std::string pcap_processor::merge_pcaps(const std::string pcap_path) {
     for (; iterator_attack != sniffer_attack.end(); iterator_attack++) {
         try {
             writer.write(*iterator_attack);
-        } catch (serialization_error) {
+        } catch (serialization_error&) {
             auto tstmp_attack = (iterator_attack->timestamp().seconds()) + (iterator_attack->timestamp().microseconds()*1e-6);
             std::cout << "Could not serialize attack packet with timestamp " << std::setprecision(15) << tstmp_attack << std::endl;
         }
@@ -306,7 +306,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
 
                 // MSS distribution
                 stats.incrementMSScount(ipAddressSender, val);
-            } catch (Tins::option_not_found) {
+            } catch (Tins::option_not_found&) {
                 // Ignore MSS if option not set
             }
             stats.incrementPortCount(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), "TCP");

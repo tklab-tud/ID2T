@@ -160,7 +160,7 @@ bool check_tcpChecksum(const std::string &ipAddressSender, const std::string &ip
 
     try {
         bufferArray_8 = tcpPkt.serialize();
-    } catch (serialization_error) {
+    } catch (serialization_error&) {
         std::cout << "Error: Could not serialize TCP packet with sender: " << ipAddressSender << ", receiver: "
                   << ipAddressReceiver << ", seq: " << tcpPkt.seq() << std::endl;
         return false;
