@@ -581,7 +581,7 @@ public:
 
     void assignMacAddress(std::string ipAddress, std::string macAddress);
     
-    void addIpStat_packetSent(std::string filePath, std::string ipAddressSender, std::string ipAddressReceiver, long bytesSent, std::chrono::microseconds timestamp);
+    void addIpStat_packetSent(std::string ipAddressSender, std::string ipAddressReceiver, long bytesSent, std::chrono::microseconds timestamp);
 
     int getPacketCount();
 

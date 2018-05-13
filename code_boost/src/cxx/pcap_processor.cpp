@@ -225,7 +225,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
         ipAddressReceiver = ipLayer.dst_addr().to_string();
 
         // IP distribution
-        stats.addIpStat_packetSent(filePath, ipAddressSender, ipLayer.dst_addr().to_string(), sizeCurrentPacket, pkt.timestamp());
+        stats.addIpStat_packetSent(ipAddressSender, ipLayer.dst_addr().to_string(), sizeCurrentPacket, pkt.timestamp());
 
         // TTL distribution
         stats.incrementTTLcount(ipAddressSender, ipLayer.ttl());
@@ -248,7 +248,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
         ipAddressReceiver = ipLayer.dst_addr().to_string();
 
         // IP distribution
-        stats.addIpStat_packetSent(filePath, ipAddressSender, ipLayer.dst_addr().to_string(), sizeCurrentPacket, pkt.timestamp());
+        stats.addIpStat_packetSent(ipAddressSender, ipLayer.dst_addr().to_string(), sizeCurrentPacket, pkt.timestamp());
 
         // TTL distribution
         stats.incrementTTLcount(ipAddressSender, ipLayer.hop_limit());

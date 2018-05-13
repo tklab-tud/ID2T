@@ -489,7 +489,7 @@ void statistics::assignMacAddress(std::string ipAddress, std::string macAddress)
  * @param ipAddressReceiver The IP address of the packet receiver.
  * @param bytesSent The packet's size.
  */
-void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddressSender, std::string ipAddressReceiver, long bytesSent, std::chrono::microseconds timestamp) {
+void statistics::addIpStat_packetSent(std::string ipAddressSender, std::string ipAddressReceiver, long bytesSent, std::chrono::microseconds timestamp) {
 
     // Adding IP as a sender for first time
     if(ip_statistics[ipAddressSender].pkts_sent==0){  
