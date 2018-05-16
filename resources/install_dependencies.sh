@@ -108,15 +108,18 @@ elif [ "$KERNEL" = 'Linux' ]; then
         OS_LIKE=$(lsb_release -si | tr '[:upper:]' '[:lower:]')
     fi
 
-    if [ "$OS_LIKE" = 'archlinux' ]; then
-        echo -e "Detected OS: Arch Linux"
-        install_pkg_arch
-        exit 0
-    elif [ "$OS_LIKE" = 'debian' ]; then
-        echo -e "Detected OS: Debian"
-        install_pkg_ubuntu
-        exit 0
-    fi
+    case $OS_LIKE in
+        archlinux|arch)
+            echo -e "Detected OS: Arch Linux"
+            install_pkg_arch
+            exit 0
+            ;;
+        debian)
+            echo -e "Detected OS: Debian"
+            install_pkg_ubuntu
+            exit 0
+            ;;
+    esac
 fi
 echo -e "Your OS is not supported by this script, please make sure to install the dependencies manually"
 exit 0
