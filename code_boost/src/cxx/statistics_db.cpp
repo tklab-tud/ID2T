@@ -264,7 +264,7 @@ void statistics_db::writeStatisticsPorts(const std::unordered_map<ipAddress_inOu
                 "byteCount REAL,"
                 "portProtocol TEXT COLLATE NOCASE,"
                 "portService TEXT COLLATE NOCASE,"
-                "PRIMARY KEY(ipAddress,portDirection,portNumber));";
+                "PRIMARY KEY(ipAddress,portDirection,portNumber,portProtocol));";
         db->exec(createTable);
         SQLite::Statement query(*db, "INSERT INTO ip_ports VALUES (?, ?, ?, ?, ?, ?, ?)");
         for (auto it = portsStatistics.begin(); it != portsStatistics.end(); ++it) {
