@@ -260,46 +260,48 @@ void statistics::addConvStat(const std::string &ipAddressSender,int sport,const 
  * @param timestamp The timestamp of the packet.
  */
 void statistics::addConvStatExt(const std::string &ipAddressSender,int sport,const std::string &ipAddressReceiver,int dport,const std::string &protocol, std::chrono::microseconds timestamp){
-    convWithProt f1 = {ipAddressReceiver, dport, ipAddressSender, sport, protocol};
-    convWithProt f2 = {ipAddressSender, sport, ipAddressReceiver, dport, protocol};
-    convWithProt f;
+    if(this->getDoExtraTests()) {
+        convWithProt f1 = {ipAddressReceiver, dport, ipAddressSender, sport, protocol};
+        convWithProt f2 = {ipAddressSender, sport, ipAddressReceiver, dport, protocol};
+        convWithProt f;
 
-    // if there already exists a communication interval for the specified conversation
-    if (conv_statistics_extended.count(f1) > 0 || conv_statistics_extended.count(f2) > 0){
+        // if there already exists a communication interval for the specified conversation
+        if (conv_statistics_extended.count(f1) > 0 || conv_statistics_extended.count(f2) > 0){
 
-        // find out which direction of conversation is contained in conv_statistics_extended
-        if (conv_statistics_extended.count(f1) > 0)
-            f = f1;
-        else
-            f = f2;
+            // find out which direction of conversation is contained in conv_statistics_extended
+            if (conv_statistics_extended.count(f1) > 0)
+                f = f1;
+            else
+                f = f2;
 
-        // increase pkts count and check on delay
-        conv_statistics_extended[f].pkts_count++;
-        if (conv_statistics_extended[f].pkts_timestamp.size()>0 && conv_statistics_extended[f].pkts_count<=3)
-            conv_statistics_extended[f].interarrival_time.push_back(std::chrono::duration_cast<std::chrono::microseconds> (timestamp - conv_statistics_extended[f].pkts_timestamp.back()));
-        conv_statistics_extended[f].pkts_timestamp.push_back(timestamp);
+            // increase pkts count and check on delay
+            conv_statistics_extended[f].pkts_count++;
+            if (conv_statistics_extended[f].pkts_timestamp.size()>0 && conv_statistics_extended[f].pkts_count<=3)
+                conv_statistics_extended[f].interarrival_time.push_back(std::chrono::duration_cast<std::chrono::microseconds> (timestamp - conv_statistics_extended[f].pkts_timestamp.back()));
+            conv_statistics_extended[f].pkts_timestamp.push_back(timestamp);
 
-        // if the time difference has exceeded the threshold, create a new interval with this message
-        if (timestamp - conv_statistics_extended[f].comm_intervals.back().end > (std::chrono::microseconds) ((unsigned long) COMM_INTERVAL_THRESHOLD)) {  // > or >= ?
-            commInterval new_interval = {timestamp, timestamp, 1};
-            conv_statistics_extended[f].comm_intervals.push_back(new_interval);
-        }  
-        // otherwise, set the time of the last interval message to the current timestamp and increase interval packet count by 1
-        else{
-            conv_statistics_extended[f].comm_intervals.back().end = timestamp;
-            conv_statistics_extended[f].comm_intervals.back().pkts_count++;
+            // if the time difference has exceeded the threshold, create a new interval with this message
+            if (timestamp - conv_statistics_extended[f].comm_intervals.back().end > (std::chrono::microseconds) ((unsigned long) COMM_INTERVAL_THRESHOLD)) {  // > or >= ?
+                commInterval new_interval = {timestamp, timestamp, 1};
+                conv_statistics_extended[f].comm_intervals.push_back(new_interval);
+            }
+            // otherwise, set the time of the last interval message to the current timestamp and increase interval packet count by 1
+            else{
+                conv_statistics_extended[f].comm_intervals.back().end = timestamp;
+                conv_statistics_extended[f].comm_intervals.back().pkts_count++;
+            }
         }
-    }
-    // if there does not exist a communication interval for the specified conversation
-    else{
-        // add initial interval entry for this conversation
-        commInterval initial_interval = {timestamp, timestamp, 1};
+        // if there does not exist a communication interval for the specified conversation
+        else{
+            // add initial interval entry for this conversation
+            commInterval initial_interval = {timestamp, timestamp, 1};
 
-        entry_convStatExt entry;
-        entry.comm_intervals.push_back(initial_interval);
-        entry.pkts_count = 1;
-        entry.pkts_timestamp.push_back(timestamp);
-        conv_statistics_extended[f2] = entry;
+            entry_convStatExt entry;
+            entry.comm_intervals.push_back(initial_interval);
+            entry.pkts_count = 1;
+            entry.pkts_timestamp.push_back(timestamp);
+            conv_statistics_extended[f2] = entry;
+        }
     }
 }
 
@@ -513,22 +515,24 @@ void statistics::addIpStat_packetSent(const std::string &ipAddressSender, const 
     ip_statistics[ipAddressReceiver].pkts_received++;
     ip_statistics[ipAddressReceiver].pkts_received_timestamp.push_back(timestamp);
 
-    // Increment Degrees for sender and receiver, if Sender sends its first packet to this receiver
-    std::unordered_set<std::string>::const_iterator found_receiver = contacted_ips[ipAddressSender].find(ipAddressReceiver);
-    if(found_receiver == contacted_ips[ipAddressSender].end()){
-        // Receiver is NOT contained in the List of IPs, that the Sender has contacted, therefore this is the first packet in this direction
-        ip_statistics[ipAddressSender].out_degree++;
-        ip_statistics[ipAddressReceiver].in_degree++;
+    if(this->getDoExtraTests()) {
+        // Increment Degrees for sender and receiver, if Sender sends its first packet to this receiver
+        std::unordered_set<std::string>::const_iterator found_receiver = contacted_ips[ipAddressSender].find(ipAddressReceiver);
+        if(found_receiver == contacted_ips[ipAddressSender].end()){
+            // Receiver is NOT contained in the List of IPs, that the Sender has contacted, therefore this is the first packet in this direction
+            ip_statistics[ipAddressSender].out_degree++;
+            ip_statistics[ipAddressReceiver].in_degree++;
 
-        // Increment overall_degree only if this is the first packet for the connection (both directions)
-        // Therefore check, whether Receiver has contacted Sender before
-        std::unordered_set<std::string>::const_iterator sender_contacted = contacted_ips[ipAddressReceiver].find(ipAddressSender);
-        if(sender_contacted == contacted_ips[ipAddressReceiver].end()){
-            ip_statistics[ipAddressSender].overall_degree++;
-            ip_statistics[ipAddressReceiver].overall_degree++;
-        }  
+            // Increment overall_degree only if this is the first packet for the connection (both directions)
+            // Therefore check, whether Receiver has contacted Sender before
+            std::unordered_set<std::string>::const_iterator sender_contacted = contacted_ips[ipAddressReceiver].find(ipAddressSender);
+            if(sender_contacted == contacted_ips[ipAddressReceiver].end()){
+                ip_statistics[ipAddressSender].overall_degree++;
+                ip_statistics[ipAddressReceiver].overall_degree++;
+            }
 
-        contacted_ips[ipAddressSender].insert(ipAddressReceiver);
+            contacted_ips[ipAddressSender].insert(ipAddressReceiver);
+        }
     }
 }
 
