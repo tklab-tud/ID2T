@@ -22,7 +22,7 @@ public:
     /*
      * Database version: Increment number on every change in the C++ code!
      */
-    static const int DB_VERSION = 5;
+    static const int DB_VERSION = 6;
 
     /*
      * Methods for writing values into database
@@ -47,7 +47,8 @@ public:
 
     void writeStatisticsFile(int packetCount, float captureDuration, std::string timestampFirstPkt,
                              std::string timestampLastPkt, float avgPacketRate, float avgPacketSize,
-                             float avgPacketsSentPerHost, float avgBandwidthIn, float avgBandwidthOut);
+                             float avgPacketsSentPerHost, float avgBandwidthIn, float avgBandwidthOut,
+                             bool doExtraTests);
 
     void writeStatisticsConv(std::unordered_map<conv, entry_convStat> &convStatistics);
 

@@ -334,7 +334,8 @@ void statistics_db::writeStatisticsIpMac(const std::unordered_map<std::string, s
  */
 void statistics_db::writeStatisticsFile(int packetCount, float captureDuration, std::string timestampFirstPkt,
                                         std::string timestampLastPkt, float avgPacketRate, float avgPacketSize,
-                                        float avgPacketsSentPerHost, float avgBandwidthIn, float avgBandwidthOut) {
+                                        float avgPacketsSentPerHost, float avgBandwidthIn, float avgBandwidthOut,
+                                        bool doExtraTests) {
     try {
         db->exec("DROP TABLE IF EXISTS file_statistics");
         SQLite::Transaction transaction(*db);
@@ -347,9 +348,10 @@ void statistics_db::writeStatisticsFile(int packetCount, float captureDuration, 
                 "avgPacketSize REAL,"
                 "avgPacketsSentPerHost REAL,"
                 "avgBandwidthIn REAL,"
-                "avgBandwidthOut REAL);";
+                "avgBandwidthOut REAL,"
+                "doExtraTests INTEGER);";
         db->exec(createTable);
-        SQLite::Statement query(*db, "INSERT INTO file_statistics VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        SQLite::Statement query(*db, "INSERT INTO file_statistics VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         query.bind(1, packetCount);
         query.bind(2, captureDuration);
         query.bind(3, timestampFirstPkt);
@@ -359,6 +361,7 @@ void statistics_db::writeStatisticsFile(int packetCount, float captureDuration, 
         query.bind(7, avgPacketsSentPerHost);
         query.bind(8, avgBandwidthIn);
         query.bind(9, avgBandwidthOut);
+        query.bind(10, doExtraTests);
         query.exec();
         transaction.commit();
     }

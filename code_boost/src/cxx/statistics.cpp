@@ -752,7 +752,7 @@ void statistics::writeToDatabase(std::string database_path) {
                                getFormattedTimestamp(timestamp_firstPacket.seconds(), timestamp_firstPacket.microseconds()),
                                getFormattedTimestamp(timestamp_lastPacket.seconds(), timestamp_lastPacket.microseconds()),
                                avgPacketRate, avgPacketSize, avgPacketsSentPerHost, avgBandwidthInKBits,
-                               avgBandwidthOutInKBits);
+                               avgBandwidthOutInKBits, doExtraTests);
         db.writeStatisticsIP(ip_statistics);
         db.writeStatisticsTTL(ttl_distribution);
         db.writeStatisticsIpMac(ip_mac_mapping);
