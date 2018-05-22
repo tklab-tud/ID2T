@@ -242,7 +242,9 @@ void pcap_processor::process_packets(const Packet &pkt) {
         stats.assignMacAddress(ipAddressReceiver, macAddressReceiver);
 
     } // PDU is IPv6
-    else if (pdu_l3_type == PDU::PDUType::IPv6) {
+    // FIXME: IPv6 Workaround
+    /*else if (pdu_l3_type == PDU::PDUType::IPv6) {
+        return;
         const IPv6 &ipLayer = (const IPv6 &) *pdu_l3;
         ipAddressSender = ipLayer.src_addr().to_string();
         ipAddressReceiver = ipLayer.dst_addr().to_string();
@@ -260,7 +262,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
         // Assign IP Address to MAC Address
         stats.assignMacAddress(ipAddressSender, macAddressSender);
         stats.assignMacAddress(ipAddressReceiver, macAddressReceiver);
-    } //PDU is unrecognized
+    }*/ //PDU is unrecognized
     else {
         hasUnrecognized = true;
 
