@@ -32,7 +32,7 @@ void statistics::checkPayload(const PDU *pdu_l4) {
  * @param ipAddressReceiver The destination IP.
  * @param tcpPkt The packet to get checked.
  */
-void statistics::checkTCPChecksum(std::string ipAddressSender, std::string ipAddressReceiver, TCP tcpPkt) {
+void statistics::checkTCPChecksum(const std::string &ipAddressSender, const std::string &ipAddressReceiver, TCP tcpPkt) {
     if(this->getDoExtraTests()) {
         if(check_tcpChecksum(ipAddressSender, ipAddressReceiver, tcpPkt))
             correctTCPChecksumCount++;
@@ -226,7 +226,7 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
  * @param dport The destination port.
  * @param timestamp The timestamp of the packet.
  */
-void statistics::addConvStat(std::string ipAddressSender,int sport,std::string ipAddressReceiver,int dport, std::chrono::microseconds timestamp){
+void statistics::addConvStat(const std::string &ipAddressSender,int sport,const std::string &ipAddressReceiver,int dport, std::chrono::microseconds timestamp){
 
     conv f1 = {ipAddressReceiver, dport, ipAddressSender, sport};
     conv f2 = {ipAddressSender, sport, ipAddressReceiver, dport};
@@ -259,47 +259,49 @@ void statistics::addConvStat(std::string ipAddressSender,int sport,std::string i
  * @param protocol The used protocol.
  * @param timestamp The timestamp of the packet.
  */
-void statistics::addConvStatExt(std::string ipAddressSender,int sport,std::string ipAddressReceiver,int dport,std::string protocol, std::chrono::microseconds timestamp){
-    convWithProt f1 = {ipAddressReceiver, dport, ipAddressSender, sport, protocol};
-    convWithProt f2 = {ipAddressSender, sport, ipAddressReceiver, dport, protocol};
-    convWithProt f;
+void statistics::addConvStatExt(const std::string &ipAddressSender,int sport,const std::string &ipAddressReceiver,int dport,const std::string &protocol, std::chrono::microseconds timestamp){
+    if(this->getDoExtraTests()) {
+        convWithProt f1 = {ipAddressReceiver, dport, ipAddressSender, sport, protocol};
+        convWithProt f2 = {ipAddressSender, sport, ipAddressReceiver, dport, protocol};
+        convWithProt f;
 
-    // if there already exists a communication interval for the specified conversation
-    if (conv_statistics_extended.count(f1) > 0 || conv_statistics_extended.count(f2) > 0){
+        // if there already exists a communication interval for the specified conversation
+        if (conv_statistics_extended.count(f1) > 0 || conv_statistics_extended.count(f2) > 0){
 
-        // find out which direction of conversation is contained in conv_statistics_extended
-        if (conv_statistics_extended.count(f1) > 0)
-            f = f1;
-        else
-            f = f2;
+            // find out which direction of conversation is contained in conv_statistics_extended
+            if (conv_statistics_extended.count(f1) > 0)
+                f = f1;
+            else
+                f = f2;
 
-        // increase pkts count and check on delay
-        conv_statistics_extended[f].pkts_count++;
-        if (conv_statistics_extended[f].pkts_timestamp.size()>0 && conv_statistics_extended[f].pkts_count<=3)
-            conv_statistics_extended[f].interarrival_time.push_back(std::chrono::duration_cast<std::chrono::microseconds> (timestamp - conv_statistics_extended[f].pkts_timestamp.back()));
-        conv_statistics_extended[f].pkts_timestamp.push_back(timestamp);
+            // increase pkts count and check on delay
+            conv_statistics_extended[f].pkts_count++;
+            if (conv_statistics_extended[f].pkts_timestamp.size()>0 && conv_statistics_extended[f].pkts_count<=3)
+                conv_statistics_extended[f].interarrival_time.push_back(std::chrono::duration_cast<std::chrono::microseconds> (timestamp - conv_statistics_extended[f].pkts_timestamp.back()));
+            conv_statistics_extended[f].pkts_timestamp.push_back(timestamp);
 
-        // if the time difference has exceeded the threshold, create a new interval with this message
-        if (timestamp - conv_statistics_extended[f].comm_intervals.back().end > (std::chrono::microseconds) ((unsigned long) COMM_INTERVAL_THRESHOLD)) {  // > or >= ?
-            commInterval new_interval = {timestamp, timestamp, 1};
-            conv_statistics_extended[f].comm_intervals.push_back(new_interval);
-        }  
-        // otherwise, set the time of the last interval message to the current timestamp and increase interval packet count by 1
-        else{
-            conv_statistics_extended[f].comm_intervals.back().end = timestamp;
-            conv_statistics_extended[f].comm_intervals.back().pkts_count++;
+            // if the time difference has exceeded the threshold, create a new interval with this message
+            if (timestamp - conv_statistics_extended[f].comm_intervals.back().end > (std::chrono::microseconds) ((unsigned long) COMM_INTERVAL_THRESHOLD)) {  // > or >= ?
+                commInterval new_interval = {timestamp, timestamp, 1};
+                conv_statistics_extended[f].comm_intervals.push_back(new_interval);
+            }
+            // otherwise, set the time of the last interval message to the current timestamp and increase interval packet count by 1
+            else{
+                conv_statistics_extended[f].comm_intervals.back().end = timestamp;
+                conv_statistics_extended[f].comm_intervals.back().pkts_count++;
+            }
         }
-    }
-    // if there does not exist a communication interval for the specified conversation
-    else{
-        // add initial interval entry for this conversation
-        commInterval initial_interval = {timestamp, timestamp, 1};
+        // if there does not exist a communication interval for the specified conversation
+        else{
+            // add initial interval entry for this conversation
+            commInterval initial_interval = {timestamp, timestamp, 1};
 
-        entry_convStatExt entry;
-        entry.comm_intervals.push_back(initial_interval);
-        entry.pkts_count = 1;
-        entry.pkts_timestamp.push_back(timestamp);
-        conv_statistics_extended[f2] = entry;
+            entry_convStatExt entry;
+            entry.comm_intervals.push_back(initial_interval);
+            entry.pkts_count = 1;
+            entry.pkts_timestamp.push_back(timestamp);
+            conv_statistics_extended[f2] = entry;
+        }
     }
 }
 
@@ -347,7 +349,7 @@ void statistics::createCommIntervalStats(){
  * @param ipAddress The IP address whose MSS packet counter should be incremented.
  * @param mssValue The MSS value of the packet.
  */
-void statistics::incrementMSScount(std::string ipAddress, int mssValue) {
+void statistics::incrementMSScount(const std::string &ipAddress, int mssValue) {
     mss_values[mssValue]++;
     mss_distribution[{ipAddress, mssValue}]++;
 }
@@ -357,7 +359,7 @@ void statistics::incrementMSScount(std::string ipAddress, int mssValue) {
  * @param ipAddress The IP address whose window size packet counter should be incremented.
  * @param winSize The window size of the packet.
  */
-void statistics::incrementWinCount(std::string ipAddress, int winSize) {
+void statistics::incrementWinCount(const std::string &ipAddress, int winSize) {
     win_values[winSize]++;
     win_distribution[{ipAddress, winSize}]++;
 }
@@ -367,7 +369,7 @@ void statistics::incrementWinCount(std::string ipAddress, int winSize) {
  * @param ipAddress The IP address whose TTL packet counter should be incremented.
  * @param ttlValue The TTL value of the packet.
  */
-void statistics::incrementTTLcount(std::string ipAddress, int ttlValue) {
+void statistics::incrementTTLcount(const std::string &ipAddress, int ttlValue) {
     ttl_values[ttlValue]++;
     ttl_distribution[{ipAddress, ttlValue}]++;
 }
@@ -377,7 +379,7 @@ void statistics::incrementTTLcount(std::string ipAddress, int ttlValue) {
  * @param ipAddress The IP address whose ToS packet counter should be incremented.
  * @param tosValue The ToS value of the packet.
  */
-void statistics::incrementToScount(std::string ipAddress, int tosValue) {
+void statistics::incrementToScount(const std::string &ipAddress, int tosValue) {
     tos_values[tosValue]++;
     tos_distribution[{ipAddress, tosValue}]++;
 }
@@ -387,7 +389,7 @@ void statistics::incrementToScount(std::string ipAddress, int tosValue) {
  * @param ipAddress The IP address whose protocol packet counter should be incremented.
  * @param protocol The protocol of the packet.
  */
-void statistics::incrementProtocolCount(std::string ipAddress, std::string protocol) {
+void statistics::incrementProtocolCount(const std::string &ipAddress, const std::string &protocol) {
     protocol_distribution[{ipAddress, protocol}].count++;
 }
 
@@ -396,7 +398,7 @@ void statistics::incrementProtocolCount(std::string ipAddress, std::string proto
  * @param ipAddress The IP address whose packet count is wanted.
  * @param protocol The protocol whose packet count is wanted.
  */
-int statistics::getProtocolCount(std::string ipAddress, std::string protocol) {
+int statistics::getProtocolCount(const std::string &ipAddress, const std::string &protocol) {
     return protocol_distribution[{ipAddress, protocol}].count;
 }
 
@@ -406,7 +408,7 @@ int statistics::getProtocolCount(std::string ipAddress, std::string protocol) {
  * @param protocol The protocol of the packet.
  * @param byteSent The packet's size.
  */
-void statistics::increaseProtocolByteCount(std::string ipAddress, std::string protocol, long bytesSent) {
+void statistics::increaseProtocolByteCount(const std::string &ipAddress, const std::string &protocol, long bytesSent) {
     protocol_distribution[{ipAddress, protocol}].byteCount += bytesSent;
 }
 
@@ -416,7 +418,7 @@ void statistics::increaseProtocolByteCount(std::string ipAddress, std::string pr
  * @param protocol The protocol whose byte count is wanted.
  * @return a float: The number of bytes
  */
-float statistics::getProtocolByteCount(std::string ipAddress, std::string protocol) {
+float statistics::getProtocolByteCount(const std::string &ipAddress, const std::string &protocol) {
     return protocol_distribution[{ipAddress, protocol}].byteCount;
 }
 
@@ -429,8 +431,8 @@ float statistics::getProtocolByteCount(std::string ipAddress, std::string protoc
  * @param ipAddressReceiver The IP address of the packet receiver.
  * @param incomingPort The port used by the receiver.
  */
-void statistics::incrementPortCount(std::string ipAddressSender, int outgoingPort, std::string ipAddressReceiver,
-                                    int incomingPort, std::string protocol) {
+void statistics::incrementPortCount(const std::string &ipAddressSender, int outgoingPort, const std::string &ipAddressReceiver,
+                                    int incomingPort, const std::string &protocol) {
     port_values[outgoingPort]++;
     port_values[incomingPort]++;
     ip_ports[{ipAddressSender, "out", outgoingPort, protocol}].count++;
@@ -447,8 +449,8 @@ void statistics::incrementPortCount(std::string ipAddressSender, int outgoingPor
  * @param incomingPort The port used by the receiver.
  * @param byteSent The packet's size.
  */
-void statistics::increasePortByteCount(std::string ipAddressSender, int outgoingPort, std::string ipAddressReceiver,
-                                       int incomingPort, long bytesSent, std::string protocol) {
+void statistics::increasePortByteCount(const std::string &ipAddressSender, int outgoingPort, const std::string &ipAddressReceiver,
+                                       int incomingPort, long bytesSent, const std::string &protocol) {
     ip_ports[{ipAddressSender, "out", outgoingPort, protocol}].byteCount += bytesSent;
     ip_ports[{ipAddressReceiver, "in", incomingPort, protocol}].byteCount += bytesSent;
 }
@@ -461,8 +463,8 @@ void statistics::increasePortByteCount(std::string ipAddressSender, int outgoing
  * @param dstMac The MAC address of the packet receiver.
  * @param typeNumber The payload type number of the packet.
  */
-void statistics::incrementUnrecognizedPDUCount(std::string srcMac, std::string dstMac, uint32_t typeNumber,
-                                               std::string timestamp) {
+void statistics::incrementUnrecognizedPDUCount(const std::string &srcMac, const std::string &dstMac, uint32_t typeNumber,
+                                               const std::string &timestamp) {
     unrecognized_PDUs[{srcMac, dstMac, typeNumber}].count++;
     unrecognized_PDUs[{srcMac, dstMac, typeNumber}].timestamp_last_occurrence = timestamp;
 }
@@ -478,7 +480,7 @@ statistics::statistics(void) {
  * @param ipAddress The IP address belonging to the given MAC address.
  * @param macAddress The MAC address belonging to the given IP address.
  */
-void statistics::assignMacAddress(std::string ipAddress, std::string macAddress) {
+void statistics::assignMacAddress(const std::string &ipAddress, const std::string &macAddress) {
     ip_mac_mapping[ipAddress] = macAddress;
 }
 
@@ -489,7 +491,7 @@ void statistics::assignMacAddress(std::string ipAddress, std::string macAddress)
  * @param ipAddressReceiver The IP address of the packet receiver.
  * @param bytesSent The packet's size.
  */
-void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddressSender, std::string ipAddressReceiver, long bytesSent, std::chrono::microseconds timestamp) {
+void statistics::addIpStat_packetSent(const std::string &ipAddressSender, const std::string &ipAddressReceiver, long bytesSent, std::chrono::microseconds timestamp) {
 
     // Adding IP as a sender for first time
     if(ip_statistics[ipAddressSender].pkts_sent==0){  
@@ -513,22 +515,24 @@ void statistics::addIpStat_packetSent(std::string filePath, std::string ipAddres
     ip_statistics[ipAddressReceiver].pkts_received++;
     ip_statistics[ipAddressReceiver].pkts_received_timestamp.push_back(timestamp);
 
-    // Increment Degrees for sender and receiver, if Sender sends its first packet to this receiver
-    std::vector<std::string>::iterator found_receiver = std::find(contacted_ips[ipAddressSender].begin(), contacted_ips[ipAddressSender].end(), ipAddressReceiver);
-    if(found_receiver == contacted_ips[ipAddressSender].end()){
-        // Receiver is NOT contained in the List of IPs, that the Sender has contacted, therefore this is the first packet in this direction
-        ip_statistics[ipAddressSender].out_degree++;
-        ip_statistics[ipAddressReceiver].in_degree++;
+    if(this->getDoExtraTests()) {
+        // Increment Degrees for sender and receiver, if Sender sends its first packet to this receiver
+        std::unordered_set<std::string>::const_iterator found_receiver = contacted_ips[ipAddressSender].find(ipAddressReceiver);
+        if(found_receiver == contacted_ips[ipAddressSender].end()){
+            // Receiver is NOT contained in the List of IPs, that the Sender has contacted, therefore this is the first packet in this direction
+            ip_statistics[ipAddressSender].out_degree++;
+            ip_statistics[ipAddressReceiver].in_degree++;
 
-        // Increment overall_degree only if this is the first packet for the connection (both directions)
-        // Therefore check, whether Receiver has contacted Sender before
-        std::vector<std::string>::iterator sender_contacted = std::find(contacted_ips[ipAddressReceiver].begin(), contacted_ips[ipAddressReceiver].end(), ipAddressSender);
-        if(sender_contacted == contacted_ips[ipAddressReceiver].end()){
-            ip_statistics[ipAddressSender].overall_degree++;
-            ip_statistics[ipAddressReceiver].overall_degree++;
-        }  
+            // Increment overall_degree only if this is the first packet for the connection (both directions)
+            // Therefore check, whether Receiver has contacted Sender before
+            std::unordered_set<std::string>::const_iterator sender_contacted = contacted_ips[ipAddressReceiver].find(ipAddressSender);
+            if(sender_contacted == contacted_ips[ipAddressReceiver].end()){
+                ip_statistics[ipAddressSender].overall_degree++;
+                ip_statistics[ipAddressReceiver].overall_degree++;
+            }
 
-        contacted_ips[ipAddressSender].push_back(ipAddressReceiver);
+            contacted_ips[ipAddressSender].insert(ipAddressReceiver);
+        }
     }
 }
 
@@ -668,7 +672,7 @@ std::string statistics::getFormattedTimestamp(time_t seconds, suseconds_t micros
  * @param ipAddress The IP address whose statistics should be calculated.
  * @return a ip_stats struct containing statistical data derived by the statistical data collected.
  */
-ip_stats statistics::getStatsForIP(std::string ipAddress) {
+ip_stats statistics::getStatsForIP(const std::string &ipAddress) {
     float duration = getCaptureDurationSeconds();
     entry_ipStat ipStatEntry = ip_statistics[ipAddress];
 
@@ -693,7 +697,7 @@ void statistics::incrementPacketCount() {
  * Prints the statistics of the PCAP and IP specific statistics for the given IP address.
  * @param ipAddress The IP address whose statistics should be printed. Can be empty "" to print only general file statistics.
  */
-void statistics::printStats(std::string ipAddress) {
+void statistics::printStats(const std::string &ipAddress) {
     std::stringstream ss;
     ss << std::endl;
     ss << "Capture duration: " << getCaptureDurationSeconds() << " seconds" << std::endl;
@@ -752,7 +756,7 @@ void statistics::writeToDatabase(std::string database_path) {
                                getFormattedTimestamp(timestamp_firstPacket.seconds(), timestamp_firstPacket.microseconds()),
                                getFormattedTimestamp(timestamp_lastPacket.seconds(), timestamp_lastPacket.microseconds()),
                                avgPacketRate, avgPacketSize, avgPacketsSentPerHost, avgBandwidthInKBits,
-                               avgBandwidthOutInKBits);
+                               avgBandwidthOutInKBits, doExtraTests);
         db.writeStatisticsIP(ip_statistics);
         db.writeStatisticsTTL(ttl_distribution);
         db.writeStatisticsIpMac(ip_mac_mapping);

@@ -22,38 +22,39 @@ public:
     /*
      * Database version: Increment number on every change in the C++ code!
      */
-    static const int DB_VERSION = 4;
+    static const int DB_VERSION = 7;
 
     /*
      * Methods for writing values into database
      */
-    void writeStatisticsIP(std::unordered_map<std::string, entry_ipStat> ipStatistics);
+    void writeStatisticsIP(const std::unordered_map<std::string, entry_ipStat> &ipStatistics);
 
-    void writeStatisticsDegree(std::unordered_map<std::string, entry_ipStat> ipStatistics);
+    void writeStatisticsDegree(const std::unordered_map<std::string, entry_ipStat> &ipStatistics);
 
-    void writeStatisticsTTL(std::unordered_map<ipAddress_ttl, int> ttlDistribution);
+    void writeStatisticsTTL(const std::unordered_map<ipAddress_ttl, int> &ttlDistribution);
 
-    void writeStatisticsMSS(std::unordered_map<ipAddress_mss, int> mssDistribution);
+    void writeStatisticsMSS(const std::unordered_map<ipAddress_mss, int> &mssDistribution);
 
-    void writeStatisticsToS(std::unordered_map<ipAddress_tos, int> tosDistribution);
+    void writeStatisticsToS(const std::unordered_map<ipAddress_tos, int> &tosDistribution);
 
-    void writeStatisticsWin(std::unordered_map<ipAddress_win, int> winDistribution);
+    void writeStatisticsWin(const std::unordered_map<ipAddress_win, int> &winDistribution);
 
-    void writeStatisticsProtocols(std::unordered_map<ipAddress_protocol, entry_protocolStat> protocolDistribution);
+    void writeStatisticsProtocols(const std::unordered_map<ipAddress_protocol, entry_protocolStat> &protocolDistribution);
 
-    void writeStatisticsPorts(std::unordered_map<ipAddress_inOut_port, entry_portStat> portsStatistics);
+    void writeStatisticsPorts(const std::unordered_map<ipAddress_inOut_port, entry_portStat> &portsStatistics);
 
-    void writeStatisticsIpMac(std::unordered_map<std::string, std::string> IpMacStatistics);
+    void writeStatisticsIpMac(const std::unordered_map<std::string, std::string> &IpMacStatistics);
 
     void writeStatisticsFile(int packetCount, float captureDuration, std::string timestampFirstPkt,
                              std::string timestampLastPkt, float avgPacketRate, float avgPacketSize,
-                             float avgPacketsSentPerHost, float avgBandwidthIn, float avgBandwidthOut);
+                             float avgPacketsSentPerHost, float avgBandwidthIn, float avgBandwidthOut,
+                             bool doExtraTests);
 
-    void writeStatisticsConv(std::unordered_map<conv, entry_convStat> convStatistics);
+    void writeStatisticsConv(std::unordered_map<conv, entry_convStat> &convStatistics);
 
-    void writeStatisticsConvExt(std::unordered_map<convWithProt, entry_convStatExt> conv_statistics_extended);
+    void writeStatisticsConvExt(std::unordered_map<convWithProt, entry_convStatExt> &conv_statistics_extended);
 
-    void writeStatisticsInterval(std::unordered_map<std::string, entry_intervalStat> intervalStatistics);
+    void writeStatisticsInterval(const std::unordered_map<std::string, entry_intervalStat> &intervalStatistics);
 
     void writeDbVersion();
 
@@ -63,7 +64,7 @@ public:
 
     bool pathExists(std::string path);
 
-    void writeStatisticsUnrecognizedPDUs(std::unordered_map<unrecognized_PDU, unrecognized_PDU_stat> unrecognized_PDUs);
+    void writeStatisticsUnrecognizedPDUs(const std::unordered_map<unrecognized_PDU, unrecognized_PDU_stat> &unrecognized_PDUs);
 
 
 private:

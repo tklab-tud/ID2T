@@ -83,7 +83,7 @@ std::string pcap_processor::merge_pcaps(const std::string pcap_path) {
         if (!all_attack_pkts_processed && tstmp_attack <= tstmp_base) {
             try {
                 writer.write(*iterator_attack);
-            } catch (serialization_error) {
+            } catch (serialization_error&) {
                 std::cout << std::setprecision(15) << "Could not serialize attack packet with timestamp " << tstmp_attack << std::endl;
             }
             iterator_attack++;
@@ -92,7 +92,7 @@ std::string pcap_processor::merge_pcaps(const std::string pcap_path) {
         } else {
             try {
                 writer.write(*iterator_base);
-            } catch (serialization_error) {
+            } catch (serialization_error&) {
                     std::cout << "Could not serialize base packet with timestamp " << std::setprecision(15) << tstmp_attack << std::endl;
             }
             iterator_base++;
@@ -104,7 +104,7 @@ std::string pcap_processor::merge_pcaps(const std::string pcap_path) {
     for (; iterator_attack != sniffer_attack.end(); iterator_attack++) {
         try {
             writer.write(*iterator_attack);
-        } catch (serialization_error) {
+        } catch (serialization_error&) {
             auto tstmp_attack = (iterator_attack->timestamp().seconds()) + (iterator_attack->timestamp().microseconds()*1e-6);
             std::cout << "Could not serialize attack packet with timestamp " << std::setprecision(15) << tstmp_attack << std::endl;
         }
@@ -204,7 +204,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
     const PDU *pdu_l2 = pkt.pdu();
     uint32_t sizeCurrentPacket = pdu_l2->size();
     if (pdu_l2->pdu_type() == PDU::ETHERNET_II) {
-        EthernetII eth = (const EthernetII &) *pdu_l2;
+        const EthernetII &eth = (const EthernetII &) *pdu_l2;
         macAddressSender = eth.src_addr().to_string();
         macAddressReceiver = eth.dst_addr().to_string();
         sizeCurrentPacket = eth.size();
@@ -225,7 +225,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
         ipAddressReceiver = ipLayer.dst_addr().to_string();
 
         // IP distribution
-        stats.addIpStat_packetSent(filePath, ipAddressSender, ipLayer.dst_addr().to_string(), sizeCurrentPacket, pkt.timestamp());
+        stats.addIpStat_packetSent(ipAddressSender, ipLayer.dst_addr().to_string(), sizeCurrentPacket, pkt.timestamp());
 
         // TTL distribution
         stats.incrementTTLcount(ipAddressSender, ipLayer.ttl());
@@ -248,7 +248,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
         ipAddressReceiver = ipLayer.dst_addr().to_string();
 
         // IP distribution
-        stats.addIpStat_packetSent(filePath, ipAddressSender, ipLayer.dst_addr().to_string(), sizeCurrentPacket, pkt.timestamp());
+        stats.addIpStat_packetSent(ipAddressSender, ipLayer.dst_addr().to_string(), sizeCurrentPacket, pkt.timestamp());
 
         // TTL distribution
         stats.incrementTTLcount(ipAddressSender, ipLayer.hop_limit());
@@ -264,7 +264,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
     else {
         hasUnrecognized = true;
 
-        EthernetII eth = (const EthernetII &) *pdu_l2;
+        const EthernetII &eth = (const EthernetII &) *pdu_l2;
         Tins::Timestamp ts = pkt.timestamp();
         std::string timestamp_pkt = stats.getFormattedTimestamp(ts.seconds(), ts.microseconds());
 
@@ -283,7 +283,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
           }
 
         if (p == PDU::PDUType::TCP) {
-            TCP tcpPkt = (const TCP &) *pdu_l4;
+            const TCP &tcpPkt = (const TCP &) *pdu_l4;
             
             // Check TCP checksum
             if (pdu_l3_type == PDU::PDUType::IP) {
@@ -306,7 +306,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
 
                 // MSS distribution
                 stats.incrementMSScount(ipAddressSender, val);
-            } catch (Tins::option_not_found) {
+            } catch (Tins::option_not_found&) {
                 // Ignore MSS if option not set
             }
             stats.incrementPortCount(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), "TCP");
@@ -314,7 +314,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
 
           // UDP Packet
         } else if (p == PDU::PDUType::UDP) {
-            const UDP udpPkt = (const UDP &) *pdu_l4;
+            const UDP &udpPkt = (const UDP &) *pdu_l4;
             stats.incrementProtocolCount(ipAddressSender, "UDP");
             stats.increaseProtocolByteCount(ipAddressSender, "UDP", sizeCurrentPacket);
             stats.incrementPortCount(ipAddressSender, udpPkt.sport(), ipAddressReceiver, udpPkt.dport(), "UDP");
