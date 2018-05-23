@@ -33,9 +33,10 @@ class SMBScanAttack(BaseAttack.BaseAttack):
         self.supported_params.update({
             atkParam.Parameter.IP_SOURCE: atkParam.ParameterTypes.TYPE_IP_ADDRESS,
             atkParam.Parameter.IP_DESTINATION: atkParam.ParameterTypes.TYPE_IP_ADDRESS,
+            atkParam.Parameter.TARGET_COUNT: atkParam.ParameterTypes.TYPE_INTEGER_POSITIVE,
+            atkParam.Parameter.HOSTING_PERCENTAGE: atkParam.ParameterTypes.TYPE_PERCENTAGE,
             atkParam.Parameter.PORT_SOURCE: atkParam.ParameterTypes.TYPE_PORT,
             atkParam.Parameter.MAC_SOURCE: atkParam.ParameterTypes.TYPE_MAC_ADDRESS,
-            atkParam.Parameter.MAC_DESTINATION: atkParam.ParameterTypes.TYPE_MAC_ADDRESS,
             atkParam.Parameter.INJECT_AT_TIMESTAMP: atkParam.ParameterTypes.TYPE_FLOAT,
             atkParam.Parameter.INJECT_AFTER_PACKET: atkParam.ParameterTypes.TYPE_PACKET_POSITION,
             atkParam.Parameter.IP_SOURCE_RANDOMIZE: atkParam.ParameterTypes.TYPE_BOOLEAN,
@@ -62,19 +63,9 @@ class SMBScanAttack(BaseAttack.BaseAttack):
         self.add_param_value(atkParam.Parameter.IP_SOURCE_RANDOMIZE, 'False')
         self.add_param_value(atkParam.Parameter.MAC_SOURCE, self.statistics.get_mac_address(most_used_ip_address))
 
-        all_ips = self.statistics.get_ip_addresses()
-        if not isinstance(all_ips, list):
-            ip_destinations = []
-            ip_destinations.append(all_ips)
-        else:
-            ip_destinations = all_ips
-        self.add_param_value(atkParam.Parameter.IP_DESTINATION, ip_destinations)
-        destination_mac = []
-        for ip in ip_destinations:
-            destination_mac.append(self.statistics.get_mac_address(str(ip)))
-        if isinstance(destination_mac, list) and len(destination_mac) == 0:
-            destination_mac = self.generate_random_mac_address()
-        self.add_param_value(atkParam.Parameter.MAC_DESTINATION, destination_mac)
+        self.add_param_value(atkParam.Parameter.TARGET_COUNT, 200)
+        self.add_param_value(atkParam.Parameter.IP_DESTINATION, "1.1.1.1")
+
         self.add_param_value(atkParam.Parameter.PORT_SOURCE, rnd.randint(1024, 65535))
         self.add_param_value(atkParam.Parameter.PORT_SOURCE_RANDOMIZE, 'True')
         self.add_param_value(atkParam.Parameter.PACKETS_PER_SECOND,
@@ -82,8 +73,8 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                               self.statistics.get_pps_received(most_used_ip_address)) / 2)
         self.add_param_value(atkParam.Parameter.INJECT_AFTER_PACKET, rnd.randint(0, self.statistics.get_packet_count()))
 
-        rnd_ip_count = self.statistics.get_ip_address_count() // 2
-        self.add_param_value(atkParam.Parameter.HOSTING_IP, self.statistics.get_random_ip_address(rnd_ip_count))
+        self.add_param_value(atkParam.Parameter.HOSTING_PERCENTAGE, 0.5)
+        self.add_param_value(atkParam.Parameter.HOSTING_IP, "1.1.1.1")
         self.add_param_value(atkParam.Parameter.HOSTING_VERSION, SMBLib.get_smb_version(platform=self.host_os))
         self.add_param_value(atkParam.Parameter.SOURCE_PLATFORM, Util.get_rnd_os())
         self.add_param_value(atkParam.Parameter.PROTOCOL_VERSION, "1")
@@ -106,8 +97,56 @@ class SMBScanAttack(BaseAttack.BaseAttack):
 
         # Initialize parameters
         ip_source = self.get_param_value(atkParam.Parameter.IP_SOURCE)
+
+        dest_ip_count = self.get_param_value(atkParam.Parameter.TARGET_COUNT)
+        ip_addr_count = self.statistics.get_ip_address_count()
+        if ip_addr_count < dest_ip_count + 1:
+            dest_ip_count = ip_addr_count
+
+        # Check for user defined target IP addresses
         ip_destinations = self.get_param_value(atkParam.Parameter.IP_DESTINATION)
+        if isinstance(ip_destinations, list):
+            dest_ip_count = dest_ip_count - len(ip_destinations)
+        elif ip_destinations is not "1.1.1.1":
+            dest_ip_count = dest_ip_count - 1
+            ip_destinations = [ip_destinations]
+        else:
+            ip_destinations = []
+
+        # Take random targets from pcap
+        rnd_ips = self.statistics.get_random_ip_address(dest_ip_count)
+        if not isinstance(rnd_ips, list):
+            rnd_ips = [rnd_ips]
+        ip_destinations = ip_destinations + rnd_ips
+
+        # Make sure the source IP is not part of targets
+        if ip_source in ip_destinations and isinstance(ip_destinations, list):
+            ip_destinations.remove(ip_source)
+        self.add_param_value(atkParam.Parameter.IP_DESTINATION, ip_destinations)
+
+        ip_destinations = self.get_param_value(atkParam.Parameter.IP_DESTINATION)
+
+        # Calculate the amount of IP addresses which are hosting SMB
+        host_percentage = self.get_param_value(atkParam.Parameter.HOSTING_PERCENTAGE)
+        rnd_ip_count = len(ip_destinations) * host_percentage
+
+        # Check for user defined IP addresses which are hosting SMB
         hosting_ip = self.get_param_value(atkParam.Parameter.HOSTING_IP)
+        if isinstance(hosting_ip, list):
+            rnd_ip_count = rnd_ip_count - len(hosting_ip)
+        elif hosting_ip is not "1.1.1.1":
+            rnd_ip_count = rnd_ip_count - 1
+            hosting_ip = [hosting_ip]
+        else:
+            hosting_ip = []
+
+        hosting_ip = hosting_ip + ip_destinations[:int(rnd_ip_count)]
+        self.add_param_value(atkParam.Parameter.HOSTING_IP, hosting_ip)
+
+        # Shuffle targets
+        rnd.shuffle(ip_destinations)
+
+        # FIXME: Handle mac addresses correctly
         mac_source = self.get_param_value(atkParam.Parameter.MAC_SOURCE)
         mac_dest = self.get_param_value(atkParam.Parameter.MAC_DESTINATION)
 
