@@ -93,7 +93,7 @@ std::string pcap_processor::merge_pcaps(const std::string pcap_path) {
             try {
                 writer.write(*iterator_base);
             } catch (serialization_error&) {
-                    std::cout << "Could not serialize base packet with timestamp " << std::setprecision(15) << tstmp_attack << std::endl;
+                    std::cout << "Could not serialize base packet with timestamp " << std::setprecision(15) << tstmp_base << std::endl;
             }
             iterator_base++;
         }
