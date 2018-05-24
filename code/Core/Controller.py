@@ -324,6 +324,11 @@ class Controller:
             self.statisticsDB.process_db_query("SELECT name FROM sqlite_master WHERE type='table';", True)
             return True
         elif cmd == "columns":
+            is_table = self.statisticsDB.process_db_query("SELECT name FROM sqlite_master WHERE type='table' AND name='"
+                                                          + params[0].lower() + "';", False)
+            if not is_table:
+                print("Table " + params[0].lower() + " does not exist.")
+                return True
             self.statisticsDB.process_db_query("SELECT * FROM " + params[0].lower(), False)
             columns = self.statisticsDB.get_field_types(params[0].lower())
             for column in columns:
