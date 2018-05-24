@@ -305,6 +305,7 @@ class StatsDatabase:
                 raise QueryExecutionException("The requested query '" + query_list[0] + "(" + query_list[1] +
                                               ")' was not found in the internal query list!")
             self.cursor.execute(str(query))
+            # TODO: fetch query on demand
             last_result = self.cursor.fetchall()
             return last_result
 
