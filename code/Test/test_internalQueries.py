@@ -23,7 +23,7 @@ class UnitTestInternalQueries(unittest.TestCase):
                           ("Unrecognized packets", 10, "PDUs"), ("% Recognized packets", 99.49949949949949, "%"),
                           ("% Unrecognized packets", 0.5005005005005005, "%"),
                           ("Last unknown PDU", '1970-01-01 01:07:39.604899'),
-                          ('Capture duration', '25.4294414520264', 'seconds'),
+                          ('Capture duration', '385.429443359375', 'seconds'),
                           ('Capture start', '\t1970-01-01 01:01:45.647675'),
                           ('Capture end', '\t1970-01-01 01:08:10.102034')])
 
@@ -31,7 +31,7 @@ class UnitTestInternalQueries(unittest.TestCase):
         self.assertEqual(controller.statistics.get_packet_count(), 1998)
 
     def test_get_capture_duration(self):
-        self.assertEqual(controller.statistics.get_capture_duration(), '25.4294414520264')
+        self.assertEqual(controller.statistics.get_capture_duration(), '385.429443359375')
 
     def test_get_pcap_timestamp_start(self):
         self.assertEqual(controller.statistics.get_pcap_timestamp_start(), '1970-01-01 01:01:45.647675')
@@ -42,14 +42,14 @@ class UnitTestInternalQueries(unittest.TestCase):
     # FIXME: This seems to be the only testcase where float values differ slightly between macOS and Linux
     def test_get_general_file_statistics(self):
         file_stats = controller.statistics.get_general_file_statistics()
-        self.assertEqual(file_stats[0], ('Avg. packet rate', 78.57034301757812, 'packets/sec'))
+        self.assertEqual(file_stats[0], ('Avg. packet rate', 5.183828353881836, 'packets/sec'))
         self.assertEqual(file_stats[1], ('Avg. packet size', 0.0, 'kbytes'))
         self.assertEqual(file_stats[2], ('Avg. packets sent', 90.0, 'packets'))
         self.assertEqual(file_stats[3][0], 'Avg. bandwidth in')
-        self.assertAlmostEqual(file_stats[3][1], 9.529013633728027, places=5)
+        self.assertAlmostEqual(file_stats[3][1], 0.6286947727203369, places=5)
         self.assertEqual(file_stats[3][2], 'kbit/s')
         self.assertEqual(file_stats[4][0], 'Avg. bandwidth out')
-        self.assertAlmostEqual(file_stats[4][1], 9.529013633728027, places=5)
+        self.assertAlmostEqual(file_stats[4][1], 0.6286947727203369, places=5)
 
     # INTERNAL QUERY TESTS
     def test_get_ip_address_count(self):
@@ -88,7 +88,7 @@ class UnitTestInternalQueries(unittest.TestCase):
         self.assertEqual(controller.statistics.get_pps_sent(ip_address='72.247.178.67'), 0)
 
     def test_get_pps_sent_2(self):
-        self.assertEqual(controller.statistics.get_pps_sent(ip_address='10.0.2.15'), 32)
+        self.assertEqual(controller.statistics.get_pps_sent(ip_address='10.0.2.15'), 2)
 
     def test_get_pps_sent_wrong_input(self):
         # wrong input parameter
@@ -99,7 +99,7 @@ class UnitTestInternalQueries(unittest.TestCase):
         self.assertEqual(controller.statistics.get_pps_received(ip_address='72.247.178.67'), 0)
 
     def test_get_pps_received_2(self):
-        self.assertEqual(controller.statistics.get_pps_received(ip_address='10.0.2.15'), 46)
+        self.assertEqual(controller.statistics.get_pps_received(ip_address='10.0.2.15'), 3)
 
     def test_get_ttl_distribution_1(self):
         self.assertEqual(controller.statistics.get_ttl_distribution(ip_address='72.247.178.67'), {64: 5})

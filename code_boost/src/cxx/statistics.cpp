@@ -642,10 +642,8 @@ float statistics::getCaptureDurationSeconds() const {
     timeval d;
     d.tv_sec = timestamp_lastPacket.seconds() - timestamp_firstPacket.seconds();
     d.tv_usec = timestamp_lastPacket.microseconds() - timestamp_firstPacket.microseconds();
-    char tmbuf[64], buf[64];
-    auto nowtm = localtime(&(d.tv_sec));
-    strftime(tmbuf, sizeof(tmbuf), "%S", nowtm);
-    snprintf(buf, sizeof(buf), "%s.%06u", tmbuf, (uint) d.tv_usec);
+    char buf[64];
+    snprintf(buf, sizeof(buf), "%u.%06u", static_cast<uint>(d.tv_sec), static_cast<uint>(d.tv_usec));
     return std::stof(std::string(buf));
 }
 
@@ -663,7 +661,7 @@ std::string statistics::getFormattedTimestamp(time_t seconds, suseconds_t micros
     char tmbuf[64], buf[64];
     auto nowtm = localtime(&(tv.tv_sec));
     strftime(tmbuf, sizeof(tmbuf), "%Y-%m-%d %H:%M:%S", nowtm);
-    snprintf(buf, sizeof(buf), "%s.%06u", tmbuf, (uint) tv.tv_usec);
+    snprintf(buf, sizeof(buf), "%s.%06u", tmbuf, static_cast<uint>(tv.tv_usec));
     return std::string(buf);
 }
 
