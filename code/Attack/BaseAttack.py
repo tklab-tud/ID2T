@@ -55,6 +55,13 @@ class BaseAttack(metaclass=abc.ABCMeta):
         self.packets = []
         self.path_attack_pcap = ""
 
+        # get_reply_delay
+        self.all_min_delays = None
+        self.all_max_delays = None
+        self.most_used_mss_value = None
+        self.most_used_ttl_value = None
+        self.most_used_win_size = None
+
     def set_statistics(self, statistics):
         """
         Specify the statistics object that will be used to calculate the parameters of this attack.
@@ -64,6 +71,13 @@ class BaseAttack(metaclass=abc.ABCMeta):
         :param statistics: Reference to a statistics object.
         """
         self.statistics = statistics
+
+        # get_reply_delay
+        self.all_min_delays = self.statistics.process_db_query("SELECT minDelay FROM conv_statistics LIMIT 500;")
+        self.all_max_delays = self.statistics.process_db_query("SELECT maxDelay FROM conv_statistics LIMIT 500;")
+        self.most_used_mss_value = self.statistics.get_most_used_mss_value()
+        self.most_used_ttl_value = self.statistics.get_most_used_ttl_value()
+        self.most_used_win_size = self.statistics.get_most_used_win_size()
 
     @abc.abstractmethod
     def init_params(self):
@@ -516,10 +530,8 @@ class BaseAttack(metaclass=abc.ABCMeta):
             min_delay = result[0][0]
             max_delay = result[0][1]
         else:
-            all_min_delays = self.statistics.process_db_query("SELECT minDelay FROM conv_statistics LIMIT 500;")
-            min_delay = np.median(all_min_delays)
-            all_max_delays = self.statistics.process_db_query("SELECT maxDelay FROM conv_statistics LIMIT 500;")
-            max_delay = np.median(all_max_delays)
+            min_delay = np.median(self.all_min_delays)
+            max_delay = np.median(self.all_max_delays)
 
             if math.isnan(min_delay):  # max_delay is nan too then
                 if default < 0:
@@ -682,7 +694,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
             mss_prob_dict = lea.Lea.fromValFreqsDict(mss_dist)
             mss_value = mss_prob_dict.random()
         else:
-            mss_value = Util.handle_most_used_outputs(self.statistics.process_db_query("most_used(mssValue)"))
+            mss_value = Util.handle_most_used_outputs(self.most_used_mss_value)
 
         # Set TTL based on TTL distribution of IP address
         ttl_dist = self.statistics.get_ttl_distribution(ip_address)
@@ -690,7 +702,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
             ttl_prob_dict = lea.Lea.fromValFreqsDict(ttl_dist)
             ttl_value = ttl_prob_dict.random()
         else:
-            ttl_value = Util.handle_most_used_outputs(self.statistics.process_db_query("most_used(ttlValue)"))
+            ttl_value = Util.handle_most_used_outputs(self.most_used_ttl_value)
 
         # Set Window Size based on Window Size distribution of IP address
         win_dist = self.statistics.get_win_distribution(ip_address)
@@ -698,7 +710,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
             win_prob_dict = lea.Lea.fromValFreqsDict(win_dist)
             win_value = win_prob_dict.random()
         else:
-            win_value = Util.handle_most_used_outputs(self.statistics.process_db_query("most_used(winSize)"))
+            win_value = Util.handle_most_used_outputs(self.most_used_win_size)
 
         return mss_value, ttl_value, win_value
 
