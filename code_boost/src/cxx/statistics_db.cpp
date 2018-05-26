@@ -108,7 +108,8 @@ void statistics_db::writeStatisticsTTL(const std::unordered_map<ipAddress_ttl, i
                 "ipAddress TEXT,"
                 "ttlValue INTEGER,"
                 "ttlCount INTEGER,"
-                "PRIMARY KEY(ipAddress,ttlValue));";
+                "PRIMARY KEY(ipAddress,ttlValue));"
+                "CREATE INDEX ipAddressTTL ON ip_ttl(ipAddress);";
         db->exec(createTable);
         SQLite::Statement query(*db, "INSERT INTO ip_ttl VALUES (?, ?, ?)");
         for (auto it = ttlDistribution.begin(); it != ttlDistribution.end(); ++it) {
@@ -138,7 +139,8 @@ void statistics_db::writeStatisticsMSS(const std::unordered_map<ipAddress_mss, i
                 "ipAddress TEXT,"
                 "mssValue INTEGER,"
                 "mssCount INTEGER,"
-                "PRIMARY KEY(ipAddress,mssValue));";
+                "PRIMARY KEY(ipAddress,mssValue));"
+                "CREATE INDEX ipAddressMSS ON tcp_mss(ipAddress);";
         db->exec(createTable);
         SQLite::Statement query(*db, "INSERT INTO tcp_mss VALUES (?, ?, ?)");
         for (auto it = mssDistribution.begin(); it != mssDistribution.end(); ++it) {
@@ -198,7 +200,8 @@ void statistics_db::writeStatisticsWin(const std::unordered_map<ipAddress_win, i
                 "ipAddress TEXT,"
                 "winSize INTEGER,"
                 "winCount INTEGER,"
-                "PRIMARY KEY(ipAddress,winSize));";
+                "PRIMARY KEY(ipAddress,winSize));"
+                "CREATE INDEX ipAddressWIN ON tcp_win(ipAddress);";
         db->exec(createTable);
         SQLite::Statement query(*db, "INSERT INTO tcp_win VALUES (?, ?, ?)");
         for (auto it = winDistribution.begin(); it != winDistribution.end(); ++it) {
