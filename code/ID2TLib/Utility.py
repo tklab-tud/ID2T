@@ -51,6 +51,7 @@ def update_timestamp(timestamp, pps, delay=0):
 
     :return: Timestamp to be used for the next packet.
     """
+    # FIXME: throw Exception if pps==0
     if delay == 0:
         # Calculate request timestamp
         # To imitate the bursty behavior of traffic
