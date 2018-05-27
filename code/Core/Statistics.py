@@ -597,6 +597,13 @@ class Statistics:
         """
         return self.process_db_query("SELECT DISTINCT ipAddress FROM ip_mac WHERE macAddress = '" + mac_address + "'")
 
+    def get_mac_addresses(self, ip_addresses: list):
+        """
+        :return: The MAC addresses used in the dataset for the given IP addresses as a dictionary.
+        """
+        return dict(self.process_db_query("SELECT DISTINCT ipAddress, macAddress from ip_mac WHERE ipAddress in ("
+                                          + str(ip_addresses)[1:-1] + ")"))
+
     def get_mac_address(self, ip_address: str):
         """
         :return: The MAC address used in the dataset for the given IP address.
