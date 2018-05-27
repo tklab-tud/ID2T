@@ -197,6 +197,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
         source_mss_value, source_ttl_value, source_win_value = self.get_ip_data(ip_source)
 
         mac_dests = self.statistics.get_mac_addresses(ip_dests)
+        first_timestamp_smb = self.statistics.get_pcap_timestamp_start()[:19]
 
         for ip in ip_dests:
 
@@ -320,8 +321,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     self.packets.append(confirm_smb_req)
 
                     # smb response package
-                    first_timestamp = time.mktime(time.strptime(self.statistics.get_pcap_timestamp_start()[:19],
-                                                                "%Y-%m-%d %H:%M:%S"))
+                    first_timestamp = time.mktime(time.strptime(first_timestamp_smb, "%Y-%m-%d %H:%M:%S"))
                     server_guid, security_blob, capabilities, data_size, server_start_time =\
                         SMBLib.get_smb_platform_data(self.host_os, first_timestamp)
 
