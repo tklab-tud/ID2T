@@ -336,14 +336,13 @@ void pcap_processor::process_packets(const Packet &pkt) {
             int win = tcpPkt.window();
             stats.incrementWinCount(ipAddressSender, win);
 
-            try {
-                int val = tcpPkt.mss();
-
-                // MSS distribution
-                stats.incrementMSScount(ipAddressSender, val);
-            } catch (Tins::option_not_found&) {
-                // Ignore MSS if option not set
+            // MSS distribution
+            auto mssOption = tcpPkt.search_option(TCP::MSS);
+            if (mssOption != nullptr) {
+                auto mss_value = mssOption->to<uint16_t>();
+                stats.incrementMSScount(ipAddressSender, mss_value);
             }
+
             stats.incrementPortCount(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), "TCP");
             stats.increasePortByteCount(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), sizeCurrentPacket, "TCP");
 
