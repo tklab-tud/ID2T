@@ -7,10 +7,12 @@ class Parameter(enum.Enum):
     when calling Core via the command line.
     """
     # recommended type: IP address -------------------------------
-    IP_SOURCE = 'ip.src'  # source IP address
-    IP_DESTINATION = 'ip.dst'  # destination IP address
+    IP_SOURCE = 'ip.src'  # source IP address(es)
+    IP_DESTINATION = 'ip.dst'  # destination IP address(es)
+    TARGET_COUNT = "target.count"  # count of target IP addresses
     IP_DNS = 'ip.dns'  # IP address of DNS server
-    HOSTING_IP = 'hosting.ip'
+    HOSTING_IP = 'hosting.ip'  # IP address(es) hosting the vulnerable service
+    HOSTING_PERCENTAGE = 'hosting.percentage'  # percentage of target IPs hosting the vulnerable service
     IP_VICTIM = 'ip.victim'
     # recommended type: MAC address ------------------------------
     MAC_SOURCE = 'mac.src'  # MAC address of source
