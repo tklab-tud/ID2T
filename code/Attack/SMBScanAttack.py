@@ -196,20 +196,23 @@ class SMBScanAttack(BaseAttack.BaseAttack):
         # Get MSS, TTL and Window size value for source IP
         source_mss_value, source_ttl_value, source_win_value = self.get_ip_data(ip_source)
 
+        mac_dests = self.statistics.get_mac_addresses(ip_dests)
+
         for ip in ip_dests:
 
             if ip != ip_source:
 
                 # Get destination Mac Address
-                mac_destination = self.statistics.get_mac_address(str(ip))
+                mac_destination = ""
+                if ip in mac_dests.keys():
+                    mac_destination = mac_dests[ip]
                 if len(mac_destination) == 0:
                     if isinstance(mac_dest, str):
-                        if len(self.statistics.get_ip_address_from_mac(mac_dest)) != 0:
-                            ip = self.statistics.get_ip_address_from_mac(mac_dest)
+                        ip_from_mac = self.statistics.get_ip_address_from_mac(mac_dest)
+                        if len(ip_from_mac) != 0:
+                            ip = ip_from_mac
                             self.ip_src_dst_equal_check(ip_source, ip)
-
                         mac_destination = mac_dest
-
                     else:
                         mac_destination = self.generate_random_mac_address()
 
