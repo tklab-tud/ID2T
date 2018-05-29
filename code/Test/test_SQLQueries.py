@@ -26,9 +26,9 @@ class UnitTestSqlQueries(unittest.TestCase):
     def test_severalOperator(self):
         query1 = "Select ipAddress from ip_Statistics where pktsSent = '5'"
         query2 = "Select ipAddress from ip_Statistics where pktsSent < '5'"
-        query3 = "Select ipAddress from ip_Statistics where pktsSent <= '5'"
+        query3 = "Select ipAddress from ip_Statistics where pktsSent <= '5' ORDER BY ipAddress DESC"
         query4 = "Select ipAddress from ip_Statistics where pktsSent > '356'"
-        query5 = "Select ipAddress from ip_Statistics where pktsSent >= '356'"
+        query5 = "Select ipAddress from ip_Statistics where pktsSent >= '356' ORDER BY ipAddress ASC"
 
         self.assertEqual("72.247.178.67", controller.statistics.stats_db.process_db_query(query1))
         self.assertEqual("72.247.178.113", controller.statistics.stats_db.process_db_query(query2))
