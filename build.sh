@@ -25,6 +25,10 @@ fi
 if [ ${FULLBUILD} = true -o ! -d .venv ]; then
     rm -Rf .venv
     python3 -m venv .venv
+    if [ $? != 0 ]; then
+        echo "Error: Could not create the venv. Please make sure the 'venv' Python-module is installed."
+        exit
+    fi
 fi
 
 # Activate the venv
