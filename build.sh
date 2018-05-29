@@ -1,13 +1,31 @@
 #!/bin/bash
 
+FULLBUILD=false
+NONINTERACTIVE=false
+
+while test $# -gt 0
+do
+    case "$1" in
+        --non-interactive)
+            NONINTERACTIVE=true
+            ;;
+        --full)
+            FULLBUILD=true
+            ;;
+    esac
+    shift
+done
+
 # Install required packages
-if [ "$1" != '--non-interactive' ]; then
+if [ ! ${NONINTERACTIVE} = true ]; then
     ./resources/install_dependencies.sh
 fi
 
-# Create a new venv
-rm -Rf .venv
-python3 -m venv .venv
+# Fullbuild or nonexistent venv
+if [ ${FULLBUILD} = true -o ! -d .venv ]; then
+    rm -Rf .venv
+    python3 -m venv .venv
+fi
 
 # Activate the venv
 source .venv/bin/activate
@@ -21,8 +39,10 @@ deactivate
 # Create the Makefile using cmake, from a clean build directory
 cd code_boost/src/build/
 if [ ${PWD##*/} = 'build' ]; then
-    # Only delete everything if we are in a folder called 'build'.
-    rm -rf ./*
+    if [ ${FULLBUILD} = true ]; then
+        # Only delete everything if we are in a folder called 'build'.
+        rm -rf ./*
+    fi
 else
     echo "Error: The 'build' directory was not found."
     exit
