@@ -620,13 +620,17 @@ bool statistics::getDoExtraTests() {
  */
 std::string statistics::getCaptureDurationTimestamp() const {
     // Calculate duration
-    time_t t = (timestamp_lastPacket.seconds() - timestamp_firstPacket.seconds());
-    time_t ms = (timestamp_lastPacket.microseconds() - timestamp_firstPacket.microseconds());
-    long int hour = t / 3600;
-    long int remainder = (t - hour * 3600);
+    timeval fp, lp, d;
+    fp.tv_sec = timestamp_firstPacket.seconds();
+    fp.tv_usec = timestamp_firstPacket.microseconds();
+    lp.tv_sec = timestamp_lastPacket.seconds();
+    lp.tv_usec = timestamp_lastPacket.microseconds();
+    timersub(&lp, &fp, &d);
+    long int hour = d.tv_sec / 3600;
+    long int remainder = (d.tv_sec - hour * 3600);
     long int minute = remainder / 60;
     long int second = (remainder - minute * 60) % 60;
-    long int microseconds = ms;
+    long int microseconds = d.tv_usec;
     // Build desired output format: YYYY-mm-dd hh:mm:ss
     char out[64];
     sprintf(out, "%02ld:%02ld:%02ld.%06ld ", hour, minute, second, microseconds);
@@ -639,9 +643,12 @@ std::string statistics::getCaptureDurationTimestamp() const {
  * S: seconds (UNIX time), mmmmmm: microseconds
  */
 float statistics::getCaptureDurationSeconds() const {
-    timeval d;
-    d.tv_sec = timestamp_lastPacket.seconds() - timestamp_firstPacket.seconds();
-    d.tv_usec = timestamp_lastPacket.microseconds() - timestamp_firstPacket.microseconds();
+    timeval fp, lp, d;
+    fp.tv_sec = timestamp_firstPacket.seconds();
+    fp.tv_usec = timestamp_firstPacket.microseconds();
+    lp.tv_sec = timestamp_lastPacket.seconds();
+    lp.tv_usec = timestamp_lastPacket.microseconds();
+    timersub(&lp, &fp, &d);
     char buf[64];
     snprintf(buf, sizeof(buf), "%u.%06u", static_cast<uint>(d.tv_sec), static_cast<uint>(d.tv_usec));
     return std::stof(std::string(buf));
