@@ -15,7 +15,8 @@ import Core.StatsDatabase as StatsDB
 
 
 class Controller:
-    def __init__(self, pcap_file_path: str, do_extra_tests: bool, non_verbose: bool=True, pcap_out_path: str=None):
+    def __init__(self, pcap_file_path: str, do_extra_tests: bool, non_verbose: bool=True, pcap_out_path: str=None,
+                 debug: bool=False):
         """
         Creates a new Controller, acting as a central coordinator for the whole application.
 
@@ -31,6 +32,7 @@ class Controller:
         self.seed = None
         self.durations = []
         self.added_packets = 0
+        self.debug = debug
 
         # Initialize class instances
         print("Input file: %s" % self.pcap_src_path)
@@ -149,10 +151,13 @@ class Controller:
             print("done.")
 
             # delete intermediate PCAP files
-            print('Deleting intermediate attack pcap...', end=" ")
-            sys.stdout.flush()  # force python to print text immediately
-            os.remove(attacks_pcap_path)
-            print("done.")
+            if self.debug:
+                print('NOT deleting intermediate attack pcap while in debug mode.')
+            else:
+                print('Deleting intermediate attack pcap...', end=" ")
+                sys.stdout.flush()  # force python to print text immediately
+                os.remove(attacks_pcap_path)
+                print("done.")
 
             # write label file with attacks
             self.label_manager.write_label_file(self.pcap_dest_path)

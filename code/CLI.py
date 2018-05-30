@@ -72,7 +72,8 @@ class CLI(object):
         parser.add_argument('-V', '--non-verbose', help='reduces terminal clutter', action='store_true', default=False)
         parser.add_argument('-o', '--output', metavar="PCAP_FILE", help='path to the output pcap file')
         parser.add_argument('-ie', '--inject_empty', action='store_true',
-                                       help='injects ATTACK into an EMPTY PCAP file, using the statistics of the input PCAP.')
+                            help='injects ATTACK into an EMPTY PCAP file, using the statistics of the input PCAP.')
+        parser.add_argument('-d', '--debug', help='Runs ID2T in debug mode.', action='store_true', default=False)
 
         # Attack arguments
         parser.add_argument('-a', '--attack', metavar="ATTACK", action='append',
@@ -144,7 +145,8 @@ class CLI(object):
         Evaluates given queries.
         """
         # Create Core Controller
-        controller = Controller(self.args.input, self.args.extraTests, self.args.non_verbose, self.args.output)
+        controller = Controller(self.args.input, self.args.extraTests, self.args.non_verbose, self.args.output,
+                                self.args.debug)
 
         # Load PCAP statistics
         controller.load_pcap_statistics(self.args.export, self.args.recalculate, self.args.statistics)
