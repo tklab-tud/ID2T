@@ -11,7 +11,7 @@ class TestUtility(unittest.TestCase):
         self.assertTrue(100 + 10 / 5 >= Utility.update_timestamp(100, 5) >= 100 + 1 / 5)
 
     def test_update_timestamp_with_delay(self):
-        self.assertTrue(100 + 1 / 5 + 10 * 100 >= Utility.update_timestamp(100, 5, 10) >= 100 + 1 / 5 + 10)
+        self.assertTrue(100 + 1 / 5 + 10/10 <= Utility.update_timestamp(100, 5, 10) <= 100 + 1 / 5 + 10)
 
     def test_update_timestamp_comparison(self):
         self.assertTrue(Utility.update_timestamp(100, 5) <= Utility.update_timestamp(100, 5, 10))

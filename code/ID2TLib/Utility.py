@@ -59,7 +59,7 @@ def update_timestamp(timestamp, pps, delay=0):
         return timestamp + rnd.uniform(1 / pps, randomdelay.random())
     else:
         # Calculate reply timestamp
-        randomdelay = lea.Lea.fromValFreqsDict({2 * delay: 70, 3 * delay: 20, 5 * delay: 7, 10 * delay: 3})
+        randomdelay = lea.Lea.fromValFreqsDict({delay / 2: 70, delay / 3: 20, delay / 5: 7, delay / 10: 3})
         return timestamp + rnd.uniform(1 / pps + delay, 1 / pps + randomdelay.random())
 
 
