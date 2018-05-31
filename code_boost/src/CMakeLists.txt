@@ -81,7 +81,7 @@ SET_target_properties(sqlite3 PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 ADD_LIBRARY(pcapreader SHARED ${SOURCE_FILES})
 # Libs pthread and dl are prerequisites of SQLiteCpp
-TARGET_LINK_LIBRARIES(pcapreader ${Boost_LIBRARIES} "${TINS_LIBRARY}" ${PYTHON_LIBRARIES} SQLiteCpp sqlite3 pthread dl)
+TARGET_LINK_LIBRARIES(pcapreader ${Boost_LIBRARIES} "${TINS_LIBRARY}" ${PYTHON_LIBRARIES} SQLiteCpp sqlite3 pthread dl pcap)
 
 ADD_LIBRARY(botnetcomm SHARED ${BOT_COMM_PROC_SOURCE})
 TARGET_LINK_LIBRARIES(botnetcomm ${Boost_LIBRARIES} ${PYTHON_LIBRARIES})
