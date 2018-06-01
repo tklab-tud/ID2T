@@ -1,3 +1,6 @@
 [submodule "code_boost/src/SQLiteCpp"]
 	path = code_boost/src/SQLiteCpp
 	url = https://github.com/SRombauts/SQLiteCpp
+[submodule "code_boost/src/pybind11"]
+	path = code_boost/src/pybind11
+	url = https://github.com/pybind/pybind11
