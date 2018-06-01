@@ -33,6 +33,9 @@ option(SQLITECPP_RUN_CPPLINT OFF)
 include_directories(SQLiteCpp/include)
 add_subdirectory(SQLiteCpp)
 
+# Include pybind11
+include_directories(pybind11/include)
+
 # Find libtins library
 FIND_LIBRARY(TINS_LIBRARY tins)
 IF(TINS_LIBRARY)
