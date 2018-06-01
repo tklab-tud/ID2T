@@ -232,8 +232,8 @@ void pcap_processor::collect_statistics() {
  */
 void pcap_processor::process_packets(const Packet &pkt) {
     // Layer 2: Data Link Layer ------------------------
-    std::string macAddressSender = "";
-    std::string macAddressReceiver = "";
+    std::string macAddressSender;
+    std::string macAddressReceiver;
     const PDU *pdu_l2 = pkt.pdu();
     uint32_t sizeCurrentPacket = pdu_l2->size();
     if (pdu_l2->pdu_type() == PDU::ETHERNET_II) {
@@ -258,7 +258,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
         ipAddressReceiver = ipLayer.dst_addr().to_string();
 
         // IP distribution
-        stats.addIpStat_packetSent(ipAddressSender, ipLayer.dst_addr().to_string(), sizeCurrentPacket, pkt.timestamp());
+        stats.addIpStat_packetSent(ipAddressSender, ipAddressReceiver, sizeCurrentPacket, pkt.timestamp());
 
         // TTL distribution
         stats.incrementTTLcount(ipAddressSender, ipLayer.ttl());
@@ -283,7 +283,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
         ipAddressReceiver = ipLayer.dst_addr().to_string();
 
         // IP distribution
-        stats.addIpStat_packetSent(ipAddressSender, ipLayer.dst_addr().to_string(), sizeCurrentPacket, pkt.timestamp());
+        stats.addIpStat_packetSent(ipAddressSender, ipAddressReceiver, sizeCurrentPacket, pkt.timestamp());
 
         // TTL distribution
         stats.incrementTTLcount(ipAddressSender, ipLayer.hop_limit());
