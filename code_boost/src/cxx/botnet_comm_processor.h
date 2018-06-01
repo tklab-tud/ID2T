@@ -7,8 +7,7 @@
 #define BOTNET_COMM_PROCESSOR_H
 
 #include <iostream>
-#include <boost/python.hpp>
-#include <boost/algorithm/string/replace.hpp>
+#include <pybind11/pybind11.h>
 #include <vector>
 #include <thread>
 #include <deque>
@@ -37,7 +36,7 @@
 /*
  * For quick usage
  */
-namespace py = boost::python;
+namespace py = pybind11;
 
 /*
  * Definition of structs
