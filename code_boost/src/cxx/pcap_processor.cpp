@@ -112,6 +112,44 @@ std::string pcap_processor::merge_pcaps(const std::string pcap_path) {
     return new_filepath;
 }
 
+bool pcap_processor::read_pcap_info(const std::string &filePath, std::size_t &totalPakets) {
+    // libtins has a lot of overhead when just iterating through, so we use libpcap directly
+    char errbuf[PCAP_ERRBUF_SIZE];
+    pcap_t *pcap_handle = pcap_open_offline(filePath.c_str(), errbuf);
+    if (pcap_handle == nullptr) {
+        std::cerr << "ERROR: Could not open PCAP '" << filePath << "': " << errbuf << std::endl;
+        return false;
+    }
+
+    const u_char *packet;
+    pcap_pkthdr header;
+
+    packet = pcap_next(pcap_handle, &header);
+    if (packet == nullptr)
+    {
+        std::cerr << "ERROR: PCAP file is empty!" << std::endl;
+        pcap_close(pcap_handle);
+        return false;
+    }
+
+    // Extract first timestamp
+    stats.setTimestampFirstPacket(Tins::Timestamp(header.ts));
+
+    totalPakets = 0;
+    timeval lv;
+    while (packet != nullptr) {
+        totalPakets++;
+        // Extract last timestamp
+        lv = header.ts;
+        packet = pcap_next(pcap_handle, &header);
+    }
+
+    stats.setTimestampLastPacket(Tins::Timestamp(lv));
+
+    pcap_close(pcap_handle);
+    return true;
+}
+
 /**
  * Collect statistics of the loaded PCAP file. Calls for each packet the method process_packets.
  */
@@ -120,25 +158,20 @@ void pcap_processor::collect_statistics() {
     if (file_exists(filePath)) {
         std::cout << "Loading pcap..." << std::endl;
         FileSniffer sniffer(filePath);
-        FileSniffer snifferOverview(filePath);
 
         SnifferIterator i = sniffer.begin();
         std::chrono::microseconds currentPktTimestamp;
 
-        // Save timestamp of first packet
-        stats.setTimestampFirstPacket(i->timestamp());
+        // Read PCAP file info
+        std::size_t totalPackets = 0;
+        if (!read_pcap_info(filePath, totalPackets)) return;
 
-        int totalPackets = 0;
+        // choose a suitable time interval
         int timeIntervalCounter = 1;
         int timeIntervalsNum = 100;
         std::chrono::microseconds intervalStartTimestamp = stats.getTimestampFirstPacket();
         std::chrono::microseconds firstTimestamp = stats.getTimestampFirstPacket();
-
-        // An empty loop to know the capture duration, then choose a suitable time interval
-        SnifferIterator lastpkt;
-        for (SnifferIterator j = snifferOverview.begin(); j != snifferOverview.end(); ++j, ++totalPackets) {lastpkt = j;}
-
-        std::chrono::microseconds lastTimestamp = lastpkt->timestamp();
+        std::chrono::microseconds lastTimestamp = stats.getTimestampLastPacket();
         std::chrono::microseconds captureDuration = lastTimestamp - firstTimestamp;
         if(captureDuration.count()<=0){
             std::cout << "ERROR: PCAP file is empty!" << std::endl;
@@ -199,8 +232,8 @@ void pcap_processor::collect_statistics() {
  */
 void pcap_processor::process_packets(const Packet &pkt) {
     // Layer 2: Data Link Layer ------------------------
-    std::string macAddressSender = "";
-    std::string macAddressReceiver = "";
+    std::string macAddressSender;
+    std::string macAddressReceiver;
     const PDU *pdu_l2 = pkt.pdu();
     uint32_t sizeCurrentPacket = pdu_l2->size();
     if (pdu_l2->pdu_type() == PDU::ETHERNET_II) {
@@ -225,7 +258,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
         ipAddressReceiver = ipLayer.dst_addr().to_string();
 
         // IP distribution
-        stats.addIpStat_packetSent(ipAddressSender, ipLayer.dst_addr().to_string(), sizeCurrentPacket, pkt.timestamp());
+        stats.addIpStat_packetSent(ipAddressSender, ipAddressReceiver, sizeCurrentPacket, pkt.timestamp());
 
         // TTL distribution
         stats.incrementTTLcount(ipAddressSender, ipLayer.ttl());
@@ -250,7 +283,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
         ipAddressReceiver = ipLayer.dst_addr().to_string();
 
         // IP distribution
-        stats.addIpStat_packetSent(ipAddressSender, ipLayer.dst_addr().to_string(), sizeCurrentPacket, pkt.timestamp());
+        stats.addIpStat_packetSent(ipAddressSender, ipAddressReceiver, sizeCurrentPacket, pkt.timestamp());
 
         // TTL distribution
         stats.incrementTTLcount(ipAddressSender, ipLayer.hop_limit());
@@ -303,14 +336,13 @@ void pcap_processor::process_packets(const Packet &pkt) {
             int win = tcpPkt.window();
             stats.incrementWinCount(ipAddressSender, win);
 
-            try {
-                int val = tcpPkt.mss();
-
-                // MSS distribution
-                stats.incrementMSScount(ipAddressSender, val);
-            } catch (Tins::option_not_found&) {
-                // Ignore MSS if option not set
+            // MSS distribution
+            auto mssOption = tcpPkt.search_option(TCP::MSS);
+            if (mssOption != nullptr) {
+                auto mss_value = mssOption->to<uint16_t>();
+                stats.incrementMSScount(ipAddressSender, mss_value);
             }
+
             stats.incrementPortCount(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), "TCP");
             stats.increasePortByteCount(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), sizeCurrentPacket, "TCP");
 

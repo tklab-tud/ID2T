@@ -43,6 +43,8 @@ public:
 
     std::string merge_pcaps(const std::string pcap_path);
 
+    bool read_pcap_info(const std::string &filePath, std::size_t &totalPakets);
+
     void collect_statistics();
 
     void write_to_database(std::string database_path);
