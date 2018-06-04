@@ -111,126 +111,127 @@ class PortscanAttack(BaseAttack.BaseAttack):
         if isinstance(ip_source, list):
             ip_source = ip_source[0]
         ip_destination = self.get_param_value(atkParam.Parameter.IP_DESTINATION)
-        if isinstance(ip_destination, list):
-            ip_destination = ip_destination[0]
+        if not isinstance(ip_destination, list):
+            ip_destination = [ip_destination]
 
         # Check ip.src == ip.dst
         self.ip_src_dst_equal_check(ip_source, ip_destination)
 
-        # Select open ports
-        ports_open = self.get_param_value(atkParam.Parameter.PORT_OPEN)
-        if ports_open == 1:  # user did not specify open ports
-            # the ports that were already used by ip.dst (direction in) in the background traffic are open ports
-            ports_used_by_ip_dst = self.statistics.process_db_query(
-                "SELECT portNumber FROM ip_ports WHERE portDirection='in' AND ipAddress='" + ip_destination + "'")
-            if ports_used_by_ip_dst:
-                ports_open = ports_used_by_ip_dst
-            else:  # if no ports were retrieved from database
-                # Take open ports from nmap-service file
-                # ports_temp = self.get_ports_from_nmap_service_dst(100)
-                # ports_open = ports_temp[0:rnd.randint(1,10)]
-                # OR take open ports from the most used ports in traffic statistics
-                ports_open = self.statistics.process_db_query(
-                    "SELECT portNumber FROM ip_ports GROUP BY portNumber ORDER BY SUM(portCount) DESC LIMIT " + str(
-                        rnd.randint(1, 10)))
-        # in case of one open port, convert ports_open to array
-        if not isinstance(ports_open, list):
-            ports_open = [ports_open]
+        for ip in ip_destination:
+            # Select open ports
+            ports_open = self.get_param_value(atkParam.Parameter.PORT_OPEN)
+            if ports_open == 1:  # user did not specify open ports
+                # the ports that were already used by ip.dst (direction in) in the background traffic are open ports
+                ports_used_by_ip_dst = self.statistics.process_db_query(
+                    "SELECT portNumber FROM ip_ports WHERE portDirection='in' AND ipAddress='" + ip + "'")
+                if ports_used_by_ip_dst:
+                    ports_open = ports_used_by_ip_dst
+                else:  # if no ports were retrieved from database
+                    # Take open ports from nmap-service file
+                    # ports_temp = self.get_ports_from_nmap_service_dst(100)
+                    # ports_open = ports_temp[0:rnd.randint(1,10)]
+                    # OR take open ports from the most used ports in traffic statistics
+                    ports_open = self.statistics.process_db_query(
+                        "SELECT portNumber FROM ip_ports GROUP BY portNumber ORDER BY SUM(portCount) DESC LIMIT " + str(
+                            rnd.randint(1, 10)))
+            # in case of one open port, convert ports_open to array
+            if not isinstance(ports_open, list):
+                ports_open = [ports_open]
 
-        # Set MSS (Maximum Segment Size) based on MSS distribution of IP address
-        source_mss_dist = self.statistics.get_mss_distribution(ip_source)
-        if len(source_mss_dist) > 0:
-            source_mss_prob_dict = lea.Lea.fromValFreqsDict(source_mss_dist)
-            source_mss_value = source_mss_prob_dict.random()
-        else:
-            source_mss_value = Util.handle_most_used_outputs(self.statistics.get_most_used_mss_value())
-        destination_mss_dist = self.statistics.get_mss_distribution(ip_destination)
-        if len(destination_mss_dist) > 0:
-            destination_mss_prob_dict = lea.Lea.fromValFreqsDict(destination_mss_dist)
-            destination_mss_value = destination_mss_prob_dict.random()
-        else:
-            destination_mss_value = Util.handle_most_used_outputs(self.statistics.get_most_used_mss_value())
+            # Set MSS (Maximum Segment Size) based on MSS distribution of IP address
+            source_mss_dist = self.statistics.get_mss_distribution(ip_source)
+            if len(source_mss_dist) > 0:
+                source_mss_prob_dict = lea.Lea.fromValFreqsDict(source_mss_dist)
+                source_mss_value = source_mss_prob_dict.random()
+            else:
+                source_mss_value = Util.handle_most_used_outputs(self.statistics.get_most_used_mss_value())
+            destination_mss_dist = self.statistics.get_mss_distribution(ip)
+            if len(destination_mss_dist) > 0:
+                destination_mss_prob_dict = lea.Lea.fromValFreqsDict(destination_mss_dist)
+                destination_mss_value = destination_mss_prob_dict.random()
+            else:
+                destination_mss_value = Util.handle_most_used_outputs(self.statistics.get_most_used_mss_value())
 
-        # Set TTL based on TTL distribution of IP address
-        source_ttl_dist = self.statistics.get_ttl_distribution(ip_source)
-        if len(source_ttl_dist) > 0:
-            source_ttl_prob_dict = lea.Lea.fromValFreqsDict(source_ttl_dist)
-            source_ttl_value = source_ttl_prob_dict.random()
-        else:
-            source_ttl_value = Util.handle_most_used_outputs(self.statistics.get_most_used_ttl_value())
-        destination_ttl_dist = self.statistics.get_ttl_distribution(ip_destination)
-        if len(destination_ttl_dist) > 0:
-            destination_ttl_prob_dict = lea.Lea.fromValFreqsDict(destination_ttl_dist)
-            destination_ttl_value = destination_ttl_prob_dict.random()
-        else:
-            destination_ttl_value = Util.handle_most_used_outputs(self.statistics.get_most_used_ttl_value())
+            # Set TTL based on TTL distribution of IP address
+            source_ttl_dist = self.statistics.get_ttl_distribution(ip_source)
+            if len(source_ttl_dist) > 0:
+                source_ttl_prob_dict = lea.Lea.fromValFreqsDict(source_ttl_dist)
+                source_ttl_value = source_ttl_prob_dict.random()
+            else:
+                source_ttl_value = Util.handle_most_used_outputs(self.statistics.get_most_used_ttl_value())
+            destination_ttl_dist = self.statistics.get_ttl_distribution(ip)
+            if len(destination_ttl_dist) > 0:
+                destination_ttl_prob_dict = lea.Lea.fromValFreqsDict(destination_ttl_dist)
+                destination_ttl_value = destination_ttl_prob_dict.random()
+            else:
+                destination_ttl_value = Util.handle_most_used_outputs(self.statistics.get_most_used_ttl_value())
 
-        # Set Window Size based on Window Size distribution of IP address
-        source_win_dist = self.statistics.get_win_distribution(ip_source)
-        if len(source_win_dist) > 0:
-            source_win_prob_dict = lea.Lea.fromValFreqsDict(source_win_dist)
-            source_win_value = source_win_prob_dict.random()
-        else:
-            source_win_value = Util.handle_most_used_outputs(self.statistics.get_most_used_win_size())
-        destination_win_dist = self.statistics.get_win_distribution(ip_destination)
-        if len(destination_win_dist) > 0:
-            destination_win_prob_dict = lea.Lea.fromValFreqsDict(destination_win_dist)
-            destination_win_value = destination_win_prob_dict.random()
-        else:
-            destination_win_value = Util.handle_most_used_outputs(self.statistics.get_most_used_win_size())
+            # Set Window Size based on Window Size distribution of IP address
+            source_win_dist = self.statistics.get_win_distribution(ip_source)
+            if len(source_win_dist) > 0:
+                source_win_prob_dict = lea.Lea.fromValFreqsDict(source_win_dist)
+                source_win_value = source_win_prob_dict.random()
+            else:
+                source_win_value = Util.handle_most_used_outputs(self.statistics.get_most_used_win_size())
+            destination_win_dist = self.statistics.get_win_distribution(ip)
+            if len(destination_win_dist) > 0:
+                destination_win_prob_dict = lea.Lea.fromValFreqsDict(destination_win_dist)
+                destination_win_value = destination_win_prob_dict.random()
+            else:
+                destination_win_value = Util.handle_most_used_outputs(self.statistics.get_most_used_win_size())
 
-        min_delay, max_delay = self.get_reply_delay(ip_destination)
+            min_delay, max_delay = self.get_reply_delay(ip)
 
-        for dport in dest_ports:
-            # Parameters changing each iteration
-            if self.get_param_value(atkParam.Parameter.IP_SOURCE_RANDOMIZE) and isinstance(ip_source, list):
-                ip_source = rnd.choice(ip_source)
+            for dport in dest_ports:
+                # Parameters changing each iteration
+                if self.get_param_value(atkParam.Parameter.IP_SOURCE_RANDOMIZE) and isinstance(ip_source, list):
+                    ip_source = rnd.choice(ip_source)
 
-            # 1) Build request package
-            request_ether = inet.Ether(src=mac_source, dst=mac_destination)
-            request_ip = inet.IP(src=ip_source, dst=ip_destination, ttl=source_ttl_value)
+                # 1) Build request package
+                request_ether = inet.Ether(src=mac_source, dst=mac_destination)
+                request_ip = inet.IP(src=ip_source, dst=ip, ttl=source_ttl_value)
 
-            # Random src port for each packet
-            sport = rnd.randint(1, 65535)
+                # Random src port for each packet
+                sport = rnd.randint(1, 65535)
 
-            request_tcp = inet.TCP(sport=sport, dport=dport, window=source_win_value, flags='S',
-                                   options=[('MSS', source_mss_value)])
+                request_tcp = inet.TCP(sport=sport, dport=dport, window=source_win_value, flags='S',
+                                       options=[('MSS', source_mss_value)])
 
-            request = (request_ether / request_ip / request_tcp)
+                request = (request_ether / request_ip / request_tcp)
 
-            request.time = timestamp_next_pkt
-            # Append request
-            self.packets.append(request)
+                request.time = timestamp_next_pkt
+                # Append request
+                self.packets.append(request)
 
-            # 2) Build reply (for open ports) package
-            if dport in ports_open:  # destination port is OPEN
-                reply_ether = inet.Ether(src=mac_destination, dst=mac_source)
-                reply_ip = inet.IP(src=ip_destination, dst=ip_source, ttl=destination_ttl_value, flags='DF')
-                reply_tcp = inet.TCP(sport=dport, dport=sport, seq=0, ack=1, flags='SA', window=destination_win_value,
-                                     options=[('MSS', destination_mss_value)])
-                reply = (reply_ether / reply_ip / reply_tcp)
+                # 2) Build reply (for open ports) package
+                if dport in ports_open:  # destination port is OPEN
+                    reply_ether = inet.Ether(src=mac_destination, dst=mac_source)
+                    reply_ip = inet.IP(src=ip, dst=ip_source, ttl=destination_ttl_value, flags='DF')
+                    reply_tcp = inet.TCP(sport=dport, dport=sport, seq=0, ack=1, flags='SA', window=destination_win_value,
+                                         options=[('MSS', destination_mss_value)])
+                    reply = (reply_ether / reply_ip / reply_tcp)
 
-                timestamp_reply = Util.update_timestamp(timestamp_next_pkt, pps, min_delay)
-                while timestamp_reply <= timestamp_prv_reply:
-                    timestamp_reply = Util.update_timestamp(timestamp_prv_reply, pps, min_delay)
-                timestamp_prv_reply = timestamp_reply
+                    timestamp_reply = Util.update_timestamp(timestamp_next_pkt, pps, min_delay)
+                    while timestamp_reply <= timestamp_prv_reply:
+                        timestamp_reply = Util.update_timestamp(timestamp_prv_reply, pps, min_delay)
+                    timestamp_prv_reply = timestamp_reply
 
-                reply.time = timestamp_reply
-                self.packets.append(reply)
+                    reply.time = timestamp_reply
+                    self.packets.append(reply)
 
-                # requester confirms
-                confirm_ether = request_ether
-                confirm_ip = request_ip
-                confirm_tcp = inet.TCP(sport=sport, dport=dport, seq=1, window=0, flags='R')
-                confirm = (confirm_ether / confirm_ip / confirm_tcp)
-                timestamp_confirm = Util.update_timestamp(timestamp_reply, pps, min_delay)
-                confirm.time = timestamp_confirm
-                self.packets.append(confirm)
+                    # requester confirms
+                    confirm_ether = request_ether
+                    confirm_ip = request_ip
+                    confirm_tcp = inet.TCP(sport=sport, dport=dport, seq=1, window=0, flags='R')
+                    confirm = (confirm_ether / confirm_ip / confirm_tcp)
+                    timestamp_confirm = Util.update_timestamp(timestamp_reply, pps, min_delay)
+                    confirm.time = timestamp_confirm
+                    self.packets.append(confirm)
 
-                # else: destination port is NOT OPEN -> no reply is sent by target
+                    # else: destination port is NOT OPEN -> no reply is sent by target
 
-            pps = max(Util.get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
-            timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps)
+                pps = max(Util.get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
+                timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps)
 
     def generate_attack_pcap(self):
         """

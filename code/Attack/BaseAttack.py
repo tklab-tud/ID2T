@@ -609,8 +609,15 @@ class BaseAttack(metaclass=abc.ABCMeta):
         :param ip_destination: destination IP address.
         """
         equal = False
-        if isinstance(ip_source, list):
+        if isinstance(ip_source, list) and isinstance(ip_destination, list):
+            for ip in ip_source:
+                if ip in ip_destination:
+                    equal = True
+        elif isinstance(ip_source, list):
             if ip_destination in ip_source:
+                equal = True
+        elif isinstance(ip_destination, list):
+            if ip_source in ip_destination:
                 equal = True
         else:
             if ip_source == ip_destination:
