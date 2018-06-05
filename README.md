@@ -21,7 +21,7 @@ ID2T was also presented in Blackhat Europe 2017 as part of the Arsenal session (
 ## Getting Started
 
 ### Dependencies
-ID2T is written using Python 3 and C++ 11. The main logic is programmed in Python whereas performance critical components are programmed in C++11. The C++11 module uses the [Libtins](https://github.com/mfontanini/libtins/) library. The python and c++ modules interact with each other through the [Boost.Python](http://www.boost.org/doc/libs/1_62_0/libs/python/doc/html/index.html) library .
+ID2T is written using Python 3 and C++ 11. The main logic is programmed in Python whereas performance critical components are programmed in C++11. The C++11 module uses the [Libtins](https://github.com/mfontanini/libtins/) library. The python and c++ modules interact with each other through the [pybind11](https://github.com/pybind/pybind11) library.
 
 #### Required C++ Libraries/Programs
 The following packages/libraries are required to compile the ID2T C++ modules
@@ -29,10 +29,6 @@ The following packages/libraries are required to compile the ID2T C++ modules
     - ubuntu: apt install build-essential cmake
     - arch: pacman -S cmake
     - macos: brew install cmake
-* ``boost`` with the ``python`` component (minimum version 1.54)
-    - ubuntu: apt install libboost-dev libboost-python-dev
-    - arch: pacman -S boost boost-libs
-    - macos: brew install boost boost-python --with-python3
 * ``libtins`` (minimum version 3.4)
     - ubuntu: apt install libtins-dev (if you cannot find it in the official repository, install it manually from [here](https://github.com/mfontanini/libtins))
     - arch: (install from AUR, i.e. pacaur -S libtins, or manually from [here](https://github.com/mfontanini/libtins)).

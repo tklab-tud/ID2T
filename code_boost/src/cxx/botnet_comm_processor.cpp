@@ -1,4 +1,6 @@
 #include "botnet_comm_processor.h"
+#include <algorithm>
+#include <sstream>
 
 
 /**
@@ -25,12 +27,12 @@ botnet_comm_processor::botnet_comm_processor(){
 void botnet_comm_processor::set_messages(const py::list &messages_pyboost){
     messages.clear();
     for (int i = 0; i < len(messages_pyboost); i++){
-        py::dict msg_pyboost = py::extract<py::dict>(messages_pyboost[i]);
-        unsigned int src_id = std::stoi(py::extract<std::string>(msg_pyboost["Src"]));
-        unsigned int dst_id = std::stoi(py::extract<std::string>(msg_pyboost["Dst"]));
-        unsigned short type = (unsigned short) std::stoi(py::extract<std::string>(msg_pyboost["Type"]));
-        double time = std::stod(py::extract<std::string>(msg_pyboost["Time"]));
-        int line_no = std::stoi(py::extract<std::string>(msg_pyboost.get("LineNumber", "-1")));
+        py::dict msg_pyboost = py::cast<py::dict>(messages_pyboost[i]);
+        unsigned int src_id = std::stoi(py::cast<std::string>(msg_pyboost["Src"]));
+        unsigned int dst_id = std::stoi(py::cast<std::string>(msg_pyboost["Dst"]));
+        unsigned short type = (unsigned short) std::stoi(py::cast<std::string>(msg_pyboost["Type"]));
+        double time = std::stod(py::cast<std::string>(msg_pyboost["Time"]));
+        int line_no = std::stoi(msg_pyboost.contains("LineNumber") ? py::cast<std::string>(msg_pyboost["LineNumber"]) : "-1");
 
         abstract_msg msg = {src_id, dst_id, type, time, line_no};
         messages.push_back(std::move(msg));
@@ -95,7 +97,7 @@ unsigned int botnet_comm_processor::parse_csv(const std::string &filepath){
         cur_msg.line_no = line_no;
         // iterate over every key:value entry
         for (std::string pair; std::getline(line_stream, pair, ','); ){
-            boost::replace_all(pair, " ", "");
+            pair.erase(std::remove(pair.begin(), pair.end(), ' '), pair.end());
             std::size_t split_pos = pair.find(":");
             if (split_pos != std::string::npos){
                 std::string key = pair.substr(0, split_pos);
@@ -550,18 +552,10 @@ py::list botnet_comm_processor::convert_intervals_to_py_repr(const std::vector<c
 //     std::cout << "Src: " << message.src << "   Dst: " << message.dst << "   Type: " << message.type << "   Time: " << message.time << "   LineNumber: " << message.line_no << std::endl;
 // }
 
-
-/*
- * Comment out if executable should be build & run
- * Comment in if library should be build
- */
-
-using namespace boost::python;
-
-BOOST_PYTHON_MODULE (libbotnetcomm) {
-    class_<botnet_comm_processor>("botnet_comm_processor")
-            .def(init<list>())
-            .def(init<>())
+PYBIND11_MODULE (libbotnetcomm, m) {
+    py::class_<botnet_comm_processor>(m, "botnet_comm_processor")
+            .def(py::init<py::list>())
+            .def(py::init<>())
             .def("find_interval_from_startidx", &botnet_comm_processor::find_interval_from_startidx)
             .def("find_interval_from_endidx", &botnet_comm_processor::find_interval_from_endidx)
             .def("find_optimal_interval", &botnet_comm_processor::find_optimal_interval)

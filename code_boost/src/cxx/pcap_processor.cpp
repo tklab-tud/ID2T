@@ -412,15 +412,15 @@ bool inline pcap_processor::file_exists(const std::string &filePath) {
  * Comment out if executable should be build & run
  * Comment in if library should be build
  */
-#include <boost/python.hpp>
+#include <pybind11/pybind11.h>
+namespace py = pybind11;
 
-using namespace boost::python;
-
-BOOST_PYTHON_MODULE (libpcapreader) {
-    class_<pcap_processor>("pcap_processor", init<std::string, std::string>())
+PYBIND11_MODULE (libpcapreader, m) {
+    py::class_<pcap_processor>(m, "pcap_processor")
+            .def(py::init<std::string, std::string>())
             .def("merge_pcaps", &pcap_processor::merge_pcaps)
             .def("collect_statistics", &pcap_processor::collect_statistics)
             .def("get_timestamp_mu_sec", &pcap_processor::get_timestamp_mu_sec)
             .def("write_to_database", &pcap_processor::write_to_database)
-            .def("get_db_version", &pcap_processor::get_db_version).staticmethod("get_db_version");
+            .def_static("get_db_version", &pcap_processor::get_db_version);
 }

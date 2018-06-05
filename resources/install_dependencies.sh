@@ -2,7 +2,7 @@
 
 install_pkg_arch()
 {
-    PACMAN_PKGS="boost boost-libs cmake python python-pip sqlite tcpdump"
+    PACMAN_PKGS="cmake python python-pip sqlite tcpdump"
 
     # Check first to avoid unnecessary sudo
     echo -e "Packages: Checking..."
@@ -43,7 +43,7 @@ install_pkg_arch()
 
 install_pkg_ubuntu()
 {
-    APT_PKGS='build-essential libboost-dev libboost-python-dev cmake python3-dev python3-pip python3-venv sqlite tcpdump libtins-dev libpcap-dev'
+    APT_PKGS='build-essential cmake python3-dev python3-pip python3-venv sqlite tcpdump libtins-dev libpcap-dev'
 
     which sudo >/dev/null
     if [ $? != 0 ]; then
@@ -67,7 +67,7 @@ install_pkg_ubuntu()
 
 install_pkg_darwin()
 {
-    BREW_PKGS="cmake python coreutils libdnet libtins sqlite boost boost-python --with-python3"
+    BREW_PKGS="cmake python coreutils libdnet libtins sqlite"
 
     # Check first to avoid unnecessary update
     echo -e "Packages: Checking..."
@@ -81,8 +81,8 @@ install_pkg_darwin()
     fi
 }
 
-# Make sure the SQLiteCpp submodule is there
-echo -e "Updating SQLiteCpp"
+# Make sure the submodules are there
+echo -e "Updating submodules"
 git submodule update --init
 
 KERNEL=$(uname)
