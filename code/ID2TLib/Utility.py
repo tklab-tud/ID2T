@@ -76,6 +76,10 @@ def update_timestamp(timestamp: float, pps: float, delay: float=0, inj_pps: floa
     return result
 
 
+def get_timestamp_from_datetime_str(time: str):
+    return dt.datetime.strptime(time, "%Y-%m-%d %H:%M:%S.%f").timestamp()
+
+
 def get_interval_pps(complement_interval_pps, timestamp):
     """
     Gets the packet rate (pps) for a specific time interval.

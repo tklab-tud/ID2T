@@ -72,7 +72,11 @@ class SMBScanAttack(BaseAttack.BaseAttack):
         self.add_param_value(atkParam.Parameter.PACKETS_PER_SECOND,
                              (self.statistics.get_pps_sent(most_used_ip_address) +
                               self.statistics.get_pps_received(most_used_ip_address)) / 2)
+
         self.add_param_value(atkParam.Parameter.INJECT_AFTER_PACKET, rnd.randint(0, self.statistics.get_packet_count()))
+        start = Util.get_timestamp_from_datetime_str(self.statistics.get_pcap_timestamp_start())
+        end = Util.get_timestamp_from_datetime_str(self.statistics.get_pcap_timestamp_end())
+        self.add_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP, (start + end) / 2)
         self.add_param_value(atkParam.Parameter.INJECT_PPS, 0)
 
         self.add_param_value(atkParam.Parameter.HOSTING_PERCENTAGE, 0.5)
