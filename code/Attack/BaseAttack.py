@@ -354,15 +354,19 @@ class BaseAttack(metaclass=abc.ABCMeta):
 
         # by default no param is valid
         is_valid = False
+        param_name = None
 
         # get AttackParameters instance associated with param
         # for default values assigned in attack classes, like Parameter.PORT_OPEN
         if isinstance(param, atkParam.Parameter):
             param_name = param
         # for values given by user input, like port.open
-        else:
+        elif atkParam.Parameter(param):
             # Get Enum key of given string identifier
             param_name = atkParam.Parameter(param)
+        else:
+            print("ERROR: Parameter " + param + " is not supported by ID2T.")
+            sys.exit(-1)
 
         # Get parameter type of attack's required_params
         param_type = self.supported_params.get(param_name)
