@@ -59,7 +59,7 @@ void statistics_db::writeStatisticsIP(const std::unordered_map<std::string, entr
         transaction.commit();
     }
     catch (std::exception &e) {
-        std::cerr << "Exception in statistics_db: " << e.what() << std::endl;
+        std::cerr << "Exception in statistics_db::" << __func__ << ": " << e.what() << std::endl;
     }
 }
 
@@ -92,7 +92,7 @@ void statistics_db::writeStatisticsDegree(const std::unordered_map<std::string, 
         transaction.commit();
     }
     catch (std::exception &e) {
-        std::cerr << "Exception in statistics_db: " << e.what() << std::endl;
+        std::cerr << "Exception in statistics_db::" << __func__ << ": " << e.what() << std::endl;
     }
 }
 
@@ -123,7 +123,7 @@ void statistics_db::writeStatisticsTTL(const std::unordered_map<ipAddress_ttl, i
         transaction.commit();
     }
     catch (std::exception &e) {
-        std::cerr << "Exception in statistics_db: " << e.what() << std::endl;
+        std::cerr << "Exception in statistics_db::" << __func__ << ": " << e.what() << std::endl;
     }
 }
 
@@ -154,7 +154,7 @@ void statistics_db::writeStatisticsMSS(const std::unordered_map<ipAddress_mss, i
         transaction.commit();
     }
     catch (std::exception &e) {
-        std::cerr << "Exception in statistics_db: " << e.what() << std::endl;
+        std::cerr << "Exception in statistics_db::" << __func__ << ": " << e.what() << std::endl;
     }
 }
 
@@ -184,7 +184,7 @@ void statistics_db::writeStatisticsToS(const std::unordered_map<ipAddress_tos, i
         transaction.commit();
     }
     catch (std::exception &e) {
-        std::cerr << "Exception in statistics_db: " << e.what() << std::endl;
+        std::cerr << "Exception in statistics_db::" << __func__ << ": " << e.what() << std::endl;
     }
 }
 
@@ -215,7 +215,7 @@ void statistics_db::writeStatisticsWin(const std::unordered_map<ipAddress_win, i
         transaction.commit();
     }
     catch (std::exception &e) {
-        std::cerr << "Exception in statistics_db: " << e.what() << std::endl;
+        std::cerr << "Exception in statistics_db::" << __func__ << ": " << e.what() << std::endl;
     }
 }
 
@@ -247,7 +247,7 @@ void statistics_db::writeStatisticsProtocols(const std::unordered_map<ipAddress_
         transaction.commit();
     }
     catch (std::exception &e) {
-        std::cerr << "Exception in statistics_db: " << e.what() << std::endl;
+        std::cerr << "Exception in statistics_db::" << __func__ << ": " << e.what() << std::endl;
     }
 }
 
@@ -292,7 +292,7 @@ void statistics_db::writeStatisticsPorts(const std::unordered_map<ipAddress_inOu
         transaction.commit();
     }
     catch (std::exception &e) {
-        std::cerr << "Exception in statistics_db: " << e.what() << std::endl;
+        std::cerr << "Exception in statistics_db::" << __func__ << ": " << e.what() << std::endl;
     }
 }
 
@@ -319,7 +319,7 @@ void statistics_db::writeStatisticsIpMac(const std::unordered_map<std::string, s
         transaction.commit();
     }
     catch (std::exception &e) {
-        std::cerr << "Exception in statistics_db: " << e.what() << std::endl;
+        std::cerr << "Exception in statistics_db::" << __func__ << ": " << e.what() << std::endl;
     }
 }
 
@@ -369,7 +369,7 @@ void statistics_db::writeStatisticsFile(int packetCount, float captureDuration, 
         transaction.commit();
     }
     catch (std::exception &e) {
-        std::cerr << "Exception in statistics_db: " << e.what() << std::endl;
+        std::cerr << "Exception in statistics_db::" << __func__ << ": " << e.what() << std::endl;
     }
 }
 
@@ -436,7 +436,7 @@ void statistics_db::writeStatisticsConv(std::unordered_map<conv, entry_convStat>
         transaction.commit();
     }
     catch (std::exception &e) {
-        std::cerr << "Exception in statistics_db: " << e.what() << std::endl;
+        std::cerr << "Exception in statistics_db::" << __func__ << ": " << e.what() << std::endl;
     }
 }
 
@@ -530,7 +530,7 @@ void statistics_db::writeStatisticsConvExt(std::unordered_map<convWithProt, entr
         transaction.commit();
     }
     catch (std::exception &e) {
-        std::cerr << "Exception in statistics_db: " << e.what() << std::endl;
+        std::cerr << "Exception in statistics_db::" << __func__ << ": " << e.what() << std::endl;
     }
 }
 
@@ -587,7 +587,7 @@ void statistics_db::writeStatisticsInterval(const std::unordered_map<std::string
         transaction.commit();
     }
     catch (std::exception &e) {
-        std::cerr << "Exception in statistics_db: " << e.what() << std::endl;
+        std::cerr << "Exception in statistics_db::" << __func__ << ": " << e.what() << std::endl;
     }
 }
 
@@ -599,7 +599,7 @@ void statistics_db::writeDbVersion(){
 		transaction.commit();
 	}
 	catch (std::exception &e) {
-        std::cerr << "Exception in statistics_db: " << e.what() << std::endl;
+        std::cerr << "Exception in statistics_db::" << __func__ << ": " << e.what() << std::endl;
     }
 }
 
@@ -731,6 +731,6 @@ void statistics_db::writeStatisticsUnrecognizedPDUs(const std::unordered_map<unr
         transaction.commit();
     }
     catch (std::exception &e) {
-        std::cerr << "Exception in statistics_db: " << e.what() << std::endl;
+        std::cerr << "Exception in statistics_db::" << __func__ << ": " << e.what() << std::endl;
     }
 }
