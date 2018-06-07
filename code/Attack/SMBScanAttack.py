@@ -41,6 +41,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
             atkParam.Parameter.INJECT_AFTER_PACKET: atkParam.ParameterTypes.TYPE_PACKET_POSITION,
             atkParam.Parameter.IP_SOURCE_RANDOMIZE: atkParam.ParameterTypes.TYPE_BOOLEAN,
             atkParam.Parameter.PACKETS_PER_SECOND: atkParam.ParameterTypes.TYPE_FLOAT,
+            atkParam.Parameter.INJECT_PPS: atkParam.ParameterTypes.TYPE_FLOAT,
             atkParam.Parameter.PORT_SOURCE_RANDOMIZE: atkParam.ParameterTypes.TYPE_BOOLEAN,
             atkParam.Parameter.HOSTING_IP: atkParam.ParameterTypes.TYPE_IP_ADDRESS,
             atkParam.Parameter.HOSTING_VERSION: atkParam.ParameterTypes.TYPE_STRING,
@@ -71,7 +72,12 @@ class SMBScanAttack(BaseAttack.BaseAttack):
         self.add_param_value(atkParam.Parameter.PACKETS_PER_SECOND,
                              (self.statistics.get_pps_sent(most_used_ip_address) +
                               self.statistics.get_pps_received(most_used_ip_address)) / 2)
+
         self.add_param_value(atkParam.Parameter.INJECT_AFTER_PACKET, rnd.randint(0, self.statistics.get_packet_count()))
+        start = Util.get_timestamp_from_datetime_str(self.statistics.get_pcap_timestamp_start())
+        end = Util.get_timestamp_from_datetime_str(self.statistics.get_pcap_timestamp_end())
+        self.add_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP, (start + end) / 2)
+        self.add_param_value(atkParam.Parameter.INJECT_PPS, 0)
 
         self.add_param_value(atkParam.Parameter.HOSTING_PERCENTAGE, 0.5)
         self.add_param_value(atkParam.Parameter.HOSTING_IP, "1.1.1.1")
@@ -199,6 +205,9 @@ class SMBScanAttack(BaseAttack.BaseAttack):
         mac_dests = self.statistics.get_mac_addresses(ip_dests)
         first_timestamp_smb = self.statistics.get_pcap_timestamp_start()[:19]
 
+        # get inject pss
+        inject_pps = self.get_param_value(atkParam.Parameter.INJECT_PPS)
+
         for ip in ip_dests:
 
             if ip != ip_source:
@@ -243,9 +252,11 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                 self.packets.append(request)
 
                 # Update timestamp for next package
-                timestamp_reply = Util.update_timestamp(timestamp_next_pkt, pps, min_delay)
+                timestamp_reply = Util.update_timestamp(timestamp_next_pkt, pps, min_delay, inj_pps=inject_pps,
+                                                        inj_timestamp=self.attack_start_utime)
                 while timestamp_reply <= timestamp_prv_reply:
-                    timestamp_reply = Util.update_timestamp(timestamp_prv_reply, pps, min_delay)
+                    timestamp_reply = Util.update_timestamp(timestamp_prv_reply, pps, min_delay, inj_pps=inject_pps,
+                                                            inj_timestamp=self.attack_start_utime)
                 timestamp_prv_reply = timestamp_reply
 
                 if ip in hosting_ip:

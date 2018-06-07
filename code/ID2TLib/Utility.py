@@ -45,22 +45,39 @@ attacker_ttl_mapping = {}
 generic_attack_names = {"attack", "exploit"}
 
 
-def update_timestamp(timestamp, pps, delay=0):
+def update_timestamp(timestamp: float, pps: float, delay: float=0, inj_pps: float=0, inj_timestamp: float=0):
     """
     Calculates the next timestamp to be used based on the packet per second rate (pps) and the maximum delay.
 
     :return: Timestamp to be used for the next packet.
     """
     # FIXME: throw Exception if pps==0
+    second = 0
+    packets_this_second = 0
+    if inj_pps != 0 and inj_timestamp != 0:
+        time = timestamp - inj_timestamp
+        packets_so_far = time / inj_pps
+        packets_this_second = packets_so_far % inj_pps
+    else:
+        inj_pps = 0
     if delay == 0:
         # Calculate request timestamp
         # To imitate the bursty behavior of traffic
-        randomdelay = lea.Lea.fromValFreqsDict({1 / pps: 70, 2 / pps: 20, 5 / pps: 7, 10 / pps: 3})
-        return timestamp + rnd.uniform(1 / pps, randomdelay.random())
+        random_delay = lea.Lea.fromValFreqsDict({1 / pps: 70, 2 / pps: 20, 5 / pps: 7, 10 / pps: 3})
+        result_delay = rnd.uniform(1 / pps, random_delay.random())
     else:
         # Calculate reply timestamp
-        randomdelay = lea.Lea.fromValFreqsDict({delay / 2: 70, delay / 3: 20, delay / 5: 7, delay / 10: 3})
-        return timestamp + rnd.uniform(1 / pps + delay, 1 / pps + randomdelay.random())
+        random_delay = lea.Lea.fromValFreqsDict({delay / 2: 70, delay / 3: 20, delay / 5: 7, delay / 10: 3})
+        result_delay = rnd.uniform(1 / pps + delay, 1 / pps + random_delay.random())
+
+    result = timestamp + result_delay
+    if inj_pps > packets_this_second and int(result) - int(timestamp) != 1:
+        result = result + 1
+    return result
+
+
+def get_timestamp_from_datetime_str(time: str):
+    return dt.datetime.strptime(time, "%Y-%m-%d %H:%M:%S.%f").timestamp()
 
 
 def get_interval_pps(complement_interval_pps, timestamp):
