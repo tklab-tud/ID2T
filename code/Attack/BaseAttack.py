@@ -361,7 +361,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         if isinstance(param, atkParam.Parameter):
             param_name = param
         # for values given by user input, like port.open
-        elif atkParam.Parameter(param):
+        elif any(param == item.value for item in atkParam.Parameter):
             # Get Enum key of given string identifier
             param_name = atkParam.Parameter(param)
         else:
