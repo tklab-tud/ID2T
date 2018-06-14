@@ -171,8 +171,9 @@ joomla="JoomlaRegPrivExploit ip.src=192.168.178.1"
 sality="SalityBotnet"
 ddos="DDoSAttack attackers.count=10 packets.per-second=95 attack.duration=10"
 ms17="MS17Scan ip.src=192.168.178.1"
+memcrashed="MemcrashedSpooferAttack"
 eb="EternalBlue"
-for i in "\$smbloris" "\$smbscan1" "\$smbscan2" "\$ftp" "\$porto" "\$portc" "\$sqli" "\$joomla" "\$sality" "\$ddos" "\$ms17" "\$eb"; do
+for i in "\$smbloris" "\$smbscan1" "\$smbscan2" "\$ftp" "\$porto" "\$portc" "\$sqli" "\$joomla" "\$sality" "\$ddos" "\$ms17" "\$memcrashed" "\$eb"; do
     mprof run ./id2t -i \${TEST_PCAP} -a \${i}
     mprof plot -t "\${i}" -o "\${PLOT_DIR}\${i}.png"
     mv mprofile_* "\${PLOT_DIR}\${i}.dat"
