@@ -779,7 +779,7 @@ void statistics::writeToDatabase(std::string database_path) {
     }
     else {
         // Tinslib failed to recognize the types of the packets in the input PCAP
-        std::cout<<"ERROR: Statistics could not be collected from the input PCAP!"<<"\n";
+        std::cerr<<"ERROR: Statistics could not be collected from the input PCAP!"<<"\n";
         return;
     }
 }
