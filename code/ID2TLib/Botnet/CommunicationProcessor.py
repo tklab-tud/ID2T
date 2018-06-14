@@ -1,7 +1,7 @@
 from lea import Lea
 from random import randrange
-from Attack.MembersMgmtCommAttack import MessageType
-from Attack.MembersMgmtCommAttack import Message
+from ID2TLib.Botnet.Message import Message
+from ID2TLib.Botnet.Message import MessageType
 
 
 class CommunicationProcessor:

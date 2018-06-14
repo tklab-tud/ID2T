@@ -8,70 +8,12 @@ import os
 import sys
 
 import ID2TLib.Botnet.libbotnetcomm as lb
+import ID2TLib.Botnet.Message as Bmsg
 from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes
 from ID2TLib.Ports import PortSelectors
 import ID2TLib.Utility as Util
-
-class MessageType(Enum):
-    """
-    Defines possible botnet message types
-    """
-
-    TIMEOUT = 3
-    SALITY_NL_REQUEST = 101
-    SALITY_NL_REPLY = 102
-    SALITY_HELLO = 103
-    SALITY_HELLO_REPLY = 104
-
-    def is_request(mtype):
-        """
-        Checks whether the given message type is a request or not.
-        :param mtype: the message type to check
-        :return: True if it is a request, False otherwise
-        """
-        return mtype in {MessageType.SALITY_HELLO, MessageType.SALITY_NL_REQUEST}
-
-    def is_response(mtype):
-        """
-        Checks whether the given message type is a response or not.
-        :param mtype: the message type to check
-        :return: True if it is a response, False otherwise
-        """
-        return mtype in {MessageType.SALITY_HELLO_REPLY, MessageType.SALITY_NL_REPLY}
-
-class Message():
-    INVALID_LINENO = -1
-
-    """
-    Defines a compact message type that contains all necessary information.
-    """
-    def __init__(self, msg_id: int, src, dst, type_: MessageType, time: float, refer_msg_id: int=-1, line_no = -1):
-        """
-        Constructs a message with the given parameters.
-
-        :param msg_id: the ID of the message
-        :param src: something identifiying the source, e.g. ID or configuration
-        :param dst: something identifiying the destination, e.g. ID or configuration
-        :param type_: the type of the message
-        :param time: the timestamp of the message
-        :param refer_msg_id: the ID this message is a request for or reply to. -1 if there is no related message.
-        :param line_no: The line number this message appeared at in the original CSV file
-        """
-        self.msg_id = msg_id
-        self.src = src
-        self.dst = dst
-        self.type = type_
-        self.time = time
-        self.csv_time = time
-        self.refer_msg_id = refer_msg_id
-        self.line_no = line_no
-
-    def __str__(self):
-        str_ = "{0}. at {1}: {2}-->{3}, {4}, refer:{5} (line {6})".format(self.msg_id, self.time, self.src, self.dst, self.type, self.refer_msg_id, self.line_no)
-        return str_
-
 
 from ID2TLib import FileUtils, Generator
 from ID2TLib.IPv4 import IPAddress
@@ -139,7 +81,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
 
         # create dict with MessageType values for fast name lookup
         self.msg_types = {}
-        for msg_type in MessageType:
+        for msg_type in Bmsg.MessageType:
             self.msg_types[msg_type.value] = msg_type
 
     def init_params(self):
@@ -151,7 +93,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         :param statistics: Reference to a statistics object.
         """
         # set class constants
-        self.DEFAULT_XML_PATH = "resources/Botnet/MembersMgmtComm_example.xml"
+        self.DEFAULT_XML_PATH = Util.RESOURCE_DIR + "Botnet/MembersMgmtComm_example.xml"
 
         # PARAMETERS: initialize with default values
         # (values are overwritten if user specifies them)
@@ -188,7 +130,8 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
     def generate_attack_pcap(self):
         """
         Injects the packets of this attack into a PCAP and stores it as a temporary file.
-        :return: a tuple of the number packets injected and the path to the temporary attack PCAP
+        :return: a tuple of the number packets injected, the path to the temporary attack PCAP
+        and a list of additionally created files
         """
 
         # create the final messages that have to be sent, including all bot configurations
@@ -233,7 +176,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
 
             # if the type of the message is a NL reply, determine the number of entries
             nl_size = 0
-            if msg.type == MessageType.SALITY_NL_REPLY:
+            if msg.type == Bmsg.MessageType.SALITY_NL_REPLY:
                 nl_size = randint(1, 25)    # what is max NL entries?
 
             # create suitable IP/UDP packet and add to packets list
@@ -289,15 +232,14 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
 
         # write the mapping to a file
         current_ts = datetime.now().strftime("%Y%m%d-%H%M%S")
-        mapping_filename = "mapping_" + current_ts 
+        mapping_filename = "mapping_" + current_ts + ".xml"
         msg_packet_mapping.write_to_file(mapping_filename)
-        Util.MISC_OUT_FILES["mapping.xml"] = mapping_filename
 
         # Store timestamp of last packet
         self.attack_end_utime = last_packet.time
 
         # Return packets sorted by packet by timestamp and total number of packets (sent)
-        return total_pkts , path_attack_pcap
+        return total_pkts , path_attack_pcap, [mapping_filename]
 
 
     def generate_attack_packets(self):
@@ -505,7 +447,6 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                 print("Writing corresponding XML file...", end=" ")
                 sys.stdout.flush()
             filepath_xml = cpp_comm_proc.write_xml(Util.OUT_DIR, filename)
-            Util.MISC_OUT_FILES[filepath_xml] = None
             if print_updates: print("done.")
         else:
             filesize = os.path.getsize(filepath_xml) / 2**20  # get filesize in MB
@@ -603,7 +544,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         assign_realistic_timestamps(messages, external_ids, local_ids, avg_delay_local, avg_delay_external, zero_reference)
 
         portSelector = PortSelectors.LINUX
-        reserved_ports = set(int(line.strip()) for line in open("resources/reserved_ports.txt").readlines())
+        reserved_ports = set(int(line.strip()) for line in open(Util.RESOURCE_DIR + "reserved_ports.txt").readlines())
         def filter_reserved(get_port):
             port = get_port()
             while port in reserved_ports:

@@ -18,7 +18,6 @@ ROOT_DIR = CODE_DIR + "../"
 RESOURCE_DIR = ROOT_DIR + "resources/"
 TEST_DIR = RESOURCE_DIR + "test/"
 OUT_DIR = None
-MISC_OUT_FILES = {}
 
 # List of common operation systems
 platforms = {"win7", "win10", "winxp", "win8.1", "macos", "linux", "win8", "winvista", "winnt", "win2000"}
