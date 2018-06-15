@@ -1,28 +1,23 @@
-from enum import Enum
-from random import randint, randrange, choice, uniform
-from collections import deque
-from scipy.stats import gamma
-from lea import Lea
-from datetime import datetime
 import os
 import sys
+from collections import deque
+from datetime import datetime
+from random import randint, randrange, choice, uniform
 
 import ID2TLib.Botnet.libbotnetcomm as lb
+from lea import Lea
+from scapy.layers.inet import IP, IPOption_Security
+
 import ID2TLib.Botnet.Message as Bmsg
+import ID2TLib.Utility as Util
 from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes
-from ID2TLib.Ports import PortSelectors
-import ID2TLib.Utility as Util
-
-from ID2TLib import FileUtils, Generator
-from ID2TLib.IPv4 import IPAddress
-from ID2TLib.PcapAddressOperations import PcapAddressOperations
+from ID2TLib import Generator
 from ID2TLib.Botnet.CommunicationProcessor import CommunicationProcessor
 from ID2TLib.Botnet.MessageMapping import MessageMapping
-from ID2TLib.PcapFile import PcapFile
-from Core.Statistics import Statistics
-from scapy.layers.inet import IP, IPOption_Security
+from ID2TLib.PcapAddressOperations import PcapAddressOperations
+from ID2TLib.Ports import PortSelectors
 
 
 class MembersMgmtCommAttack(BaseAttack.BaseAttack):
