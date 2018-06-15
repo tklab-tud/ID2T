@@ -133,19 +133,19 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         # create the final messages that have to be sent, including all bot configurations
         messages = self._create_messages()
 
-        if messages == []:
+        if not messages:
             return 0, None
 
         # Setup (initial) parameters for packet creation loop
-        BUFFER_SIZE = 1000
+        buffer_size = 1000
         pkt_gen = Generator.PacketGenerator()
         padding = self.get_param_value(Param.PACKET_PADDING)
-        packets = deque(maxlen=BUFFER_SIZE)
+        packets = deque(maxlen=buffer_size)
         total_pkts = 0
         limit_packetcount = self.get_param_value(Param.PACKETS_LIMIT)
         limit_duration = self.get_param_value(Param.ATTACK_DURATION)
         path_attack_pcap = None
-        overThousand = False
+        over_thousand = False
 
         msg_packet_mapping = MessageMapping(messages, self.statistics.get_pcap_timestamp_start())
         mark_packets = self.get_param_value(Param.HIDDEN_MARK)
@@ -153,7 +153,6 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         # create packets to write to PCAP file
         for msg in messages:
             # retrieve the source and destination configurations
-            id_src, id_dst = msg.src["ID"], msg.dst["ID"]
             ip_src, ip_dst = msg.src["IP"], msg.dst["IP"]
             mac_src, mac_dst = msg.src["MAC"], msg.dst["MAC"]
             if msg.type.is_request():
@@ -199,32 +198,32 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
             # Store timestamp of first packet (for attack label)
             if total_pkts <= 1:
                 self.attack_start_utime = packets[0].time
-            elif total_pkts % BUFFER_SIZE == 0:  # every 1000 packets write them to the PCAP file (append)
-                if overThousand:  # if over 1000 packets written, packet-length for the last few packets may differ
+            elif total_pkts % buffer_size == 0:  # every 1000 packets write them to the PCAP file (append)
+                if over_thousand:  # if over 1000 packets written, packet-length for the last few packets may differ
                     packets = list(packets)
                     Generator.equal_length(packets, length=max_len, padding=padding, force_len=True)
                     last_packet = packets[-1]
                     path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
-                    packets = deque(maxlen=BUFFER_SIZE)
+                    packets = deque(maxlen=buffer_size)
                 else:
                     packets = list(packets)
                     Generator.equal_length(packets, padding=padding)
                     last_packet = packets[-1]
                     max_len = len(last_packet)
-                    overThousand = True
+                    over_thousand = True
                     path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
-                    packets = deque(maxlen=BUFFER_SIZE)
+                    packets = deque(maxlen=buffer_size)
 
         # if there are unwritten packets remaining, write them to the PCAP file
         if len(packets) > 0:
-            if overThousand:
+            if over_thousand:
                 packets = list(packets)
-                Generator.equal_length(packets, length = max_len, padding = padding, force_len = True)
+                Generator.equal_length(packets, length=max_len, padding=padding, force_len=True)
                 path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
                 last_packet = packets[-1]
             else:
                 packets = list(packets)
-                Generator.equal_length(packets, padding = padding)
+                Generator.equal_length(packets, padding=padding)
                 path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
                 last_packet = packets[-1]
 
@@ -237,7 +236,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         self.attack_end_utime = last_packet.time
 
         # Return packets sorted by packet by timestamp and total number of packets (sent)
-        return total_pkts , path_attack_pcap, [mapping_filename]
+        return total_pkts, path_attack_pcap, [mapping_filename]
 
     def generate_attack_packets(self):
         pass
@@ -283,7 +282,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                 bot_configs[random_id] = {"Type": idtype, "IP": ip, "MAC": mac}
                 ids.remove(random_id)
 
-        def assign_realistic_ttls(bot_configs: list):
+        def assign_realistic_ttls(bot_configs: dict):
             """
             Assigns a realisitic ttl to each bot from @param: bot_configs. Uses statistics and distribution to be able
             to calculate a realisitc ttl.
@@ -329,13 +328,13 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
             # response to the last one was received
             last_response = {}
 
-            for msg in messages:    # init
-                last_response[(msg.src, msg.dst)] = -1
+            for m in messages:    # init
+                last_response[(m.src, m.dst)] = -1
 
             # update all timestamps
             for req_msg in messages:
 
-                if req_msg in updated_msgs :
+                if req_msg in updated_msgs:
                     # message already updated
                     continue
 
@@ -528,8 +527,6 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         reuse_percent_total = self.get_param_value(Param.IP_REUSE_TOTAL)
         reuse_percent_external = self.get_param_value(Param.IP_REUSE_EXTERNAL)
         reuse_percent_local = self.get_param_value(Param.IP_REUSE_LOCAL)
-        reuse_count_external = int(reuse_percent_total * reuse_percent_external * len(mapped_ids))
-        reuse_count_local = int(reuse_percent_total * reuse_percent_local * len(mapped_ids))
 
         # create IP and MAC configurations for the IDs/Bots
         ipgen = Generator.IPGenerator()
@@ -571,7 +568,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         assign_realistic_timestamps(messages, external_ids, local_ids, avg_delay_local, avg_delay_external,
                                     zero_reference)
 
-        portSelector = PortSelectors.LINUX
+        port_selector = PortSelectors.LINUX
         reserved_ports = set(int(line.strip()) for line in open(Util.RESOURCE_DIR + "reserved_ports.txt").readlines())
 
         def filter_reserved(get_port):
@@ -583,11 +580,11 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         # create port configurations for the bots
         use_multiple_ports = self.get_param_value(Param.MULTIPORT)
         for bot in sorted(bot_configs):
-            bot_configs[bot]["SrcPort"] = filter_reserved(portSelector.select_port_udp)
+            bot_configs[bot]["SrcPort"] = filter_reserved(port_selector.select_port_udp)
             if not use_multiple_ports:
                 bot_configs[bot]["DstPort"] = filter_reserved(Generator.gen_random_server_port)
             else:
-                bot_configs[bot]["DstPort"] = filter_reserved(portSelector.select_port_udp)
+                bot_configs[bot]["DstPort"] = filter_reserved(port_selector.select_port_udp)
 
         # assign realistic TTL for every bot
         if self.get_param_value(Param.TTL_FROM_CAIDA):
@@ -598,7 +595,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         # put together the final messages including the full sender and receiver
         # configurations (i.e. IP, MAC, port, ...) for easier later use
         final_messages = []
-        messages = sorted(messages, key=lambda msg: msg.time)
+        messages = sorted(messages, key=lambda m: m.time)
         new_id = 0
 
         for msg in messages:
