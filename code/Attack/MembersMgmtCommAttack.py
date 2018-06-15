@@ -85,8 +85,6 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         Initialize some parameters of this communication-attack using the user supplied command line parameters.
         The remaining parameters are implicitly set in the provided data file. Note: the timestamps in the file
         have to be sorted in ascending order
-
-        :param statistics: Reference to a statistics object.
         """
         # set class constants
         self.DEFAULT_XML_PATH = Util.RESOURCE_DIR + "Botnet/MembersMgmtComm_example.xml"
