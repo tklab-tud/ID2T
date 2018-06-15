@@ -104,8 +104,6 @@ class AttackController:
         :param seed: random seed for param generation
         :return: None
         """
-        attack_name = self.choose_attack(attack_name)
-
         print("\nCreating attack instance of \033[1m" + attack_name + "\033[0m")
         # Load attack class
         attack_module = importlib.import_module("Attack." + attack_name)
@@ -137,6 +135,8 @@ class AttackController:
         :param time: Measure packet generation time or not.
         :return: The file path to the created pcap file.
         """
+        attack = self.choose_attack(attack)
+
         self.create_attack(attack, self.seed)
 
         print("Validating and adding attack parameters.")
