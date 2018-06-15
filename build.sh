@@ -100,10 +100,9 @@ else
     ID2T_DIR=\$(readlink -f \$0)
 fi
 SCRIPT_PATH=\${ID2T_DIR%/*}
-cd \$SCRIPT_PATH
 # Execute ID2T
-source .venv/bin/activate
-exec ./code/CLI.py "\$@"
+source "\$SCRIPT_PATH"/.venv/bin/activate
+exec "\$SCRIPT_PATH"/code/CLI.py "\$@"
 deactivate
 EOF
 
