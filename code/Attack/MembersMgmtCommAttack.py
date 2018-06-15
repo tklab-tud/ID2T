@@ -80,6 +80,8 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         for msg_type in Bmsg.MessageType:
             self.msg_types[msg_type.value] = msg_type
 
+        self.DEFAULT_XML_PATH = None
+
     def init_params(self):
         """
         Initialize some parameters of this communication-attack using the user supplied command line parameters.
