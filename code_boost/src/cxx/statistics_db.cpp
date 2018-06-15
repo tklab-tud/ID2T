@@ -5,6 +5,8 @@
 #include <fstream>
 #include <unistd.h>
 #include <stdio.h>
+#include <pybind11/pybind11.h>
+namespace py = pybind11;
 
 /**
  * Creates a new statistics_db object. Opens an existing database located at database_path. If not existing, creates
@@ -55,6 +57,8 @@ void statistics_db::writeStatisticsIP(const std::unordered_map<std::string, entr
             query.bindNoCopy(8, e.ip_class);
             query.exec();
             query.reset();
+
+            if (PyErr_CheckSignals()) throw py::error_already_set();
         }
         transaction.commit();
     }
@@ -88,6 +92,8 @@ void statistics_db::writeStatisticsDegree(const std::unordered_map<std::string, 
             query.bind(4, e.overall_degree);
             query.exec();
             query.reset();
+
+            if (PyErr_CheckSignals()) throw py::error_already_set();
         }
         transaction.commit();
     }
@@ -119,6 +125,8 @@ void statistics_db::writeStatisticsTTL(const std::unordered_map<ipAddress_ttl, i
             query.bind(3, it->second);
             query.exec();
             query.reset();
+
+            if (PyErr_CheckSignals()) throw py::error_already_set();
         }
         transaction.commit();
     }
@@ -150,6 +158,8 @@ void statistics_db::writeStatisticsMSS(const std::unordered_map<ipAddress_mss, i
             query.bind(3, it->second);
             query.exec();
             query.reset();
+
+            if (PyErr_CheckSignals()) throw py::error_already_set();
         }
         transaction.commit();
     }
@@ -180,6 +190,8 @@ void statistics_db::writeStatisticsToS(const std::unordered_map<ipAddress_tos, i
             query.bind(3, it->second);
             query.exec();
             query.reset();
+
+            if (PyErr_CheckSignals()) throw py::error_already_set();
         }
         transaction.commit();
     }
@@ -211,6 +223,8 @@ void statistics_db::writeStatisticsWin(const std::unordered_map<ipAddress_win, i
             query.bind(3, it->second);
             query.exec();
             query.reset();
+
+            if (PyErr_CheckSignals()) throw py::error_already_set();
         }
         transaction.commit();
     }
@@ -243,6 +257,8 @@ void statistics_db::writeStatisticsProtocols(const std::unordered_map<ipAddress_
             query.bind(4, it->second.byteCount);
             query.exec();
             query.reset();
+
+            if (PyErr_CheckSignals()) throw py::error_already_set();
         }
         transaction.commit();
     }
@@ -288,6 +304,8 @@ void statistics_db::writeStatisticsPorts(const std::unordered_map<ipAddress_inOu
             query.bindNoCopy(7, portService);
             query.exec();
             query.reset();
+
+            if (PyErr_CheckSignals()) throw py::error_already_set();
         }
         transaction.commit();
     }
@@ -315,6 +333,8 @@ void statistics_db::writeStatisticsIpMac(const std::unordered_map<std::string, s
             query.bindNoCopy(2, it->second);
             query.exec();
             query.reset();
+
+            if (PyErr_CheckSignals()) throw py::error_already_set();
         }
         transaction.commit();
     }
@@ -431,6 +451,8 @@ void statistics_db::writeStatisticsConv(std::unordered_map<conv, entry_convStat>
                 query.bind(9, maxDelay);
                 query.exec();
                 query.reset();
+
+                if (PyErr_CheckSignals()) throw py::error_already_set();
             }
         }
         transaction.commit();
@@ -524,6 +546,8 @@ void statistics_db::writeStatisticsConvExt(std::unordered_map<convWithProt, entr
                 query.bind(14, e.total_comm_duration);
                 query.exec();
                 query.reset();
+
+                if (PyErr_CheckSignals()) throw py::error_already_set();
             }
             
         }
@@ -583,6 +607,8 @@ void statistics_db::writeStatisticsInterval(const std::unordered_map<std::string
             query.bind(16, e.novel_mss_count);
             query.exec();
             query.reset();
+
+            if (PyErr_CheckSignals()) throw py::error_already_set();
         }
         transaction.commit();
     }
@@ -727,6 +753,8 @@ void statistics_db::writeStatisticsUnrecognizedPDUs(const std::unordered_map<unr
             query.bindNoCopy(5, it->second.timestamp_last_occurrence);
             query.exec();
             query.reset();
+
+            if (PyErr_CheckSignals()) throw py::error_already_set();
         }
         transaction.commit();
     }
