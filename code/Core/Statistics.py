@@ -688,46 +688,48 @@ class Statistics:
         :return: tuple consisting of avg delay for local and external communication, (local, external)
         """
 
-        conv_delays = self.stats_db.process_user_defined_query("SELECT ipAddressA, ipAddressB, avgDelay FROM conv_statistics")
-        if(conv_delays):
+        conv_delays = self.stats_db.process_user_defined_query(
+            "SELECT ipAddressA, ipAddressB, avgDelay FROM conv_statistics")
+        if conv_delays:
             external_conv = []
             local_conv = []
 
             for conv in conv_delays:
-                IPA = IPAddress.parse(conv[0])
-                IPB = IPAddress.parse(conv[1])
+                ip_a = IPAddress.parse(conv[0])
+                ip_b = IPAddress.parse(conv[1])
 
-                #split into local and external conversations
-                if(not IPA.is_private() or not IPB.is_private()):
+                # split into local and external conversations
+                if not ip_a.is_private() or not ip_b.is_private():
                     external_conv.append(conv)
                 else:
                     local_conv.append(conv)
    
-            # calculate avg local and external delay by summing up the respective delays and dividing them by the number of conversations
+            # calculate avg local and external delay by summing up the respective delays and dividing them by the
+            # number of conversations
             avg_delay_external = 0.0
             avg_delay_local = 0.0
             default_ext = False
             default_local = False
 
-            if(local_conv):
+            if local_conv:
                 for conv in local_conv:
                     avg_delay_local += conv[2]
-                avg_delay_local = (avg_delay_local/len(local_conv)) * 0.001 #ms
+                avg_delay_local = (avg_delay_local/len(local_conv)) * 0.001  # ms
             else:
                 # no local conversations in statistics found
                 avg_delay_local = 0.055
                 default_local = True
 
-            if(external_conv):
+            if external_conv:
                 for conv in external_conv:
                     avg_delay_external += conv[2]
-                avg_delay_external = (avg_delay_external/len(external_conv)) * 0.001 #ms
+                avg_delay_external = (avg_delay_external/len(external_conv)) * 0.001  # ms
             else:
                 # no external conversations in statistics found
                 avg_delay_external = 0.09
                 default_ext = True
         else:
-            #if no statistics were found, use these numbers
+            # if no statistics were found, use these numbers
             avg_delay_external = 0.09
             avg_delay_local = 0.055
             default_ext = True
@@ -740,13 +742,14 @@ class Statistics:
         # print information, that (default) values are used, that are not collected from the Input PCAP
         if default_ext or default_local:
             if default_ext and default_local:
-                print("Warning: Could not collect average delays for local or external communication, using following values:")
+                print("Warning: Could not collect average delays for local or external communication, using "
+                      "following values:")
             elif default_ext:
                 print("Warning: Could not collect average delays for external communication, using following values:")
             elif default_local:
                 print("Warning: Could not collect average delays for local communication, using following values:")
-            print("Avg delay of external communication: {0}s,  Avg delay of local communication: {1}s".format(avg_delay_external, avg_delay_local))
-            
+            print("Avg delay of external communication: {0}s,  Avg delay of local communication: {1}s".format(
+                avg_delay_external, avg_delay_local))
 
         return avg_delay_local, avg_delay_external
 
@@ -762,7 +765,7 @@ class Statistics:
                 "SELECT ipAddress, %s FROM ip_degrees" % degree_type)
 
         degrees = []
-        if(degrees_raw):
+        if degrees_raw:
             for deg in degrees_raw:
                 if int(deg[1]) > 0:
                     degrees.append(deg)
@@ -1298,13 +1301,13 @@ class Statistics:
             plt.ylabel('IpAddress')
             plt.xlabel('Indegree')
 
-            #set width of the bars
+            # set width of the bars
             width = 0.3
 
             # set scalings
             plt.figure(figsize=(int(len(graphx))/20 + 5, int(len(graphy)/5) + 5))  # these proportions just worked well
 
-            #set limits of the axis
+            # set limits of the axis
             plt.ylim([0, len(graphy)])
             plt.xlim([0, max(graphx) + 10])
 
@@ -1322,7 +1325,7 @@ class Statistics:
             plt.yticks(graphy, labels)
             out = self.pcap_filepath.replace('.pcap', '_plot-In Degree of an IP' + file_ending)
             plt.tight_layout()
-            plt.savefig(out,dpi=500)
+            plt.savefig(out, dpi=500)
 
             return out
 
@@ -1351,13 +1354,13 @@ class Statistics:
             plt.ylabel('IpAddress')
             plt.xlabel('Outdegree')
 
-            #set width of the bars
+            # set width of the bars
             width = 0.3
 
             # set scalings
             plt.figure(figsize=(int(len(graphx))/20 + 5, int(len(graphy)/5) + 5))  # these proportions just worked well
 
-            #set limits of the axis
+            # set limits of the axis
             plt.ylim([0, len(graphy)])
             plt.xlim([0, max(graphx) + 10])
 
@@ -1375,7 +1378,7 @@ class Statistics:
             plt.yticks(graphy, labels)
             out = self.pcap_filepath.replace('.pcap', '_plot-Out Degree of an IP' + file_ending)
             plt.tight_layout()
-            plt.savefig(out,dpi=500)
+            plt.savefig(out, dpi=500)
 
             return out
 
@@ -1404,13 +1407,13 @@ class Statistics:
             plt.ylabel('IpAddress')
             plt.xlabel('Overalldegree')
 
-            #set width of the bars
+            # set width of the bars
             width = 0.3
 
             # set scalings
             plt.figure(figsize=(int(len(graphx))/20 + 5, int(len(graphy)/5) + 5))  # these proportions just worked well
 
-            #set limits of the axis
+            # set limits of the axis
             plt.ylim([0, len(graphy)])
             plt.xlim([0, max(graphx) + 10])
 
@@ -1428,10 +1431,10 @@ class Statistics:
             plt.yticks(graphy, labels)
             out = self.pcap_filepath.replace('.pcap', '_plot-Overall Degree of an IP' + file_ending)
             plt.tight_layout()
-            plt.savefig(out,dpi=500)
+            plt.savefig(out, dpi=500)
             return out
 
-        def plot_big_conv_ext_stat(attr:str, title:str, xlabel:str, suffix:str):
+        def plot_big_conv_ext_stat(attr: str, title: str, xlabel: str, suffix: str):
             """
             Plots the desired statistc per connection as horizontal bar plot. 
             Included are 'half-open' connections, where only one packet is exchanged.
@@ -1440,7 +1443,6 @@ class Statistics:
             Note: there may be cutoff/scaling problems within the plot if there is too little data.
 
             :param attr: The desired statistic, named with respect to its attribute in the given statistics table
-            :param table: The statistics table 
             :param title: The title of the created plot
             :param xlabel: The name of the x-axis of the created plot
             :param suffix: The suffix of the created file, including file extension
@@ -1450,10 +1452,10 @@ class Statistics:
             result = self.stats_db.process_user_defined_query(
                 "SELECT ipAddressA, portA, ipAddressB, portB, %s FROM conv_statistics_extended" % attr)
 
-            if (result):
+            if result:
                 graphy, graphx = [], []
                 # plot data in descending order
-                result = sorted(result, key=lambda row: row[4])
+                result = sorted(result, key=lambda r: r[4])
                 # compute plot data
                 for i, row in enumerate(result):
                     addr1, addr2 = "%s:%d" % (row[0], row[1]), "%s:%d" % (row[2], row[3])
@@ -1473,7 +1475,8 @@ class Statistics:
             # compute plot height in inches for scaling the plot
             dist_mult_height = 0.55  # this value turned out to work well
             plt_height = len(graphy) * dist_mult_height
-            title_distance = 1 + 0.012*52.8/plt_height  # orginally, a good title distance turned out to be 1.012 with a plot height of 52.8
+            # originally, a good title distance turned out to be 1.012 with a plot height of 52.8
+            title_distance = 1 + 0.012*52.8/plt_height
 
             plt.gcf().set_size_inches(plt.gcf().get_size_inches()[0], plt_height)  # set plot height
             plt.gcf().subplots_adjust(left=0.35)
@@ -1566,7 +1569,7 @@ class Statistics:
             # plot data and return outpath
             return plot_big_conv_ext_stat("totalConversationDuration", title, 'Duration', suffix)
 
-        def plot_comm_histogram(attr:str, title:str, label:str, suffix:str):
+        def plot_comm_histogram(attr: str, title: str, label: str, suffix: str):
             """
             Plots a histogram about the specified attribute for communications.
             :param attr: The statistics attribute for this histogram
@@ -1598,7 +1601,6 @@ class Statistics:
             plt.title(title)
             plt.ylabel("Relative frequency of connections")
             plt.xlabel(label)
-            width = 0.5
             plt.grid(True)
 
             # create 11 bins
@@ -1619,7 +1621,7 @@ class Statistics:
             plt.savefig(out, dpi=500, bbox_inches='tight', pad=0.2)
             return out
 
-        def plot_histogram_degree(degree_type:str, title:str, label:str, suffix:str):          
+        def plot_histogram_degree(degree_type: str, title: str, label: str, suffix: str):
             """
             Plots a histogram about the specified type for the degree of an IP.
             :param degree_type: The type of degree, i.e. inDegree, outDegree or overallDegree
@@ -1644,7 +1646,6 @@ class Statistics:
             plt.title(title)
             plt.ylabel("Relative frequency of IPs")
             plt.xlabel(label)
-            width = 0.5
             plt.grid(True)
 
             # create 11 bins

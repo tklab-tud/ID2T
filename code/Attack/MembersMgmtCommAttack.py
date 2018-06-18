@@ -1,28 +1,23 @@
-from enum import Enum
-from random import randint, randrange, choice, uniform
-from collections import deque
-from scipy.stats import gamma
-from lea import Lea
-from datetime import datetime
 import os
 import sys
+from collections import deque
+from datetime import datetime
+from random import randint, randrange, choice, uniform
 
 import ID2TLib.Botnet.libbotnetcomm as lb
+from lea import Lea
+from scapy.layers.inet import IP, IPOption_Security
+
 import ID2TLib.Botnet.Message as Bmsg
+import ID2TLib.Utility as Util
 from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes
-from ID2TLib.Ports import PortSelectors
-import ID2TLib.Utility as Util
-
-from ID2TLib import FileUtils, Generator
-from ID2TLib.IPv4 import IPAddress
-from ID2TLib.PcapAddressOperations import PcapAddressOperations
+from ID2TLib import Generator
 from ID2TLib.Botnet.CommunicationProcessor import CommunicationProcessor
 from ID2TLib.Botnet.MessageMapping import MessageMapping
-from ID2TLib.PcapFile import PcapFile
-from Core.Statistics import Statistics
-from scapy.layers.inet import IP, IPOption_Security
+from ID2TLib.PcapAddressOperations import PcapAddressOperations
+from ID2TLib.Ports import PortSelectors
 
 
 class MembersMgmtCommAttack(BaseAttack.BaseAttack):
@@ -32,8 +27,9 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
 
         """
         # Initialize communication
-        super(MembersMgmtCommAttack, self).__init__("Membership Management Communication Attack (MembersMgmtCommAttack)",
-                                        "Injects Membership Management Communication", "Botnet communication")
+        super(MembersMgmtCommAttack, self).__init__(
+            "Membership Management Communication Attack (MembersMgmtCommAttack)",
+            "Injects Membership Management Communication", "Botnet communication")
 
         # Define allowed parameters and their type
         self.supported_params = {
@@ -84,13 +80,13 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         for msg_type in Bmsg.MessageType:
             self.msg_types[msg_type.value] = msg_type
 
+        self.DEFAULT_XML_PATH = None
+
     def init_params(self):
         """
         Initialize some parameters of this communication-attack using the user supplied command line parameters.
         The remaining parameters are implicitly set in the provided data file. Note: the timestamps in the file
         have to be sorted in ascending order
-
-        :param statistics: Reference to a statistics object.
         """
         # set class constants
         self.DEFAULT_XML_PATH = Util.RESOURCE_DIR + "Botnet/MembersMgmtComm_example.xml"
@@ -137,19 +133,19 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         # create the final messages that have to be sent, including all bot configurations
         messages = self._create_messages()
 
-        if messages == []:
+        if not messages:
             return 0, None
 
         # Setup (initial) parameters for packet creation loop
-        BUFFER_SIZE = 1000
+        buffer_size = 1000
         pkt_gen = Generator.PacketGenerator()
         padding = self.get_param_value(Param.PACKET_PADDING)
-        packets = deque(maxlen=BUFFER_SIZE)
+        packets = deque(maxlen=buffer_size)
         total_pkts = 0
         limit_packetcount = self.get_param_value(Param.PACKETS_LIMIT)
         limit_duration = self.get_param_value(Param.ATTACK_DURATION)
         path_attack_pcap = None
-        overThousand = False
+        over_thousand = False
 
         msg_packet_mapping = MessageMapping(messages, self.statistics.get_pcap_timestamp_start())
         mark_packets = self.get_param_value(Param.HIDDEN_MARK)
@@ -157,7 +153,6 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         # create packets to write to PCAP file
         for msg in messages:
             # retrieve the source and destination configurations
-            id_src, id_dst = msg.src["ID"], msg.dst["ID"]
             ip_src, ip_dst = msg.src["IP"], msg.dst["IP"]
             mac_src, mac_dst = msg.src["MAC"], msg.dst["MAC"]
             if msg.type.is_request():
@@ -180,9 +175,11 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                 nl_size = randint(1, 25)    # what is max NL entries?
 
             # create suitable IP/UDP packet and add to packets list
-            packet = pkt_gen.generate_mmcom_packet(ip_src=ip_src, ip_dst=ip_dst, ttl=ttl, mac_src=mac_src, mac_dst=mac_dst,
-                port_src=port_src, port_dst=port_dst, message_type=msg.type, neighborlist_entries=nl_size)
-            Generator.add_padding(packet, padding,True, True)
+            packet = pkt_gen.generate_mmcom_packet(ip_src=ip_src, ip_dst=ip_dst, ttl=ttl, mac_src=mac_src,
+                                                   mac_dst=mac_dst,
+                                                   port_src=port_src, port_dst=port_dst, message_type=msg.type,
+                                                   neighborlist_entries=nl_size)
+            Generator.add_padding(packet, padding, True, True)
 
             packet.time = msg.time
 
@@ -201,32 +198,32 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
             # Store timestamp of first packet (for attack label)
             if total_pkts <= 1:
                 self.attack_start_utime = packets[0].time
-            elif total_pkts % BUFFER_SIZE == 0: # every 1000 packets write them to the PCAP file (append)
-                if overThousand: # if over 1000 packets written, there may be a different packet-length for the last few packets 
+            elif total_pkts % buffer_size == 0:  # every 1000 packets write them to the PCAP file (append)
+                if over_thousand:  # if over 1000 packets written, packet-length for the last few packets may differ
                     packets = list(packets)
-                    Generator.equal_length(packets, length = max_len, padding = padding, force_len = True)
+                    Generator.equal_length(packets, length=max_len, padding=padding, force_len=True)
                     last_packet = packets[-1]
                     path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
-                    packets = deque(maxlen=BUFFER_SIZE)
+                    packets = deque(maxlen=buffer_size)
                 else:
                     packets = list(packets)
-                    Generator.equal_length(packets, padding = padding)
+                    Generator.equal_length(packets, padding=padding)
                     last_packet = packets[-1]
                     max_len = len(last_packet)
-                    overThousand = True
+                    over_thousand = True
                     path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
-                    packets = deque(maxlen=BUFFER_SIZE)
+                    packets = deque(maxlen=buffer_size)
 
         # if there are unwritten packets remaining, write them to the PCAP file
         if len(packets) > 0:
-            if overThousand:
+            if over_thousand:
                 packets = list(packets)
-                Generator.equal_length(packets, length = max_len, padding = padding, force_len = True)
+                Generator.equal_length(packets, length=max_len, padding=padding, force_len=True)
                 path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
                 last_packet = packets[-1]
             else:
                 packets = list(packets)
-                Generator.equal_length(packets, padding = padding)
+                Generator.equal_length(packets, padding=padding)
                 path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
                 last_packet = packets[-1]
 
@@ -239,12 +236,10 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         self.attack_end_utime = last_packet.time
 
         # Return packets sorted by packet by timestamp and total number of packets (sent)
-        return total_pkts , path_attack_pcap, [mapping_filename]
-
+        return total_pkts, path_attack_pcap, [mapping_filename]
 
     def generate_attack_packets(self):
         pass
-
 
     def _create_messages(self):
         """
@@ -252,7 +247,8 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         :return: the final messages as a list
         """
 
-        def add_ids_to_config(ids_to_add: list, existing_ips: list, new_ips: list, bot_configs: dict, idtype:str="local", router_mac:str=""):
+        def add_ids_to_config(ids_to_add: list, existing_ips: list, new_ips: list, bot_configs: dict,
+                              idtype: str = "local", router_mac: str = ""):
             """
             Creates IP and MAC configurations for the given IDs and adds them to the existing configurations object.
 
@@ -265,8 +261,8 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
             """
 
             ids = ids_to_add.copy()
-            # macgen only needed, when IPs are new local IPs (therefore creating the object here suffices for the current callers
-            # to not end up with the same MAC paired with different IPs)
+            # macgen only needed, when IPs are new local IPs (therefore creating the object here suffices for the
+            # current callers to not end up with the same MAC paired with different IPs)
             macgen = Generator.MacAddressGenerator()
 
             # assign existing IPs and the corresponding MAC addresses in the PCAP to the IDs
@@ -286,19 +282,19 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                 bot_configs[random_id] = {"Type": idtype, "IP": ip, "MAC": mac}
                 ids.remove(random_id)
 
-        def assign_realistic_ttls(bot_configs:list):
-            '''
+        def assign_realistic_ttls(bot_configs: dict):
+            """
             Assigns a realisitic ttl to each bot from @param: bot_configs. Uses statistics and distribution to be able
             to calculate a realisitc ttl.
             :param bot_configs: List that contains all bots that should be assigned with realistic ttls.
-            '''
+            """
             ids = sorted(bot_configs.keys())
-            for pos,bot in enumerate(ids):
+            for pos, bot in enumerate(ids):
                 bot_type = bot_configs[bot]["Type"]
-                if(bot_type == "local"): # Set fix TTL for local Bots
+                if bot_type == "local":  # Set fix TTL for local Bots
                     bot_configs[bot]["TTL"] = 128
                     # Set TTL based on TTL distribution of IP address
-                else: # Set varying TTl for external Bots
+                else:  # Set varying TTl for external Bots
                     bot_ttl_dist = self.statistics.get_ttl_distribution(bot_configs[bot]["IP"])
                     if len(bot_ttl_dist) > 0:
                         source_ttl_prob_dict = Lea.fromValFreqsDict(bot_ttl_dist)
@@ -310,33 +306,43 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                         else:
                             bot_configs[bot]["TTL"] = self.statistics.process_db_query("most_used(ttlValue)")
 
-        def assign_realistic_timestamps(messages: list, external_ids: set, local_ids: set, avg_delay_local:float, avg_delay_external: float, zero_reference:float):
+        def assign_realistic_timestamps(messages: list, external_ids: set, local_ids: set, avg_delay_local: float,
+                                        avg_delay_external: float, zero_reference: float):
             """
             Assigns realistic timestamps to a set of messages
 
             :param messages: the set of messages to be updated
             :param external_ids: the set of bot ids, that are outside the network, i.e. external
             :param local_ids: the set of bot ids, that are inside the network, i.e. local
-            :avg_delay_local: the avg_delay between the dispatch and the reception of a packet between local computers
-            :avg_delay_external: the avg_delay between the dispatch and the reception of a packet between a local and an external computer
-            :zero_reference: the timestamp which is regarded as the beginning of the pcap_file and therefore handled like a timestamp that resembles 0
+            :param avg_delay_local: the avg_delay between the dispatch and the reception of a packet between local
+                                    computers
+            :param avg_delay_external: the avg_delay between the dispatch and the reception of a packet between a local
+                                       and an external computer
+            :param zero_reference: the timestamp which is regarded as the beginning of the pcap_file and therefore
+                                   handled like a timestamp that resembles 0
             """
             updated_msgs = []
-            last_response = {}      # Dict, takes a tuple of 2 Bot_IDs as a key (requester, responder), returns the time of the last response, the requester received
-                                    # necessary in order to make sure, that additional requests are sent only after the response to the last one was received
-            for msg in messages:    # init
-                last_response[(msg.src, msg.dst)] = -1
+
+            # Dict, takes a tuple of 2 Bot_IDs as a key (requester, responder), returns the time of the last response,
+            # the requester received necessary in order to make sure, that additional requests are sent only after the
+            # response to the last one was received
+            last_response = {}
+
+            for m in messages:    # init
+                last_response[(m.src, m.dst)] = -1
 
             # update all timestamps
             for req_msg in messages:
 
-                if(req_msg in updated_msgs):
+                if req_msg in updated_msgs:
                     # message already updated
                     continue
 
-                # if req_msg.timestamp would be before the timestamp of the response to the last request, req_msg needs to be sent later (else branch)
-                if last_response[(req_msg.src, req_msg.dst)] == -1 or last_response[(req_msg.src, req_msg.dst)] < (zero_reference + req_msg.time - 0.05):
-                    ## update req_msg timestamp with a variation of up to 50ms
+                # if req_msg.timestamp would be before the timestamp of the response to the last request, req_msg needs
+                # to be sent later (else branch)
+                if last_response[(req_msg.src, req_msg.dst)] == -1 or last_response[(req_msg.src, req_msg.dst)] < (
+                        zero_reference + req_msg.time - 0.05):
+                    # update req_msg timestamp with a variation of up to 50ms
                     req_msg.time = zero_reference + req_msg.time + uniform(-0.05, 0.05)
                     updated_msgs.append(req_msg)
 
@@ -347,14 +353,17 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                 if req_msg.refer_msg_id != -1:
                     respns_msg = messages[req_msg.refer_msg_id]
 
-                    # check for local or external communication and update response timestamp with the respective avg delay
+                    # check for local or external communication and update response timestamp with the respective
+                    # avg delay
                     if req_msg.src in external_ids or req_msg.dst in external_ids:
-                        #external communication
-                        respns_msg.time = req_msg.time + avg_delay_external + uniform(-0.1*avg_delay_external, 0.1*avg_delay_external)
+                        # external communication
+                        respns_msg.time = req_msg.time + avg_delay_external + uniform(-0.1 * avg_delay_external,
+                                                                                      0.1 * avg_delay_external)
 
                     else:
-                        #local communication
-                        respns_msg.time = req_msg.time + avg_delay_local + uniform(-0.1*avg_delay_local, 0.1*avg_delay_local)
+                        # local communication
+                        respns_msg.time = req_msg.time + avg_delay_local + uniform(-0.1 * avg_delay_local,
+                                                                                   0.1 * avg_delay_local)
 
                     updated_msgs.append(respns_msg)
                     last_response[(req_msg.src, req_msg.dst)] = respns_msg.time
@@ -362,8 +371,10 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         def assign_ttls_from_caida(bot_configs):
             """
             Assign realistic TTL values to bots with respect to their IP, based on the CAIDA dataset.
-            If there exists an entry for a bot's IP, the TTL is chosen based on a distribution over all used TTLs by this IP.
-            If there is no such entry, the TTL is chosen based on a distribution over all used TTLs and their respective frequency.
+            If there exists an entry for a bot's IP, the TTL is chosen based on a distribution over all used TTLs by
+            this IP.
+            If there is no such entry, the TTL is chosen based on a distribution over all used TTLs and their
+            respective frequency.
 
             :param bot_configs: the existing bot configurations
             """
@@ -371,7 +382,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
             def get_ip_ttl_distrib():
                 """
                 Parses the CSV file containing a mapping between IP and their used TTLs.
-                :return: returns a dict with the IPs as keys and dicts for their TTL disribution as values
+                :return: returns a dict with the IPs as keys and dicts for their TTL distribution as values
                 """
                 ip_based_distrib = {}
                 with open("resources/CaidaTTL_perIP.csv", "r") as file:
@@ -380,7 +391,8 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                     for line in file:
                         ip_addr, ttl, freq = line.split(",")
                         if ip_addr not in ip_based_distrib:
-                            ip_based_distrib[ip_addr] = {}  # the values for ip_based_distrib are dicts with key=TTL, value=Frequency
+                            # the values for ip_based_distrib are dicts with key=TTL, value=Frequency
+                            ip_based_distrib[ip_addr] = {}
                         ip_based_distrib[ip_addr][ttl] = int(freq)
 
                 return ip_based_distrib
@@ -417,7 +429,8 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                 # if there exists detailed information about the TTL distribution of this IP
                 elif bot_ip in ip_ttl_distrib:
                     ip_ttl_freqs = ip_ttl_distrib[bot_ip]
-                    source_ttl_prob_dict = Lea.fromValFreqsDict(ip_ttl_freqs)  # build a probability dict from this IP's TTL distribution
+                    # build a probability dict from this IP's TTL distribution
+                    source_ttl_prob_dict = Lea.fromValFreqsDict(ip_ttl_freqs)
                     bot_configs[bot_id]["TTL"] = source_ttl_prob_dict.random()
 
                 # otherwise assign a random TTL based on the total TTL distribution
@@ -429,7 +442,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         filepath_csv = self.get_param_value(Param.FILE_CSV)
 
         # use C++ communication processor for faster interval finding
-        cpp_comm_proc = lb.botnet_comm_processor();
+        cpp_comm_proc = lb.botnet_comm_processor()
 
         # only use CSV input if the XML path is the default one
         # --> prefer XML input over CSV input (in case both are given)
@@ -447,7 +460,8 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                 print("Writing corresponding XML file...", end=" ")
                 sys.stdout.flush()
             filepath_xml = cpp_comm_proc.write_xml(Util.OUT_DIR, filename)
-            if print_updates: print("done.")
+            if print_updates:
+                print("done.")
         else:
             filesize = os.path.getsize(filepath_xml) / 2**20  # get filesize in MB
             if filesize > 10:
@@ -455,7 +469,8 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                 sys.stdout.flush()
                 print_updates = True
             cpp_comm_proc.parse_xml(filepath_xml)
-            if print_updates: print("done.")
+            if print_updates:
+                print("done.")
 
         # find a good communication mapping in the input file that matches the users parameters
         nat = self.get_param_value(Param.NAT_PRESENT)
@@ -466,34 +481,42 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         start_idx = self.get_param_value(Param.INTERVAL_SELECT_START)
         end_idx = self.get_param_value(Param.INTERVAL_SELECT_END)
 
-        potential_long_find_time = (strategy == "optimal" and (filesize > 4 and self.statistics.get_packet_count() > 1000))
+        potential_long_find_time = (
+                    strategy == "optimal" and (filesize > 4 and self.statistics.get_packet_count() > 1000))
         if print_updates or potential_long_find_time:
-            if not print_updates: print()
+            if not print_updates:
+                print()
             print("Selecting communication interval from input CSV/XML file...", end=" ")
             sys.stdout.flush()
             if potential_long_find_time:
-                print("\nWarning: Because of the large input files and the (chosen) interval selection strategy 'optimal',")
-                print("this may take a while. Consider using selection strategy 'random' or 'custom'...", end=" ")
+                print("\nWarning: Because of the large input files and the (chosen) interval selection strategy")
+                print("'optimal', this may take a while. Consider using selection strategy 'random' or 'custom'...",
+                      end=" ")
                 sys.stdout.flush()
             print_updates = True
 
-        comm_interval = comm_proc.get_comm_interval(cpp_comm_proc, strategy, number_init_bots, duration, start_idx, end_idx)
+        comm_interval = comm_proc.get_comm_interval(cpp_comm_proc, strategy, number_init_bots, duration, start_idx,
+                                                    end_idx)
 
         if not comm_interval:
             print("Error: An interval that satisfies the input cannot be found.")
             return []
-        if print_updates: print("done.")  # print corresponding message to interval finding message
+        if print_updates:
+            print("done.")  # print corresponding message to interval finding message
 
         # retrieve the mapping information
-        mapped_ids, packet_start_idx, packet_end_idx = comm_interval["IDs"], comm_interval["Start"], comm_interval["End"]
+        mapped_ids = comm_interval["IDs"]
+        packet_start_idx = comm_interval["Start"]
+        packet_end_idx = comm_interval["End"]
         while len(mapped_ids) > number_init_bots:
             rm_idx = randrange(0, len(mapped_ids))
             del mapped_ids[rm_idx]
 
-        if print_updates: print("Generating attack packets...", end=" ")
+        if print_updates:
+            print("Generating attack packets...", end=" ")
         sys.stdout.flush()
         # get the messages contained in the chosen interval
-        abstract_packets = cpp_comm_proc.get_messages(packet_start_idx, packet_end_idx);
+        abstract_packets = cpp_comm_proc.get_messages(packet_start_idx, packet_end_idx)
         comm_proc.set_mapping(abstract_packets, mapped_ids)
         # determine ID roles and select the messages that are to be mapped into the PCAP
         messages = comm_proc.det_id_roles_and_msgs()
@@ -504,8 +527,6 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         reuse_percent_total = self.get_param_value(Param.IP_REUSE_TOTAL)
         reuse_percent_external = self.get_param_value(Param.IP_REUSE_EXTERNAL)
         reuse_percent_local = self.get_param_value(Param.IP_REUSE_LOCAL)
-        reuse_count_external = int(reuse_percent_total * reuse_percent_external * len(mapped_ids))
-        reuse_count_local = int(reuse_percent_total * reuse_percent_local * len(mapped_ids))
 
         # create IP and MAC configurations for the IDs/Bots
         ipgen = Generator.IPGenerator()
@@ -529,22 +550,27 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
             existing_external_ips = sorted(pcapops.get_existing_external_ips(reuse_count_external))
             remaining = len(external_ids) - len(existing_external_ips)
 
-            for external_ip in existing_external_ips: ipgen.add_to_blacklist(external_ip)
+            for external_ip in existing_external_ips:
+                ipgen.add_to_blacklist(external_ip)
             new_external_ips = sorted([ipgen.random_ip() for _ in range(remaining)])
-            add_ids_to_config(sorted(external_ids), existing_external_ips, new_external_ips, bot_configs, idtype="external", router_mac=router_mac)
+            add_ids_to_config(sorted(external_ids), existing_external_ips, new_external_ips, bot_configs,
+                              idtype="external", router_mac=router_mac)
 
-        # this is the timestamp at which the first packet should be injected, the packets have to be shifted to the beginning of the
-        # pcap file (INJECT_AT_TIMESTAMP) and then the offset of the packets have to be compensated to start at the given point in time
+        # this is the timestamp at which the first packet should be injected, the packets have to be shifted to
+        # the beginning of the pcap file (INJECT_AT_TIMESTAMP) and then the offset of the packets have to be
+        # compensated to start at the given point in time
         zero_reference = self.get_param_value(Param.INJECT_AT_TIMESTAMP) - messages[0].time
 
         # calculate the average delay values for local and external responses
         avg_delay_local, avg_delay_external = self.statistics.get_avg_delay_local_ext()
 
-        #set timestamps
-        assign_realistic_timestamps(messages, external_ids, local_ids, avg_delay_local, avg_delay_external, zero_reference)
+        # set timestamps
+        assign_realistic_timestamps(messages, external_ids, local_ids, avg_delay_local, avg_delay_external,
+                                    zero_reference)
 
-        portSelector = PortSelectors.LINUX
+        port_selector = PortSelectors.LINUX
         reserved_ports = set(int(line.strip()) for line in open(Util.RESOURCE_DIR + "reserved_ports.txt").readlines())
+
         def filter_reserved(get_port):
             port = get_port()
             while port in reserved_ports:
@@ -554,11 +580,11 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         # create port configurations for the bots
         use_multiple_ports = self.get_param_value(Param.MULTIPORT)
         for bot in sorted(bot_configs):
-            bot_configs[bot]["SrcPort"] = filter_reserved(portSelector.select_port_udp)
+            bot_configs[bot]["SrcPort"] = filter_reserved(port_selector.select_port_udp)
             if not use_multiple_ports:
                 bot_configs[bot]["DstPort"] = filter_reserved(Generator.gen_random_server_port)
             else:
-                bot_configs[bot]["DstPort"] = filter_reserved(portSelector.select_port_udp)
+                bot_configs[bot]["DstPort"] = filter_reserved(port_selector.select_port_udp)
 
         # assign realistic TTL for every bot
         if self.get_param_value(Param.TTL_FROM_CAIDA):
@@ -569,7 +595,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         # put together the final messages including the full sender and receiver
         # configurations (i.e. IP, MAC, port, ...) for easier later use
         final_messages = []
-        messages = sorted(messages, key=lambda msg: msg.time)
+        messages = sorted(messages, key=lambda m: m.time)
         new_id = 0
 
         for msg in messages:
@@ -584,7 +610,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
             msg.src["ID"], msg.dst["ID"] = id_src, id_dst
             msg.msg_id = new_id
             new_id += 1
-            ### Important here to update refers, if needed later?
+            # Important here to update refers, if needed later?
             final_messages.append(msg)
 
         return final_messages
