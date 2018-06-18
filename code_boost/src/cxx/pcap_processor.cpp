@@ -1,3 +1,6 @@
+#include <pybind11/pybind11.h>
+namespace py = pybind11;
+
 #include "pcap_processor.h"
 
 using namespace Tins;
@@ -208,6 +211,8 @@ void pcap_processor::collect_statistics() {
                 std::cout << std::fixed << std::setprecision(1) << (static_cast<float>(packetCount)*100/totalPackets) << "%";
                 std::cout << " (" << packetCount << "/" << totalPackets << ")" << std::flush;
                 lastPrinted = std::chrono::system_clock::now();
+
+                if (PyErr_CheckSignals()) throw py::error_already_set();
             }
         }
 
@@ -412,9 +417,6 @@ bool inline pcap_processor::file_exists(const std::string &filePath) {
  * Comment out if executable should be build & run
  * Comment in if library should be build
  */
-#include <pybind11/pybind11.h>
-namespace py = pybind11;
-
 PYBIND11_MODULE (libpcapreader, m) {
     py::class_<pcap_processor>(m, "pcap_processor")
             .def(py::init<std::string, std::string>())
