@@ -714,7 +714,7 @@ class Statistics:
             if local_conv:
                 for conv in local_conv:
                     avg_delay_local += conv[2]
-                avg_delay_local = (avg_delay_local/len(local_conv)) * 0.001  # ms
+                avg_delay_local = (avg_delay_local / len(local_conv)) * 0.001  # ms
             else:
                 # no local conversations in statistics found
                 avg_delay_local = 0.055
@@ -723,7 +723,7 @@ class Statistics:
             if external_conv:
                 for conv in external_conv:
                     avg_delay_external += conv[2]
-                avg_delay_external = (avg_delay_external/len(external_conv)) * 0.001  # ms
+                avg_delay_external = (avg_delay_external / len(external_conv)) * 0.001  # ms
             else:
                 # no external conversations in statistics found
                 avg_delay_external = 0.09
@@ -737,7 +737,7 @@ class Statistics:
 
         # check whether delay numbers are consistent
         if avg_delay_local > avg_delay_external:
-            avg_delay_external = avg_delay_local*1.2
+            avg_delay_external = avg_delay_local * 1.2
 
         # print information, that (default) values are used, that are not collected from the Input PCAP
         if default_ext or default_local:
@@ -762,7 +762,7 @@ class Statistics:
         """
 
         degrees_raw = self.stats_db.process_user_defined_query(
-                "SELECT ipAddress, %s FROM ip_degrees" % degree_type)
+            "SELECT ipAddress, %s FROM ip_degrees" % degree_type)
 
         degrees = []
         if degrees_raw:
@@ -1201,15 +1201,25 @@ class Statistics:
             if query_output:
                 return plot_interval_statistics(query_output, title, x_label, y_label, file_ending)
 
-        def plot_interval_ip_dst_cum_ent(file_ending: str):
+        def plot_interval_ip_cum_ent(ip_type: str, file_ending: str):
             """
             TODO: FILL ME
+            :param ip_type: source or destination
             :param file_ending:
             :return:
             """
+            if ip_type is "src":
+                sod = "Src"
+                full = "Source"
+            elif ip_type is "src":
+                sod = "Dst"
+                full = "Destination"
+            else:
+                return None
+
             plt.gcf().clear()
             result = self.stats_db.process_user_defined_query(
-                "SELECT lastPktTimestamp, ipDstCumEntropy FROM interval_statistics ORDER BY lastPktTimestamp")
+                "SELECT lastPktTimestamp, ip%sCumEntropy FROM interval_statistics ORDER BY lastPktTimestamp" % sod)
             graphx, graphy = [], []
             for row in result:
                 graphx.append(row[0])
@@ -1217,7 +1227,7 @@ class Statistics:
             # If entropy was not calculated do not plot the graph
             if graphy[0] != -1:
                 plt.autoscale(enable=True, axis='both')
-                plt.title("Destination IP Cumulative Entropy")
+                plt.title(full + " IP Cumulative Entropy")
                 # plt.xlabel('Timestamp')
                 plt.xlabel('Time Interval')
                 plt.ylabel('Entropy')
@@ -1234,78 +1244,47 @@ class Statistics:
                 plt.locator_params(axis='x', nbins=20)
 
                 plt.plot(x, graphy, 'r')
-                out = self.pcap_filepath.replace('.pcap', '_plot-interval-ip-dst-cum-ent' + file_ending)
+                out = self.pcap_filepath.replace('.pcap', '_plot-interval-ip-' + ip_type + '-cum-ent' + file_ending)
                 plt.savefig(out, dpi=500)
                 return out
 
-        def plot_interval_ip_src_cum_ent(file_ending: str):
+        def plot_degree(degree_type: str, file_ending: str):
             """
-            TODO: FILL ME
-            :param file_ending:
-            :return:
-            """
-            plt.gcf().clear()
+            Creates a Plot, visualizing a degree for every IP Address
 
-            result = self.stats_db.process_user_defined_query(
-                "SELECT lastPktTimestamp, ipSrcCumEntropy FROM interval_statistics ORDER BY lastPktTimestamp")
-            graphx, graphy = [], []
-            for row in result:
-                graphx.append(row[0])
-                graphy.append(row[1])
-            # If entropy was not calculated do not plot the graph
-            if graphy[0] != -1:
-                plt.autoscale(enable=True, axis='both')
-                plt.title("Source IP Cumulative Entropy")
-                # plt.xlabel('Timestamp')
-                plt.xlabel('Time Interval')
-                plt.ylabel('Entropy')
-                plt.xlim([0, len(graphx)])
-                plt.grid(True)
-
-                # timestamp on x-axis
-                x = range(0, len(graphx))
-                # my_xticks = graphx
-                # plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
-                # plt.tight_layout()
-
-                # limit the number of xticks
-                plt.locator_params(axis='x', nbins=20)
-
-                plt.plot(x, graphy, 'r')
-                out = self.pcap_filepath.replace('.pcap', '_plot-interval-ip-src-cum-ent' + file_ending)
-                plt.savefig(out, dpi=500)
-                return out
-
-        def plot_in_degree(file_ending: str):
-            """
-            Creates a Plot, visualizing the in-degree for every IP Address
-
+            :param degree_type: the type of degree, which should be plotted
             :param file_ending: The file extension for the output file containing the plot, e.g. "pdf"
             :return: A filepath to the file containing the created plot
             """
+            if degree_type not in ["in", "out", "overall"]:
+                return None
 
             plt.gcf().clear()
 
             # retrieve data
-            in_degree = self.get_filtered_degree("inDegree")
+            degree = self.get_filtered_degree(degree_type + "Degree")
+
+            if degree is None:
+                return None
 
             graphx, graphy = [], []
-            for entry in in_degree:
+            for entry in degree:
                 # degree values
                 graphx.append(entry[1])
                 # IP labels
                 graphy.append(entry[0])
 
             # set labels
-            plt.title("Indegree per IP Address")
+            plt.title(degree_type + " Degree per IP Address")
             plt.ylabel('IpAddress')
-            plt.xlabel('Indegree')
+            plt.xlabel(degree_type + 'Degree')
 
             # set width of the bars
             width = 0.3
 
             # set scalings
-            plt.figure(figsize=(int(len(graphx))/20 + 5, int(len(graphy)/5) + 5))  # these proportions just worked well
+            plt.figure(
+                figsize=(int(len(graphx)) / 20 + 5, int(len(graphy) / 5) + 5))  # these proportions just worked well
 
             # set limits of the axis
             plt.ylim([0, len(graphy)])
@@ -1323,115 +1302,10 @@ class Statistics:
             graphy = list(range(len(graphx)))
             plt.barh(graphy, graphx, width, align='center', linewidth=1, color='red', edgecolor='red')
             plt.yticks(graphy, labels)
-            out = self.pcap_filepath.replace('.pcap', '_plot-In Degree of an IP' + file_ending)
+            out = self.pcap_filepath.replace('.pcap', '_plot-' + degree_type + ' Degree of an IP' + file_ending)
             # plt.tight_layout()
             plt.savefig(out, dpi=500)
 
-            return out
-
-        def plot_out_degree(file_ending: str):
-            """
-            Creates a Plot, visualizing the out-degree for every IP Address
-
-            :param file_ending: The file extension for the output file containing the plot, e.g. "pdf"
-            :return: A filepath to the file containing the created plot
-            """
-
-            plt.gcf().clear()
-
-            # retrieve data
-            out_degree = self.get_filtered_degree("outDegree")
-
-            graphx, graphy = [], []
-            for entry in out_degree:
-                # degree values
-                graphx.append(entry[1])
-                # IP labels
-                graphy.append(entry[0])
-
-            # set labels
-            plt.title("Outdegree per IP Address")
-            plt.ylabel('IpAddress')
-            plt.xlabel('Outdegree')
-
-            # set width of the bars
-            width = 0.3
-
-            # set scalings
-            plt.figure(figsize=(int(len(graphx))/20 + 5, int(len(graphy)/5) + 5))  # these proportions just worked well
-
-            # set limits of the axis
-            plt.ylim([0, len(graphy)])
-            plt.xlim([0, max(graphx) + 10])
-
-            # display numbers at each bar
-            for i, v in enumerate(graphx):
-                plt.text(v + 1, i + .1, str(v), color='blue', fontweight='bold')
-
-            # display grid for better visuals
-            plt.grid(True)
-
-            # plot the bar
-            labels = graphy
-            graphy = list(range(len(graphx)))
-            plt.barh(graphy, graphx, width, align='center', linewidth=1, color='red', edgecolor='red')
-            plt.yticks(graphy, labels)
-            out = self.pcap_filepath.replace('.pcap', '_plot-Out Degree of an IP' + file_ending)
-            # plt.tight_layout()
-            plt.savefig(out, dpi=500)
-
-            return out
-
-        def plot_overall_degree(file_ending: str):
-            """
-            Creates a Plot, visualizing the overall-degree for every IP Address
-
-            :param file_ending: The file extension for the output file containing the plot, e.g. "pdf"
-            :return: A filepath to the file containing the created plot
-            """
-
-            plt.gcf().clear()
-
-            # retrieve data
-            overall_degree = self.get_filtered_degree("overallDegree")
-
-            graphx, graphy = [], []
-            for entry in overall_degree:
-                # degree values
-                graphx.append(entry[1])
-                # IP labels
-                graphy.append(entry[0])
-
-            # set labels
-            plt.title("Overalldegree per IP Address")
-            plt.ylabel('IpAddress')
-            plt.xlabel('Overalldegree')
-
-            # set width of the bars
-            width = 0.3
-
-            # set scalings
-            plt.figure(figsize=(int(len(graphx))/20 + 5, int(len(graphy)/5) + 5))  # these proportions just worked well
-
-            # set limits of the axis
-            plt.ylim([0, len(graphy)])
-            plt.xlim([0, max(graphx) + 10])
-
-            # display numbers at each bar
-            for i, v in enumerate(graphx):
-                plt.text(v + 1, i + .1, str(v), color='blue', fontweight='bold')
-
-            # display grid for better visuals
-            plt.grid(True)
-
-            # plot the bar
-            labels = graphy
-            graphy = list(range(len(graphx)))
-            plt.barh(graphy, graphx, width, align='center', linewidth=1, color='red', edgecolor='red')
-            plt.yticks(graphy, labels)
-            out = self.pcap_filepath.replace('.pcap', '_plot-Overall Degree of an IP' + file_ending)
-            # plt.tight_layout()
-            plt.savefig(out, dpi=500)
             return out
 
         def plot_big_conv_ext_stat(attr: str, title: str, xlabel: str, suffix: str):
@@ -1476,7 +1350,7 @@ class Statistics:
             dist_mult_height = 0.55  # this value turned out to work well
             plt_height = len(graphy) * dist_mult_height
             # originally, a good title distance turned out to be 1.012 with a plot height of 52.8
-            title_distance = 1 + 0.012*52.8/plt_height
+            title_distance = 1 + 0.012 * 52.8 / plt_height
 
             plt.gcf().set_size_inches(plt.gcf().get_size_inches()[0], plt_height)  # set plot height
             plt.gcf().subplots_adjust(left=0.35)
@@ -1607,10 +1481,10 @@ class Statistics:
             bins = []
             max_val = max(result)
             for i in range(0, 11):
-                bins.append(i * max_val/10)
+                bins.append(i * max_val / 10)
 
             # set weights normalize histogram
-            weights = numpy.ones_like(result)/float(len(result))
+            weights = numpy.ones_like(result) / float(len(result))
 
             # plot the above data, first use plain numbers as graphy to maintain sorting
             plt.hist(result, bins=bins, weights=weights, color='red', edgecolor='red', align="mid", rwidth=0.5)
@@ -1652,10 +1526,10 @@ class Statistics:
             bins = []
             max_val = max(result)
             for i in range(0, 11):
-                bins.append(int(i * max_val/10))
+                bins.append(int(i * max_val / 10))
 
             # set weights normalize histogram
-            weights = numpy.ones_like(result)/float(len(result))
+            weights = numpy.ones_like(result) / float(len(result))
 
             # plot the above data, first use plain numbers as graphy to maintain sorting
             plt.hist(result, bins=bins, weights=weights, color='red', edgecolor='red', align="mid", rwidth=0.5)
@@ -1681,9 +1555,9 @@ class Statistics:
             print(".", end="", flush=True)
             plot_interval_ip_dst_ent = plot_interval_ip_dst_ent('.' + file_format)
             print(".", end="", flush=True)
-            plot_interval_ip_src_cum_ent = plot_interval_ip_src_cum_ent('.' + file_format)
+            plot_interval_ip_src_cum_ent = plot_interval_ip_cum_ent("src", '.' + file_format)
             print(".", end="", flush=True)
-            plot_interval_ip_dst_cum_ent = plot_interval_ip_dst_cum_ent('.' + file_format)
+            plot_interval_ip_dst_cum_ent = plot_interval_ip_cum_ent("dst", '.' + file_format)
             print(".", end="", flush=True)
         plot_interval_new_ip = plot_interval_new_ip('.' + file_format)
         print(".", end="", flush=True)
@@ -1698,34 +1572,48 @@ class Statistics:
         plot_interval_new_mss = plot_interval_new_mss('.' + file_format)
         print(".", end="", flush=True)
         plot_hist_indegree_out = plot_histogram_degree("inDegree", "Histogram - Ingoing degree per IP Address",
-            "Ingoing degree", "_plot-Histogram Ingoing Degree per IP" + file_format)
+                                                       "Ingoing degree",
+                                                       "_plot-Histogram Ingoing Degree per IP" + file_format)
         print(".", end="", flush=True)
         plot_hist_outdegree_out = plot_histogram_degree("outDegree", "Histogram - Outgoing degree per IP Address",
-            "Outgoing degree", "_plot-Histogram Outgoing Degree per IP" + file_format)
+                                                        "Outgoing degree",
+                                                        "_plot-Histogram Outgoing Degree per IP" + file_format)
         print(".", end="", flush=True)
-        plot_hist_overalldegree_out = plot_histogram_degree("overallDegree", "Histogram - Overall degree per IP Address",
-            "Overall degree", "_plot-Histogram Overall Degree per IP" + file_format)
+        plot_hist_overalldegree_out = plot_histogram_degree("overallDegree",
+                                                            "Histogram - Overall degree per IP Address",
+                                                            "Overall degree",
+                                                            "_plot-Histogram Overall Degree per IP" + file_format)
         print(".", end="", flush=True)
-        plot_hist_pkts_per_connection_out = plot_comm_histogram("pktsCount", "Histogram - Number of exchanged packets per connection",
-            "Number of packets", "_plot-Histogram PktCount per Connection" + "." + file_format)
+        plot_hist_pkts_per_connection_out = plot_comm_histogram("pktsCount",
+                                                                "Histogram - Number of exchanged packets per connection",
+                                                                "Number of packets",
+                                                                "_plot-Histogram PktCount per Connection" + "." + file_format)
         print(".", end="", flush=True)
-        plot_hist_avgpkts_per_commint_out = plot_comm_histogram("avgIntervalPktCount", "Histogram - Average number of exchanged packets per communication interval",
-            "Average number of packets", "_plot-Histogram Avg PktCount per Interval per Connection" + "." + file_format)
+        plot_hist_avgpkts_per_commint_out = plot_comm_histogram("avgIntervalPktCount",
+                                                                "Histogram - Average number of exchanged packets per communication interval",
+                                                                "Average number of packets",
+                                                                "_plot-Histogram Avg PktCount per Interval per Connection" + "." + file_format)
         print(".", end="", flush=True)
-        plot_hist_avgtime_betw_commints_out = plot_comm_histogram("avgTimeBetweenIntervals", "Histogram - Average time between communication intervals in seconds",
-            "Average time between intervals", "_plot-Histogram Avg Time Between Intervals per Connection" + "." + file_format)
+        plot_hist_avgtime_betw_commints_out = plot_comm_histogram("avgTimeBetweenIntervals",
+                                                                  "Histogram - Average time between communication intervals in seconds",
+                                                                  "Average time between intervals",
+                                                                  "_plot-Histogram Avg Time Between Intervals per Connection" + "." + file_format)
         print(".", end="", flush=True)
-        plot_hist_avg_int_time_per_connection_out = plot_comm_histogram("avgIntervalTime", "Histogram - Average duration of a communication interval in seconds",
-            "Average interval time", "_plot-Histogram Avg Interval Time per Connection" + "." + file_format)
+        plot_hist_avg_int_time_per_connection_out = plot_comm_histogram("avgIntervalTime",
+                                                                        "Histogram - Average duration of a communication interval in seconds",
+                                                                        "Average interval time",
+                                                                        "_plot-Histogram Avg Interval Time per Connection" + "." + file_format)
         print(".", end="", flush=True)
-        plot_hist_total_comm_duration_out = plot_comm_histogram("totalConversationDuration", "Histogram - Total communication duration in seconds",
-            "Duration", "_plot-Histogram Communication Duration per Connection" + "." + file_format)
+        plot_hist_total_comm_duration_out = plot_comm_histogram("totalConversationDuration",
+                                                                "Histogram - Total communication duration in seconds",
+                                                                "Duration",
+                                                                "_plot-Histogram Communication Duration per Connection" + "." + file_format)
         print(".", end="", flush=True)
-        plot_out_degree = plot_out_degree('.' + file_format)
+        plot_out_degree = plot_degree("out", '.' + file_format)
         print(".", end="", flush=True)
-        plot_in_degree = plot_in_degree('.' + file_format)
+        plot_in_degree = plot_degree("in", '.' + file_format)
         print(".", end="", flush=True)
-        plot_overall_degree = plot_overall_degree('.' + file_format)
+        plot_overall_degree = plot_degree("overall", '.' + file_format)
         print(".", end="", flush=True)
         plot_packets_per_connection_out = plot_packets_per_connection('.' + file_format)
         print(".", end="", flush=True)
