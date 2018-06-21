@@ -1262,13 +1262,17 @@ class Statistics:
             plt.gcf().clear()
 
             # retrieve data
-            degree = self.get_filtered_degree(degree_type + "Degree")
+
+            degree = self.stats_db.process_user_defined_query(
+                "SELECT ipAddress, %s FROM ip_degrees" % (degree_type + "Degree"))
 
             if degree is None:
                 return None
 
             graphx, graphy = [], []
             for entry in degree:
+                if entry[1] <= 0:
+                    continue
                 # degree values
                 graphx.append(entry[1])
                 # IP labels
