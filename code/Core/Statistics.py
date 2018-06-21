@@ -703,7 +703,7 @@ class Statistics:
                     external_conv.append(conv)
                 else:
                     local_conv.append(conv)
-   
+
             # calculate avg local and external delay by summing up the respective delays and dividing them by the
             # number of conversations
             avg_delay_external = 0.0
@@ -769,7 +769,7 @@ class Statistics:
             for deg in degrees_raw:
                 if int(deg[1]) > 0:
                     degrees.append(deg)
-        
+
         return degrees
 
     def get_rnd_win_size(self, pkts_num):
@@ -995,7 +995,7 @@ class Statistics:
             x = range(0, len(graphx))
             my_xticks = graphx
             plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
-            plt.tight_layout()
+            # plt.tight_layout()
 
             # limit the number of xticks
             plt.locator_params(axis='x', nbins=20)
@@ -1031,7 +1031,7 @@ class Statistics:
             x = range(0, len(graphx))
             my_xticks = graphx
             plt.xticks(x, my_xticks, rotation='vertical', fontsize=5)
-            plt.tight_layout()
+            # plt.tight_layout()
 
             # limit the number of xticks
             plt.locator_params(axis='x', nbins=20)
@@ -1324,7 +1324,7 @@ class Statistics:
             plt.barh(graphy, graphx, width, align='center', linewidth=1, color='red', edgecolor='red')
             plt.yticks(graphy, labels)
             out = self.pcap_filepath.replace('.pcap', '_plot-In Degree of an IP' + file_ending)
-            plt.tight_layout()
+            # plt.tight_layout()
             plt.savefig(out, dpi=500)
 
             return out
@@ -1377,7 +1377,7 @@ class Statistics:
             plt.barh(graphy, graphx, width, align='center', linewidth=1, color='red', edgecolor='red')
             plt.yticks(graphy, labels)
             out = self.pcap_filepath.replace('.pcap', '_plot-Out Degree of an IP' + file_ending)
-            plt.tight_layout()
+            # plt.tight_layout()
             plt.savefig(out, dpi=500)
 
             return out
@@ -1430,13 +1430,13 @@ class Statistics:
             plt.barh(graphy, graphx, width, align='center', linewidth=1, color='red', edgecolor='red')
             plt.yticks(graphy, labels)
             out = self.pcap_filepath.replace('.pcap', '_plot-Overall Degree of an IP' + file_ending)
-            plt.tight_layout()
+            # plt.tight_layout()
             plt.savefig(out, dpi=500)
             return out
 
         def plot_big_conv_ext_stat(attr: str, title: str, xlabel: str, suffix: str):
             """
-            Plots the desired statistc per connection as horizontal bar plot. 
+            Plots the desired statistc per connection as horizontal bar plot.
             Included are 'half-open' connections, where only one packet is exchanged.
             The given statistics table has to have at least the attributes 'ipAddressA', 'portA', 'ipAddressB',
             'portB' and the specified additional attribute.
@@ -1496,12 +1496,12 @@ class Statistics:
 
             # save created figure
             out = self.pcap_filepath.replace('.pcap', suffix)
-            plt.savefig(out, dpi=500, bbox_inches='tight', pad=0.2)
+            plt.savefig(out, dpi=500)
             return out
 
         def plot_packets_per_connection(file_ending: str):
             """
-            Plots the total number of exchanged packets per connection. 
+            Plots the total number of exchanged packets per connection.
 
             :param file_ending: The file extension for the output file containing the plot
             :return: A filepath to the file containing the created plot
@@ -1515,7 +1515,7 @@ class Statistics:
 
         def plot_avg_pkts_per_comm_interval(file_ending: str):
             """
-            Plots the average number of exchanged packets per communication interval for every connection. 
+            Plots the average number of exchanged packets per communication interval for every connection.
 
             :param file_ending: The file extension for the output file containing the plot
             :return: A filepath to the file containing the created plot
@@ -1529,7 +1529,7 @@ class Statistics:
 
         def plot_avg_time_between_comm_interval(file_ending: str):
             """
-            Plots the average time between the communication intervals of every connection. 
+            Plots the average time between the communication intervals of every connection.
 
             :param file_ending: The file extension for the output file containing the plot
             :return: A filepath to the file containing the created plot
@@ -1543,7 +1543,7 @@ class Statistics:
 
         def plot_avg_comm_interval_time(file_ending: str):
             """
-            Plots the average duration of a communication interval of every connection. 
+            Plots the average duration of a communication interval of every connection.
 
             :param file_ending: The file extension for the output file containing the plot
             :return: A filepath to the file containing the created plot
@@ -1557,7 +1557,7 @@ class Statistics:
 
         def plot_total_comm_duration(file_ending: str):
             """
-            Plots the total communication duration of every connection. 
+            Plots the total communication duration of every connection.
 
             :param file_ending: The file extension for the output file containing the plot
             :return: A filepath to the file containing the created plot
@@ -1618,7 +1618,7 @@ class Statistics:
 
             # save created figure
             out = self.pcap_filepath.replace('.pcap', suffix)
-            plt.savefig(out, dpi=500, bbox_inches='tight', pad=0.2)
+            plt.savefig(out, dpi=500)
             return out
 
         def plot_histogram_degree(degree_type: str, title: str, label: str, suffix: str):
@@ -1629,8 +1629,8 @@ class Statistics:
             :param label: The xlabel of the histogram
             :param suffix: The file suffix
             :return: The path to the created plot
-            """  
-            
+            """
+
             plt.gcf().clear()
             result_raw = self.get_filtered_degree(degree_type)
 
@@ -1663,7 +1663,7 @@ class Statistics:
 
             # save created figure
             out = self.pcap_filepath.replace('.pcap', suffix)
-            plt.savefig(out, dpi=500, bbox_inches='tight', pad=0.2)
+            plt.savefig(out, dpi=500)
             return out
 
         ttl_out_path = plot_ttl('.' + file_format)
