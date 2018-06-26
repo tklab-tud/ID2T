@@ -15,7 +15,7 @@ import ID2TLib.PcapFile as PcapFile
 import ID2TLib.Utility as Util
 from ID2TLib.IPv4 import IPAddress
 
-matplotlib.use('Agg', force=True)
+matplotlib.use('Cairo', force=True)
 import matplotlib.pyplot as plt
 
 

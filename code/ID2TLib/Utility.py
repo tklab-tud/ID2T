@@ -7,7 +7,7 @@ import random as rnd
 import matplotlib
 import scipy.stats as stats
 
-matplotlib.use('Agg', force=True)
+matplotlib.use('Cairo', force=True)
 import lea
 import xdg.BaseDirectory as BaseDir
 import scapy.layers.inet as inet
