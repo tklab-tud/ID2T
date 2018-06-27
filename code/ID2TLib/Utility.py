@@ -3,11 +3,6 @@ import datetime as dt
 import ipaddress
 import os
 import random as rnd
-
-import matplotlib
-import scipy.stats as stats
-
-matplotlib.use('Cairo', force=True)
 import lea
 import xdg.BaseDirectory as BaseDir
 import scapy.layers.inet as inet

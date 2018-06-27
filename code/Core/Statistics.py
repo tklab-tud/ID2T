@@ -8,14 +8,10 @@ from operator import itemgetter
 # TODO: double check this import
 # does it complain because libpcapreader is not a .py?
 import ID2TLib.libpcapreader as pr
-import matplotlib
-
 import Core.StatsDatabase as statsDB
 import ID2TLib.PcapFile as PcapFile
 import ID2TLib.Utility as Util
 from ID2TLib.IPv4 import IPAddress
-
-matplotlib.use('Cairo', force=True)
 import matplotlib.pyplot as plt
 
 
