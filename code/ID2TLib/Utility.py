@@ -6,6 +6,7 @@ import random as rnd
 import lea
 import xdg.BaseDirectory as BaseDir
 import scapy.layers.inet as inet
+import scipy.stats as stats
 
 CACHE_DIR = os.path.join(BaseDir.xdg_cache_home, 'id2t')
 CODE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/../"
