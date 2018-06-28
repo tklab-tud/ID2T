@@ -22,7 +22,7 @@ public:
     /*
      * Database version: Increment number on every change in the C++ code!
      */
-    static const int DB_VERSION = 11;
+    static const int DB_VERSION = 12;
 
     /*
      * Methods for writing values into database
