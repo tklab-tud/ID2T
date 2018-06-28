@@ -515,7 +515,7 @@ public:
     /*
      * Constructor
      */
-    statistics();
+    statistics(std::string resourcePath);
 
     /*
      * Methods
@@ -618,6 +618,7 @@ private:
     Tins::Timestamp timestamp_lastPacket;
     float sumPacketSize = 0;
     int packetCount = 0;
+    std::string resourcePath;
 
     /* Extra tests includes:
      * - calculate IPs entropies for intervals

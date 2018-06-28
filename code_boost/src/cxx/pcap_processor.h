@@ -23,7 +23,7 @@ public:
     /*
     * Class constructor
     */
-    pcap_processor(std::string path, std::string extraTests);
+    pcap_processor(std::string path, std::string extraTests, std::string resource_path);
 
     /*
      * Attributes

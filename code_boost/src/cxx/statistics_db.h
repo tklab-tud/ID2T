@@ -17,7 +17,7 @@ public:
     /*
      * Constructor: Creates new database / Opens existing database
      */
-    statistics_db(std::string database_path);
+    statistics_db(std::string database_path, std::string resourcePath);
 
     /*
      * Database version: Increment number on every change in the C++ code!
@@ -60,10 +60,6 @@ public:
 
     void readPortServicesFromNmap();
 
-    std::string getNmapPath();
-
-    bool pathExists(std::string path);
-
     void writeStatisticsUnrecognizedPDUs(const std::unordered_map<unrecognized_PDU, unrecognized_PDU_stat> &unrecognized_PDUs);
 
 
@@ -73,6 +69,8 @@ private:
 
     // Vector which contains all ports and their corresponding services
     std::unordered_map<int, std::string> portServices;
+
+    std::string resourcePath;
 
 };
 

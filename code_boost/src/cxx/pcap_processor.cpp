@@ -9,12 +9,12 @@ using namespace Tins;
  * Creates a new pcap_processor object.
  * @param path The path where the PCAP to get analyzed is locatated.
  */
-pcap_processor::pcap_processor(std::string path, std::string extraTests) {
+pcap_processor::pcap_processor(std::string path, std::string extraTests, std::string resourcePath) : stats(resourcePath) {
     filePath = path;
     hasUnrecognized = false;
     if(extraTests == "True")
         stats.setDoExtraTests(true);
-    else stats.setDoExtraTests(false);;
+    else stats.setDoExtraTests(false);
 }
 
 /**
@@ -419,7 +419,7 @@ bool inline pcap_processor::file_exists(const std::string &filePath) {
  */
 PYBIND11_MODULE (libpcapreader, m) {
     py::class_<pcap_processor>(m, "pcap_processor")
-            .def(py::init<std::string, std::string>())
+            .def(py::init<std::string, std::string, std::string>())
             .def("merge_pcaps", &pcap_processor::merge_pcaps)
             .def("collect_statistics", &pcap_processor::collect_statistics)
             .def("get_timestamp_mu_sec", &pcap_processor::get_timestamp_mu_sec)

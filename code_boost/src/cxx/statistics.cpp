@@ -472,7 +472,8 @@ void statistics::incrementUnrecognizedPDUCount(const std::string &srcMac, const 
 /**
  * Creates a new statistics object.
  */
-statistics::statistics(void) {
+statistics::statistics(std::string resourcePath) {
+    this->resourcePath = resourcePath;
 }
 
 /**
@@ -756,7 +757,7 @@ void statistics::writeToDatabase(std::string database_path) {
         float avgBandwidthOutInKBits = (sumBandwidthOut / senderCountIP) * 8;
 
         // Create database and write information
-        statistics_db db(database_path);
+        statistics_db db(database_path, resourcePath);
         db.writeStatisticsFile(packetCount, getCaptureDurationSeconds(),
                                getFormattedTimestamp(timestamp_firstPacket.seconds(), timestamp_firstPacket.microseconds()),
                                getFormattedTimestamp(timestamp_lastPacket.seconds(), timestamp_lastPacket.microseconds()),
