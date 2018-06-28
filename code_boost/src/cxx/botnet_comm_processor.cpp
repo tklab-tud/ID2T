@@ -26,7 +26,7 @@ botnet_comm_processor::botnet_comm_processor(){
  */
 void botnet_comm_processor::set_messages(const py::list &messages_pyboost){
     messages.clear();
-    for (int i = 0; i < len(messages_pyboost); i++){
+    for (size_t i = 0; i < len(messages_pyboost); i++){
         py::dict msg_pyboost = py::cast<py::dict>(messages_pyboost[i]);
         unsigned int src_id = std::stoi(py::cast<std::string>(msg_pyboost["Src"]));
         unsigned int dst_id = std::stoi(py::cast<std::string>(msg_pyboost["Dst"]));
