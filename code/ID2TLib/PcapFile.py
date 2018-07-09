@@ -21,7 +21,7 @@ class PcapFile(object):
         :param attack_pcap_path: The path to the PCAP file to merge with the PCAP at pcap_file_path
         :return: The file path of the resulting PCAP file
         """
-        pcap = pr.pcap_processor(self.pcap_file_path, "False")
+        pcap = pr.pcap_processor(self.pcap_file_path, "False", Util.RESOURCE_DIR)
         file_out_path = pcap.merge_pcaps(attack_pcap_path)
         return file_out_path
 

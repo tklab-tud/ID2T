@@ -59,7 +59,7 @@ class Statistics:
 
         # Recalculate statistics if database does not exist OR param -r/--recalculate is provided
         if (not self.stats_db.get_db_exists()) or flag_recalculate_stats or self.stats_db.get_db_outdated():
-            self.pcap_proc = pr.pcap_processor(self.pcap_filepath, str(self.do_extra_tests))
+            self.pcap_proc = pr.pcap_processor(self.pcap_filepath, str(self.do_extra_tests), Util.RESOURCE_DIR)
             self.pcap_proc.collect_statistics()
             self.pcap_proc.write_to_database(self.path_db)
             outstring_datasource = "by PCAP file processor."

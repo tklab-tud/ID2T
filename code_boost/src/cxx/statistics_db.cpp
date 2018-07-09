@@ -13,13 +13,15 @@ namespace py = pybind11;
  * a new database at database_path.
  * @param database_path The file path of the database.
  */
-statistics_db::statistics_db(std::string database_path) {
+statistics_db::statistics_db(std::string database_path, std::string resourcePath) {
     // Append file extension if not present
     if (database_path.find(".sqlite3") == database_path.npos) {
         database_path += ".sqlite3";
     }
     // creates the DB if not existing, opens the DB for read+write access
     db.reset(new SQLite::Database(database_path, SQLite::OPEN_CREATE | SQLite::OPEN_READWRITE));
+
+    this->resourcePath = resourcePath;
 
     // Read ports and services into portServices vector
     readPortServicesFromNmap();
@@ -637,7 +639,7 @@ void statistics_db::readPortServicesFromNmap()
     std::string portnumber;
     std::string service;
     std::string dump;
-    std::string nmapPath = getNmapPath();
+    std::string nmapPath = resourcePath + "nmap-services-tcp.csv";
     std::ifstream reader;
 
     reader.open(nmapPath, std::ios::in);
@@ -667,65 +669,6 @@ void statistics_db::readPortServicesFromNmap()
     }
 }
 
-/**
- * Gets the path to nmap-services-tcp.csv and makes sure the file is reached from any working directory within "/code"
- * because the working directory can be different when running tests. Checks if the file/path exists and warns the user.
- */
-std::string statistics_db::getNmapPath()
-{
-    //The different working directory paths according to how the database is built:
-    //<ID2T> stands for the directory id2t.sh is located in
-    //From tests(e.g. pycharm)  /<ID2T>/code/Test
-    //From run_tests.sh         /<ID2T>/code
-    //From id2t.sh              /<ID2T>
-    std::string filename = "nmap-services-tcp.csv";
-    std::string resourcesDir = "/resources/";
-    std::string codeDir = "/code";
-    std::string testDir = "/code/Test";
-    char buff[FILENAME_MAX];
-    // Working directory
-    std::string dir(getcwd(buff, FILENAME_MAX));
-
-    // Check if working directory is id2t.sh directory(try to reach file from working directory)
-    if(pathExists(dir + resourcesDir + filename))
-    {
-        return dir + resourcesDir + filename;
-    }
-
-    // If working directory is test directory(happens if tests are called from pycharm for example)
-    else if(dir.rfind(testDir) == (dir.size()-testDir.size()))
-    {
-        // Remove test directory from path
-        dir = dir.substr(0, (dir.size()-testDir.size()));
-    }
-
-    // If working directory is code directory(happens if tests are called with testscript)
-    else if(dir.rfind(codeDir) == (dir.size()-codeDir.size()))
-    {
-        // Remove code directory from path
-        dir = dir.substr(0, (dir.size()-codeDir.size()));
-    }
-
-    dir = dir + resourcesDir + filename;
-
-    return dir;
-}
-
-bool statistics_db::pathExists(std::string path)
-{
-    std::ifstream file;
-    file.open(path, std::ios::in);
-    if(file.is_open())
-    {
-        file.close();
-        return true;
-    }
-
-    else
-    {
-        return false;
-    }
-}
 /**
  * Writes the unrecognized PDUs into the database.
  * @param unrecognized_PDUs The unrecognized PDUs from class statistics.
