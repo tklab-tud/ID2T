@@ -59,7 +59,7 @@ install_pkg_ubuntu()
     if [ $? != 0 ]; then
         # Install all missing packages
         echo -e "Packages: Installing..."
-        $SUDO "apt-get install $APT_PKGS"
+        $SUDO apt-get install $APT_PKGS
     else
         echo -e "Packages: Found."
     fi
