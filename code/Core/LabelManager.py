@@ -2,6 +2,7 @@ import importlib
 import datetime as dt
 import os.path
 import xml.dom.minidom as minidom
+import pytz as pytz
 
 import ID2TLib.Label as Label
 import ID2TLib.TestLibrary as Lib
@@ -105,7 +106,7 @@ class LabelManager:
 
             # add timestamp in human-readable format
             timestamp_hr = doc.createElement(self.TAG_TIMESTAMP_HR)
-            timestamp_hr_text = dt.datetime.fromtimestamp(timestamp_entry).strftime('%Y-%m-%d %H:%M:%S.%f')
+            timestamp_hr_text = dt.datetime.fromtimestamp(timestamp_entry).astimezone(pytz.timezone('UTC')).strftime('%Y-%m-%d %H:%M:%S.%f')
             timestamp_hr.appendChild(doc.createTextNode(timestamp_hr_text))
             timestamp_root.appendChild(timestamp_hr)
 

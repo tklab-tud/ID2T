@@ -22,10 +22,10 @@ class UnitTestInternalQueries(unittest.TestCase):
                           ("Recognized packets", 1988, "packets"),
                           ("Unrecognized packets", 10, "PDUs"), ("% Recognized packets", 99.49949949949949, "%"),
                           ("% Unrecognized packets", 0.5005005005005005, "%"),
-                          ("Last unknown PDU", '1970-01-01 01:07:39.604899'),
+                          ("Last unknown PDU", '1970-01-01 00:07:39.604899'),
                           ('Capture duration', '384.454345703125', 'seconds'),
-                          ('Capture start', '\t1970-01-01 01:01:45.647675'),
-                          ('Capture end', '\t1970-01-01 01:08:10.102034')])
+                          ('Capture start', '\t1970-01-01 00:01:45.647675'),
+                          ('Capture end', '\t1970-01-01 00:08:10.102034')])
 
     def test_get_packet_count(self):
         self.assertEqual(controller.statistics.get_packet_count(), 1998)
@@ -34,10 +34,10 @@ class UnitTestInternalQueries(unittest.TestCase):
         self.assertEqual(controller.statistics.get_capture_duration(), '384.454345703125')
 
     def test_get_pcap_timestamp_start(self):
-        self.assertEqual(controller.statistics.get_pcap_timestamp_start(), '1970-01-01 01:01:45.647675')
+        self.assertEqual(controller.statistics.get_pcap_timestamp_start(), '1970-01-01 00:01:45.647675')
 
     def test_get_pcap_timestamp_end(self):
-        self.assertEqual(controller.statistics.get_pcap_timestamp_end(), '1970-01-01 01:08:10.102034')
+        self.assertEqual(controller.statistics.get_pcap_timestamp_end(), '1970-01-01 00:08:10.102034')
 
     # FIXME: This seems to be the only testcase where float values differ slightly between macOS and Linux
     def test_get_general_file_statistics(self):

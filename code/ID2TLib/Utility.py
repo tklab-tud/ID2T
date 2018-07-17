@@ -7,6 +7,7 @@ import lea
 import xdg.BaseDirectory as BaseDir
 import scapy.layers.inet as inet
 import scipy.stats as stats
+import pytz as pytz
 
 CACHE_DIR = os.path.join(BaseDir.xdg_cache_home, 'id2t')
 CODE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/../"
@@ -72,7 +73,7 @@ def update_timestamp(timestamp: float, pps: float, delay: float=0, inj_pps: floa
 
 
 def get_timestamp_from_datetime_str(time: str):
-    return dt.datetime.strptime(time, "%Y-%m-%d %H:%M:%S.%f").timestamp()
+    return pytz.timezone('UTC').localize(dt.datetime.strptime(time, "%Y-%m-%d %H:%M:%S.%f")).timestamp()
 
 
 def get_interval_pps(complement_interval_pps, timestamp):
