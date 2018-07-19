@@ -666,7 +666,7 @@ std::string statistics::getFormattedTimestamp(time_t seconds, suseconds_t micros
     timeval tv;
     tv.tv_sec = seconds;
     tv.tv_usec = microseconds;
-    char tmbuf[64], buf[64];
+    char tmbuf[20], buf[64];
     auto nowtm = gmtime(&(tv.tv_sec));
     strftime(tmbuf, sizeof(tmbuf), "%Y-%m-%d %H:%M:%S", nowtm);
     snprintf(buf, sizeof(buf), "%s.%06u", tmbuf, static_cast<uint>(tv.tv_usec));
