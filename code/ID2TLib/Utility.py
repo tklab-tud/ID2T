@@ -7,6 +7,7 @@ import lea
 import xdg.BaseDirectory as BaseDir
 import scapy.layers.inet as inet
 import scipy.stats as stats
+import pytz as pytz
 
 CACHE_DIR = os.path.join(BaseDir.xdg_cache_home, 'id2t')
 CODE_DIR = os.path.dirname(os.path.abspath(__file__)) + "/../"
@@ -72,7 +73,7 @@ def update_timestamp(timestamp: float, pps: float, delay: float=0, inj_pps: floa
 
 
 def get_timestamp_from_datetime_str(time: str):
-    return dt.datetime.strptime(time, "%Y-%m-%d %H:%M:%S.%f").timestamp()
+    return pytz.timezone('UTC').localize(dt.datetime.strptime(time, "%Y-%m-%d %H:%M:%S.%f")).timestamp()
 
 
 def get_interval_pps(complement_interval_pps, timestamp):
@@ -189,9 +190,7 @@ def get_filetime_format(timestamp):
     :param timestamp: a timestamp in seconds
     :return: MS FILETIME timestamp
     """
-    boot_datetime = dt.datetime.fromtimestamp(timestamp)
-    if boot_datetime.tzinfo is None or boot_datetime.tzinfo.utcoffset(boot_datetime) is None:
-        boot_datetime = boot_datetime.replace(tzinfo=boot_datetime.tzname())
+    boot_datetime = dt.datetime.fromtimestamp(timestamp).astimezone(pytz.timezone('UTC'))
     boot_filetime = 116444736000000000 + (cal.timegm(boot_datetime.timetuple()) * 10000000)
     return boot_filetime + (boot_datetime.microsecond * 10)
 
