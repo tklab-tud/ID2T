@@ -74,6 +74,23 @@ class CLI(object):
         parser.add_argument('-ie', '--inject_empty', action='store_true',
                             help='injects ATTACK into an EMPTY PCAP file, using the statistics of the input PCAP.')
         parser.add_argument('-d', '--debug', help='Runs ID2T in debug mode.', action='store_true', default=False)
+        parser.add_argument('-si', '--statistics_interval', help='interval duration in seconds', action='store',
+                            type=float, nargs='+', default=[])
+        parser.add_argument('-rd', '--recalculate-delete',
+                            help='recalculate statistics even if a cached version exists.'
+                                 'also delete old interval statistics.'
+                                 'surpresses (yes, no, delete) prompt.', action='store_true',
+                            default=False)
+        parser.add_argument('-ry', '--recalculate-yes',
+                            help='recalculate statistics even if a cached version exists.'
+                                 'also recalculates old interval statistics.'
+                                 'surpresses (yes, no, delete) prompt.', action='store_true',
+                            default=False)
+        parser.add_argument('-rn', '--recalculate-no',
+                            help='recalculate statistics even if a cached version exists.'
+                                 'does not recalculate old interval statistics, but keeps them.'
+                                 'surpresses (yes, no, delete) prompt.', action='store_true',
+                            default=False)
 
         # Attack arguments
         parser.add_argument('-a', '--attack', metavar="ATTACK", action='append',
@@ -149,7 +166,18 @@ class CLI(object):
                                 self.args.debug)
 
         # Load PCAP statistics
-        controller.load_pcap_statistics(self.args.export, self.args.recalculate, self.args.statistics)
+        recalculate_intervals = None
+        if self.args.recalculate_delete:
+            self.args.recalculate = True
+        elif self.args.recalculate_yes:
+            recalculate_intervals = True
+            self.args.recalculate = True
+        elif self.args.recalculate_no:
+            recalculate_intervals = False
+            self.args.recalculate = True
+        controller.load_pcap_statistics(self.args.export, self.args.recalculate, self.args.statistics,
+                                        self.args.statistics_interval, self.args.recalculate_delete,
+                                        recalculate_intervals)
 
         # Create statistics plots
         if self.args.plot is not None:

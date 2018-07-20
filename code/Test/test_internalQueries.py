@@ -5,7 +5,8 @@ import ID2TLib.TestLibrary as Lib
 import Core.Controller as Ctrl
 
 controller = Ctrl.Controller(pcap_file_path=Lib.test_pcap, do_extra_tests=False, non_verbose=True)
-controller.load_pcap_statistics(flag_write_file=False, flag_recalculate_stats=True, flag_print_statistics=False)
+controller.load_pcap_statistics(flag_write_file=False, flag_recalculate_stats=True, flag_print_statistics=False,
+                                intervals=[], delete=True)
 
 ipAddresses = ['10.0.2.15', '104.83.103.45', '13.107.21.200', '131.253.61.100', '172.217.23.142', '172.217.23.174',
                '192.168.33.254', '204.79.197.200', '23.51.123.27', '35.161.3.50', '52.11.17.245', '52.34.37.177',

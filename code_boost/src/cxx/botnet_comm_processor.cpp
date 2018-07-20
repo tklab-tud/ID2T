@@ -530,7 +530,7 @@ int botnet_comm_processor::msgtype_is_response(unsigned short mtype){
  * Converts the given vector of communication intervals to a python representation 
  * using (python) lists and (python) tuples.
  * @param intervals The communication intervals to convert.
- * @return A boost::python::list containing the same interval information using boost::python::dict for each interval.
+ * @return A py::list containing the same interval information using boost::python::dict for each interval.
  */
 py::list botnet_comm_processor::convert_intervals_to_py_repr(const std::vector<comm_interval> &intervals){
     py::list py_intervals;

@@ -32,7 +32,8 @@ class ID2TAttackTest(unittest.TestCase):
         """
 
         controller = Ctrl.Controller(pcap_file_path=pcap, do_extra_tests=False, non_verbose=True)
-        controller.load_pcap_statistics(flag_write_file, flag_recalculate_stats, flag_print_statistics)
+        controller.load_pcap_statistics(flag_write_file, flag_recalculate_stats, flag_print_statistics,
+                                        intervals=[], delete=True)
 
         controller.process_attacks(attack_args, [[seed]], time)
 
@@ -69,7 +70,8 @@ class ID2TAttackTest(unittest.TestCase):
         """
 
         controller = Ctrl.Controller(pcap_file_path=pcap, do_extra_tests=False, non_verbose=True)
-        controller.load_pcap_statistics(flag_write_file, flag_recalculate_stats, flag_print_statistics)
+        controller.load_pcap_statistics(flag_write_file, flag_recalculate_stats, flag_print_statistics,
+                                        intervals=[], delete=True)
 
         if seed is None:
             controller.process_attacks(attack_args, time=True)
@@ -110,7 +112,8 @@ class ID2TAttackTest(unittest.TestCase):
         """
 
         controller = Ctrl.Controller(pcap_file_path=pcap, do_extra_tests=False, non_verbose=True)
-        controller.load_pcap_statistics(flag_write_file, flag_recalculate_stats, flag_print_statistics)
+        controller.load_pcap_statistics(flag_write_file, flag_recalculate_stats, flag_print_statistics,
+                                        intervals=[], delete=True)
         controller.process_attacks(attack_args, [[seed]])
 
         caller_function = inspect.stack()[1].function

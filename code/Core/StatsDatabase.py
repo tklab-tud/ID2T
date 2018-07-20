@@ -365,6 +365,17 @@ class StatsDatabase:
 
         return result
 
+    def process_interval_statistics_query(self, query_string_in: str):
+        """
+
+        :param query_string_in:
+        :return:
+        """
+        table_name = self.process_db_query("SELECT name FROM interval_tables WHERE is_default=1")
+        return self.process_user_defined_query(query_string_in % table_name)
+
+
+
     def _print_query_results(self, query_string_in: str, result: typing.List[typing.Union[str, float, int]]) -> None:
         """
         Prints the results of a query.

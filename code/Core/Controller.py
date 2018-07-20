@@ -54,7 +54,8 @@ class Controller:
             Util.OUT_DIR = os.path.join(os.path.dirname(pcap_file_path), "ID2T_results") + os.sep
         os.makedirs(Util.OUT_DIR, exist_ok=True)
 
-    def load_pcap_statistics(self, flag_write_file: bool, flag_recalculate_stats: bool, flag_print_statistics: bool):
+    def load_pcap_statistics(self, flag_write_file: bool, flag_recalculate_stats: bool, flag_print_statistics: bool,
+                             intervals, delete: bool=False, recalculate_intervals: bool=None):
         """
         Loads the PCAP statistics either from the database, if the statistics were calculated earlier, or calculates
         the statistics and creates a new database.
@@ -62,10 +63,14 @@ class Controller:
         :param flag_write_file: Writes the statistics to a file.
         :param flag_recalculate_stats: Forces the recalculation of statistics.
         :param flag_print_statistics: Prints the statistics on the terminal.
+        :param intervals: user specified interval in seconds
+        :param delete: Delete old interval statistics.
+        :param recalculate_intervals: Recalculate old interval statistics or not. Prompt user if None.
         :return: None
         """
         self.statistics.load_pcap_statistics(flag_write_file, flag_recalculate_stats, flag_print_statistics,
-                                             self.non_verbose)
+                                             self.non_verbose, intervals=intervals, delete=delete,
+                                             recalculate_intervals=recalculate_intervals)
 
     def process_attacks(self, attacks_config: list, seeds=None, time: bool=False, inject_empty: bool=False):
         """

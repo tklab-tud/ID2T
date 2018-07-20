@@ -22,7 +22,7 @@ public:
     /*
      * Database version: Increment number on every change in the C++ code!
      */
-    static const int DB_VERSION = 13;
+    static const int DB_VERSION = 14;
 
     /*
      * Methods for writing values into database
@@ -54,7 +54,7 @@ public:
 
     void writeStatisticsConvExt(std::unordered_map<convWithProt, entry_convStatExt> &conv_statistics_extended);
 
-    void writeStatisticsInterval(const std::unordered_map<std::string, entry_intervalStat> &intervalStatistics);
+    void writeStatisticsInterval(const std::unordered_map<std::string, entry_intervalStat> &intervalStatistics, std::vector<std::chrono::duration<int, std::micro>> timeInterval, bool del, int defaultInterval);
 
     void writeDbVersion();
 

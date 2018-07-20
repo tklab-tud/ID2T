@@ -236,8 +236,12 @@ struct entry_protocolStat {
  * - # novel MSS
  */
 struct entry_intervalStat {
+    std::string start;
+    std::string end;
     int pkts_count;
+    float pkt_rate;
     float kbytes;
+    float kbyte_rate;
     float ip_src_entropy; 
     float ip_dst_entropy;
     float ip_src_cum_entropy; 
@@ -253,8 +257,12 @@ struct entry_intervalStat {
     int novel_port_count;
 
     bool operator==(const entry_intervalStat &other) const {
-        return pkts_count == other.pkts_count
+        return start == other.start
+               && end == other.end
+               && pkts_count == other.pkts_count
+               && pkt_rate == other.pkt_rate
                && kbytes == other.kbytes
+               && kbyte_rate == other.kbyte_rate
                && ip_src_entropy == other.ip_src_entropy
                && ip_dst_entropy == other.ip_dst_entropy
                && ip_src_cum_entropy == other.ip_src_cum_entropy
@@ -353,6 +361,7 @@ struct entry_convStatExt {
     double avg_time_between_ints;
     double avg_interval_time;
     double total_comm_duration;
+    std::chrono::duration<int, std::micro> timeInterval;
     std::vector<std::chrono::microseconds> pkts_timestamp;
     std::vector<std::chrono::microseconds> interarrival_time;
     std::chrono::microseconds avg_interarrival_time;
@@ -589,7 +598,7 @@ public:
 
     void addMSS(const std::string &ipAddress, int MSSvalue);
 
-    void writeToDatabase(std::string database_path);
+    void writeToDatabase(std::string database_path, std::vector<std::chrono::duration<int, std::micro>> timeInterval, bool del);
 
     void addPacketSize(uint32_t packetSize);
 
@@ -604,6 +613,10 @@ public:
     bool getDoExtraTests();
 
     void setDoExtraTests(bool var);
+
+    int getDefaultInterval();
+
+    void setDefaultInterval(int interval);
 
     /*
      * IP Address-specific statistics
@@ -644,6 +657,8 @@ private:
     int intervalCumNovelToSCount = 0;
     int intervalCumNovelMSSCount = 0;
     int intervalCumNovelPortCount = 0;
+
+    int default_interval = 0;
 
 
     /*

@@ -6,7 +6,8 @@ import ID2TLib.TestLibrary as Lib
 import Core.Controller as Ctrl
 
 controller = Ctrl.Controller(pcap_file_path=Lib.test_pcap, do_extra_tests=False, non_verbose=True)
-controller.load_pcap_statistics(flag_write_file=False, flag_recalculate_stats=True, flag_print_statistics=False)
+controller.load_pcap_statistics(flag_write_file=False, flag_recalculate_stats=True, flag_print_statistics=False,
+                                intervals=[], delete=True)
 
 
 class UnitTestNestedNamedQueries(unittest.TestCase):

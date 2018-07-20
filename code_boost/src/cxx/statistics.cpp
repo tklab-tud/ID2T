@@ -180,8 +180,13 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
     std::string  intervalStartTimestamp_s = std::to_string(intervalStartTimestamp.count());
 
     // The intervalStartTimestamp_s is the previous interval lastPktTimestamp_s
+    // TODO: check with carlos if first and last packet timestamps are alright
+    interval_statistics[lastPktTimestamp_s].start = std::to_string(intervalStartTimestamp.count());
+    interval_statistics[lastPktTimestamp_s].end = std::to_string(intervalEndTimestamp.count());
     interval_statistics[lastPktTimestamp_s].pkts_count = packetCount - intervalCumPktCount;
-    interval_statistics[lastPktTimestamp_s].kbytes = (float(sumPacketSize - intervalCumSumPktSize) / 1024);
+    interval_statistics[lastPktTimestamp_s].pkt_rate = static_cast<float>(interval_statistics[lastPktTimestamp_s].pkts_count) / (static_cast<double>(interval.count()) / 1000000);
+    interval_statistics[lastPktTimestamp_s].kbytes = static_cast<float>(sumPacketSize - intervalCumSumPktSize) / 1024;
+    interval_statistics[lastPktTimestamp_s].kbyte_rate = interval_statistics[lastPktTimestamp_s].kbytes / (static_cast<double>(interval.count()) / 1000000);
 
     interval_statistics[lastPktTimestamp_s].payload_count = payloadCount - intervalPayloadCount;
     interval_statistics[lastPktTimestamp_s].incorrect_tcp_checksum_count = incorrectTCPChecksumCount - intervalIncorrectTCPChecksumCount;
@@ -214,7 +219,7 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
         interval_statistics[lastPktTimestamp_s].ip_src_cum_entropy = ipCumEntopies[0];
         interval_statistics[lastPktTimestamp_s].ip_dst_cum_entropy = ipCumEntopies[1];
     }
-}        
+}
 
 /**
  * Registers statistical data for a sent packet in a given conversation (two IPs, two ports). 
@@ -692,6 +697,14 @@ ip_stats statistics::getStatsForIP(const std::string &ipAddress) {
     return s;
 }
 
+int statistics::getDefaultInterval() {
+    return this->default_interval;
+}
+
+void statistics::setDefaultInterval(int interval) {
+    this->default_interval = interval;
+}
+
 /**
  * Increments the packet counter.
  */
@@ -736,7 +749,7 @@ void statistics::printStats(const std::string &ipAddress) {
  * writes all data into a SQLite database, located at database_path.
  * @param database_path The path of the SQLite database file ending with .sqlite3.
  */
-void statistics::writeToDatabase(std::string database_path) {
+void statistics::writeToDatabase(std::string database_path, std::vector<std::chrono::duration<int, std::micro>> timeIntervals, bool del) {
     // Generate general file statistics
     float duration = getCaptureDurationSeconds();
     long sumPacketsSent = 0, senderCountIP = 0;
@@ -774,7 +787,7 @@ void statistics::writeToDatabase(std::string database_path) {
         db.writeStatisticsWin(win_distribution);
         db.writeStatisticsConv(conv_statistics);
         db.writeStatisticsConvExt(conv_statistics_extended);
-        db.writeStatisticsInterval(interval_statistics);
+        db.writeStatisticsInterval(interval_statistics, timeIntervals, del, this->default_interval);
         db.writeDbVersion();
         db.writeStatisticsUnrecognizedPDUs(unrecognized_PDUs);
     }

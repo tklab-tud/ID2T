@@ -122,7 +122,7 @@ SCRIPT_PATH=\${ID2T_DIR%/*}
 cd \$SCRIPT_PATH
 source .venv/bin/activate
 # Regenerate the statistics DB
-./id2t -i resources/test/reference_1998.pcap -r >/dev/null
+./id2t -i resources/test/reference_1998.pcap -rd >/dev/null
 cd code
 # Execute tests
 set -e

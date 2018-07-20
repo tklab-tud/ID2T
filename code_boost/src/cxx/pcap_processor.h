@@ -5,15 +5,19 @@
 #ifndef CPP_PCAPREADER_MAIN_H
 #define CPP_PCAPREADER_MAIN_H
 
+#include <algorithm>
 #include <iomanip>
 #include <tins/tins.h>
 #include <iostream>
+#include <pybind11/pybind11.h>
 #include <time.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <unordered_map>
 #include "statistics.h"
 #include "statistics_db.h"
+
+namespace py = pybind11;
 
 using namespace Tins;
 
@@ -31,6 +35,7 @@ public:
     statistics stats;
     std::string filePath;
     bool hasUnrecognized;
+    std::chrono::duration<int, std::micro> timeInterval;
 
     /*
      * Methods
@@ -45,9 +50,9 @@ public:
 
     bool read_pcap_info(const std::string &filePath, std::size_t &totalPakets);
 
-    void collect_statistics();
+    void collect_statistics(const py::list& intervals);
 
-    void write_to_database(std::string database_path);
+    void write_to_database(std::string database_path, const py::list& intervals, bool del);
 
     static int get_db_version() { return statistics_db::DB_VERSION; };
 };

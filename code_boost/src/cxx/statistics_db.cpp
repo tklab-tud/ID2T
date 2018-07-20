@@ -407,7 +407,7 @@ void statistics_db::writeStatisticsConv(std::unordered_map<conv, entry_convStat>
         const char *createTable = "CREATE TABLE conv_statistics ("
                 "ipAddressA TEXT,"
                 "portA INTEGER,"
-                "ipAddressB TEXT,"              
+                "ipAddressB TEXT,"
                 "portB INTEGER,"
                 "pktsCount INTEGER,"
                 "avgPktRate REAL,"
@@ -475,7 +475,7 @@ void statistics_db::writeStatisticsConvExt(std::unordered_map<convWithProt, entr
         const char *createTable = "CREATE TABLE conv_statistics_extended ("
                 "ipAddressA TEXT,"
                 "portA INTEGER,"
-                "ipAddressB TEXT,"              
+                "ipAddressB TEXT,"
                 "portB INTEGER,"
                 "protocol TEXT COLLATE NOCASE,"
                 "pktsCount INTEGER,"
@@ -509,13 +509,13 @@ void statistics_db::writeStatisticsConvExt(std::unordered_map<convWithProt, entr
                 }
                 if (e.interarrival_time.size() > 0)
                     e.avg_interarrival_time = (std::chrono::microseconds) sumDelay / e.interarrival_time.size(); // average
-                else 
+                else
                     e.avg_interarrival_time = (std::chrono::microseconds) 0;
             }
 
-            if (e.total_comm_duration == 0) 
+            if (e.total_comm_duration == 0)
                 e.avg_pkt_rate = e.pkts_count; // pkt per sec
-            else 
+            else
                 e.avg_pkt_rate = e.pkts_count / e.total_comm_duration;
 
             if (e.avg_int_pkts_count > 0){
@@ -551,7 +551,7 @@ void statistics_db::writeStatisticsConvExt(std::unordered_map<convWithProt, entr
 
                 if (PyErr_CheckSignals()) throw py::error_already_set();
             }
-            
+
         }
         transaction.commit();
     }
@@ -564,55 +564,102 @@ void statistics_db::writeStatisticsConvExt(std::unordered_map<convWithProt, entr
  * Writes the interval statistics into the database.
  * @param intervalStatistics The interval entries from class statistics.
  */
-void statistics_db::writeStatisticsInterval(const std::unordered_map<std::string, entry_intervalStat> &intervalStatistics){
-    try {        
+void statistics_db::writeStatisticsInterval(const std::unordered_map<std::string, entry_intervalStat> &intervalStatistics, std::vector<std::chrono::duration<int, std::micro>> timeIntervals, bool del, int defaultInterval){
+    try {
+        // remove old tables produced by prior database versions
         db->exec("DROP TABLE IF EXISTS interval_statistics");
-        SQLite::Transaction transaction(*db);
-        const char *createTable = "CREATE TABLE interval_statistics ("
-                "lastPktTimestamp TEXT,"
-                "pktsCount INTEGER,"
-                "kBytes REAL,"
-                "ipSrcEntropy REAL,"      
-                "ipDstEntropy REAL,"  
-                "ipSrcCumEntropy REAL,"      
-                "ipDstCumEntropy REAL,"
-                "payloadCount INTEGER,"
-                "incorrectTCPChecksumCount INTEGER,"
-                "correctTCPChecksumCount INTEGER,"
-                "newIPCount INTEGER,"
-                "newPortCount INTEGER,"
-                "newTTLCount INTEGER,"
-                "newWinSizeCount INTEGER,"
-                "newToSCount INTEGER,"
-                "newMSSCount INTEGER,"
-                "PRIMARY KEY(lastPktTimestamp));";
-        db->exec(createTable);
-        SQLite::Statement query(*db, "INSERT INTO interval_statistics VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        for (auto it = intervalStatistics.begin(); it != intervalStatistics.end(); ++it) {
-            const entry_intervalStat &e = it->second;
-            
-            query.bindNoCopy(1, it->first);
-            query.bind(2, (int)e.pkts_count);
-            query.bind(3, e.kbytes);
-            query.bind(4, e.ip_src_entropy);
-            query.bind(5, e.ip_dst_entropy);
-            query.bind(6, e.ip_src_cum_entropy);
-            query.bind(7, e.ip_dst_cum_entropy);
-            query.bind(8, e.payload_count);
-            query.bind(9, e.incorrect_tcp_checksum_count);
-            query.bind(10, e.correct_tcp_checksum_count);
-            query.bind(11, e.novel_ip_count);
-            query.bind(12, e.novel_port_count);
-            query.bind(13, e.novel_ttl_count);
-            query.bind(14, e.novel_win_size_count);
-            query.bind(15, e.novel_tos_count);
-            query.bind(16, e.novel_mss_count);
-            query.exec();
-            query.reset();
 
-            if (PyErr_CheckSignals()) throw py::error_already_set();
+        if (del) {
+            SQLite::Statement query(*db, "SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'interval_statistics_%';");
+            std::vector<std::string> previous_tables;
+            while (query.executeStep()) {
+                previous_tables.push_back(query.getColumn(0));
+            }
+            for (std::string table: previous_tables) {
+                db->exec("DROP TABLE IF EXISTS " + table);
+            }
+            db->exec("DROP TABLE IF EXISTS interval_tables");
         }
-        transaction.commit();
+
+        db->exec("CREATE TABLE IF NOT EXISTS interval_tables (name TEXT, is_default INTEGER);");
+        std::string is_default = "0";
+
+        if (defaultInterval != 0.0) {
+            is_default = "1";
+            std::chrono::duration<int, std::micro> defaultTimeInterval(defaultInterval);
+            if (timeIntervals.empty()) {
+                timeIntervals.push_back(defaultTimeInterval);
+            }
+        }
+
+        for (auto timeInterval: timeIntervals) {
+            std::ostringstream strs;
+            strs << timeInterval.count();
+            std::string table_name = "interval_statistics_" + strs.str();
+
+            // add interval_tables entry
+            db->exec("DELETE FROM interval_tables WHERE name = '" + table_name + "';");
+            db->exec("INSERT INTO interval_tables VALUES ('" + table_name + "', '" + is_default + "');");
+
+            is_default = "0";
+
+            // new interval statistics implementation
+            db->exec("DROP TABLE IF EXISTS " + table_name);
+            SQLite::Transaction transaction(*db);
+            db->exec("CREATE TABLE " + table_name + " ("
+                    "lastPktTimestamp TEXT,"
+                    "startTimestamp TEXT,"
+                    "endTimestamp TEXT,"
+                    "pktsCount INTEGER,"
+                    "pktRate REAL,"
+                    "kBytes REAL,"
+                    "kByteRate REAL,"
+                    "ipSrcEntropy REAL,"
+                    "ipDstEntropy REAL,"
+                    "ipSrcCumEntropy REAL,"
+                    "ipDstCumEntropy REAL,"
+                    "payloadCount INTEGER,"
+                    "incorrectTCPChecksumCount INTEGER,"
+                    "correctTCPChecksumCount INTEGER,"
+                    "newIPCount INTEGER,"
+                    "newPortCount INTEGER,"
+                    "newTTLCount INTEGER,"
+                    "newWinSizeCount INTEGER,"
+                    "newToSCount INTEGER,"
+                    "newMSSCount INTEGER,"
+                    "PRIMARY KEY(lastPktTimestamp));");
+
+            SQLite::Statement query(*db, "INSERT INTO " + table_name + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            for (auto it = intervalStatistics.begin(); it != intervalStatistics.end(); ++it) {
+                const entry_intervalStat &e = it->second;
+
+                query.bindNoCopy(1, it->first);
+                query.bind(2, e.start);
+                query.bind(3, e.end);
+                query.bind(4, (int)e.pkts_count);
+                query.bind(5, e.pkt_rate);
+                query.bind(6, e.kbytes);
+                query.bind(7, e.kbyte_rate);
+                query.bind(8, e.ip_src_entropy);
+                query.bind(9, e.ip_dst_entropy);
+                query.bind(10, e.ip_src_cum_entropy);
+                query.bind(11, e.ip_dst_cum_entropy);
+                query.bind(12, e.payload_count);
+                query.bind(13, e.incorrect_tcp_checksum_count);
+                query.bind(14, e.correct_tcp_checksum_count);
+                query.bind(15, e.novel_ip_count);
+                query.bind(16, e.novel_port_count);
+                query.bind(17, e.novel_ttl_count);
+                query.bind(18, e.novel_win_size_count);
+                query.bind(19, e.novel_tos_count);
+                query.bind(20, e.novel_mss_count);
+                query.exec();
+                query.reset();
+
+                if (PyErr_CheckSignals()) throw py::error_already_set();
+            }
+            transaction.commit();
+        }
     }
     catch (std::exception &e) {
         std::cerr << "Exception in statistics_db::" << __func__ << ": " << e.what() << std::endl;
@@ -620,13 +667,13 @@ void statistics_db::writeStatisticsInterval(const std::unordered_map<std::string
 }
 
 void statistics_db::writeDbVersion(){
-	try {
-		SQLite::Transaction transaction(*db);
-		SQLite::Statement query(*db, std::string("PRAGMA user_version = ") + std::to_string(DB_VERSION) + ";");
-		query.exec();
-		transaction.commit();
-	}
-	catch (std::exception &e) {
+    try {
+        SQLite::Transaction transaction(*db);
+        SQLite::Statement query(*db, std::string("PRAGMA user_version = ") + std::to_string(DB_VERSION) + ";");
+        query.exec();
+        transaction.commit();
+    }
+    catch (std::exception &e) {
         std::cerr << "Exception in statistics_db::" << __func__ << ": " << e.what() << std::endl;
     }
 }

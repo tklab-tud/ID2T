@@ -155,8 +155,9 @@ bool pcap_processor::read_pcap_info(const std::string &filePath, std::size_t &to
 
 /**
  * Collect statistics of the loaded PCAP file. Calls for each packet the method process_packets.
+ * param: user specified interval in seconds
  */
-void pcap_processor::collect_statistics() {
+void pcap_processor::collect_statistics(const py::list& intervals) {
     // Only process PCAP if file exists
     if (file_exists(filePath)) {
         std::cout << "Loading pcap..." << std::endl;
@@ -171,21 +172,47 @@ void pcap_processor::collect_statistics() {
 
         // choose a suitable time interval
         int timeIntervalCounter = 1;
-        int timeIntervalsNum = 100;
-        std::chrono::microseconds intervalStartTimestamp = stats.getTimestampFirstPacket();
+        long timeInterval_microsec = 0;
+        std::vector<std::chrono::microseconds> intervalStartTimestamp;
         std::chrono::microseconds firstTimestamp = stats.getTimestampFirstPacket();
-        std::chrono::microseconds lastTimestamp = stats.getTimestampLastPacket();
-        std::chrono::microseconds captureDuration = lastTimestamp - firstTimestamp;
-        if(captureDuration.count()<=0){
-            std::cerr << "ERROR: PCAP file is empty!" << std::endl;
-            return;
+
+        std::vector<std::chrono::duration<int, std::micro>> timeIntervals;
+        std::vector<std::chrono::microseconds> barriers;
+
+        if (intervals.size() == 0) {
+            int timeIntervalsNum = 100;
+            std::chrono::microseconds lastTimestamp = stats.getTimestampLastPacket();
+            std::chrono::microseconds captureDuration = lastTimestamp - firstTimestamp;
+            if(captureDuration.count()<=0){
+                std::cerr << "ERROR: PCAP file is empty!" << std::endl;
+                return;
+            }
+            timeInterval_microsec = captureDuration.count() / timeIntervalsNum;
+            stats.setDefaultInterval(static_cast<double>(timeInterval_microsec));
+            intervalStartTimestamp.push_back(firstTimestamp);
+            std::chrono::duration<int, std::micro> timeInterval(timeInterval_microsec);
+            std::chrono::microseconds barrier = timeInterval;
+            timeIntervals.push_back(timeInterval);
+            barriers.push_back(barrier);
+        } else {
+            for (auto interval: intervals) {
+                double interval_double = interval.cast<double>();
+                timeInterval_microsec = static_cast<long>(interval_double * 1000000);
+                intervalStartTimestamp.push_back(firstTimestamp);
+                std::chrono::duration<int, std::micro> timeInterval(timeInterval_microsec);
+                std::chrono::microseconds barrier = timeInterval;
+                timeIntervals.push_back(timeInterval);
+                barriers.push_back(barrier);
+            }
         }
-        long timeInterval_microsec = captureDuration.count() / timeIntervalsNum;
-        std::chrono::duration<int, std::micro> timeInterval(timeInterval_microsec);
-        std::chrono::microseconds barrier = timeInterval;
+
+        std::sort(timeIntervals.begin(), timeIntervals.end());
+        std::sort(barriers.begin(), barriers.end());
 
         std::cout << std::endl;
         std::chrono::system_clock::time_point lastPrinted = std::chrono::system_clock::now();
+
+        int barrier_count = static_cast<int>(barriers.size());
 
         // Iterate over all packets and collect statistics
         for (; i != sniffer.end(); i++) {
@@ -193,12 +220,15 @@ void pcap_processor::collect_statistics() {
             std::chrono::microseconds currentDuration = currentPktTimestamp - firstTimestamp;
 
             // For each interval
-            if(currentDuration>barrier){
-                stats.addIntervalStat(timeInterval, intervalStartTimestamp, currentPktTimestamp);
-                timeIntervalCounter++;
+            // drops last interval too small
+            for (int j = 0; j < barrier_count; j++) {
+                if(currentDuration>barriers[j]){
+                    stats.addIntervalStat(timeIntervals[j], intervalStartTimestamp[j], currentPktTimestamp);
+                    timeIntervalCounter++;
 
-                barrier =  barrier + timeInterval;
-                intervalStartTimestamp = currentPktTimestamp;
+                    barriers[j] =  barriers[j] + timeIntervals[j];
+                    intervalStartTimestamp[j] = currentPktTimestamp;
+                }
             }
 
             stats.incrementPacketCount();
@@ -374,8 +404,14 @@ void pcap_processor::process_packets(const Packet &pkt) {
  * database or, if not present, creates a new database.
  * @param database_path The path to the database file, ending with .sqlite3.
  */
-void pcap_processor::write_to_database(std::string database_path) {
-    stats.writeToDatabase(database_path);
+void pcap_processor::write_to_database(std::string database_path, const py::list& intervals, bool del) {
+    std::vector<std::chrono::duration<int, std::micro>> timeIntervals;
+    for (auto interval: intervals) {
+        double interval_double = interval.cast<double>();
+        std::chrono::duration<int, std::micro> timeInterval(static_cast<long>(interval_double * 1000000));
+        timeIntervals.push_back(timeInterval);
+    }
+    stats.writeToDatabase(database_path, timeIntervals, del);
 }
 
 /**

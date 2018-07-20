@@ -38,7 +38,7 @@ class Statistics:
         self.stats_db = statsDB.StatsDatabase(self.path_db)
 
     def load_pcap_statistics(self, flag_write_file: bool, flag_recalculate_stats: bool, flag_print_statistics: bool,
-                             flag_non_verbose: bool):
+                             flag_non_verbose: bool, intervals, delete: bool=False, recalculate_intervals: bool=None):
         """
         Loads the PCAP statistics for the file specified by pcap_filepath. If the database is not existing yet, the
         statistics are calculated by the PCAP file processor and saved into the newly created database. Otherwise the
@@ -49,6 +49,9 @@ class Statistics:
         :param flag_recalculate_stats: Indicates whether eventually existing statistics should be recalculated
         :param flag_print_statistics: Indicates whether the gathered basic statistics should be printed to the terminal
         :param flag_non_verbose: Indicates whether certain prints should be made or not, to reduce terminal clutter
+        :param intervals: user specified interval in seconds
+        :param delete: Delete old interval statistics.
+        :param recalculate_intervals: Recalculate old interval statistics or not. Prompt user if None.
         """
         # Load pcap and get loading time
         time_start = time.clock()
@@ -60,8 +63,39 @@ class Statistics:
         # Recalculate statistics if database does not exist OR param -r/--recalculate is provided
         if (not self.stats_db.get_db_exists()) or flag_recalculate_stats or self.stats_db.get_db_outdated():
             self.pcap_proc = pr.pcap_processor(self.pcap_filepath, str(self.do_extra_tests), Util.RESOURCE_DIR)
-            self.pcap_proc.collect_statistics()
-            self.pcap_proc.write_to_database(self.path_db)
+            previous_interval_tables = self.stats_db.process_db_query("SELECT name FROM sqlite_master WHERE "
+                                                                      "type='table' AND name LIKE "
+                                                                      "'interval_statistics_%';")
+            previous_intervals = []
+            recalc_intervals = None
+            if previous_interval_tables:
+                if not isinstance(previous_interval_tables, list):
+                    previous_interval_tables = [previous_interval_tables]
+                print("There are " + str(len(previous_interval_tables)) + " interval statistics table(s) in the "
+                                                                          "database:")
+                for table in previous_interval_tables:
+                    print(table)
+                    previous_intervals.append(float(table[len("interval_statistics_"):])/1000000)
+                recalc_intervals = recalculate_intervals
+                while recalc_intervals is None and not delete:
+                    user_input = input("Do you want to recalculate them as well? (yes|no|delete): ")
+                    if user_input.lower() == "yes" or user_input.lower() == "y":
+                        recalc_intervals = True
+                    elif user_input.lower() == "no" or user_input.lower() == "n":
+                        recalc_intervals = False
+                    elif user_input.lower() == "delete" or user_input.lower() == "d":
+                        recalc_intervals = False
+                        delete = True
+                    else:
+                        print("This was no valid input.")
+            if intervals is None or intervals is []:
+                intervals = [0.0]
+            elif not isinstance(intervals, list):
+                intervals = [intervals]
+            if recalc_intervals and previous_intervals:
+                intervals = list(set(intervals + previous_intervals))
+            self.pcap_proc.collect_statistics(intervals)
+            self.pcap_proc.write_to_database(self.path_db, intervals, delete)
             outstring_datasource = "by PCAP file processor."
 
             # only print summary of new db if -s flag not set
@@ -189,8 +223,8 @@ class Statistics:
 
         :return: normalized packet rates for each time interval.
         """
-        result = self.process_db_query(
-            "SELECT lastPktTimestamp,pktsCount FROM interval_statistics ORDER BY lastPktTimestamp")
+        result = self.stats_db.process_interval_statistics_query(
+            "SELECT lastPktTimestamp,pktsCount FROM %s ORDER BY lastPktTimestamp")
         # print(result)
         bg_interval_pps = []
         complement_interval_pps = []
@@ -235,8 +269,7 @@ class Statistics:
             return values, freq_output
 
         # Payload Tests
-        sum_payload_count = self.stats_db.process_user_defined_query("SELECT sum(payloadCount) FROM "
-                                                                     "interval_statistics")
+        sum_payload_count = self.stats_db.process_interval_statistics_query("SELECT sum(payloadCount) FROM %s")
         pkt_count = self.stats_db.process_user_defined_query("SELECT packetCount FROM file_statistics")
         if sum_payload_count and pkt_count:
             payload_ratio = 0
@@ -246,10 +279,10 @@ class Statistics:
             payload_ratio = -1
 
         # TCP checksum Tests
-        incorrect_checksum_count = self.stats_db.process_user_defined_query(
-            "SELECT sum(incorrectTCPChecksumCount) FROM interval_statistics")
-        correct_checksum_count = self.stats_db.process_user_defined_query(
-            "SELECT avg(correctTCPChecksumCount) FROM interval_statistics")
+        incorrect_checksum_count = self.stats_db.process_interval_statistics_query(
+            "SELECT sum(incorrectTCPChecksumCount) FROM %s")
+        correct_checksum_count = self.stats_db.process_interval_statistics_query(
+            "SELECT avg(correctTCPChecksumCount) FROM %s")
         if incorrect_checksum_count and correct_checksum_count:
             incorrect_checksum_ratio = 0
             if (incorrect_checksum_count[0][0] + correct_checksum_count[0][0]) != 0:
@@ -268,7 +301,7 @@ class Statistics:
         ip_src_entropy, ip_src_norm_entropy = self.calculate_entropy(src_frequency, True)
         ip_dst_entropy, ip_dst_norm_entropy = self.calculate_entropy(dst_frequency, True)
 
-        new_ip_count = self.stats_db.process_user_defined_query("SELECT newIPCount FROM interval_statistics")
+        new_ip_count = self.stats_db.process_interval_statistics_query("SELECT newIPCount FROM %s")
         ip_novels_per_interval, ip_novels_per_interval_frequency = count_frequncy(new_ip_count)
         ip_novelty_dist_entropy = self.calculate_entropy(ip_novels_per_interval_frequency)
 
@@ -294,7 +327,7 @@ class Statistics:
         for row in result:
             frequency.append(row[1])
         ttl_entropy, ttl_norm_entropy = self.calculate_entropy(frequency, True)
-        new_ttl_count = self.stats_db.process_user_defined_query("SELECT newTTLCount FROM interval_statistics")
+        new_ttl_count = self.stats_db.process_interval_statistics_query("SELECT newTTLCount FROM %s")
         ttl_novels_per_interval, ttl_novels_per_interval_frequency = count_frequncy(new_ttl_count)
         ttl_novelty_dist_entropy = self.calculate_entropy(ttl_novels_per_interval_frequency)
 
@@ -304,7 +337,7 @@ class Statistics:
         for row in result:
             frequency.append(row[1])
         win_entropy, win_norm_entropy = self.calculate_entropy(frequency, True)
-        new_win_size_count = self.stats_db.process_user_defined_query("SELECT newWinSizeCount FROM interval_statistics")
+        new_win_size_count = self.stats_db.process_interval_statistics_query("SELECT newWinSizeCount FROM %s")
         win_novels_per_interval, win_novels_per_interval_frequency = count_frequncy(new_win_size_count)
         win_novelty_dist_entropy = self.calculate_entropy(win_novels_per_interval_frequency)
 
@@ -315,7 +348,7 @@ class Statistics:
         for row in result:
             frequency.append(row[1])
         tos_entropy, tos_norm_entropy = self.calculate_entropy(frequency, True)
-        new_tos_count = self.stats_db.process_user_defined_query("SELECT newToSCount FROM interval_statistics")
+        new_tos_count = self.stats_db.process_interval_statistics_query("SELECT newToSCount FROM %s")
         tos_novels_per_interval, tos_novels_per_interval_frequency = count_frequncy(new_tos_count)
         tos_novelty_dist_entropy = self.calculate_entropy(tos_novels_per_interval_frequency)
 
@@ -326,7 +359,7 @@ class Statistics:
         for row in result:
             frequency.append(row[1])
         mss_entropy, mss_norm_entropy = self.calculate_entropy(frequency, True)
-        new_mss_count = self.stats_db.process_user_defined_query("SELECT newMSSCount FROM interval_statistics")
+        new_mss_count = self.stats_db.process_interval_statistics_query("SELECT newMSSCount FROM %s")
         mss_novels_per_interval, mss_novels_per_interval_frequency = count_frequncy(new_mss_count)
         mss_novelty_dist_entropy = self.calculate_entropy(mss_novels_per_interval_frequency)
 
@@ -1077,8 +1110,8 @@ class Statistics:
             :param file_ending:
             :return:
             """
-            query_output = self.stats_db.process_user_defined_query(
-                "SELECT lastPktTimestamp, pktsCount FROM interval_statistics ORDER BY lastPktTimestamp")
+            query_output = self.stats_db.process_interval_statistics_query(
+                "SELECT lastPktTimestamp, pktsCount FROM %s ORDER BY lastPktTimestamp")
             title = "Packet Rate"
             x_label = "Time Interval"
             y_label = "Number of Packets"
@@ -1091,8 +1124,8 @@ class Statistics:
             :param file_ending:
             :return:
             """
-            query_output = self.stats_db.process_user_defined_query(
-                "SELECT lastPktTimestamp, ipSrcEntropy FROM interval_statistics ORDER BY lastPktTimestamp")
+            query_output = self.stats_db.process_interval_statistics_query(
+                "SELECT lastPktTimestamp, ipSrcEntropy FROM %s ORDER BY lastPktTimestamp")
             title = "Source IP Entropy"
             x_label = "Time Interval"
             y_label = "Entropy"
@@ -1105,8 +1138,8 @@ class Statistics:
             :param file_ending:
             :return:
             """
-            query_output = self.stats_db.process_user_defined_query(
-                "SELECT lastPktTimestamp, ipDstEntropy FROM interval_statistics ORDER BY lastPktTimestamp")
+            query_output = self.stats_db.process_interval_statistics_query(
+                "SELECT lastPktTimestamp, ipDstEntropy FROM %s ORDER BY lastPktTimestamp")
             title = "Destination IP Entropy"
             x_label = "Time Interval"
             y_label = "Entropy"
@@ -1119,8 +1152,8 @@ class Statistics:
             :param file_ending:
             :return:
             """
-            query_output = self.stats_db.process_user_defined_query(
-                "SELECT lastPktTimestamp, newIPCount FROM interval_statistics ORDER BY lastPktTimestamp")
+            query_output = self.stats_db.process_interval_statistics_query(
+                "SELECT lastPktTimestamp, newIPCount FROM %s ORDER BY lastPktTimestamp")
             title = "IP Novelty Distribution"
             x_label = "Time Interval"
             y_label = "Novel values count"
@@ -1133,8 +1166,8 @@ class Statistics:
             :param file_ending:
             :return:
             """
-            query_output = self.stats_db.process_user_defined_query(
-                "SELECT lastPktTimestamp, newPortCount FROM interval_statistics ORDER BY lastPktTimestamp")
+            query_output = self.stats_db.process_interval_statistics_query(
+                "SELECT lastPktTimestamp, newPortCount FROM %s ORDER BY lastPktTimestamp")
             title = "Port Novelty Distribution"
             x_label = "Time Interval"
             y_label = "Novel values count"
@@ -1147,8 +1180,8 @@ class Statistics:
             :param file_ending:
             :return:
             """
-            query_output = self.stats_db.process_user_defined_query(
-                "SELECT lastPktTimestamp, newTTLCount FROM interval_statistics ORDER BY lastPktTimestamp")
+            query_output = self.stats_db.process_interval_statistics_query(
+                "SELECT lastPktTimestamp, newTTLCount FROM %s ORDER BY lastPktTimestamp")
             title = "TTL Novelty Distribution"
             x_label = "Time Interval"
             y_label = "Novel values count"
@@ -1161,8 +1194,8 @@ class Statistics:
             :param file_ending:
             :return:
             """
-            query_output = self.stats_db.process_user_defined_query(
-                "SELECT lastPktTimestamp, newToSCount FROM interval_statistics ORDER BY lastPktTimestamp")
+            query_output = self.stats_db.process_interval_statistics_query(
+                "SELECT lastPktTimestamp, newToSCount FROM %s ORDER BY lastPktTimestamp")
             title = "ToS Novelty Distribution"
             x_label = "Time Interval"
             y_label = "Novel values count"
@@ -1175,8 +1208,8 @@ class Statistics:
             :param file_ending:
             :return:
             """
-            query_output = self.stats_db.process_user_defined_query(
-                "SELECT lastPktTimestamp, newWinSizeCount FROM interval_statistics ORDER BY lastPktTimestamp")
+            query_output = self.stats_db.process_interval_statistics_query(
+                "SELECT lastPktTimestamp, newWinSizeCount FROM %s ORDER BY lastPktTimestamp")
             title = "Window Size Novelty Distribution"
             x_label = "Time Interval"
             y_label = "Novel values count"
@@ -1189,8 +1222,8 @@ class Statistics:
             :param file_ending:
             :return:
             """
-            query_output = self.stats_db.process_user_defined_query(
-                "SELECT lastPktTimestamp, newMSSCount FROM interval_statistics ORDER BY lastPktTimestamp")
+            query_output = self.stats_db.process_interval_statistics_query(
+                "SELECT lastPktTimestamp, newMSSCount FROM %s ORDER BY lastPktTimestamp")
             title = "MSS Novelty Distribution"
             x_label = "Time Interval"
             y_label = "Novel values count"
@@ -1214,8 +1247,8 @@ class Statistics:
                 return None
 
             plt.gcf().clear()
-            result = self.stats_db.process_user_defined_query(
-                "SELECT lastPktTimestamp, ip%sCumEntropy FROM interval_statistics ORDER BY lastPktTimestamp" % sod)
+            result = self.stats_db.process_interval_statistics_query(
+                "SELECT lastPktTimestamp, ip%sCumEntropy FROM %s ORDER BY lastPktTimestamp" % sod)
             graphx, graphy = [], []
             for row in result:
                 graphx.append(row[0])
