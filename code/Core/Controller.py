@@ -54,6 +54,9 @@ class Controller:
             Util.OUT_DIR = os.path.join(os.path.dirname(pcap_file_path), "ID2T_results") + os.sep
         os.makedirs(Util.OUT_DIR, exist_ok=True)
 
+    def list_interval_statistics(self):
+        self.statistics.list_previous_interval_statistic_tables()
+
     def load_pcap_statistics(self, flag_write_file: bool, flag_recalculate_stats: bool, flag_print_statistics: bool,
                              intervals, delete: bool=False, recalculate_intervals: bool=None):
         """

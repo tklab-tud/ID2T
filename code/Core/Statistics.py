@@ -37,6 +37,33 @@ class Statistics:
         # Class instances
         self.stats_db = statsDB.StatsDatabase(self.path_db)
 
+    def list_previous_interval_statistic_tables(self):
+        """
+        Prints a list of all interval statistic tables from the database.
+
+        :return: A list of intervals in seconds used to create the previous interval statistics tables
+        """
+        if self.stats_db.process_db_query("SELECT name FROM sqlite_master WHERE name='interval_tables';"):
+            previous_interval_tables = self.stats_db.process_db_query("SELECT * FROM interval_tables;")
+        else:
+            previous_interval_tables = self.stats_db.process_db_query("SELECT name FROM sqlite_master WHERE "
+                                                                      "type='table' AND name LIKE "
+                                                                      "'interval_statistics_%';")
+        previous_intervals = []
+        if previous_interval_tables:
+            if not isinstance(previous_interval_tables, list):
+                previous_interval_tables = [previous_interval_tables]
+            print("There are " + str(len(previous_interval_tables)) + " interval statistics table(s) in the "
+                                                                      "database:")
+            i = 0
+            print("ID".ljust(3) + " | " + "interval in seconds".ljust(30) + " | is_default")
+            for table in previous_interval_tables:
+                seconds = float(table[0][len("interval_statistics_"):])/1000000
+                print(str(i).ljust(3) + " | " + str(seconds).ljust(30) + " | " + str(table[1]))
+                previous_intervals.append(seconds)
+                i = i + 1
+        return previous_intervals
+
     def load_pcap_statistics(self, flag_write_file: bool, flag_recalculate_stats: bool, flag_print_statistics: bool,
                              flag_non_verbose: bool, intervals, delete: bool=False, recalculate_intervals: bool=None):
         """
@@ -63,25 +90,10 @@ class Statistics:
         # Recalculate statistics if database does not exist OR param -r/--recalculate is provided
         if (not self.stats_db.get_db_exists()) or flag_recalculate_stats or self.stats_db.get_db_outdated():
             self.pcap_proc = pr.pcap_processor(self.pcap_filepath, str(self.do_extra_tests), Util.RESOURCE_DIR)
-            if self.stats_db.process_db_query("SELECT name FROM sqlite_master WHERE name='interval_tables';"):
-                previous_interval_tables = self.stats_db.process_db_query("SELECT * FROM interval_tables;")
-            else:
-                previous_interval_tables = self.stats_db.process_db_query("SELECT name FROM sqlite_master WHERE "
-                                                                          "type='table' AND name LIKE "
-                                                                          "'interval_statistics_%';")
-            previous_intervals = []
+
+            previous_intervals = self.list_previous_interval_statistic_tables()
             recalc_intervals = None
-            if previous_interval_tables:
-                if not isinstance(previous_interval_tables, list):
-                    previous_interval_tables = [previous_interval_tables]
-                print("There are " + str(len(previous_interval_tables)) + " interval statistics table(s) in the "
-                                                                          "database:")
-                i = 0
-                print("ID".ljust(3) + " | " + "table name".ljust(30) + " | is_default")
-                for table in previous_interval_tables:
-                    print(str(i).rjust(3) + " | " + table[0].ljust(30) + " | " + str(table[1]))
-                    previous_intervals.append(float(table[0][len("interval_statistics_"):])/1000000)
-                    i = i + 1
+            if previous_intervals:
                 recalc_intervals = recalculate_intervals
                 while recalc_intervals is None and not delete:
                     user_input = input("Do you want to recalculate them as well? (yes|no|delete): ")

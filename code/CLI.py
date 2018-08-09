@@ -91,6 +91,8 @@ class CLI(object):
                                  'does not recalculate old interval statistics, but keeps them.'
                                  'surpresses (yes, no, delete) prompt.', action='store_true',
                             default=False)
+        parser.add_argument('-li', '--list-intervals', action='store_true',
+                            help='prints all interval statistics tables available in the database')
 
         # Attack arguments
         parser.add_argument('-a', '--attack', metavar="ATTACK", action='append',
@@ -178,6 +180,9 @@ class CLI(object):
         controller.load_pcap_statistics(self.args.export, self.args.recalculate, self.args.statistics,
                                         self.args.statistics_interval, self.args.recalculate_delete,
                                         recalculate_intervals)
+
+        if self.args.list_intervals:
+            controller.list_interval_statistics()
 
         # Create statistics plots
         if self.args.plot is not None:
