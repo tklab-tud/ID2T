@@ -63,9 +63,12 @@ class Statistics:
         # Recalculate statistics if database does not exist OR param -r/--recalculate is provided
         if (not self.stats_db.get_db_exists()) or flag_recalculate_stats or self.stats_db.get_db_outdated():
             self.pcap_proc = pr.pcap_processor(self.pcap_filepath, str(self.do_extra_tests), Util.RESOURCE_DIR)
-            previous_interval_tables = self.stats_db.process_db_query("SELECT name FROM sqlite_master WHERE "
-                                                                      "type='table' AND name LIKE "
-                                                                      "'interval_statistics_%';")
+            if self.stats_db.process_db_query("SELECT name FROM sqlite_master WHERE name='interval_tables';"):
+                previous_interval_tables = self.stats_db.process_db_query("SELECT * FROM interval_tables;")
+            else:
+                previous_interval_tables = self.stats_db.process_db_query("SELECT name FROM sqlite_master WHERE "
+                                                                          "type='table' AND name LIKE "
+                                                                          "'interval_statistics_%';")
             previous_intervals = []
             recalc_intervals = None
             if previous_interval_tables:
@@ -73,9 +76,12 @@ class Statistics:
                     previous_interval_tables = [previous_interval_tables]
                 print("There are " + str(len(previous_interval_tables)) + " interval statistics table(s) in the "
                                                                           "database:")
+                i = 0
+                print("ID".ljust(3) + " | " + "table name".ljust(30) + " | is_default")
                 for table in previous_interval_tables:
-                    print(table)
-                    previous_intervals.append(float(table[len("interval_statistics_"):])/1000000)
+                    print(str(i).rjust(3) + " | " + table[0].ljust(30) + " | " + str(table[1]))
+                    previous_intervals.append(float(table[0][len("interval_statistics_"):])/1000000)
+                    i = i + 1
                 recalc_intervals = recalculate_intervals
                 while recalc_intervals is None and not delete:
                     user_input = input("Do you want to recalculate them as well? (yes|no|delete): ")
