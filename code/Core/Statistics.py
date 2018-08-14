@@ -37,7 +37,7 @@ class Statistics:
         # Class instances
         self.stats_db = statsDB.StatsDatabase(self.path_db)
 
-    def list_previous_interval_statistic_tables(self):
+    def list_previous_interval_statistic_tables(self, output: bool=True):
         """
         Prints a list of all interval statistic tables from the database.
 
@@ -53,13 +53,16 @@ class Statistics:
         if previous_interval_tables:
             if not isinstance(previous_interval_tables, list):
                 previous_interval_tables = [previous_interval_tables]
-            print("There are " + str(len(previous_interval_tables)) + " interval statistics table(s) in the "
+            if output:
+                print("There are " + str(len(previous_interval_tables)) + " interval statistics table(s) in the "
                                                                       "database:")
             i = 0
-            print("ID".ljust(3) + " | " + "interval in seconds".ljust(30) + " | is_default")
+            if output:
+                print("ID".ljust(3) + " | " + "interval in seconds".ljust(30) + " | is_default")
             for table in previous_interval_tables:
                 seconds = float(table[0][len("interval_statistics_"):])/1000000
-                print(str(i).ljust(3) + " | " + str(seconds).ljust(30) + " | " + str(table[1]))
+                if output:
+                    print(str(i).ljust(3) + " | " + str(seconds).ljust(30) + " | " + str(table[1]))
                 previous_intervals.append(seconds)
                 i = i + 1
         return previous_intervals
@@ -89,22 +92,24 @@ class Statistics:
         elif not isinstance(intervals, list):
             intervals = [intervals]
 
-        # Get interval statistics tables which already exist
-        previous_intervals = self.list_previous_interval_statistic_tables()
-
         # Inform user about recalculation of statistics and its reason
         if flag_recalculate_stats:
             print("Flag -r/--recalculate found. Recalculating statistics.")
 
+        outstring_datasource = "from statistics database."
+
         # Recalculate statistics if database does not exist OR param -r/--recalculate is provided
         if (not self.stats_db.get_db_exists()) or flag_recalculate_stats or self.stats_db.get_db_outdated():
+            # Get interval statistics tables which already exist
+            previous_intervals = self.list_previous_interval_statistic_tables()
+
             self.pcap_proc = pr.pcap_processor(self.pcap_filepath, str(self.do_extra_tests), Util.RESOURCE_DIR)
 
             recalc_intervals = None
             if previous_intervals:
                 recalc_intervals = recalculate_intervals
                 while recalc_intervals is None and not delete:
-                    user_input = input("Do you want to recalculate them as well? (yes|no|delete): ")
+                    user_input = input("Do you want to recalculate them as well? (y)es|(n)o|(d)elete: ")
                     if user_input.lower() == "yes" or user_input.lower() == "y":
                         recalc_intervals = True
                     elif user_input.lower() == "no" or user_input.lower() == "n":
@@ -114,8 +119,19 @@ class Statistics:
                         delete = True
                     else:
                         print("This was no valid input.")
+
             if recalc_intervals and previous_intervals:
                 intervals = list(set(intervals + previous_intervals))
+                print("The old interval statistics will be recalculated.")
+            elif delete:
+                print("The old interval statistics will be deleted.")
+            else:
+                print("The old interval statistics wont be recalculated.")
+
+            if current_intervals != [0.0]:
+                print("User specified intervals will be used to calculate interval statistics: " +
+                      str(current_intervals)[1:-1])
+
             self.pcap_proc.collect_statistics(intervals)
             self.pcap_proc.write_to_database(self.path_db, intervals, delete)
             outstring_datasource = "by PCAP file processor."
@@ -123,13 +139,16 @@ class Statistics:
             # only print summary of new db if -s flag not set
             if not flag_print_statistics and not flag_non_verbose:
                 self.stats_summary_new_db()
-        else:
-            outstring_datasource = "from statistics database."
-            self.pcap_proc = pr.pcap_processor(self.pcap_filepath, str(self.do_extra_tests), Util.RESOURCE_DIR)
-            for interval in intervals:
-                if interval in previous_intervals:
-                    intervals.remove(interval)
-            if intervals is not None and intervals != []:
+        elif intervals is not None and intervals != []:
+                self.pcap_proc = pr.pcap_processor(self.pcap_filepath, str(self.do_extra_tests), Util.RESOURCE_DIR)
+
+                # Get interval statistics tables which already exist
+                previous_intervals = self.list_previous_interval_statistic_tables(output=False)
+
+                for interval in intervals:
+                    if interval in previous_intervals:
+                        intervals.remove(interval)
+
                 self.pcap_proc.collect_statistics(intervals)
                 self.pcap_proc.write_new_interval_statistics(self.path_db, intervals)
 
