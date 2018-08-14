@@ -179,7 +179,7 @@ void pcap_processor::collect_statistics(const py::list& intervals) {
         std::vector<std::chrono::duration<int, std::micro>> timeIntervals;
         std::vector<std::chrono::microseconds> barriers;
 
-        if (intervals.size() == 0) {
+        if (intervals.size() == 0 || intervals[0].cast<double>() == 0) {
             int timeIntervalsNum = 100;
             std::chrono::microseconds lastTimestamp = stats.getTimestampLastPacket();
             std::chrono::microseconds captureDuration = lastTimestamp - firstTimestamp;
@@ -188,7 +188,7 @@ void pcap_processor::collect_statistics(const py::list& intervals) {
                 return;
             }
             timeInterval_microsec = captureDuration.count() / timeIntervalsNum;
-            stats.setDefaultInterval(static_cast<double>(timeInterval_microsec));
+            stats.setDefaultInterval(static_cast<int>(timeInterval_microsec));
             intervalStartTimestamp.push_back(firstTimestamp);
             std::chrono::duration<int, std::micro> timeInterval(timeInterval_microsec);
             std::chrono::microseconds barrier = timeInterval;

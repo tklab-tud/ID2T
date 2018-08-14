@@ -87,7 +87,7 @@ class Statistics:
         time_start = time.clock()
 
         # Make sure user specified intervals are a list
-        if intervals is None or intervals is []:
+        if intervals is None or intervals == []:
             intervals = [0.0]
         elif not isinstance(intervals, list):
             intervals = [intervals]

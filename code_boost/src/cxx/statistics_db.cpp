@@ -587,7 +587,8 @@ void statistics_db::writeStatisticsInterval(const std::unordered_map<std::string
         if (defaultInterval != 0.0) {
             is_default = "1";
             std::chrono::duration<int, std::micro> defaultTimeInterval(defaultInterval);
-            if (timeIntervals.empty()) {
+            if (timeIntervals.empty() || timeIntervals[0].count() == 0) {
+                timeIntervals.clear();
                 timeIntervals.push_back(defaultTimeInterval);
             }
         }
