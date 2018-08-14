@@ -414,6 +414,16 @@ void pcap_processor::write_to_database(std::string database_path, const py::list
     stats.writeToDatabase(database_path, timeIntervals, del);
 }
 
+void pcap_processor::write_new_interval_statistics(std::string database_path, const py::list& intervals) {
+    std::vector<std::chrono::duration<int, std::micro>> timeIntervals;
+    for (auto interval: intervals) {
+        double interval_double = interval.cast<double>();
+        std::chrono::duration<int, std::micro> timeInterval(static_cast<long>(interval_double * 1000000));
+        timeIntervals.push_back(timeInterval);
+    }
+    stats.writeIntervalsToDatabase(database_path, timeIntervals, false);
+}
+
 /**
  * Checks whether the file with the given file path exists.
  * @param filePath The path to the file to check.
@@ -460,5 +470,6 @@ PYBIND11_MODULE (libpcapreader, m) {
             .def("collect_statistics", &pcap_processor::collect_statistics)
             .def("get_timestamp_mu_sec", &pcap_processor::get_timestamp_mu_sec)
             .def("write_to_database", &pcap_processor::write_to_database)
+            .def("write_new_interval_statistics", &pcap_processor::write_new_interval_statistics)
             .def_static("get_db_version", &pcap_processor::get_db_version);
 }

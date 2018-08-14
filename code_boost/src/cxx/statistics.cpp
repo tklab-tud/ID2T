@@ -797,3 +797,8 @@ void statistics::writeToDatabase(std::string database_path, std::vector<std::chr
         return;
     }
 }
+
+void statistics::writeIntervalsToDatabase(std::string database_path, std::vector<std::chrono::duration<int, std::micro>> timeIntervals, bool del) {
+    statistics_db db(database_path, resourcePath);
+    db.writeStatisticsInterval(interval_statistics, timeIntervals, del, this->default_interval);
+}

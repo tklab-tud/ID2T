@@ -600,6 +600,8 @@ public:
 
     void writeToDatabase(std::string database_path, std::vector<std::chrono::duration<int, std::micro>> timeInterval, bool del);
 
+    void writeIntervalsToDatabase(std::string database_path, std::vector<std::chrono::duration<int, std::micro>> timeIntervals, bool del);
+
     void addPacketSize(uint32_t packetSize);
 
     std::string getCaptureDurationTimestamp() const;

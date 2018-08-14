@@ -83,6 +83,15 @@ class Statistics:
         # Load pcap and get loading time
         time_start = time.clock()
 
+        # Make sure user specified intervals are a list
+        if intervals is None or intervals is []:
+            intervals = [0.0]
+        elif not isinstance(intervals, list):
+            intervals = [intervals]
+
+        # Get interval statistics tables which already exist
+        previous_intervals = self.list_previous_interval_statistic_tables()
+
         # Inform user about recalculation of statistics and its reason
         if flag_recalculate_stats:
             print("Flag -r/--recalculate found. Recalculating statistics.")
@@ -91,7 +100,6 @@ class Statistics:
         if (not self.stats_db.get_db_exists()) or flag_recalculate_stats or self.stats_db.get_db_outdated():
             self.pcap_proc = pr.pcap_processor(self.pcap_filepath, str(self.do_extra_tests), Util.RESOURCE_DIR)
 
-            previous_intervals = self.list_previous_interval_statistic_tables()
             recalc_intervals = None
             if previous_intervals:
                 recalc_intervals = recalculate_intervals
@@ -106,10 +114,6 @@ class Statistics:
                         delete = True
                     else:
                         print("This was no valid input.")
-            if intervals is None or intervals is []:
-                intervals = [0.0]
-            elif not isinstance(intervals, list):
-                intervals = [intervals]
             if recalc_intervals and previous_intervals:
                 intervals = list(set(intervals + previous_intervals))
             self.pcap_proc.collect_statistics(intervals)
@@ -121,6 +125,13 @@ class Statistics:
                 self.stats_summary_new_db()
         else:
             outstring_datasource = "from statistics database."
+            self.pcap_proc = pr.pcap_processor(self.pcap_filepath, str(self.do_extra_tests), Util.RESOURCE_DIR)
+            for interval in intervals:
+                if interval in previous_intervals:
+                    intervals.remove(interval)
+            if intervals is not None and intervals != []:
+                self.pcap_proc.collect_statistics(intervals)
+                self.pcap_proc.write_new_interval_statistics(self.path_db, intervals)
 
         # Load statistics from database
         self.file_info = self.stats_db.get_file_info()

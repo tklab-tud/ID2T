@@ -54,7 +54,9 @@ public:
 
     void write_to_database(std::string database_path, const py::list& intervals, bool del);
 
-    static int get_db_version() { return statistics_db::DB_VERSION; };
+    void write_new_interval_statistics(std::string database_path, const py::list& intervals);
+
+    static int get_db_version() { return statistics_db::DB_VERSION; }
 };
 
 
