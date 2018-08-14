@@ -41,6 +41,7 @@ class StatsDatabase:
         self.existing_db = os.path.exists(db_path)
         self.database = sqlite3.connect(db_path)
         self.cursor = self.database.cursor()
+        self.current_interval_statistics_table = ""
 
         # If DB not existing, create a new DB scheme
         if self.existing_db:
@@ -153,6 +154,26 @@ class StatsDatabase:
             for field in results:
                 dic[field[1].lower()] = field[2]
         return dic
+
+    def get_current_interval_statistics_table(self):
+        """
+        :return: the current interval statistics table used for internal calculations
+        """
+        return self.current_interval_statistics_table
+
+    def set_current_interval_statistics_table(self, current_interval: float=0.0):
+        """
+        Sets the current interval statistics table, which should be used for internal calculations.
+        :param current_interval: the current interval, which should be used for internal calculations, in seconds
+        """
+        if current_interval == 0.0:
+            table_name = self.process_db_query("SELECT name FROM interval_tables WHERE is_default=1")
+            print(table_name)
+            print("No user specified interval found. Using default interval: " +
+                  str(float(table_name[len("interval_statistics_"):])/1000000) + "s")
+        else:
+            self.current_interval_statistics_table = "interval_statistics_" + str(int(current_interval*1000000))
+            print("User specified interval(s) found. Using first interval length given: " + str(current_interval) + "s")
 
     def named_query_parameterized(self, keyword: str, param_op_val: list):
         """
@@ -371,10 +392,11 @@ class StatsDatabase:
         :param query_string_in:
         :return:
         """
-        table_name = self.process_db_query("SELECT name FROM interval_tables WHERE is_default=1")
+        if self.current_interval_statistics_table != "":
+            table_name = self.current_interval_statistics_table
+        else:
+            table_name = self.process_db_query("SELECT name FROM interval_tables WHERE is_default=1")
         return self.process_user_defined_query(query_string_in % table_name)
-
-
 
     def _print_query_results(self, query_string_in: str, result: typing.List[typing.Union[str, float, int]]) -> None:
         """

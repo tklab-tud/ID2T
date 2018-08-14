@@ -92,6 +92,8 @@ class Statistics:
         elif not isinstance(intervals, list):
             intervals = [intervals]
 
+        current_interval = intervals[0]
+
         # Inform user about recalculation of statistics and its reason
         if flag_recalculate_stats:
             print("Flag -r/--recalculate found. Recalculating statistics.")
@@ -151,6 +153,8 @@ class Statistics:
 
                 self.pcap_proc.collect_statistics(intervals)
                 self.pcap_proc.write_new_interval_statistics(self.path_db, intervals)
+
+        self.stats_db.set_current_interval_statistics_table(current_interval)
 
         # Load statistics from database
         self.file_info = self.stats_db.get_file_info()
