@@ -41,7 +41,7 @@ class StatsDatabase:
         self.existing_db = os.path.exists(db_path)
         self.database = sqlite3.connect(db_path)
         self.cursor = self.database.cursor()
-        self.current_interval_statistics_table = ""
+        self.current_interval_statistics_tables = []
 
         # If DB not existing, create a new DB scheme
         if self.existing_db:
@@ -159,21 +159,37 @@ class StatsDatabase:
         """
         :return: the current interval statistics table used for internal calculations
         """
-        return self.current_interval_statistics_table
+        if len(self.current_interval_statistics_tables) > 0:
+            return self.current_interval_statistics_tables[0]
+        else:
+            return ""
 
-    def set_current_interval_statistics_table(self, current_interval: float=0.0):
+    def get_all_current_interval_statistics_tables(self):
+        """
+        :return: the list of all current interval statistics tables
+        """
+        if len(self.current_interval_statistics_tables) == 0:
+            return [self.process_db_query("SELECT name FROM interval_tables WHERE is_default=1")]
+        return self.current_interval_statistics_tables
+
+    def set_current_interval_statistics_tables(self, current_intervals: list):
         """
         Sets the current interval statistics table, which should be used for internal calculations.
-        :param current_interval: the current interval, which should be used for internal calculations, in seconds
+        :param current_intervals: a list of current intervals in seconds, first of which should be used for internal
+                                  calculations
         """
-        if current_interval == 0.0:
-            table_name = self.process_db_query("SELECT name FROM interval_tables WHERE is_default=1")
-            print(table_name)
-            print("No user specified interval found. Using default interval: " +
-                  str(float(table_name[len("interval_statistics_"):])/1000000) + "s")
-        else:
-            self.current_interval_statistics_table = "interval_statistics_" + str(int(current_interval*1000000))
-            print("User specified interval(s) found. Using first interval length given: " + str(current_interval) + "s")
+        for current_interval in current_intervals:
+            if current_interval == 0.0:
+                table_name = self.process_db_query("SELECT name FROM interval_tables WHERE is_default=1")
+                print(table_name)
+                print("No user specified interval found. Using default interval: " +
+                      str(float(table_name[len("interval_statistics_"):])/1000000) + "s")
+            else:
+                self.current_interval_statistics_tables.append("interval_statistics_" +
+                                                               str(int(current_interval*1000000)))
+                if current_interval == current_intervals[0]:
+                    print("User specified interval(s) found. Using first interval length given for internal "
+                          "calculations: " + str(current_interval) + "s")
 
     def named_query_parameterized(self, keyword: str, param_op_val: list):
         """
@@ -386,14 +402,17 @@ class StatsDatabase:
 
         return result
 
-    def process_interval_statistics_query(self, query_string_in: str):
+    def process_interval_statistics_query(self, query_string_in: str, table_param: str=""):
         """
 
-        :param query_string_in:
-        :return:
+        :param query_string_in: a query to be executed over the current internal interval statistics table
+        :param table_param: a name of a specific interval statistics table
+        :return: the result of the query
         """
-        if self.current_interval_statistics_table != "":
-            table_name = self.current_interval_statistics_table
+        if table_param != "":
+            table_name = table_param
+        elif self.get_current_interval_statistics_table() != "":
+            table_name = self.get_current_interval_statistics_table()
         else:
             table_name = self.process_db_query("SELECT name FROM interval_tables WHERE is_default=1")
         return self.process_user_defined_query(query_string_in % table_name)

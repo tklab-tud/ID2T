@@ -92,7 +92,7 @@ class Statistics:
         elif not isinstance(intervals, list):
             intervals = [intervals]
 
-        current_interval = intervals[0]
+        current_intervals = intervals[:]
 
         # Inform user about recalculation of statistics and its reason
         if flag_recalculate_stats:
@@ -154,7 +154,7 @@ class Statistics:
                 self.pcap_proc.collect_statistics(intervals)
                 self.pcap_proc.write_new_interval_statistics(self.path_db, intervals)
 
-        self.stats_db.set_current_interval_statistics_table(current_interval)
+        self.stats_db.set_current_interval_statistics_tables(current_intervals)
 
         # Load statistics from database
         self.file_info = self.stats_db.get_file_info()
@@ -204,6 +204,28 @@ class Statistics:
                 ("Avg. packets sent", self.file_info['avgPacketsSentPerHost'], "packets"),
                 ("Avg. bandwidth in", self.file_info['avgBandwidthIn'], "kbit/s"),
                 ("Avg. bandwidth out", self.file_info['avgBandwidthOut'], "kbit/s")]
+
+    def get_interval_statistics(self, table_name: str=""):
+        """
+        Returns a list of tuples, each containing interval statistics.
+
+        :param table_name: the name of the interval statistics table
+        :return: a list of tuples, each consisting of (description, values, unit).
+        """
+        return [("First packet timestamp(seconds)",
+                 [int(item[0]) for item in self.stats_db.process_interval_statistics_query(
+                     "SELECT starttimestamp from %s", table_name)], ""),
+                ("Last packet timestamp(seconds)",
+                 [int(item[0]) for item in self.stats_db.process_interval_statistics_query(
+                     "SELECT lastpkttimestamp from %s", table_name)], ""),
+                ("Avg. packet rate(packets/sec)", [item[0] for item in self.stats_db.process_interval_statistics_query(
+                    "SELECT pktrate from %s", table_name)], ""),
+                ("packets count(packets)", [item[0] for item in self.stats_db.process_interval_statistics_query(
+                    "SELECT pktscount from %s", table_name)], ""),
+                ("Avg. kbyte rate(kbytes/sec)", [item[0] for item in self.stats_db.process_interval_statistics_query(
+                    "SELECT kbyterate from %s", table_name)], ""),
+                ("kbyte count(kbytes)", [item[0] for item in self.stats_db.process_interval_statistics_query(
+                    "SELECT kbytes from %s", table_name)], "")]
 
     @staticmethod
     def write_list(desc_val_unit_list, func, line_ending="\n"):
@@ -531,6 +553,16 @@ class Statistics:
             target.write(title + " \n")
             target.write("====================== \n")
 
+        def _write_sub_header(title: str):
+            """
+            Writes the section header into the open file.
+
+            :param title: The section title
+            """
+            target.write("---------------------- \n")
+            target.write(title + " \n")
+            target.write("---------------------- \n")
+
         target = open(self.pcap_filepath + ".stat", 'w')
         target.truncate()
 
@@ -539,6 +571,12 @@ class Statistics:
 
         _write_header("General statistics")
         Statistics.write_list(self.get_general_file_statistics(), target.write)
+
+        _write_header("Interval statistics")
+        tables = self.stats_db.get_all_current_interval_statistics_tables()
+        for table in tables:
+            _write_sub_header(table)
+            Statistics.write_list(self.get_interval_statistics(table), target.write)
 
         _write_header("Tests statistics")
         Statistics.write_list(self.get_tests_statistics(), target.write)
