@@ -178,6 +178,8 @@ class Statistics:
         """
 
         pdu_count = self.process_db_query("SELECT SUM(pktCount) FROM unrecognized_pdus")
+        if pdu_count is None:
+            pdu_count = 0
         pdu_share = pdu_count / self.get_packet_count() * 100
         last_pdu_timestamp = self.process_db_query(
             "SELECT MAX(timestampLastOccurrence) FROM unrecognized_pdus")
