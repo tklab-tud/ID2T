@@ -1330,7 +1330,7 @@ class Statistics:
             if ip_type is "src":
                 sod = "Src"
                 full = "Source"
-            elif ip_type is "src":
+            elif ip_type is "dst":
                 sod = "Dst"
                 full = "Destination"
             else:
@@ -1338,7 +1338,7 @@ class Statistics:
 
             plt.gcf().clear()
             result = self.stats_db.process_interval_statistics_query(
-                "SELECT lastPktTimestamp, ip%sCumEntropy FROM %s ORDER BY lastPktTimestamp" % sod)
+                "SELECT lastPktTimestamp, ip{0}CumEntropy FROM %s ORDER BY lastPktTimestamp".format(sod))
             graphx, graphy = [], []
             for row in result:
                 graphx.append(row[0])
