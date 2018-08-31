@@ -922,8 +922,8 @@ class Statistics:
                 print("Warning: Could not collect average delays for external communication, using following values:")
             elif default_local:
                 print("Warning: Could not collect average delays for local communication, using following values:")
-            print("Avg delay of external communication: {0}s,  Avg delay of local communication: {1}s".format(
-                avg_delay_external, avg_delay_local))
+        print("Avg delay of external communication: {0}s,  Avg delay of local communication: {1}s".format(
+            avg_delay_external, avg_delay_local))
 
         return avg_delay_local, avg_delay_external
 
