@@ -74,9 +74,9 @@ class ID2TAttackTest(unittest.TestCase):
                                         intervals=[], delete=True)
 
         if seed is None:
-            controller.process_attacks(attack_args, time=True)
+            controller.process_attacks(attack_args, measure_time=True)
         else:
-            controller.process_attacks(attack_args, [[seed]], time=True)
+            controller.process_attacks(attack_args, [[seed]], measure_time=True)
 
         duration = controller.durations[0] * factor / controller.attack_controller.total_packets
         print(attack_args[0][0] + ' needs ' + str(duration) + ' seconds to generate ' + str(factor) + ' packets.')
