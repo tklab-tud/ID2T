@@ -214,20 +214,19 @@ class Statistics:
         :param table_name: the name of the interval statistics table
         :return: a list of tuples, each consisting of (description, values, unit).
         """
-        return [("First packet timestamp(seconds)",
-                 [int(item[0]) for item in self.stats_db.process_interval_statistics_query(
-                     "SELECT starttimestamp from %s", table_name)], ""),
-                ("Last packet timestamp(seconds)",
-                 [int(item[0]) for item in self.stats_db.process_interval_statistics_query(
-                     "SELECT lastpkttimestamp from %s", table_name)], ""),
-                ("Avg. packet rate(packets/sec)", [item[0] for item in self.stats_db.process_interval_statistics_query(
-                    "SELECT pktrate from %s", table_name)], ""),
-                ("packets count(packets)", [item[0] for item in self.stats_db.process_interval_statistics_query(
-                    "SELECT pktscount from %s", table_name)], ""),
-                ("Avg. kbyte rate(kbytes/sec)", [item[0] for item in self.stats_db.process_interval_statistics_query(
-                    "SELECT kbyterate from %s", table_name)], ""),
-                ("kbyte count(kbytes)", [item[0] for item in self.stats_db.process_interval_statistics_query(
-                    "SELECT kbytes from %s", table_name)], "")]
+        result = [("First packet timestamp(seconds)",
+                   [int(item[0]) for item in self.stats_db.process_interval_statistics_query("SELECT starttimestamp from %s", table_name)], ""),
+                  ("Last packet timestamp(seconds)",
+                   [int(item[0]) for item in self.stats_db.process_interval_statistics_query("SELECT lastpkttimestamp from %s", table_name)], ""),
+                  ("Avg. packet rate(packets/sec)",
+                   [item[0] for item in self.stats_db.process_interval_statistics_query("SELECT pktrate from %s", table_name)], ""),
+                  ("packets count(packets)",
+                   [item[0] for item in self.stats_db.process_interval_statistics_query("SELECT pktscount from %s", table_name)], ""),
+                  ("Avg. kbyte rate(kbytes/sec)",
+                   [item[0] for item in self.stats_db.process_interval_statistics_query("SELECT kbyterate from %s", table_name)], ""),
+                  ("kbyte count(kbytes)",
+                   [item[0] for item in self.stats_db.process_interval_statistics_query("SELECT kbytes from %s", table_name)], "")]
+        return result
 
     @staticmethod
     def write_list(desc_val_unit_list, func, line_ending="\n"):
