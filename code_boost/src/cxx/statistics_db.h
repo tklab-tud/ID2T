@@ -5,6 +5,7 @@
 #ifndef CPP_PCAPREADER_STATISTICSDB_H
 #define CPP_PCAPREADER_STATISTICSDB_H
 
+#include <tins/tins.h>
 #include <iostream>
 #include <memory>
 #include <string>

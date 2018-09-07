@@ -371,7 +371,8 @@ void pcap_processor::process_packets(const Packet &pkt) {
             stats.increaseProtocolByteCount(ipAddressSender, "TCP", sizeCurrentPacket);
 
             // Conversation statistics
-            stats.addConvStat(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), pkt.timestamp());
+            const TCP& tcp = pdu_l4->rfind_pdu<TCP>();
+            stats.addConvStat(ipAddressSender, tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), pkt.timestamp(), tcp.flags());
             stats.addConvStatExt(ipAddressSender,tcpPkt.sport(), ipAddressReceiver, tcpPkt.dport(), "TCP", pkt.timestamp());
 
             // Window Size distribution
@@ -395,6 +396,7 @@ void pcap_processor::process_packets(const Packet &pkt) {
             stats.increaseProtocolByteCount(ipAddressSender, "UDP", sizeCurrentPacket);
             stats.incrementPortCount(ipAddressSender, udpPkt.sport(), ipAddressReceiver, udpPkt.dport(), "UDP");
             stats.increasePortByteCount(ipAddressSender, udpPkt.sport(), ipAddressReceiver, udpPkt.dport(), sizeCurrentPacket, "UDP");
+            //TODO: (optional) add udp flag support?
             stats.addConvStatExt(ipAddressSender,udpPkt.sport(), ipAddressReceiver, udpPkt.dport(), "UDP", pkt.timestamp());
         } else if (p == PDU::PDUType::ICMP) {
             stats.incrementProtocolCount(ipAddressSender, "ICMP");

@@ -3,10 +3,13 @@
 #include <iostream>
 #include <sstream>
 #include <fstream>
+#include <numeric>
 #include <unistd.h>
 #include <stdio.h>
 #include <pybind11/pybind11.h>
 namespace py = pybind11;
+
+using namespace Tins;
 
 /**
  * Creates a new statistics_db object. Opens an existing database located at database_path. If not existing, creates
@@ -443,9 +446,10 @@ void statistics_db::writeStatisticsConv(std::unordered_map<conv, entry_convStat>
                 "avgDelay INTEGER,"
                 "minDelay INTEGER,"
                 "maxDelay INTEGER,"
+                "roundTripTime INTEGER,"
                 "PRIMARY KEY(ipAddressA,portA,ipAddressB,portB));";
         db->exec(createTable);
-        SQLite::Statement query(*db, "INSERT INTO conv_statistics VALUES (?, ?, ?, ?, ?,  ?, ?, ?, ?)");
+        SQLite::Statement query(*db, "INSERT INTO conv_statistics VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
         // Calculate average of inter-arrival times and average packet rate
         for (auto it = convStatistics.begin(); it != convStatistics.end(); ++it) {
@@ -466,6 +470,38 @@ void statistics_db::writeStatisticsConv(std::unordered_map<conv, entry_convStat>
                     e.avg_interarrival_time = (std::chrono::microseconds) sumDelay / e.interarrival_time.size(); // average
                 else e.avg_interarrival_time = (std::chrono::microseconds) 0;
 
+                std::vector<std::chrono::microseconds>::const_iterator i1;
+                std::vector<small_uint<12>>::const_iterator i2;
+                std::chrono::microseconds roundTripTime = std::chrono::microseconds(0);
+                std::vector<std::chrono::microseconds> roundTripTimes;
+                bool flag = false;
+                if (e.pkts_timestamp.size() != e.tcp_types.size()) {
+                    std::cout << "shit..."<< std::endl;
+                }
+                for(i1 = e.pkts_timestamp.begin(), i2 = e.tcp_types.begin();
+                    i1 < e.pkts_timestamp.end(), i2 < e.tcp_types.end();
+                    ++i1, ++i2) {
+                    if (*i2 == TCP::SYN && !flag) {
+                        roundTripTime = *i1;
+                        flag = true;
+                    } else if (*i2 == TCP::ACK && flag) {
+                        roundTripTime = *i1 - roundTripTime;
+                        flag = false;
+                        roundTripTimes.push_back(roundTripTime);
+                        roundTripTime = std::chrono::microseconds(0);
+                    }
+                }
+
+                if (roundTripTimes.size() != 0) {
+                    std::vector<std::chrono::microseconds>::const_iterator it;
+                    for(it = roundTripTimes.begin(); it < roundTripTimes.end(); ++it) {
+                        roundTripTime += *it;
+                    }
+                    roundTripTime = roundTripTime / roundTripTimes.size();
+                } else {
+                    roundTripTime = std::chrono::microseconds(-1);
+                }
+
                 std::chrono::microseconds start_timesttamp = e.pkts_timestamp[0];
                 std::chrono::microseconds end_timesttamp = e.pkts_timestamp.back();
                 std::chrono::microseconds conn_duration = end_timesttamp - start_timesttamp;
@@ -480,6 +516,7 @@ void statistics_db::writeStatisticsConv(std::unordered_map<conv, entry_convStat>
                 query.bind(7, (int) e.avg_interarrival_time.count());
                 query.bind(8, minDelay);
                 query.bind(9, maxDelay);
+                query.bind(10, static_cast<int>(roundTripTime.count()));
                 query.exec();
                 query.reset();
 

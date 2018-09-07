@@ -60,7 +60,7 @@ struct conv{
                && portA == other.portA
                &&ipAddressB == other.ipAddressB
                && portB == other.portB;
-    }    
+    }
 };
 
 /*
@@ -84,7 +84,7 @@ struct convWithProt{
                &&ipAddressB == other.ipAddressB
                && portB == other.portB
                && protocol == other.protocol;
-    }    
+    }
 };
 
 /*
@@ -302,13 +302,15 @@ struct entry_convStat {
     std::vector<std::chrono::microseconds> pkts_timestamp;
     std::vector<std::chrono::microseconds> interarrival_time;
     std::chrono::microseconds avg_interarrival_time;
+    std::vector<small_uint<12>> tcp_types;
 
     bool operator==(const entry_convStat &other) const {
         return pkts_count == other.pkts_count
                && avg_pkt_rate == avg_pkt_rate
                && pkts_timestamp == other.pkts_timestamp
                && interarrival_time == other.interarrival_time
-               && avg_interarrival_time == other.avg_interarrival_time;
+               && avg_interarrival_time == other.avg_interarrival_time
+               && tcp_types == other.tcp_types;
     }
 };
 
@@ -347,7 +349,7 @@ struct commInterval{
         return start == other.start
                && end == other.end
                && pkts_count == other.pkts_count;
-    }    
+    }
 };
 
 /*
@@ -465,7 +467,7 @@ namespace std {
                      ^ (hash<int>()(k.winSize) << 1)) >> 1);
         }
     };
-    
+
     template<>
     struct hash<conv> {
         std::size_t operator()(const conv &k) const {
@@ -492,7 +494,7 @@ namespace std {
                      ^ (hash<string>()(c.protocol));
         }
     };
-    
+
     template<>
     struct hash<ipAddress_protocol> {
         std::size_t operator()(const ipAddress_protocol &k) const {
@@ -552,7 +554,7 @@ public:
 
     void incrementWinCount(const std::string &ipAddress, int winSize);
 
-    void addConvStat(const std::string &ipAddressSender,int sport, const std::string &ipAddressReceiver,int dport, std::chrono::microseconds timestamp);
+    void addConvStat(const std::string &ipAddressSender,int sport, const std::string &ipAddressReceiver,int dport, std::chrono::microseconds timestamp, small_uint<12> flags);
 
     void addConvStatExt(const std::string &ipAddressSender,int sport, const std::string &ipAddressReceiver,int dport, const std::string &protocol, std::chrono::microseconds timestamp);
 
@@ -596,12 +598,12 @@ public:
     void setTimestampFirstPacket(Tins::Timestamp ts);
 
     void setTimestampLastPacket(Tins::Timestamp ts);
-    
+
     Tins::Timestamp getTimestampFirstPacket();
     Tins::Timestamp getTimestampLastPacket();
 
     void assignMacAddress(const std::string &ipAddress, const std::string &macAddress);
-    
+
     void addIpStat_packetSent(const std::string &ipAddressSender, const std::string &ipAddressReceiver, long bytesSent, std::chrono::microseconds timestamp);
 
     int getPacketCount();
