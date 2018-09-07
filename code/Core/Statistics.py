@@ -856,10 +856,9 @@ class Statistics:
         else:
             return None
 
-    def get_avg_delay_local_ext(self):
+    def get_avg_delay_distributions(self):
         """
-        Calculates the average delay of a packet for external and local communication, based on the tcp handshakes
-        :return: tuple consisting of avg delay for local and external communication, (local, external)
+        :return: tuple consisting of avg delay distributions for local and external communication
         """
 
         conv_delays = self.stats_db.process_user_defined_query(
@@ -878,54 +877,16 @@ class Statistics:
                 else:
                     local_conv.append(conv)
 
-            # calculate avg local and external delay by summing up the respective delays and dividing them by the
-            # number of conversations
-            avg_delay_external = 0.0
-            avg_delay_local = 0.0
-            default_ext = False
-            default_local = False
+            local_dist = []
+            for conv in local_conv:
+                local_dist.append(conv[2])
 
-            if local_conv:
-                for conv in local_conv:
-                    avg_delay_local += conv[2]
-                avg_delay_local = (avg_delay_local / len(local_conv)) * 0.001  # ms
-            else:
-                # no local conversations in statistics found
-                avg_delay_local = 0.055
-                default_local = True
+            external_dist = []
+            for conv in external_conv:
+                external_dist.append(conv[2])
 
-            if external_conv:
-                for conv in external_conv:
-                    avg_delay_external += conv[2]
-                avg_delay_external = (avg_delay_external / len(external_conv)) * 0.001  # ms
-            else:
-                # no external conversations in statistics found
-                avg_delay_external = 0.09
-                default_ext = True
-        else:
-            # if no statistics were found, use these numbers
-            avg_delay_external = 0.09
-            avg_delay_local = 0.055
-            default_ext = True
-            default_local = True
-
-        # check whether delay numbers are consistent
-        if avg_delay_local > avg_delay_external:
-            avg_delay_external = avg_delay_local * 1.2
-
-        # print information, that (default) values are used, that are not collected from the Input PCAP
-        if default_ext or default_local:
-            if default_ext and default_local:
-                print("Warning: Could not collect average delays for local or external communication, using "
-                      "following values:")
-            elif default_ext:
-                print("Warning: Could not collect average delays for external communication, using following values:")
-            elif default_local:
-                print("Warning: Could not collect average delays for local communication, using following values:")
-        print("Avg delay of external communication: {0}s,  Avg delay of local communication: {1}s".format(
-            avg_delay_external, avg_delay_local))
-
-        return avg_delay_local, avg_delay_external
+            return local_dist, external_dist
+        return [], []
 
     def get_filtered_degree(self, degree_type: str):
         """

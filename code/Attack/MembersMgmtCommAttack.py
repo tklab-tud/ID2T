@@ -306,18 +306,18 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                         else:
                             bot_configs[bot]["TTL"] = self.statistics.process_db_query("most_used(ttlValue)")
 
-        def assign_realistic_timestamps(messages: list, external_ids: set, local_ids: set, avg_delay_local: float,
-                                        avg_delay_external: float, zero_reference: float):
+        def assign_realistic_timestamps(messages: list, external_ids: set, local_ids: set, avg_delay_local: list,
+                                        avg_delay_external: list, zero_reference: float):
             """
             Assigns realistic timestamps to a set of messages
 
             :param messages: the set of messages to be updated
             :param external_ids: the set of bot ids, that are outside the network, i.e. external
             :param local_ids: the set of bot ids, that are inside the network, i.e. local
-            :param avg_delay_local: the avg_delay between the dispatch and the reception of a packet between local
-                                    computers
-            :param avg_delay_external: the avg_delay between the dispatch and the reception of a packet between a local
-                                       and an external computer
+            :param avg_delay_local: the avg_delay distribution between the dispatch and the reception of a packet
+                                    between local computers
+            :param avg_delay_external: the avg_delay distribution between the dispatch and the reception of a packet
+                                       between a local and an external computer
             :param zero_reference: the timestamp which is regarded as the beginning of the pcap_file and therefore
                                    handled like a timestamp that resembles 0
             """
@@ -357,13 +357,13 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                     # avg delay
                     if req_msg.src in external_ids or req_msg.dst in external_ids:
                         # external communication
-                        respns_msg.time = req_msg.time + avg_delay_external + uniform(-0.1 * avg_delay_external,
-                                                                                      0.1 * avg_delay_external)
+                        external_dist = Lea.fromSeq(avg_delay_external)
+                        respns_msg.time = req_msg.time + float(external_dist.random()) * 0.001
 
                     else:
                         # local communication
-                        respns_msg.time = req_msg.time + avg_delay_local + uniform(-0.1 * avg_delay_local,
-                                                                                   0.1 * avg_delay_local)
+                        local_dist = Lea.fromSeq(avg_delay_local)
+                        respns_msg.time = req_msg.time + float(local_dist.random()) * 0.001
 
                     updated_msgs.append(respns_msg)
                     last_response[(req_msg.src, req_msg.dst)] = respns_msg.time
@@ -562,7 +562,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         zero_reference = self.get_param_value(Param.INJECT_AT_TIMESTAMP) - messages[0].time
 
         # calculate the average delay values for local and external responses
-        avg_delay_local, avg_delay_external = self.statistics.get_avg_delay_local_ext()
+        avg_delay_local, avg_delay_external = self.statistics.get_avg_delay_distributions()
 
         # set timestamps
         assign_realistic_timestamps(messages, external_ids, local_ids, avg_delay_local, avg_delay_external,
