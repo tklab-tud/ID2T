@@ -214,19 +214,33 @@ class Statistics:
         :param table_name: the name of the interval statistics table
         :return: a list of tuples, each consisting of (description, values, unit).
         """
-        result = [("First packet timestamp(seconds)",
-                   [int(item[0]) for item in self.stats_db.process_interval_statistics_query("SELECT starttimestamp from %s", table_name)], ""),
-                  ("Last packet timestamp(seconds)",
-                   [int(item[0]) for item in self.stats_db.process_interval_statistics_query("SELECT lastpkttimestamp from %s", table_name)], ""),
-                  ("Avg. packet rate(packets/sec)",
-                   [item[0] for item in self.stats_db.process_interval_statistics_query("SELECT pktrate from %s", table_name)], ""),
-                  ("packets count(packets)",
-                   [item[0] for item in self.stats_db.process_interval_statistics_query("SELECT pktscount from %s", table_name)], ""),
-                  ("Avg. kbyte rate(kbytes/sec)",
-                   [item[0] for item in self.stats_db.process_interval_statistics_query("SELECT kbyterate from %s", table_name)], ""),
-                  ("kbyte count(kbytes)",
-                   [item[0] for item in self.stats_db.process_interval_statistics_query("SELECT kbytes from %s", table_name)], "")]
-        return result
+        interval_stats = self.stats_db.process_interval_statistics_query("SELECT * from %s", table_name)
+
+        column_names = self.stats_db.get_field_types(table_name)
+        pretty_names = {'starttimestamp': "First packet timestamp(seconds)",
+                        'lastpkttimestamp': "Last packet timestamp(seconds)",
+                        'pktrate': "packets count(packets)",
+                        'kbyterate': "Avg. kbyte rate(kbytes/sec)",
+                        'kbytes': "kbyte count(kbytes)"}
+
+        final_names = []
+        inverted_table = {}
+        for i, name in enumerate(column_names):
+            if name in pretty_names.keys():
+                name = pretty_names[name]
+            inverted_table[name] = []
+            final_names.append(name)
+
+        for row in interval_stats:
+            for column, name in zip(row, final_names):
+                if type(column) == str:
+                    try:
+                        column = int(column)
+                    except ValueError:
+                        column = float(column)
+                inverted_table[name].append(column)
+
+        return inverted_table.items()
 
     @staticmethod
     def write_list(desc_val_unit_list, func, line_ending="\n"):
@@ -252,6 +266,10 @@ class Statistics:
             # round float
             if isinstance(value, float):
                 value = round(value, 4)
+            # check for lists
+            if isinstance(value, list):
+                # remove brackets
+                value = str(value)[1:-1]
             # write into file
             if len(entry) == 3:
                 unit = entry[2]
