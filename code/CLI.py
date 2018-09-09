@@ -65,7 +65,7 @@ class CLI(object):
         parser.add_argument('-t', '--extraTests',
                             help='perform extra tests on the input pcap file, including calculating IP entropy'
                                  'in interval-wise, TCP checksum, and checking payload availability.',
-                            action='store_true')
+                            action='store_true', default=False)
         parser.add_argument('-S', '--rngSeed', action='append', help='sets rng seed for testing or benchmarking',
                             nargs='+', default=[])
         parser.add_argument('-T', '--time', help='measures packet generation time', action='store_true', default=False)
