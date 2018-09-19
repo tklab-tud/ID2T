@@ -18,6 +18,7 @@ class LabelManager:
     TAG_ATTACK_NAME = 'name'
     TAG_ATTACK_NOTE = 'note'
     TAG_ATTACK_SEED = 'seed'
+    TAG_ATTACK_PACKETS = 'injected_packets'
     TAG_TIMESTAMP_START = 'timestamp_start'
     TAG_TIMESTAMP_END = 'timestamp_end'
     TAG_TIMESTAMP = 'timestamp'
@@ -152,6 +153,9 @@ class LabelManager:
             attack_seed = doc.createElement(self.TAG_ATTACK_SEED)
             attack_seed.appendChild(doc.createTextNode(str(label.seed)))
             xml_tree.appendChild(attack_seed)
+            injected_packets = doc.createElement(self.TAG_ATTACK_PACKETS)
+            injected_packets.appendChild(doc.createTextNode(str(label.injected_packets)))
+            xml_tree.appendChild(injected_packets)
 
             # add timestamp_start to XML tree
             xml_tree.appendChild(get_subtree_timestamp(self.TAG_TIMESTAMP_START, label.timestamp_start))
