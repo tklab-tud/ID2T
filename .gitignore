@@ -29,6 +29,8 @@ dbs/
 code_boost/src/cxx/CMakeLists.txt
 code_boost/src/cxx/cmake-build-debug/
 code_boost/src/cmake-build-debug/
+resources/test/id2t_results
+# legacy dir
 resources/test/ID2T_results
 
 id2t

@@ -51,7 +51,7 @@ class Controller:
                 out_dir = "."
             Util.OUT_DIR = out_dir + os.sep
         else:
-            Util.OUT_DIR = os.path.join(os.path.dirname(pcap_file_path), "ID2T_results") + os.sep
+            Util.OUT_DIR = os.path.join(os.path.dirname(pcap_file_path), "id2t_results") + os.sep
         os.makedirs(Util.OUT_DIR, exist_ok=True)
 
     def list_interval_statistics(self):
