@@ -101,7 +101,9 @@ class Statistics:
         outstring_datasource = "from statistics database."
 
         # Recalculate statistics if database does not exist OR param -r/--recalculate is provided
-        if (not self.stats_db.get_db_exists()) or flag_recalculate_stats or self.stats_db.get_db_outdated():
+        # FIXME: probably wanna add a "calculate only extra tests" case in the future
+        if (not self.stats_db.get_db_exists()) or flag_recalculate_stats or self.stats_db.get_db_outdated() or \
+                self.do_extra_tests:
             # Get interval statistics tables which already exist
             previous_intervals = self.list_previous_interval_statistic_tables()
 
