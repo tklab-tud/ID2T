@@ -220,6 +220,10 @@ The [SemVer](http://semver.org/spec/v2.0.0.html) is used for versioning. For cur
 
 - __Aidmar Wainakh__ - _analysis and development of attacks as part of his Master Thesis_
 
+- __Jens Keim__ - _current maintainer, development of multiple attacks and general improvements_
+
+- __Stefan Schmidt__ - _volunteer contributor, development of multiple attacks and general improvements_
+
 - __Leon Böck__ - _guidance and suggestions during development of Membership Management Communication Attack_
 
 - __Nikolay Milanov__ - _development of first prototype within his Master Thesis_
@@ -238,11 +242,7 @@ The [SemVer](http://semver.org/spec/v2.0.0.html) is used for versioning. For cur
 
 - __Stefano Acquaviti__ - _development of multiple attacks and general improvements_
 
-- __Jens Keim__ - _development of multiple attacks and general improvements_
-
 - __Roey Regev__ - _development of multiple attacks and general improvements_
-
-- __Stefan Schmidt__ - _development of multiple attacks and general improvements_
 
 - __Jonathan Speth__ - _development of multiple attacks and general improvements_
 
