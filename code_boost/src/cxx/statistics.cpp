@@ -480,7 +480,7 @@ void statistics::incrementUnrecognizedPDUCount(const std::string &srcMac, const 
 /**
  * Creates a new statistics object.
  */
-statistics::statistics(std::string resourcePath) {
+statistics::statistics(std::string resourcePath) {;
     this->resourcePath = resourcePath;
 }
 
@@ -790,7 +790,7 @@ void statistics::writeToDatabase(std::string database_path, std::vector<std::chr
         db.writeStatisticsWin(win_distribution);
         db.writeStatisticsConv(conv_statistics);
         db.writeStatisticsConvExt(conv_statistics_extended);
-        db.writeStatisticsInterval(interval_statistics, timeIntervals, del, this->default_interval);
+        db.writeStatisticsInterval(interval_statistics, timeIntervals, del, this->default_interval, this->getDoExtraTests());
         db.writeDbVersion();
         db.writeStatisticsUnrecognizedPDUs(unrecognized_PDUs);
     }
@@ -803,5 +803,5 @@ void statistics::writeToDatabase(std::string database_path, std::vector<std::chr
 
 void statistics::writeIntervalsToDatabase(std::string database_path, std::vector<std::chrono::duration<int, std::micro>> timeIntervals, bool del) {
     statistics_db db(database_path, resourcePath);
-    db.writeStatisticsInterval(interval_statistics, timeIntervals, del, this->default_interval);
+    db.writeStatisticsInterval(interval_statistics, timeIntervals, del, this->default_interval, this->getDoExtraTests());
 }

@@ -170,7 +170,7 @@ class CLI(object):
         # Load PCAP statistics
         recalculate_intervals = None
         if self.args.recalculate_delete:
-            self.args.recalculate = True
+            recalculate_intervals = True
         elif self.args.recalculate_yes:
             recalculate_intervals = True
             self.args.recalculate = True

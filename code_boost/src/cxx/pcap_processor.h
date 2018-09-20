@@ -27,13 +27,15 @@ public:
     /*
     * Class constructor
     */
-    pcap_processor(std::string path, std::string extraTests, std::string resource_path);
+    pcap_processor(std::string path, std::string extraTests, std::string resource_path, std::string database_path);
 
     /*
      * Attributes
      */
     statistics stats;
     std::string filePath;
+    std::string databasePath;
+    std::string resourcePath;
     bool hasUnrecognized;
     std::chrono::duration<int, std::micro> timeInterval;
 
@@ -50,7 +52,7 @@ public:
 
     bool read_pcap_info(const std::string &filePath, std::size_t &totalPakets);
 
-    void collect_statistics(const py::list& intervals);
+    void collect_statistics(py::list& intervals);
 
     void write_to_database(std::string database_path, const py::list& intervals, bool del);
 

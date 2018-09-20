@@ -181,8 +181,12 @@ class StatsDatabase:
         for current_interval in current_intervals:
             if current_interval == 0.0:
                 table_name = self.process_db_query("SELECT name FROM interval_tables WHERE is_default=1")
-                print("No user specified interval found. Using default interval: " +
-                      str(float(table_name[len("interval_statistics_"):])/1000000) + "s")
+                if table_name != []:
+                    substr = "Using default interval: " + str(float(table_name[len("interval_statistics_"):])/1000000) \
+                             + "s"
+                else:
+                    substr = "The default interval will used after it is calculated."
+                print("No user specified interval found. " + substr)
             else:
                 self.current_interval_statistics_tables.append("interval_statistics_" +
                                                                str(int(current_interval*1000000)))

@@ -1,6 +1,3 @@
-#include <pybind11/pybind11.h>
-namespace py = pybind11;
-
 #include "pcap_processor.h"
 
 using namespace Tins;
@@ -9,8 +6,10 @@ using namespace Tins;
  * Creates a new pcap_processor object.
  * @param path The path where the PCAP to get analyzed is locatated.
  */
-pcap_processor::pcap_processor(std::string path, std::string extraTests, std::string resourcePath) : stats(resourcePath) {
+pcap_processor::pcap_processor(std::string path, std::string extraTests, std::string resource_path, std::string database_path) : stats(resource_path) {
     filePath = path;
+    resourcePath = resource_path;
+    databasePath = database_path;
     hasUnrecognized = false;
     if(extraTests == "True")
         stats.setDoExtraTests(true);
@@ -157,7 +156,7 @@ bool pcap_processor::read_pcap_info(const std::string &filePath, std::size_t &to
  * Collect statistics of the loaded PCAP file. Calls for each packet the method process_packets.
  * param: user specified interval in seconds
  */
-void pcap_processor::collect_statistics(const py::list& intervals) {
+void pcap_processor::collect_statistics(py::list& intervals) {
     // Only process PCAP if file exists
     if (file_exists(filePath)) {
         std::cout << "Loading pcap..." << std::endl;
@@ -179,7 +178,12 @@ void pcap_processor::collect_statistics(const py::list& intervals) {
         std::vector<std::chrono::duration<int, std::micro>> timeIntervals;
         std::vector<std::chrono::microseconds> barriers;
 
-        if (intervals.size() == 0 || intervals[0].cast<double>() == 0) {
+        std::vector<double> intervals_vec;
+        for (auto interval: intervals) {
+            intervals_vec.push_back(interval.cast<double>());
+        }
+
+        if (intervals_vec.size() == 0 || intervals_vec[0] == 0) {
             int timeIntervalsNum = 100;
             std::chrono::microseconds lastTimestamp = stats.getTimestampLastPacket();
             std::chrono::microseconds captureDuration = lastTimestamp - firstTimestamp;
@@ -195,9 +199,12 @@ void pcap_processor::collect_statistics(const py::list& intervals) {
             timeIntervals.push_back(timeInterval);
             barriers.push_back(barrier);
         } else {
-            for (auto interval: intervals) {
-                double interval_double = interval.cast<double>();
-                timeInterval_microsec = static_cast<long>(interval_double * 1000000);
+            if (stats.getDoExtraTests()) {
+                statistics_db stats_db(databasePath, resourcePath);
+                stats_db.getNoneExtraTestsInveralStats(intervals_vec);
+            }
+            for (auto interval: intervals_vec) {
+                timeInterval_microsec = static_cast<long>(interval * 1000000);
                 intervalStartTimestamp.push_back(firstTimestamp);
                 std::chrono::duration<int, std::micro> timeInterval(timeInterval_microsec);
                 std::chrono::microseconds barrier = timeInterval;
@@ -406,9 +413,16 @@ void pcap_processor::process_packets(const Packet &pkt) {
  */
 void pcap_processor::write_to_database(std::string database_path, const py::list& intervals, bool del) {
     std::vector<std::chrono::duration<int, std::micro>> timeIntervals;
+    std::vector<double> intervals_vec;
     for (auto interval: intervals) {
-        double interval_double = interval.cast<double>();
-        std::chrono::duration<int, std::micro> timeInterval(static_cast<long>(interval_double * 1000000));
+        intervals_vec.push_back(interval.cast<double>());
+    }
+    if (stats.getDoExtraTests()) {
+        statistics_db stats_db(databasePath, resourcePath);
+        stats_db.getNoneExtraTestsInveralStats(intervals_vec);
+    }
+    for (auto interval: intervals_vec) {
+        std::chrono::duration<int, std::micro> timeInterval(static_cast<long>(interval * 1000000));
         timeIntervals.push_back(timeInterval);
     }
     stats.writeToDatabase(database_path, timeIntervals, del);
@@ -416,9 +430,16 @@ void pcap_processor::write_to_database(std::string database_path, const py::list
 
 void pcap_processor::write_new_interval_statistics(std::string database_path, const py::list& intervals) {
     std::vector<std::chrono::duration<int, std::micro>> timeIntervals;
+    std::vector<double> intervals_vec;
     for (auto interval: intervals) {
-        double interval_double = interval.cast<double>();
-        std::chrono::duration<int, std::micro> timeInterval(static_cast<long>(interval_double * 1000000));
+        intervals_vec.push_back(interval.cast<double>());
+    }
+    if (stats.getDoExtraTests()) {
+        statistics_db stats_db(databasePath, resourcePath);
+        stats_db.getNoneExtraTestsInveralStats(intervals_vec);
+    }
+    for (auto interval: intervals_vec) {
+        std::chrono::duration<int, std::micro> timeInterval(static_cast<long>(interval * 1000000));
         timeIntervals.push_back(timeInterval);
     }
     stats.writeIntervalsToDatabase(database_path, timeIntervals, false);
@@ -465,7 +486,7 @@ bool inline pcap_processor::file_exists(const std::string &filePath) {
  */
 PYBIND11_MODULE (libpcapreader, m) {
     py::class_<pcap_processor>(m, "pcap_processor")
-            .def(py::init<std::string, std::string, std::string>())
+            .def(py::init<std::string, std::string, std::string, std::string>())
             .def("merge_pcaps", &pcap_processor::merge_pcaps)
             .def("collect_statistics", &pcap_processor::collect_statistics)
             .def("get_timestamp_mu_sec", &pcap_processor::get_timestamp_mu_sec)

@@ -417,7 +417,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
                 print('Error: Statistics-dependent attack parameter added without setting a statistics object first.')
                 exit(1)
 
-            ts = pr.pcap_processor(self.statistics.pcap_filepath, "False", Util.RESOURCE_DIR).get_timestamp_mu_sec(int(value))
+            ts = pr.pcap_processor(self.statistics.pcap_filepath, "False", Util.RESOURCE_DIR, "").get_timestamp_mu_sec(int(value))
             if 0 <= int(value) <= self.statistics.get_packet_count() and ts >= 0:
                 is_valid = True
                 param_name = atkParam.Parameter.INJECT_AT_TIMESTAMP

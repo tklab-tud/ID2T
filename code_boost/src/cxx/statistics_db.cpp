@@ -27,6 +27,35 @@ statistics_db::statistics_db(std::string database_path, std::string resourcePath
     readPortServicesFromNmap();
 }
 
+void statistics_db::getNoneExtraTestsInveralStats(std::vector<double>& intervals){
+    try {
+        //SQLite::Statement query(*db, "SELECT name FROM sqlite_master WHERE type='table' AND name='interval_tables';");
+        std::vector<std::string> tables;
+        try {
+            SQLite::Statement query(*db, "SELECT name FROM interval_tables WHERE extra_tests=1;");
+            while (query.executeStep()) {
+                tables.push_back(query.getColumn(0));
+            }
+        } catch (std::exception &e) {
+            std::cerr << "Exception in statistics_db::" << __func__ << ": " << e.what() << std::endl;
+        }
+        if (tables.size() != 0) {
+            std::string table_name;
+            double interval;
+            for (auto table = tables.begin(); table != tables.end(); table++) {
+                table_name = table->substr(std::string("interval_statistics_").length());
+                interval = static_cast<double>(::atof(table_name.c_str()))/1000000;
+                auto found = std::find(intervals.begin(), intervals.end(), interval);
+                if (found != intervals.end()) {
+                    intervals.erase(found, found);
+                }
+            }
+        }
+    } catch (std::exception &e) {
+        std::cerr << "Exception in statistics_db::" << __func__ << ": " << e.what() << std::endl;
+    }
+}
+
 /**
  * Writes the IP statistics into the database.
  * @param ipStatistics The IP statistics from class statistics.
@@ -564,11 +593,12 @@ void statistics_db::writeStatisticsConvExt(std::unordered_map<convWithProt, entr
  * Writes the interval statistics into the database.
  * @param intervalStatistics The interval entries from class statistics.
  */
-void statistics_db::writeStatisticsInterval(const std::unordered_map<std::string, entry_intervalStat> &intervalStatistics, std::vector<std::chrono::duration<int, std::micro>> timeIntervals, bool del, int defaultInterval){
+void statistics_db::writeStatisticsInterval(const std::unordered_map<std::string, entry_intervalStat> &intervalStatistics, std::vector<std::chrono::duration<int, std::micro>> timeIntervals, bool del, int defaultInterval, bool extraTests){
     try {
         // remove old tables produced by prior database versions
         db->exec("DROP TABLE IF EXISTS interval_statistics");
 
+        // delete all former interval statistics, if requested
         if (del) {
             SQLite::Statement query(*db, "SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'interval_statistics_%';");
             std::vector<std::string> previous_tables;
@@ -581,28 +611,53 @@ void statistics_db::writeStatisticsInterval(const std::unordered_map<std::string
             db->exec("DROP TABLE IF EXISTS interval_tables");
         }
 
-        db->exec("CREATE TABLE IF NOT EXISTS interval_tables (name TEXT, is_default INTEGER);");
-        std::string is_default = "0";
+        // create interval table index
+        db->exec("CREATE TABLE IF NOT EXISTS interval_tables (name TEXT, is_default INTEGER, extra_tests INTEGER);");
 
+        std::string default_table_name = "";
+        // get name for default table
+        try {
+            SQLite::Statement query(*db, "SELECT name FROM interval_tables WHERE is_default=1;");
+            query.executeStep();
+            default_table_name = query.getColumn(0).getString();
+
+        } catch (std::exception &e) {
+            std::cerr << "Exception in statistics_db::" << __func__ << ": " << e.what() << std::endl;
+        }
+
+        // handle default interval only runs
+        std::string is_default = "0";
+        std::chrono::duration<int, std::micro> defaultTimeInterval(defaultInterval);
         if (defaultInterval != 0.0) {
             is_default = "1";
-            std::chrono::duration<int, std::micro> defaultTimeInterval(defaultInterval);
             if (timeIntervals.empty() || timeIntervals[0].count() == 0) {
                 timeIntervals.clear();
                 timeIntervals.push_back(defaultTimeInterval);
             }
         }
 
+        // extra tests handling
+        std::string extra = "0";
+        if (extraTests) {
+            extra = "1";
+        }
+
         for (auto timeInterval: timeIntervals) {
+            // get interval statistics table name
             std::ostringstream strs;
             strs << timeInterval.count();
             std::string table_name = "interval_statistics_" + strs.str();
 
+            // check for recalculation of default table
+            if (table_name == default_table_name || timeInterval == defaultTimeInterval) {
+                is_default = "1";
+            } else {
+                is_default = "0";
+            }
+
             // add interval_tables entry
             db->exec("DELETE FROM interval_tables WHERE name = '" + table_name + "';");
-            db->exec("INSERT INTO interval_tables VALUES ('" + table_name + "', '" + is_default + "');");
-
-            is_default = "0";
+            db->exec("INSERT INTO interval_tables VALUES ('" + table_name + "', '" + is_default + "', '" + extra + "');");
 
             // new interval statistics implementation
             db->exec("DROP TABLE IF EXISTS " + table_name);

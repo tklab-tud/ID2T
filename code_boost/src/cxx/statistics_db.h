@@ -9,8 +9,11 @@
 #include <memory>
 #include <string>
 #include "statistics.h"
+#include <pybind11/pybind11.h>
 #include <SQLiteCpp/SQLiteCpp.h>
 #include <unordered_map>
+
+namespace py = pybind11;
 
 class statistics_db {
 public:
@@ -22,7 +25,12 @@ public:
     /*
      * Database version: Increment number on every change in the C++ code!
      */
-    static const int DB_VERSION = 14;
+    static const int DB_VERSION = 16;
+
+    /*
+     * Methods to read from database
+     */
+    void getNoneExtraTestsInveralStats(std::vector<double>& intervals);
 
     /*
      * Methods for writing values into database
@@ -54,14 +62,13 @@ public:
 
     void writeStatisticsConvExt(std::unordered_map<convWithProt, entry_convStatExt> &conv_statistics_extended);
 
-    void writeStatisticsInterval(const std::unordered_map<std::string, entry_intervalStat> &intervalStatistics, std::vector<std::chrono::duration<int, std::micro>> timeInterval, bool del, int defaultInterval);
+    void writeStatisticsInterval(const std::unordered_map<std::string, entry_intervalStat> &intervalStatistics, std::vector<std::chrono::duration<int, std::micro>> timeInterval, bool del, int defaultInterval, bool extraTests);
 
     void writeDbVersion();
 
     void readPortServicesFromNmap();
 
     void writeStatisticsUnrecognizedPDUs(const std::unordered_map<unrecognized_PDU, unrecognized_PDU_stat> &unrecognized_PDUs);
-
 
 private:
     // Pointer to the SQLite database

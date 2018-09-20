@@ -58,11 +58,12 @@ class Statistics:
                                                                       "database:")
             i = 0
             if output:
-                print("ID".ljust(3) + " | " + "interval in seconds".ljust(30) + " | is_default")
+                print("ID".ljust(3) + " | " + "interval in seconds".ljust(30) + " | is_default" + " | extra_tests")
             for table in previous_interval_tables:
                 seconds = float(table[0][len("interval_statistics_"):])/1000000
                 if output:
-                    print(str(i).ljust(3) + " | " + str(seconds).ljust(30) + " | " + str(table[1]))
+                    print(str(i).ljust(3) + " | " + str(seconds).ljust(30) + " | " + str(table[1]).ljust(
+                        len("is_default")) + " | " + str(table[2]))
                 previous_intervals.append(seconds)
                 i = i + 1
         return previous_intervals
@@ -107,12 +108,15 @@ class Statistics:
             # Get interval statistics tables which already exist
             previous_intervals = self.list_previous_interval_statistic_tables()
 
-            self.pcap_proc = pr.pcap_processor(self.pcap_filepath, str(self.do_extra_tests), Util.RESOURCE_DIR)
+            self.pcap_proc = pr.pcap_processor(self.pcap_filepath, str(self.do_extra_tests), Util.RESOURCE_DIR,
+                                               self.path_db)
 
-            recalc_intervals = None
             if previous_intervals:
-                recalc_intervals = recalculate_intervals
-                while (recalc_intervals is None and not delete) or self.stats_db.get_db_outdated():
+                if delete:
+                    recalc_intervals = False
+                else:
+                    recalc_intervals = recalculate_intervals
+                while recalc_intervals is None:
                     user_input = input("Do you want to recalculate them as well? (y)es|(n)o|(d)elete: ")
                     if user_input.lower() == "yes" or user_input.lower() == "y":
                         recalc_intervals = True
@@ -144,7 +148,8 @@ class Statistics:
             if not flag_print_statistics and not flag_non_verbose:
                 self.stats_summary_new_db()
         elif intervals is not None and intervals != []:
-                self.pcap_proc = pr.pcap_processor(self.pcap_filepath, str(self.do_extra_tests), Util.RESOURCE_DIR)
+                self.pcap_proc = pr.pcap_processor(self.pcap_filepath, str(self.do_extra_tests), Util.RESOURCE_DIR,
+                                                   self.path_db)
 
                 # Get interval statistics tables which already exist
                 previous_intervals = self.list_previous_interval_statistic_tables(output=False)
