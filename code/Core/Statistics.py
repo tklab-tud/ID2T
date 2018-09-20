@@ -216,9 +216,17 @@ class Statistics:
         :param table_name: the name of the interval statistics table
         :return: a list of tuples, each consisting of (description, values, unit).
         """
-        interval_stats = self.stats_db.process_interval_statistics_query("SELECT * from %s", table_name)
-
         column_names = self.stats_db.get_field_types(table_name)
+        column_names = sorted(column_names)
+
+        result = column_names[0]
+        for name in column_names[1:]:
+            result += ", " + name
+
+        interval_stats = self.stats_db.process_interval_statistics_query(
+            "SELECT {} FROM %s ORDER BY starttimestamp ASC".format(result),
+            table_name)
+
         pretty_names = {'starttimestamp': "First packet timestamp(seconds)",
                         'lastpkttimestamp': "Last packet timestamp(seconds)",
                         'pktrate': "packets count(packets)",
@@ -229,7 +237,7 @@ class Statistics:
         inverted_table = {}
         inverted_table["Interval count: "] = 0
 
-        for i, name in enumerate(column_names):
+        for name in column_names:
             if name in pretty_names.keys():
                 name = pretty_names[name]
             inverted_table[name] = []
@@ -246,7 +254,7 @@ class Statistics:
 
         inverted_table["Interval count: "] = len(inverted_table[final_names[0]])
 
-        return inverted_table.items()
+        return sorted(inverted_table.items())
 
     @staticmethod
     def write_list(desc_val_unit_list, func, line_ending="\n"):
