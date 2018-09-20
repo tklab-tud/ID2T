@@ -47,16 +47,18 @@ void statistics::checkTCPChecksum(const std::string &ipAddressSender, const std:
  */
 std::vector<float> statistics::calculateLastIntervalIPsEntropy(std::chrono::microseconds intervalStartTimestamp){
     if(this->getDoExtraTests()) {
+        // TODO: change datastructures
         std::vector<int> IPsSrcPktsCounts;
         std::vector<int> IPsDstPktsCounts;
 
-        std::vector<float> IPsSrcProb;
-        std::vector<float> IPsDstProb;
+        std::vector<double> IPsSrcProb;
+        std::vector<double> IPsDstProb;
 
         int pktsSent = 0, pktsReceived = 0;
 
         for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
             int IPsSrcPktsCount = 0;
+            // TODO: iter backwards and break
             for (auto j = i->second.pkts_sent_timestamp.begin(); j != i->second.pkts_sent_timestamp.end(); j++) {
                 if(*j >= intervalStartTimestamp)
                     IPsSrcPktsCount++;
@@ -78,26 +80,27 @@ std::vector<float> statistics::calculateLastIntervalIPsEntropy(std::chrono::micr
         }
 
         for (auto i = IPsSrcPktsCounts.begin(); i != IPsSrcPktsCounts.end(); i++) {
-            IPsSrcProb.push_back((float) *i / pktsSent);
+            IPsSrcProb.push_back(static_cast<double>(*i) / static_cast<double>(pktsSent));
         }
         for (auto i = IPsDstPktsCounts.begin(); i != IPsDstPktsCounts.end(); i++) {
-            IPsDstProb.push_back((float) *i / pktsReceived);
+            IPsDstProb.push_back(static_cast<double>(*i) / static_cast<double>(pktsReceived));
         }
 
         // Calculate IP source entropy
-        float IPsSrcEntropy = 0;
+        double IPsSrcEntropy = 0;
         for (unsigned i = 0; i < IPsSrcProb.size(); i++) {
             if (IPsSrcProb[i] > 0)
                 IPsSrcEntropy += -IPsSrcProb[i] * log2(IPsSrcProb[i]);
         }
         // Calculate IP destination entropy
-        float IPsDstEntropy = 0;
+        double IPsDstEntropy = 0;
         for (unsigned i = 0; i < IPsDstProb.size(); i++) {
             if (IPsDstProb[i] > 0)
                 IPsDstEntropy += -IPsDstProb[i] * log2(IPsDstProb[i]);
         }
 
-        std::vector<float> entropies = {IPsSrcEntropy, IPsDstEntropy};
+        // FIXME: return doubles not floats
+        std::vector<float> entropies = {static_cast<float>(IPsSrcEntropy), static_cast<float>(IPsDstEntropy)};
         return entropies;
     }
     else {
