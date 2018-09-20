@@ -227,6 +227,8 @@ class Statistics:
 
         final_names = []
         inverted_table = {}
+        inverted_table["Interval count: "] = 0
+
         for i, name in enumerate(column_names):
             if name in pretty_names.keys():
                 name = pretty_names[name]
@@ -241,6 +243,8 @@ class Statistics:
                     except ValueError:
                         column = float(column)
                 inverted_table[name].append(column)
+
+        inverted_table["Interval count: "] = len(inverted_table[final_names[0]])
 
         return inverted_table.items()
 
@@ -596,7 +600,7 @@ class Statistics:
         _write_header("Interval statistics")
         tables = self.stats_db.get_all_current_interval_statistics_tables()
         for table in tables:
-            _write_sub_header(table)
+            _write_sub_header(table[len("interval_staistiscs_"):] + " microseconds")
             Statistics.write_list(self.get_interval_statistics(table), target.write)
 
         _write_header("Tests statistics")
