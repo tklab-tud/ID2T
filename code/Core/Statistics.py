@@ -112,7 +112,7 @@ class Statistics:
             recalc_intervals = None
             if previous_intervals:
                 recalc_intervals = recalculate_intervals
-                while recalc_intervals is None and not delete:
+                while (recalc_intervals is None and not delete) or self.stats_db.get_db_outdated():
                     user_input = input("Do you want to recalculate them as well? (y)es|(n)o|(d)elete: ")
                     if user_input.lower() == "yes" or user_input.lower() == "y":
                         recalc_intervals = True
