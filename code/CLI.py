@@ -93,6 +93,9 @@ class CLI(object):
                             default=False)
         parser.add_argument('-li', '--list-intervals', action='store_true',
                             help='prints all interval statistics tables available in the database')
+        parser.add_argument('--skip', action='store_true', help='skips every initialization right to query mode\n'
+                                                                'CAUTION: this will only work if there already is a '
+                                                                'database')
 
         # Attack arguments
         parser.add_argument('-a', '--attack', metavar="ATTACK", action='append',
@@ -167,38 +170,39 @@ class CLI(object):
         controller = Controller(self.args.input, self.args.extraTests, self.args.non_verbose, self.args.output,
                                 self.args.debug)
 
-        # Load PCAP statistics
-        recalculate_intervals = None
-        if self.args.recalculate_delete:
-            recalculate_intervals = True
-        elif self.args.recalculate_yes:
-            recalculate_intervals = True
-            self.args.recalculate = True
-        elif self.args.recalculate_no:
-            recalculate_intervals = False
-            self.args.recalculate = True
-        controller.load_pcap_statistics(self.args.export, self.args.recalculate, self.args.statistics,
-                                        self.args.statistics_interval, self.args.recalculate_delete,
-                                        recalculate_intervals)
+        if not self.args.skip:
+            # Load PCAP statistics
+            recalculate_intervals = None
+            if self.args.recalculate_delete:
+                recalculate_intervals = True
+            elif self.args.recalculate_yes:
+                recalculate_intervals = True
+                self.args.recalculate = True
+            elif self.args.recalculate_no:
+                recalculate_intervals = False
+                self.args.recalculate = True
+            controller.load_pcap_statistics(self.args.export, self.args.recalculate, self.args.statistics,
+                                            self.args.statistics_interval, self.args.recalculate_delete,
+                                            recalculate_intervals)
 
-        if self.args.list_intervals:
-            controller.list_interval_statistics()
+            if self.args.list_intervals:
+                controller.list_interval_statistics()
 
-        # Create statistics plots
-        if self.args.plot is not None:
-            do_entropy = False
-            if self.args.extraTests:
-                do_entropy = True
-            controller.create_statistics_plot(self.args.plot, do_entropy)
+            # Create statistics plots
+            if self.args.plot is not None:
+                do_entropy = False
+                if self.args.extraTests:
+                    do_entropy = True
+                controller.create_statistics_plot(self.args.plot, do_entropy)
 
-        # Check rng seed
-        if not isinstance(self.args.rngSeed, list):
-            self.args.rngSeed = [self.args.rngSeed]
+            # Check rng seed
+            if not isinstance(self.args.rngSeed, list):
+                self.args.rngSeed = [self.args.rngSeed]
 
-        # Process attack(s) with given attack params
-        if self.args.attack is not None:
-            # If attack is present, load attack with params
-            controller.process_attacks(self.args.attack, self.args.rngSeed, self.args.time, self.args.inject_empty)
+            # Process attack(s) with given attack params
+            if self.args.attack is not None:
+                # If attack is present, load attack with params
+                controller.process_attacks(self.args.attack, self.args.rngSeed, self.args.time, self.args.inject_empty)
 
         # Parameter -q without arguments was given -> go into query loop
         if self.args.query == [None]:
