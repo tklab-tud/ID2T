@@ -693,7 +693,61 @@ void statistics_db::writeStatisticsInterval(const std::unordered_map<std::string
                     "newWinSizeEntropy REAL,"
                     "newToSEntropy REAL,"
                     "newMSSEntropy REAL,"
+                    "PortEntropyNormalized REAL,"
+                    "TTLEntropyNormalized REAL,"
+                    "WinSizeEntropyNormalized REAL,"
+                    "ToSEntropyNormalized REAL,"
+                    "MSSEntropyNormalized REAL,"
+                    "newPortEntropyNormalized REAL,"
+                    "newTTLEntropyNormalized REAL,"
+                    "newWinSizeEntropyNormalized REAL,"
+                    "newToSEntropyNormalized REAL,"
+                    "newMSSEntropyNormalized REAL,"
                     "PRIMARY KEY(lastPktTimestamp));");
+
+            double ttl_entropy = 0.0;
+            double win_size_entropy = 0.0;
+            double tos_entropy = 0.0;
+            double mss_entropy = 0.0;
+            double port_entropy = 0.0;
+            double ttl_novel_entropy = 0.0;
+            double win_size_novel_entropy = 0.0;
+            double tos_novel_entropy = 0.0;
+            double mss_novel_entropy = 0.0;
+            double port_novel_entropy = 0.0;
+            for (auto it = intervalStatistics.begin(); it != intervalStatistics.end(); ++it) {
+                const entry_intervalStat &e = it->second;
+                if (ttl_entropy < e.ttl_entropies[0]) {
+                    ttl_entropy = e.ttl_entropies[0];
+                }
+                if (win_size_entropy < e.win_size_entropies[0]) {
+                    win_size_entropy = e.win_size_entropies[0];
+                }
+                if (tos_entropy < e.tos_entropies[0]) {
+                    tos_entropy = e.tos_entropies[0];
+                }
+                if (mss_entropy < e.mss_entropies[0]) {
+                    mss_entropy = e.mss_entropies[0];
+                }
+                if (port_entropy < e.port_entropies[0]) {
+                    port_entropy = e.port_entropies[0];
+                }
+                if (ttl_novel_entropy < e.ttl_entropies[1]) {
+                    ttl_novel_entropy = e.ttl_entropies[1];
+                }
+                if (win_size_novel_entropy < e.win_size_entropies[1]) {
+                    win_size_novel_entropy = e.win_size_entropies[1];
+                }
+                if (tos_novel_entropy < e.tos_entropies[1]) {
+                    tos_novel_entropy = e.tos_entropies[1];
+                }
+                if (mss_novel_entropy < e.mss_entropies[1]) {
+                    mss_novel_entropy = e.mss_entropies[1];
+                }
+                if (port_novel_entropy < e.port_entropies[1]) {
+                    port_novel_entropy = e.port_entropies[1];
+                }
+            }
 
             SQLite::Statement query(*db, "INSERT INTO " + table_name + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             for (auto it = intervalStatistics.begin(); it != intervalStatistics.end(); ++it) {
@@ -729,6 +783,16 @@ void statistics_db::writeStatisticsInterval(const std::unordered_map<std::string
                 query.bind(28, e.win_size_entropies[1]);
                 query.bind(29, e.tos_entropies[1]);
                 query.bind(30, e.mss_entropies[1]);
+                query.bind(31, e.port_entropies[0]/port_entropy);
+                query.bind(32, e.ttl_entropies[0]/ttl_entropy);
+                query.bind(33, e.win_size_entropies[0]/win_size_entropy);
+                query.bind(34, e.tos_entropies[0]/tos_entropy);
+                query.bind(35, e.mss_entropies[0]/mss_entropy);
+                query.bind(36, e.port_entropies[1]/port_novel_entropy);
+                query.bind(37, e.ttl_entropies[1]/ttl_novel_entropy);
+                query.bind(38, e.win_size_entropies[1]/win_size_novel_entropy);
+                query.bind(39, e.tos_entropies[1]/tos_novel_entropy);
+                query.bind(40, e.mss_entropies[1]/mss_novel_entropy);
                 query.exec();
                 query.reset();
 
