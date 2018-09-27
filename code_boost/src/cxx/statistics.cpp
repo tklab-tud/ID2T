@@ -108,7 +108,6 @@ std::vector<float> statistics::calculateLastIntervalIPsEntropy(std::chrono::micr
     }
 }
 
-
 /**
  * Calculates the cumulative entropy of the source and destination IPs, i.e., the entropy for packets from the beginning of the pcap file.
  * @return a vector: contains the cumulative entropies of source and destination IPs
@@ -168,6 +167,55 @@ void statistics::calculateIPIntervalPacketRate(std::chrono::duration<int, std::m
 }
 
 /**
+ * Calculates the entropies for the count of integer values.
+ * @param current map containing the values with counts
+ * @param an old map containing the values with counts (from last iteration)
+ * @return a vector containing the calculated entropies: entropy of all updated values, entropy of all novel values
+ */
+std::vector<double> statistics::calculateEntropies(std::unordered_map<int, int> &map, std::unordered_map<int, int> &old) {
+    std::vector<double> counts;
+    int count_total = 0;
+    double entropy = 0.0;
+
+    std::vector<double> novel_counts;
+    int novel_count_total = 0;
+    double novel_entropy = 0.0;
+
+    // iterate over all values
+    for (auto iter: map) {
+        if (old.count(iter.first) == 0) {
+            // count novel values
+            double novel_count = static_cast<double>(iter.second);
+            counts.push_back(novel_count);
+            count_total += novel_count;
+            novel_counts.push_back(novel_count);
+            novel_count_total += novel_count;
+        } else if (old.count(iter.first) != map.count(iter.first)) {
+            // count all increased values
+            double count = static_cast<double>(iter.second-old[iter.first]);
+            if (count != 0.0) {
+                counts.push_back(count);
+                count_total += count;
+            }
+        }
+    }
+
+    // calculate entropy
+    for (auto count: counts) {
+        double prob = count / static_cast<double>(count_total);
+        entropy += -1 * prob * log2(prob);
+    }
+
+    // calculate novelty entropy
+    for (auto novel_count: novel_counts) {
+        double novel_prob = novel_count / static_cast<double>(novel_count_total);
+        novel_entropy += -1 * novel_prob * log2(novel_prob);
+    }
+
+    return {entropy, novel_entropy};
+}
+
+/**
  * Registers statistical data for a time interval.
  * @param intervalStartTimestamp The timstamp where the interval starts.
  * @param intervalEndTimestamp The timstamp where the interval ends.
@@ -194,25 +242,35 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
     interval_statistics[lastPktTimestamp_s].payload_count = payloadCount - intervalPayloadCount;
     interval_statistics[lastPktTimestamp_s].incorrect_tcp_checksum_count = incorrectTCPChecksumCount - intervalIncorrectTCPChecksumCount;
     interval_statistics[lastPktTimestamp_s].correct_tcp_checksum_count = correctTCPChecksumCount - intervalCorrectTCPChecksumCount;
-    interval_statistics[lastPktTimestamp_s].novel_ip_count = ip_statistics.size() - intervalCumNovelIPCount;
-    interval_statistics[lastPktTimestamp_s].novel_ttl_count = ttl_values.size() - intervalCumNovelTTLCount;
-    interval_statistics[lastPktTimestamp_s].novel_win_size_count = win_values.size() - intervalCumNovelWinSizeCount;
-    interval_statistics[lastPktTimestamp_s].novel_tos_count = tos_values.size() - intervalCumNovelToSCount;
-    interval_statistics[lastPktTimestamp_s].novel_mss_count = mss_values.size() - intervalCumNovelMSSCount;
-    interval_statistics[lastPktTimestamp_s].novel_port_count = port_values.size() - intervalCumNovelPortCount;
+    interval_statistics[lastPktTimestamp_s].novel_ip_count = static_cast<int>(ip_statistics.size()) - intervalCumNovelIPCount;
+    interval_statistics[lastPktTimestamp_s].novel_ttl_count = static_cast<int>(ttl_values.size()) - intervalCumNovelTTLCount;
+    interval_statistics[lastPktTimestamp_s].novel_win_size_count = static_cast<int>(win_values.size()) - intervalCumNovelWinSizeCount;
+    interval_statistics[lastPktTimestamp_s].novel_tos_count = static_cast<int>(tos_values.size()) - intervalCumNovelToSCount;
+    interval_statistics[lastPktTimestamp_s].novel_mss_count = static_cast<int>(mss_values.size()) - intervalCumNovelMSSCount;
+    interval_statistics[lastPktTimestamp_s].novel_port_count = static_cast<int>(port_values.size()) - intervalCumNovelPortCount;
 
+    interval_statistics[lastPktTimestamp_s].ttl_entropies = calculateEntropies(ttl_values, intervalCumTTLValues);
+    interval_statistics[lastPktTimestamp_s].win_size_entropies = calculateEntropies(win_values, intervalCumWinSizeValues);
+    interval_statistics[lastPktTimestamp_s].tos_entropies = calculateEntropies(tos_values, intervalCumTosValues);
+    interval_statistics[lastPktTimestamp_s].mss_entropies = calculateEntropies(mss_values, intervalCumMSSValues);
+    interval_statistics[lastPktTimestamp_s].port_entropies = calculateEntropies(port_values, intervalCumPortValues);
 
     intervalPayloadCount = payloadCount;
     intervalIncorrectTCPChecksumCount = incorrectTCPChecksumCount;
     intervalCorrectTCPChecksumCount = correctTCPChecksumCount;
     intervalCumPktCount = packetCount;
     intervalCumSumPktSize = sumPacketSize;
-    intervalCumNovelIPCount =  ip_statistics.size();
+    intervalCumNovelIPCount = ip_statistics.size();
     intervalCumNovelTTLCount = ttl_values.size();
     intervalCumNovelWinSizeCount = win_values.size();
     intervalCumNovelToSCount = tos_values.size();
     intervalCumNovelMSSCount = mss_values.size();
     intervalCumNovelPortCount = port_values.size();
+    intervalCumTTLValues = ttl_values;
+    intervalCumWinSizeValues = win_values;
+    intervalCumTosValues = tos_values;
+    intervalCumMSSValues = mss_values;
+    intervalCumPortValues = port_values;
 
     if(ipEntopies.size()>1){
         interval_statistics[lastPktTimestamp_s].ip_src_entropy = ipEntopies[0];

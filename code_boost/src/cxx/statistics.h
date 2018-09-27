@@ -242,10 +242,15 @@ struct entry_intervalStat {
     float pkt_rate;
     float kbytes;
     float kbyte_rate;
-    float ip_src_entropy; 
+    float ip_src_entropy;
     float ip_dst_entropy;
-    float ip_src_cum_entropy; 
+    float ip_src_cum_entropy;
     float ip_dst_cum_entropy;
+    std::vector<double> ttl_entropies;
+    std::vector<double> win_size_entropies;
+    std::vector<double> tos_entropies;
+    std::vector<double> mss_entropies;
+    std::vector<double> port_entropies;
     int payload_count;
     int incorrect_tcp_checksum_count;
     int correct_tcp_checksum_count;
@@ -256,6 +261,7 @@ struct entry_intervalStat {
     int novel_mss_count;
     int novel_port_count;
 
+    // FIXME: add new attributes to operator==
     bool operator==(const entry_intervalStat &other) const {
         return start == other.start
                && end == other.end
@@ -552,6 +558,8 @@ public:
 
     std::vector<float> calculateLastIntervalIPsEntropy(std::chrono::microseconds intervalStartTimestamp);
 
+    std::vector<double> calculateEntropies(std::unordered_map<int, int> &map, std::unordered_map<int, int> &old);
+
     void addIntervalStat(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp, std::chrono::microseconds lastPktTimestamp);
 
     void checkPayload(const PDU *pdu_l4);
@@ -659,6 +667,11 @@ private:
     int intervalCumNovelToSCount = 0;
     int intervalCumNovelMSSCount = 0;
     int intervalCumNovelPortCount = 0;
+    std::unordered_map<int,int> intervalCumTTLValues;
+    std::unordered_map<int,int> intervalCumWinSizeValues;
+    std::unordered_map<int,int> intervalCumTosValues;
+    std::unordered_map<int,int> intervalCumMSSValues;
+    std::unordered_map<int,int> intervalCumPortValues;
 
     int default_interval = 0;
 

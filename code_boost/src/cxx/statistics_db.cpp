@@ -683,9 +683,19 @@ void statistics_db::writeStatisticsInterval(const std::unordered_map<std::string
                     "newWinSizeCount INTEGER,"
                     "newToSCount INTEGER,"
                     "newMSSCount INTEGER,"
+                    "PortEntropy REAL,"
+                    "TTLEntropy REAL,"
+                    "WinSizeEntropy REAL,"
+                    "ToSEntropy REAL,"
+                    "MSSEntropy REAL,"
+                    "newPortEntropy REAL,"
+                    "newTTLEntropy REAL,"
+                    "newWinSizeEntropy REAL,"
+                    "newToSEntropy REAL,"
+                    "newMSSEntropy REAL,"
                     "PRIMARY KEY(lastPktTimestamp));");
 
-            SQLite::Statement query(*db, "INSERT INTO " + table_name + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            SQLite::Statement query(*db, "INSERT INTO " + table_name + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             for (auto it = intervalStatistics.begin(); it != intervalStatistics.end(); ++it) {
                 const entry_intervalStat &e = it->second;
 
@@ -709,6 +719,16 @@ void statistics_db::writeStatisticsInterval(const std::unordered_map<std::string
                 query.bind(18, e.novel_win_size_count);
                 query.bind(19, e.novel_tos_count);
                 query.bind(20, e.novel_mss_count);
+                query.bind(21, e.port_entropies[0]);
+                query.bind(22, e.ttl_entropies[0]);
+                query.bind(23, e.win_size_entropies[0]);
+                query.bind(24, e.tos_entropies[0]);
+                query.bind(25, e.mss_entropies[0]);
+                query.bind(26, e.port_entropies[1]);
+                query.bind(27, e.ttl_entropies[1]);
+                query.bind(28, e.win_size_entropies[1]);
+                query.bind(29, e.tos_entropies[1]);
+                query.bind(30, e.mss_entropies[1]);
                 query.exec();
                 query.reset();
 
