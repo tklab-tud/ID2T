@@ -28,6 +28,11 @@ SET(SOURCE_FILES cxx/pcap_processor.cpp cxx/pcap_processor.h cxx/statistics.cpp 
 # Add botnet comm processor source files
 SET(BOT_COMM_PROC_SOURCE cxx/botnet_comm_processor.h cxx/botnet_comm_processor.cpp)
 
+# Add the debugging source files
+IF (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    SET(DEBUG_FILES cxx/main.cpp cxx/pcap_processor.cpp cxx/pcap_processor.h cxx/statistics.cpp cxx/statistics.h cxx/statistics_db.cpp cxx/statistics_db.h cxx/utilities.h cxx/utilities.cpp)
+ENDIF ()
+
 # Include SQLiteCpp library and build it
 option(SQLITECPP_RUN_CPPLINT OFF)
 include_directories(SQLiteCpp/include)
@@ -61,6 +66,11 @@ TARGET_LINK_LIBRARIES(pcapreader "${TINS_LIBRARY}" ${PYTHON_LIBRARIES} SQLiteCpp
 
 ADD_LIBRARY(botnetcomm SHARED ${BOT_COMM_PROC_SOURCE})
 TARGET_LINK_LIBRARIES(botnetcomm ${PYTHON_LIBRARIES})
+
+IF (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    ADD_EXECUTABLE(main ${DEBUG_FILES})
+    TARGET_LINK_LIBRARIES(main pcapreader ${PYTHON_LIBRARIES})
+ENDIF ()
 
 IF (APPLE)
   SET(CMAKE_SHARED_LIBRARY_SUFFIX ".so")
