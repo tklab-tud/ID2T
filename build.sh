@@ -2,6 +2,7 @@
 
 FULLBUILD=false
 NONINTERACTIVE=false
+BUILD_TYPE='Release'
 
 while test $# -gt 0
 do
@@ -11,6 +12,9 @@ do
             ;;
         --full)
             FULLBUILD=true
+            ;;
+        --debug)
+            BUILD_TYPE='Debug'
             ;;
     esac
     shift
@@ -57,7 +61,7 @@ fi
 
 which ninja &>/dev/null
 if [ $? != 0 ]; then
-    cmake ..
+    cmake -D CMAKE_BUILD_TYPE=${BUILD_TYPE} ..
 
     # Make sure we're able to get the number of cores
     if [ $(uname) = 'Darwin' ]; then
@@ -73,7 +77,7 @@ if [ $? != 0 ]; then
         exit
     fi
 else
-    cmake .. -G Ninja
+    cmake -D CMAKE_BUILD_TYPE=${BUILD_TYPE} .. -G Ninja
 
     if [ -f build.ninja ]; then
         ninja
