@@ -148,18 +148,18 @@ class Statistics:
             if not flag_print_statistics and not flag_non_verbose:
                 self.stats_summary_new_db()
         elif intervals is not None and intervals != []:
-                self.pcap_proc = pr.pcap_processor(self.pcap_filepath, str(self.do_extra_tests), Util.RESOURCE_DIR,
-                                                   self.path_db)
+            self.pcap_proc = pr.pcap_processor(self.pcap_filepath, str(self.do_extra_tests), Util.RESOURCE_DIR,
+                                               self.path_db)
 
-                # Get interval statistics tables which already exist
-                previous_intervals = self.list_previous_interval_statistic_tables(output=False)
+            # Get interval statistics tables which already exist
+            previous_intervals = self.list_previous_interval_statistic_tables(output=False)
 
-                for interval in intervals:
-                    if interval in previous_intervals:
-                        intervals.remove(interval)
+            for interval in intervals:
+                if interval in previous_intervals:
+                    intervals.remove(interval)
 
-                self.pcap_proc.collect_statistics(intervals)
-                self.pcap_proc.write_new_interval_statistics(self.path_db, intervals)
+            self.pcap_proc.collect_statistics(intervals)
+            self.pcap_proc.write_new_interval_statistics(self.path_db, intervals)
 
         self.stats_db.set_current_interval_statistics_tables(current_intervals)
 
