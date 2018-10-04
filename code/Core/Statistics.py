@@ -58,12 +58,20 @@ class Statistics:
                                                                       "database:")
             i = 0
             if output:
-                print("ID".ljust(3) + " | " + "interval in seconds".ljust(30) + " | is_default" + " | extra_tests")
+                print("ID".ljust(3) + " | " + "interval in seconds".ljust(30) + " | is_default", end="")
+                if len(previous_interval_tables) > 0 and len(previous_interval_tables[0]) > 2:
+                    print( " | extra_tests")
+                else:
+                    print("")
             for table in previous_interval_tables:
                 seconds = float(table[0][len("interval_statistics_"):])/1000000
                 if output:
                     print(str(i).ljust(3) + " | " + str(seconds).ljust(30) + " | " + str(table[1]).ljust(
-                        len("is_default")) + " | " + str(table[2]))
+                        len("is_default")), end="")
+                    if len(table) > 2:
+                        print(" | " + str(table[2]))
+                    else:
+                        print("")
                 previous_intervals.append(seconds)
                 i = i + 1
         return previous_intervals
