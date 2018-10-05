@@ -119,6 +119,7 @@ class Statistics:
             self.pcap_proc = pr.pcap_processor(self.pcap_filepath, str(self.do_extra_tests), Util.RESOURCE_DIR,
                                                self.path_db)
 
+            recalc_intervals = None
             if previous_intervals:
                 if delete:
                     recalc_intervals = False
