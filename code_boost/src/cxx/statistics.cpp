@@ -58,10 +58,11 @@ std::vector<float> statistics::calculateLastIntervalIPsEntropy(std::chrono::micr
 
         for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
             int IPsSrcPktsCount = 0;
-            // TODO: iter backwards and break
-            for (auto j = i->second.pkts_sent_timestamp.begin(); j != i->second.pkts_sent_timestamp.end(); j++) {
+            for (auto j = i->second.pkts_sent_timestamp.end(); j != i->second.pkts_sent_timestamp.begin(); j--) {
                 if(*j >= intervalStartTimestamp)
                     IPsSrcPktsCount++;
+                else
+                    break;
             }
             if(IPsSrcPktsCount != 0) {
                 IPsSrcPktsCounts.push_back(IPsSrcPktsCount);
@@ -69,9 +70,11 @@ std::vector<float> statistics::calculateLastIntervalIPsEntropy(std::chrono::micr
             }
 
             int IPsDstPktsCount = 0;
-            for (auto j = i->second.pkts_received_timestamp.begin(); j != i->second.pkts_received_timestamp.end(); j++) {
+            for (auto j = i->second.pkts_received_timestamp.end(); j != i->second.pkts_received_timestamp.begin(); j--) {
                 if(*j >= intervalStartTimestamp)
                     IPsDstPktsCount++;
+                else
+                    break;
             }
             if(IPsDstPktsCount != 0) {
                 IPsDstPktsCounts.push_back(IPsDstPktsCount);
