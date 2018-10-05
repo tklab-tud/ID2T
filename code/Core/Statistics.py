@@ -181,6 +181,7 @@ class Statistics:
         # Write statistics if param -e/--export provided
         if flag_write_file:
             self.write_statistics_to_file()
+            self.write_statistics_to_file(interval=True)
 
         # Print statistics if param -s/--statistics provided
         if flag_print_statistics:
@@ -585,7 +586,7 @@ class Statistics:
 
         return output
 
-    def write_statistics_to_file(self):
+    def write_statistics_to_file(self, interval: bool=False):
         """
         Writes the calculated basic statistics into a file.
         """
@@ -610,23 +611,29 @@ class Statistics:
             target.write(title + " \n")
             target.write("---------------------- \n")
 
-        target = open(self.pcap_filepath + ".stat", 'w')
+        if interval:
+            ed = ".interval_stat"
+        else:
+            ed = ".stat"
+
+        target = open(self.pcap_filepath + ed, 'w')
         target.truncate()
 
         _write_header("PCAP file information")
         Statistics.write_list(self.get_file_information(), target.write)
 
-        _write_header("General statistics")
-        Statistics.write_list(self.get_general_file_statistics(), target.write)
+        if interval:
+            _write_header("Interval statistics")
+            tables = self.stats_db.get_all_current_interval_statistics_tables()
+            for table in tables:
+                _write_sub_header(table[len("interval_staistiscs_"):] + " microseconds")
+                Statistics.write_list(self.get_interval_statistics(table), target.write)
+        else:
+            _write_header("General statistics")
+            Statistics.write_list(self.get_general_file_statistics(), target.write)
 
-        _write_header("Interval statistics")
-        tables = self.stats_db.get_all_current_interval_statistics_tables()
-        for table in tables:
-            _write_sub_header(table[len("interval_staistiscs_"):] + " microseconds")
-            Statistics.write_list(self.get_interval_statistics(table), target.write)
-
-        _write_header("Tests statistics")
-        Statistics.write_list(self.get_tests_statistics(), target.write)
+            _write_header("Tests statistics")
+            Statistics.write_list(self.get_tests_statistics(), target.write)
 
         target.close()
 
