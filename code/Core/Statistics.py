@@ -111,8 +111,7 @@ class Statistics:
 
         # Recalculate statistics if database does not exist OR param -r/--recalculate is provided
         # FIXME: probably wanna add a "calculate only extra tests" case in the future
-        if (not self.stats_db.get_db_exists()) or flag_recalculate_stats or self.stats_db.get_db_outdated() or \
-                self.do_extra_tests:
+        if (not self.stats_db.get_db_exists()) or flag_recalculate_stats or self.stats_db.get_db_outdated():
             # Get interval statistics tables which already exist
             previous_intervals = self.list_previous_interval_statistic_tables()
 
@@ -156,16 +155,17 @@ class Statistics:
             # only print summary of new db if -s flag not set
             if not flag_print_statistics and not flag_non_verbose:
                 self.stats_summary_new_db()
-        elif intervals is not None and intervals != []:
+        elif (intervals is not None and intervals != []) or self.do_extra_tests:
             self.pcap_proc = pr.pcap_processor(self.pcap_filepath, str(self.do_extra_tests), Util.RESOURCE_DIR,
                                                self.path_db)
 
             # Get interval statistics tables which already exist
             previous_intervals = self.list_previous_interval_statistic_tables(output=False)
 
-            for interval in intervals:
-                if interval in previous_intervals:
-                    intervals.remove(interval)
+            if not self.do_extra_tests:
+                for interval in intervals:
+                    if interval in previous_intervals:
+                        intervals.remove(interval)
 
             self.pcap_proc.collect_statistics(intervals)
             self.pcap_proc.write_new_interval_statistics(self.path_db, intervals)
