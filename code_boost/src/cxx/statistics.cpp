@@ -48,8 +48,8 @@ void statistics::checkTCPChecksum(const std::string &ipAddressSender, const std:
 std::vector<float> statistics::calculateLastIntervalIPsEntropy(std::chrono::microseconds intervalStartTimestamp){
     if(this->getDoExtraTests()) {
         // TODO: change datastructures
-        std::vector<int> IPsSrcPktsCounts;
-        std::vector<int> IPsDstPktsCounts;
+        std::vector<long> IPsSrcPktsCounts;
+        std::vector<long> IPsDstPktsCounts;
 
         std::vector<double> IPsSrcProb;
         std::vector<double> IPsDstProb;
@@ -57,24 +57,22 @@ std::vector<float> statistics::calculateLastIntervalIPsEntropy(std::chrono::micr
         int pktsSent = 0, pktsReceived = 0;
 
         for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
-            int IPsSrcPktsCount = 0;
-            for (auto j = i->second.pkts_sent_timestamp.end(); j != i->second.pkts_sent_timestamp.begin(); j--) {
-                if(*j >= intervalStartTimestamp)
-                    IPsSrcPktsCount++;
-                else
-                    break;
+            long IPsSrcPktsCount = 0;
+            if (intervalCumIPStats.count(i->first) == 0) {
+                IPsSrcPktsCount = i->second.pkts_sent;
+            } else {
+                IPsSrcPktsCount = i->second.pkts_sent-intervalCumIPStats[i->first].pkts_sent;
             }
             if(IPsSrcPktsCount != 0) {
                 IPsSrcPktsCounts.push_back(IPsSrcPktsCount);
                 pktsSent += IPsSrcPktsCount;
             }
 
-            int IPsDstPktsCount = 0;
-            for (auto j = i->second.pkts_received_timestamp.end(); j != i->second.pkts_received_timestamp.begin(); j--) {
-                if(*j >= intervalStartTimestamp)
-                    IPsDstPktsCount++;
-                else
-                    break;
+            long IPsDstPktsCount = 0;
+            if (intervalCumIPStats.count(i->first) == 0) {
+                IPsDstPktsCount = i->second.pkts_received;
+            } else {
+                IPsDstPktsCount = i->second.pkts_received-intervalCumIPStats[i->first].pkts_received;
             }
             if(IPsDstPktsCount != 0) {
                 IPsDstPktsCounts.push_back(IPsDstPktsCount);
@@ -269,6 +267,7 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
     intervalCumNovelToSCount =static_cast<int>(tos_values.size());
     intervalCumNovelMSSCount = static_cast<int>(mss_values.size());
     intervalCumNovelPortCount = static_cast<int>(port_values.size());
+    intervalCumIPStats = ip_statistics;
     intervalCumTTLValues = ttl_values;
     intervalCumWinSizeValues = win_values;
     intervalCumTosValues = tos_values;

@@ -667,6 +667,7 @@ private:
     int intervalCumNovelToSCount = 0;
     int intervalCumNovelMSSCount = 0;
     int intervalCumNovelPortCount = 0;
+    std::unordered_map<std::string, entry_ipStat> intervalCumIPStats;
     std::unordered_map<int,int> intervalCumTTLValues;
     std::unordered_map<int,int> intervalCumWinSizeValues;
     std::unordered_map<int,int> intervalCumTosValues;
