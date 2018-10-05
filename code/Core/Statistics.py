@@ -242,24 +242,14 @@ class Statistics:
             "SELECT {} FROM %s ORDER BY starttimestamp ASC".format(result),
             table_name)
 
-        pretty_names = {'starttimestamp': "First packet timestamp(seconds)",
-                        'lastpkttimestamp': "Last packet timestamp(seconds)",
-                        'pktrate': "packets count(packets)",
-                        'kbyterate': "Avg. kbyte rate(kbytes/sec)",
-                        'kbytes': "kbyte count(kbytes)"}
-
-        final_names = []
         inverted_table = {}
-        inverted_table["Interval count: "] = 0
+        inverted_table["interval_count"] = 0
 
         for name in column_names:
-            if name in pretty_names.keys():
-                name = pretty_names[name]
             inverted_table[name] = []
-            final_names.append(name)
 
         for row in interval_stats:
-            for column, name in zip(row, final_names):
+            for column, name in zip(row, column_names):
                 if type(column) == str:
                     try:
                         column = int(column)
@@ -267,7 +257,7 @@ class Statistics:
                         column = float(column)
                 inverted_table[name].append(column)
 
-        inverted_table["Interval count: "] = len(inverted_table[final_names[0]])
+        inverted_table["interval_count"] = len(inverted_table[column_names[0]])
 
         return sorted(inverted_table.items())
 
