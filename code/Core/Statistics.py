@@ -239,7 +239,7 @@ class Statistics:
             result += ", " + name
 
         interval_stats = self.stats_db.process_interval_statistics_query(
-            "SELECT {} FROM %s ORDER BY starttimestamp ASC".format(result),
+            "SELECT {} FROM %s ORDER BY first_pkt_timestamp ASC".format(result),
             table_name)
 
         inverted_table = {}
@@ -336,7 +336,7 @@ class Statistics:
         :return: normalized packet rates for each time interval.
         """
         result = self.stats_db.process_interval_statistics_query(
-            "SELECT lastPktTimestamp,pktsCount FROM %s ORDER BY lastPktTimestamp")
+            "SELECT last_pkt_timestamp,pkts_count FROM %s ORDER BY last_pkt_timestamp")
         # print(result)
         bg_interval_pps = []
         complement_interval_pps = []
@@ -381,7 +381,7 @@ class Statistics:
             return values, freq_output
 
         # Payload Tests
-        sum_payload_count = self.stats_db.process_interval_statistics_query("SELECT sum(payloadCount) FROM %s")
+        sum_payload_count = self.stats_db.process_interval_statistics_query("SELECT sum(payload_count) FROM %s")
         pkt_count = self.stats_db.process_user_defined_query("SELECT packetCount FROM file_statistics")
         if sum_payload_count and pkt_count:
             payload_ratio = 0
@@ -392,9 +392,9 @@ class Statistics:
 
         # TCP checksum Tests
         incorrect_checksum_count = self.stats_db.process_interval_statistics_query(
-            "SELECT sum(incorrectTCPChecksumCount) FROM %s")
+            "SELECT sum(incorrect_tcp_checksum_count) FROM %s")
         correct_checksum_count = self.stats_db.process_interval_statistics_query(
-            "SELECT avg(correctTCPChecksumCount) FROM %s")
+            "SELECT avg(correct_tcp_checksum_count) FROM %s")
         if incorrect_checksum_count and correct_checksum_count:
             incorrect_checksum_ratio = 0
             if (incorrect_checksum_count[0][0] + correct_checksum_count[0][0]) != 0:
@@ -413,7 +413,7 @@ class Statistics:
         ip_src_entropy, ip_src_norm_entropy = self.calculate_entropy(src_frequency, True)
         ip_dst_entropy, ip_dst_norm_entropy = self.calculate_entropy(dst_frequency, True)
 
-        new_ip_count = self.stats_db.process_interval_statistics_query("SELECT newIPCount FROM %s")
+        new_ip_count = self.stats_db.process_interval_statistics_query("SELECT ip_novel_Count FROM %s")
         ip_novels_per_interval, ip_novels_per_interval_frequency = count_frequncy(new_ip_count)
         ip_novelty_dist_entropy = self.calculate_entropy(ip_novels_per_interval_frequency)
 
@@ -439,7 +439,7 @@ class Statistics:
         for row in result:
             frequency.append(row[1])
         ttl_entropy, ttl_norm_entropy = self.calculate_entropy(frequency, True)
-        new_ttl_count = self.stats_db.process_interval_statistics_query("SELECT newTTLCount FROM %s")
+        new_ttl_count = self.stats_db.process_interval_statistics_query("SELECT ttl_novel_count FROM %s")
         ttl_novels_per_interval, ttl_novels_per_interval_frequency = count_frequncy(new_ttl_count)
         ttl_novelty_dist_entropy = self.calculate_entropy(ttl_novels_per_interval_frequency)
 
@@ -449,7 +449,7 @@ class Statistics:
         for row in result:
             frequency.append(row[1])
         win_entropy, win_norm_entropy = self.calculate_entropy(frequency, True)
-        new_win_size_count = self.stats_db.process_interval_statistics_query("SELECT newWinSizeCount FROM %s")
+        new_win_size_count = self.stats_db.process_interval_statistics_query("SELECT win_size_novel_count FROM %s")
         win_novels_per_interval, win_novels_per_interval_frequency = count_frequncy(new_win_size_count)
         win_novelty_dist_entropy = self.calculate_entropy(win_novels_per_interval_frequency)
 
@@ -460,7 +460,7 @@ class Statistics:
         for row in result:
             frequency.append(row[1])
         tos_entropy, tos_norm_entropy = self.calculate_entropy(frequency, True)
-        new_tos_count = self.stats_db.process_interval_statistics_query("SELECT newToSCount FROM %s")
+        new_tos_count = self.stats_db.process_interval_statistics_query("SELECT tos_novel_count FROM %s")
         tos_novels_per_interval, tos_novels_per_interval_frequency = count_frequncy(new_tos_count)
         tos_novelty_dist_entropy = self.calculate_entropy(tos_novels_per_interval_frequency)
 
@@ -471,7 +471,7 @@ class Statistics:
         for row in result:
             frequency.append(row[1])
         mss_entropy, mss_norm_entropy = self.calculate_entropy(frequency, True)
-        new_mss_count = self.stats_db.process_interval_statistics_query("SELECT newMSSCount FROM %s")
+        new_mss_count = self.stats_db.process_interval_statistics_query("SELECT mss_novel_count FROM %s")
         mss_novels_per_interval, mss_novels_per_interval_frequency = count_frequncy(new_mss_count)
         mss_novelty_dist_entropy = self.calculate_entropy(mss_novels_per_interval_frequency)
 
@@ -1245,7 +1245,7 @@ class Statistics:
             :return:
             """
             query_output = self.stats_db.process_interval_statistics_query(
-                "SELECT lastPktTimestamp, pktsCount FROM %s ORDER BY lastPktTimestamp")
+                "SELECT last_pkt_timestamp, pkts_count FROM %s ORDER BY last_pkt_timestamp")
             title = "Packet Rate"
             x_label = "Time Interval"
             y_label = "Number of Packets"
@@ -1259,7 +1259,7 @@ class Statistics:
             :return:
             """
             query_output = self.stats_db.process_interval_statistics_query(
-                "SELECT lastPktTimestamp, ipSrcEntropy FROM %s ORDER BY lastPktTimestamp")
+                "SELECT last_pkt_timestamp, ip_src_entropy FROM %s ORDER BY last_pkt_timestamp")
             title = "Source IP Entropy"
             x_label = "Time Interval"
             y_label = "Entropy"
@@ -1273,7 +1273,7 @@ class Statistics:
             :return:
             """
             query_output = self.stats_db.process_interval_statistics_query(
-                "SELECT lastPktTimestamp, ipDstEntropy FROM %s ORDER BY lastPktTimestamp")
+                "SELECT last_pkt_timestamp, ip_dst_entropy FROM %s ORDER BY last_pkt_timestamp")
             title = "Destination IP Entropy"
             x_label = "Time Interval"
             y_label = "Entropy"
@@ -1287,7 +1287,7 @@ class Statistics:
             :return:
             """
             query_output = self.stats_db.process_interval_statistics_query(
-                "SELECT lastPktTimestamp, newIPCount FROM %s ORDER BY lastPktTimestamp")
+                "SELECT last_pkt_timestamp, newIPCount FROM %s ORDER BY last_pkt_timestamp")
             title = "IP Novelty Distribution"
             x_label = "Time Interval"
             y_label = "Novel values count"
@@ -1301,7 +1301,7 @@ class Statistics:
             :return:
             """
             query_output = self.stats_db.process_interval_statistics_query(
-                "SELECT lastPktTimestamp, newPortCount FROM %s ORDER BY lastPktTimestamp")
+                "SELECT last_pkt_timestamp, port_novel_count FROM %s ORDER BY last_pkt_timestamp")
             title = "Port Novelty Distribution"
             x_label = "Time Interval"
             y_label = "Novel values count"
@@ -1315,7 +1315,7 @@ class Statistics:
             :return:
             """
             query_output = self.stats_db.process_interval_statistics_query(
-                "SELECT lastPktTimestamp, newTTLCount FROM %s ORDER BY lastPktTimestamp")
+                "SELECT last_pkt_timestamp, ttl_novel_count FROM %s ORDER BY last_pkt_timestamp")
             title = "TTL Novelty Distribution"
             x_label = "Time Interval"
             y_label = "Novel values count"
@@ -1329,7 +1329,7 @@ class Statistics:
             :return:
             """
             query_output = self.stats_db.process_interval_statistics_query(
-                "SELECT lastPktTimestamp, newToSCount FROM %s ORDER BY lastPktTimestamp")
+                "SELECT last_pkt_timestamp, tos_novel_count FROM %s ORDER BY last_pkt_timestamp")
             title = "ToS Novelty Distribution"
             x_label = "Time Interval"
             y_label = "Novel values count"
@@ -1343,7 +1343,7 @@ class Statistics:
             :return:
             """
             query_output = self.stats_db.process_interval_statistics_query(
-                "SELECT lastPktTimestamp, newWinSizeCount FROM %s ORDER BY lastPktTimestamp")
+                "SELECT last_pkt_timestamp, win_size_novel_count FROM %s ORDER BY last_pkt_timestamp")
             title = "Window Size Novelty Distribution"
             x_label = "Time Interval"
             y_label = "Novel values count"
@@ -1357,7 +1357,7 @@ class Statistics:
             :return:
             """
             query_output = self.stats_db.process_interval_statistics_query(
-                "SELECT lastPktTimestamp, newMSSCount FROM %s ORDER BY lastPktTimestamp")
+                "SELECT last_pkt_timestamp, mss_novel_count FROM %s ORDER BY last_pkt_timestamp")
             title = "MSS Novelty Distribution"
             x_label = "Time Interval"
             y_label = "Novel values count"
@@ -1382,7 +1382,7 @@ class Statistics:
 
             plt.gcf().clear()
             result = self.stats_db.process_interval_statistics_query(
-                "SELECT lastPktTimestamp, ip{0}CumEntropy FROM %s ORDER BY lastPktTimestamp".format(sod))
+                "SELECT last_pkt_timestamp, ip{0}_cum_entropy FROM %s ORDER BY last_pkt_timestamp".format(sod))
             graphx, graphy = [], []
             for row in result:
                 graphx.append(row[0])
