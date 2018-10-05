@@ -50,16 +50,24 @@ std::vector<float> statistics::calculateLastIntervalIPsEntropy(std::chrono::micr
         // TODO: change datastructures
         std::vector<long> IPsSrcPktsCounts;
         std::vector<long> IPsDstPktsCounts;
+        std::vector<long> IPsSrcNovelPktsCounts;
+        std::vector<long> IPsDstNovelPktsCounts;
 
         std::vector<double> IPsSrcProb;
         std::vector<double> IPsDstProb;
+        std::vector<double> IPsSrcNovelProb;
+        std::vector<double> IPsDstNovelProb;
 
-        int pktsSent = 0, pktsReceived = 0;
+        long pktsSent = 0, pktsReceived = 0, novelPktsSent = 0, novelPktsReceived = 0;
 
         for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
             long IPsSrcPktsCount = 0;
+            long IPsSrcNovelPktsCount = 0;
             if (intervalCumIPStats.count(i->first) == 0) {
                 IPsSrcPktsCount = i->second.pkts_sent;
+                IPsSrcNovelPktsCount = i->second.pkts_sent;
+                IPsSrcNovelPktsCounts.push_back(IPsSrcNovelPktsCount);
+                novelPktsSent += IPsSrcNovelPktsCount;
             } else {
                 IPsSrcPktsCount = i->second.pkts_sent-intervalCumIPStats[i->first].pkts_sent;
             }
@@ -69,8 +77,12 @@ std::vector<float> statistics::calculateLastIntervalIPsEntropy(std::chrono::micr
             }
 
             long IPsDstPktsCount = 0;
+            long IPsDstNovelPktsCount = 0;
             if (intervalCumIPStats.count(i->first) == 0) {
                 IPsDstPktsCount = i->second.pkts_received;
+                IPsDstNovelPktsCount = i->second.pkts_received;
+                IPsDstNovelPktsCounts.push_back(IPsDstNovelPktsCount);
+                novelPktsReceived += IPsDstNovelPktsCount;
             } else {
                 IPsDstPktsCount = i->second.pkts_received-intervalCumIPStats[i->first].pkts_received;
             }
@@ -86,6 +98,12 @@ std::vector<float> statistics::calculateLastIntervalIPsEntropy(std::chrono::micr
         for (auto i = IPsDstPktsCounts.begin(); i != IPsDstPktsCounts.end(); i++) {
             IPsDstProb.push_back(static_cast<double>(*i) / static_cast<double>(pktsReceived));
         }
+        for (auto i = IPsSrcNovelPktsCounts.begin(); i != IPsSrcNovelPktsCounts.end(); i++) {
+            IPsSrcNovelProb.push_back(static_cast<double>(*i) / static_cast<double>(novelPktsSent));
+        }
+        for (auto i = IPsDstNovelPktsCounts.begin(); i != IPsDstNovelPktsCounts.end(); i++) {
+            IPsDstNovelProb.push_back(static_cast<double>(*i) / static_cast<double>(novelPktsReceived));
+        }
 
         // Calculate IP source entropy
         double IPsSrcEntropy = 0;
@@ -99,13 +117,25 @@ std::vector<float> statistics::calculateLastIntervalIPsEntropy(std::chrono::micr
             if (IPsDstProb[i] > 0)
                 IPsDstEntropy += -IPsDstProb[i] * log2(IPsDstProb[i]);
         }
+        // Calculate IP source novel entropy
+        double IPsSrcNovelEntropy = 0;
+        for (unsigned i = 0; i < IPsSrcNovelProb.size(); i++) {
+            if (IPsSrcNovelProb[i] > 0)
+                IPsSrcNovelEntropy += -IPsSrcNovelProb[i] * log2(IPsSrcNovelProb[i]);
+        }
+        // Calculate IP destination novel entropy
+        double IPsDstNovelEntropy = 0;
+        for (unsigned i = 0; i < IPsDstNovelProb.size(); i++) {
+            if (IPsDstNovelProb[i] > 0)
+                IPsDstNovelEntropy += -IPsDstNovelProb[i] * log2(IPsDstNovelProb[i]);
+        }
 
         // FIXME: return doubles not floats
-        std::vector<float> entropies = {static_cast<float>(IPsSrcEntropy), static_cast<float>(IPsDstEntropy)};
+        std::vector<float> entropies = {static_cast<float>(IPsSrcEntropy), static_cast<float>(IPsDstEntropy), static_cast<float>(IPsSrcNovelEntropy), static_cast<float>(IPsDstNovelEntropy)};
         return entropies;
     }
     else {
-        return {-1, -1};
+        return {-1, -1, -1, -1};
     }
 }
 
@@ -277,6 +307,8 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
     if(ipEntopies.size()>1){
         interval_statistics[lastPktTimestamp_s].ip_src_entropy = ipEntopies[0];
         interval_statistics[lastPktTimestamp_s].ip_dst_entropy = ipEntopies[1];
+        interval_statistics[lastPktTimestamp_s].ip_src_novel_entropy = ipEntopies[2];
+        interval_statistics[lastPktTimestamp_s].ip_dst_novel_entropy = ipEntopies[3];
     }
     if(ipCumEntopies.size()>1){
         interval_statistics[lastPktTimestamp_s].ip_src_cum_entropy = ipCumEntopies[0];

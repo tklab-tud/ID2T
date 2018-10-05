@@ -244,6 +244,8 @@ struct entry_intervalStat {
     float kbyte_rate;
     float ip_src_entropy;
     float ip_dst_entropy;
+    float ip_src_novel_entropy;
+    float ip_dst_novel_entropy;
     float ip_src_cum_entropy;
     float ip_dst_cum_entropy;
     std::vector<double> ttl_entropies;
