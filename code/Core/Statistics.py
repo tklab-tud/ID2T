@@ -162,13 +162,16 @@ class Statistics:
             # Get interval statistics tables which already exist
             previous_intervals = self.list_previous_interval_statistic_tables(output=False)
 
+            final_intervals = []
             if not self.do_extra_tests:
                 for interval in intervals:
-                    if interval in previous_intervals:
-                        intervals.remove(interval)
+                    if interval not in previous_intervals:
+                        final_intervals.append(interval)
+            else:
+                final_intervals = intervals
 
-            self.pcap_proc.collect_statistics(intervals)
-            self.pcap_proc.write_new_interval_statistics(self.path_db, intervals)
+            self.pcap_proc.collect_statistics(final_intervals)
+            self.pcap_proc.write_new_interval_statistics(self.path_db, final_intervals)
 
         self.stats_db.set_current_interval_statistics_tables(current_intervals)
 
