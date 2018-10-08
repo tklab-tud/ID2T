@@ -416,9 +416,13 @@ class Statistics:
         ip_src_entropy, ip_src_norm_entropy = self.calculate_entropy(src_frequency, True)
         ip_dst_entropy, ip_dst_norm_entropy = self.calculate_entropy(dst_frequency, True)
 
-        new_ip_count = self.stats_db.process_interval_statistics_query("SELECT ip_novel_Count FROM %s")
-        ip_novels_per_interval, ip_novels_per_interval_frequency = count_frequncy(new_ip_count)
-        ip_novelty_dist_entropy = self.calculate_entropy(ip_novels_per_interval_frequency)
+        new_ip_src_count = self.stats_db.process_interval_statistics_query("SELECT ip_src_novel_Count FROM %s")
+        ip_src_novels_per_interval, ip_src_novels_per_interval_frequency = count_frequncy(new_ip_src_count)
+        ip_src_novelty_dist_entropy = self.calculate_entropy(ip_src_novels_per_interval_frequency)
+
+        new_ip_dst_count = self.stats_db.process_interval_statistics_query("SELECT ip_dst_novel_Count FROM %s")
+        ip_dst_novels_per_interval, ip_dst_novels_per_interval_frequency = count_frequncy(new_ip_dst_count)
+        ip_dst_novelty_dist_entropy = self.calculate_entropy(ip_dst_novels_per_interval_frequency)
 
         # Ports Tests
         port0_count = self.stats_db.process_user_defined_query(
@@ -491,12 +495,13 @@ class Statistics:
             output = [("Payload ratio", payload_ratio, "%"),
                       ("Incorrect TCP checksum ratio", incorrect_checksum_ratio, "%")]
 
-        output = output + [("# IP addresses", sum([x[0] for x in new_ip_count]), ""),
+        output = output + [("# IP addresses", sum([x[0] for x in new_ip_src_count]), ""),
                            ("IP Src Entropy", ip_src_entropy, ""),
                            ("IP Src Normalized Entropy", ip_src_norm_entropy, ""),
                            ("IP Dst Entropy", ip_dst_entropy, ""),
                            ("IP Dst Normalized Entropy", ip_dst_norm_entropy, ""),
-                           ("IP Novelty Distribution Entropy", ip_novelty_dist_entropy, ""),
+                           ("IP SRC Novelty Distribution Entropy", ip_src_novelty_dist_entropy, ""),
+                           ("IP DST Novelty Distribution Entropy", ip_dst_novelty_dist_entropy, ""),
                            ("# TTL values", sum([x[0] for x in new_ttl_count]), ""),
                            ("TTL Entropy", ttl_entropy, ""),
                            ("TTL Normalized Entropy", ttl_norm_entropy, ""),
