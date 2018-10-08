@@ -253,11 +253,14 @@ class Statistics:
 
         for row in interval_stats:
             for column, name in zip(row, column_names):
-                if type(column) == str:
-                    try:
-                        column = int(column)
-                    except ValueError:
-                        column = float(column)
+                if column is not None:
+                    if type(column) == str:
+                        try:
+                            column = int(column)
+                        except ValueError:
+                            column = float(column)
+                    elif type(column) == float:
+                        column = round(column, 4)
                 inverted_table[name].append(column)
 
         inverted_table["interval_count"] = len(inverted_table[column_names[0]])
