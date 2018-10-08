@@ -130,6 +130,9 @@ std::vector<float> statistics::calculateLastIntervalIPsEntropy(std::chrono::micr
                 IPsDstNovelEntropy += -IPsDstNovelProb[i] * log2(IPsDstNovelProb[i]);
         }
 
+        this->ip_src_novel_count = IPsSrcNovelPktsCounts.size();
+        this->ip_dst_novel_count = IPsDstNovelPktsCounts.size();
+
         // FIXME: return doubles not floats
         std::vector<float> entropies = {static_cast<float>(IPsSrcEntropy), static_cast<float>(IPsDstEntropy), static_cast<float>(IPsSrcNovelEntropy), static_cast<float>(IPsDstNovelEntropy)};
         return entropies;
@@ -273,7 +276,8 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
     interval_statistics[lastPktTimestamp_s].payload_count = payloadCount - intervalPayloadCount;
     interval_statistics[lastPktTimestamp_s].incorrect_tcp_checksum_count = incorrectTCPChecksumCount - intervalIncorrectTCPChecksumCount;
     interval_statistics[lastPktTimestamp_s].correct_tcp_checksum_count = correctTCPChecksumCount - intervalCorrectTCPChecksumCount;
-    interval_statistics[lastPktTimestamp_s].novel_ip_count = static_cast<int>(ip_statistics.size()) - intervalCumNovelIPCount;
+    interval_statistics[lastPktTimestamp_s].novel_ip_src_count = this->ip_src_novel_count;
+    interval_statistics[lastPktTimestamp_s].novel_ip_dst_count = this->ip_dst_novel_count;
     interval_statistics[lastPktTimestamp_s].novel_ttl_count = static_cast<int>(ttl_values.size()) - intervalCumNovelTTLCount;
     interval_statistics[lastPktTimestamp_s].novel_win_size_count = static_cast<int>(win_values.size()) - intervalCumNovelWinSizeCount;
     interval_statistics[lastPktTimestamp_s].novel_tos_count = static_cast<int>(tos_values.size()) - intervalCumNovelToSCount;

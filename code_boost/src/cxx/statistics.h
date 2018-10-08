@@ -256,7 +256,8 @@ struct entry_intervalStat {
     int payload_count;
     int incorrect_tcp_checksum_count;
     int correct_tcp_checksum_count;
-    int novel_ip_count;
+    size_t novel_ip_src_count;
+    size_t novel_ip_dst_count;
     int novel_ttl_count;
     int novel_win_size_count;
     int novel_tos_count;
@@ -277,7 +278,8 @@ struct entry_intervalStat {
                && ip_dst_cum_entropy == other.ip_dst_cum_entropy
                && payload_count == other.payload_count
                && incorrect_tcp_checksum_count == other.incorrect_tcp_checksum_count
-               && novel_ip_count == other.novel_ip_count
+               && novel_ip_src_count == other.novel_ip_src_count
+               && novel_ip_dst_count == other.novel_ip_dst_count
                && novel_ttl_count == other.novel_ttl_count
                && novel_win_size_count == other.novel_win_size_count
                && novel_tos_count == other.novel_tos_count
@@ -663,6 +665,8 @@ private:
     int intervalCorrectTCPChecksumCount = 0;
     int intervalCumPktCount = 0;
     float intervalCumSumPktSize = 0;
+    size_t ip_src_novel_count = 0;
+    size_t ip_dst_novel_count = 0;
     int intervalCumNovelIPCount = 0;
     int intervalCumNovelTTLCount = 0;
     int intervalCumNovelWinSizeCount = 0;

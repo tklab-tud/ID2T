@@ -676,7 +676,8 @@ void statistics_db::writeStatisticsInterval(const std::unordered_map<std::string
                     "payload_count INTEGER,"
                     "incorrect_tcp_checksum_count INTEGER,"
                     "correct_tcp_checksum_count INTEGER,"
-                    "ip_novel_Count INTEGER,"
+                    "ip_src_novel_Count INTEGER,"
+                    "ip_dst_novel_Count INTEGER,"
                     "port_novel_count INTEGER,"
                     "ttl_novel_count INTEGER,"
                     "win_size_novel_count INTEGER,"
@@ -780,7 +781,7 @@ void statistics_db::writeStatisticsInterval(const std::unordered_map<std::string
                 }
             }
 
-            SQLite::Statement query(*db, "INSERT INTO " + table_name + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            SQLite::Statement query(*db, "INSERT INTO " + table_name + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             for (auto it = intervalStatistics.begin(); it != intervalStatistics.end(); ++it) {
                 const entry_intervalStat &e = it->second;
 
@@ -797,40 +798,41 @@ void statistics_db::writeStatisticsInterval(const std::unordered_map<std::string
                 query.bind(11, e.payload_count);
                 query.bind(12, e.incorrect_tcp_checksum_count);
                 query.bind(13, e.correct_tcp_checksum_count);
-                query.bind(14, e.novel_ip_count);
-                query.bind(15, e.novel_port_count);
-                query.bind(16, e.novel_ttl_count);
-                query.bind(17, e.novel_win_size_count);
-                query.bind(18, e.novel_tos_count);
-                query.bind(19, e.novel_mss_count);
-                query.bind(20, e.port_entropies[0]);
-                query.bind(21, e.ttl_entropies[0]);
-                query.bind(22, e.win_size_entropies[0]);
-                query.bind(23, e.tos_entropies[0]);
-                query.bind(24, e.mss_entropies[0]);
-                query.bind(25, e.port_entropies[1]);
-                query.bind(26, e.ttl_entropies[1]);
-                query.bind(27, e.win_size_entropies[1]);
-                query.bind(28, e.tos_entropies[1]);
-                query.bind(29, e.mss_entropies[1]);
-                query.bind(30, e.port_entropies[0]/port_entropy);
-                query.bind(31, e.ttl_entropies[0]/ttl_entropy);
-                query.bind(32, e.win_size_entropies[0]/win_size_entropy);
-                query.bind(33, e.tos_entropies[0]/tos_entropy);
-                query.bind(34, e.mss_entropies[0]/mss_entropy);
-                query.bind(35, e.port_entropies[1]/port_novel_entropy);
-                query.bind(36, e.ttl_entropies[1]/ttl_novel_entropy);
-                query.bind(37, e.win_size_entropies[1]/win_size_novel_entropy);
-                query.bind(38, e.tos_entropies[1]/tos_novel_entropy);
-                query.bind(39, e.mss_entropies[1]/mss_novel_entropy);
-                query.bind(40, e.ip_src_entropy/ip_src_entropy);
-                query.bind(41, e.ip_dst_entropy/ip_dst_entropy);
-                query.bind(42, e.ip_src_cum_entropy/ip_src_cum_entropy);
-                query.bind(43, e.ip_dst_cum_entropy/ip_dst_cum_entropy);
-                query.bind(44, e.ip_src_novel_entropy);
-                query.bind(45, e.ip_dst_novel_entropy);
-                query.bind(46, e.ip_src_novel_entropy/ip_src_novel_entropy);
-                query.bind(47, e.ip_dst_novel_entropy/ip_dst_novel_entropy);
+                query.bind(14, static_cast<long long>(e.novel_ip_src_count));
+                query.bind(15, static_cast<long long>(e.novel_ip_dst_count));
+                query.bind(16, e.novel_port_count);
+                query.bind(17, e.novel_ttl_count);
+                query.bind(18, e.novel_win_size_count);
+                query.bind(19, e.novel_tos_count);
+                query.bind(20, e.novel_mss_count);
+                query.bind(21, e.port_entropies[0]);
+                query.bind(22, e.ttl_entropies[0]);
+                query.bind(23, e.win_size_entropies[0]);
+                query.bind(24, e.tos_entropies[0]);
+                query.bind(25, e.mss_entropies[0]);
+                query.bind(26, e.port_entropies[1]);
+                query.bind(27, e.ttl_entropies[1]);
+                query.bind(28, e.win_size_entropies[1]);
+                query.bind(29, e.tos_entropies[1]);
+                query.bind(30, e.mss_entropies[1]);
+                query.bind(31, e.port_entropies[0]/port_entropy);
+                query.bind(32, e.ttl_entropies[0]/ttl_entropy);
+                query.bind(33, e.win_size_entropies[0]/win_size_entropy);
+                query.bind(34, e.tos_entropies[0]/tos_entropy);
+                query.bind(35, e.mss_entropies[0]/mss_entropy);
+                query.bind(36, e.port_entropies[1]/port_novel_entropy);
+                query.bind(37, e.ttl_entropies[1]/ttl_novel_entropy);
+                query.bind(38, e.win_size_entropies[1]/win_size_novel_entropy);
+                query.bind(39, e.tos_entropies[1]/tos_novel_entropy);
+                query.bind(40, e.mss_entropies[1]/mss_novel_entropy);
+                query.bind(41, e.ip_src_entropy/ip_src_entropy);
+                query.bind(42, e.ip_dst_entropy/ip_dst_entropy);
+                query.bind(43, e.ip_src_cum_entropy/ip_src_cum_entropy);
+                query.bind(44, e.ip_dst_cum_entropy/ip_dst_cum_entropy);
+                query.bind(45, e.ip_src_novel_entropy);
+                query.bind(46, e.ip_dst_novel_entropy);
+                query.bind(47, e.ip_src_novel_entropy/ip_src_novel_entropy);
+                query.bind(48, e.ip_dst_novel_entropy/ip_dst_novel_entropy);
                 query.exec();
                 query.reset();
 
