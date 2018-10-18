@@ -133,11 +133,16 @@ std::vector<double> statistics::calculateLastIntervalIPsEntropy(std::chrono::mic
         this->ip_src_novel_count = IPsSrcNovelPktsCounts.size();
         this->ip_dst_novel_count = IPsDstNovelPktsCounts.size();
 
-        std::vector<double> entropies = {IPsSrcEntropy, IPsDstEntropy, IPsSrcNovelEntropy, IPsDstNovelEntropy};
+        double norm_src_entropy = IPsSrcEntropy / log2(IPsSrcPktsCounts.size());
+        double norm_dst_entropy = IPsDstEntropy / log2(IPsDstPktsCounts.size());
+        double norm_novel_src_entropy = IPsSrcNovelEntropy / log2(IPsSrcNovelPktsCounts.size());
+        double norm_novel_dst_entropy = IPsDstNovelEntropy / log2(IPsDstNovelPktsCounts.size());
+
+        std::vector<double> entropies = {IPsSrcEntropy, IPsDstEntropy, IPsSrcNovelEntropy, IPsDstNovelEntropy, norm_src_entropy, norm_dst_entropy, norm_novel_src_entropy, norm_novel_dst_entropy};
         return entropies;
     }
     else {
-        return {-1, -1, -1, -1};
+        return {-1, -1, -1, -1, -1, -1, -1, -1};
     }
 }
 
@@ -315,6 +320,10 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
         interval_statistics[lastPktTimestamp_s].ip_dst_entropy = ipEntopies[1];
         interval_statistics[lastPktTimestamp_s].ip_src_novel_entropy = ipEntopies[2];
         interval_statistics[lastPktTimestamp_s].ip_dst_novel_entropy = ipEntopies[3];
+        interval_statistics[lastPktTimestamp_s].ip_src_entropy_norm = ipEntopies[4];
+        interval_statistics[lastPktTimestamp_s].ip_dst_entropy_norm = ipEntopies[5];
+        interval_statistics[lastPktTimestamp_s].ip_src_novel_entropy_norm = ipEntopies[6];
+        interval_statistics[lastPktTimestamp_s].ip_dst_novel_entropy_norm = ipEntopies[7];
     }
     if(ipCumEntopies.size()>1){
         interval_statistics[lastPktTimestamp_s].ip_src_cum_entropy = ipCumEntopies[0];
