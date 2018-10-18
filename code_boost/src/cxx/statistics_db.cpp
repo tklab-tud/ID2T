@@ -723,10 +723,10 @@ void statistics_db::writeStatisticsInterval(const std::unordered_map<std::string
                 query.bind(4, e.pkt_rate);
                 query.bind(5, e.kbytes);
                 query.bind(6, e.kbyte_rate);
-                query.bind(7, e.ip_src_entropy);
-                query.bind(8, e.ip_dst_entropy);
-                query.bind(9, e.ip_src_cum_entropy);
-                query.bind(10, e.ip_dst_cum_entropy);
+                query.bind(7, e.ip_entropies[0]);
+                query.bind(8, e.ip_entropies[1]);
+                query.bind(9, e.ip_cum_entropies[0]);
+                query.bind(10, e.ip_cum_entropies[1]);
                 query.bind(11, e.payload_count);
                 query.bind(12, e.incorrect_tcp_checksum_count);
                 query.bind(13, e.correct_tcp_checksum_count);
@@ -757,14 +757,14 @@ void statistics_db::writeStatisticsInterval(const std::unordered_map<std::string
                 query.bind(38, e.win_size_entropies[3]);
                 query.bind(39, e.tos_entropies[3]);
                 query.bind(40, e.mss_entropies[3]);
-                query.bind(41, e.ip_src_entropy_norm);
-                query.bind(42, e.ip_dst_entropy_norm);
-                query.bind(43, e.ip_src_cum_entropy_norm);
-                query.bind(44, e.ip_dst_cum_entropy_norm);
-                query.bind(45, e.ip_src_novel_entropy);
-                query.bind(46, e.ip_dst_novel_entropy);
-                query.bind(47, e.ip_src_novel_entropy_norm);
-                query.bind(48, e.ip_dst_novel_entropy_norm);
+                query.bind(41, e.ip_entropies[4]);
+                query.bind(42, e.ip_entropies[5]);
+                query.bind(43, e.ip_cum_entropies[2]);
+                query.bind(44, e.ip_cum_entropies[3]);
+                query.bind(45, e.ip_entropies[2]);
+                query.bind(46, e.ip_entropies[3]);
+                query.bind(47, e.ip_entropies[6]);
+                query.bind(48, e.ip_entropies[7]);
                 query.exec();
                 query.reset();
 

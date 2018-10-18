@@ -318,22 +318,8 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
     intervalCumMSSValues = mss_values;
     intervalCumPortValues = port_values;
 
-    if(ipEntopies.size()>1){
-        interval_statistics[lastPktTimestamp_s].ip_src_entropy = ipEntopies[0];
-        interval_statistics[lastPktTimestamp_s].ip_dst_entropy = ipEntopies[1];
-        interval_statistics[lastPktTimestamp_s].ip_src_novel_entropy = ipEntopies[2];
-        interval_statistics[lastPktTimestamp_s].ip_dst_novel_entropy = ipEntopies[3];
-        interval_statistics[lastPktTimestamp_s].ip_src_entropy_norm = ipEntopies[4];
-        interval_statistics[lastPktTimestamp_s].ip_dst_entropy_norm = ipEntopies[5];
-        interval_statistics[lastPktTimestamp_s].ip_src_novel_entropy_norm = ipEntopies[6];
-        interval_statistics[lastPktTimestamp_s].ip_dst_novel_entropy_norm = ipEntopies[7];
-    }
-    if(ipCumEntopies.size()>1){
-        interval_statistics[lastPktTimestamp_s].ip_src_cum_entropy = ipCumEntopies[0];
-        interval_statistics[lastPktTimestamp_s].ip_dst_cum_entropy = ipCumEntopies[1];
-        interval_statistics[lastPktTimestamp_s].ip_src_cum_entropy_norm = ipCumEntopies[2];
-        interval_statistics[lastPktTimestamp_s].ip_dst_cum_entropy_norm = ipCumEntopies[3];
-    }
+    interval_statistics[lastPktTimestamp_s].ip_entropies = ipEntopies;
+    interval_statistics[lastPktTimestamp_s].ip_cum_entropies = ipCumEntopies;
 }
 
 /**
@@ -430,7 +416,7 @@ void statistics::addConvStatExt(const std::string &ipAddressSender,int sport,con
  * Do this by computing the average packet rate per interval and the average time between intervals.
  * Also compute average interval duration and total communication duration (i.e. last_msg.time - first_msg.time)
  */
-void statistics::createCommIntervalStats(){    
+void statistics::createCommIntervalStats(){
     // iterate over all <convWithProt, entry_convStatExt> pairs
     for (auto &cur_elem : conv_statistics_extended) {
         entry_convStatExt &entry = cur_elem.second;

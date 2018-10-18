@@ -242,18 +242,8 @@ struct entry_intervalStat {
     float pkt_rate;
     float kbytes;
     float kbyte_rate;
-    double ip_src_entropy;
-    double ip_dst_entropy;
-    double ip_src_novel_entropy;
-    double ip_dst_novel_entropy;
-    double ip_src_entropy_norm;
-    double ip_dst_entropy_norm;
-    double ip_src_novel_entropy_norm;
-    double ip_dst_novel_entropy_norm;
-    double ip_src_cum_entropy;
-    double ip_dst_cum_entropy;
-    double ip_src_cum_entropy_norm;
-    double ip_dst_cum_entropy_norm;
+    std::vector<double> ip_entropies;
+    std::vector<double> ip_cum_entropies;
     std::vector<double> ttl_entropies;
     std::vector<double> win_size_entropies;
     std::vector<double> tos_entropies;
@@ -278,18 +268,8 @@ struct entry_intervalStat {
                && pkt_rate == other.pkt_rate
                && kbytes == other.kbytes
                && kbyte_rate == other.kbyte_rate
-               && ip_src_entropy == other.ip_src_entropy
-               && ip_dst_entropy == other.ip_dst_entropy
-               && ip_src_novel_entropy == other.ip_src_novel_entropy
-               && ip_dst_novel_entropy == other.ip_dst_novel_entropy
-               && ip_src_entropy_norm == other.ip_src_entropy_norm
-               && ip_dst_entropy_norm == other.ip_dst_entropy_norm
-               && ip_src_novel_entropy_norm == other.ip_src_novel_entropy_norm
-               && ip_dst_novel_entropy_norm == other.ip_dst_novel_entropy_norm
-               && ip_src_cum_entropy == other.ip_src_cum_entropy
-               && ip_dst_cum_entropy == other.ip_dst_cum_entropy
-               && ip_src_cum_entropy_norm == other.ip_src_cum_entropy_norm
-               && ip_dst_cum_entropy_norm == other.ip_dst_cum_entropy_norm
+               && ip_entropies == other.ip_entropies
+               && ip_cum_entropies == other.ip_cum_entropies
                && payload_count == other.payload_count
                && incorrect_tcp_checksum_count == other.incorrect_tcp_checksum_count
                && correct_tcp_checksum_count == other.correct_tcp_checksum_count
