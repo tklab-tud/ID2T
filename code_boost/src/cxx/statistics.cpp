@@ -45,7 +45,7 @@ void statistics::checkTCPChecksum(const std::string &ipAddressSender, const std:
  * @param intervalStartTimestamp The timstamp where the interval starts.
  * @return a vector: contains source IP entropy and destination IP entropy.
  */
-std::vector<float> statistics::calculateLastIntervalIPsEntropy(std::chrono::microseconds intervalStartTimestamp){
+std::vector<double> statistics::calculateLastIntervalIPsEntropy(std::chrono::microseconds intervalStartTimestamp){
     if(this->getDoExtraTests()) {
         // TODO: change datastructures
         std::vector<long> IPsSrcPktsCounts;
@@ -133,8 +133,7 @@ std::vector<float> statistics::calculateLastIntervalIPsEntropy(std::chrono::micr
         this->ip_src_novel_count = IPsSrcNovelPktsCounts.size();
         this->ip_dst_novel_count = IPsDstNovelPktsCounts.size();
 
-        // FIXME: return doubles not floats
-        std::vector<float> entropies = {static_cast<float>(IPsSrcEntropy), static_cast<float>(IPsDstEntropy), static_cast<float>(IPsSrcNovelEntropy), static_cast<float>(IPsDstNovelEntropy)};
+        std::vector<double> entropies = {IPsSrcEntropy, IPsDstEntropy, IPsSrcNovelEntropy, IPsDstNovelEntropy};
         return entropies;
     }
     else {
@@ -262,7 +261,7 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
     // Add packet rate for each IP to ip_statistics map
     calculateIPIntervalPacketRate(interval, intervalStartTimestamp);
     
-    std::vector<float> ipEntopies = calculateLastIntervalIPsEntropy(intervalStartTimestamp);
+    std::vector<double> ipEntopies = calculateLastIntervalIPsEntropy(intervalStartTimestamp);
     std::vector<float> ipCumEntopies = calculateIPsCumEntropy();
     std::string lastPktTimestamp_s = std::to_string(intervalEndTimestamp.count());
     std::string  intervalStartTimestamp_s = std::to_string(intervalStartTimestamp.count());
