@@ -713,18 +713,6 @@ void statistics_db::writeStatisticsInterval(const std::unordered_map<std::string
                     "ip_dst_novel_entropy_normalized REAL,"
                     "PRIMARY KEY(last_pkt_timestamp));");
 
-            double ip_src_cum_entropy = 0.0;
-            double ip_dst_cum_entropy = 0.0;
-            for (auto it = intervalStatistics.begin(); it != intervalStatistics.end(); ++it) {
-                const entry_intervalStat &e = it->second;
-                if (ip_src_cum_entropy < e.ip_src_cum_entropy) {
-                    ip_src_cum_entropy = e.ip_src_cum_entropy;
-                }
-                if (ip_dst_cum_entropy < e.ip_dst_cum_entropy) {
-                    ip_dst_cum_entropy = e.ip_dst_cum_entropy;
-                }
-            }
-
             SQLite::Statement query(*db, "INSERT INTO " + table_name + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             for (auto it = intervalStatistics.begin(); it != intervalStatistics.end(); ++it) {
                 const entry_intervalStat &e = it->second;
@@ -771,8 +759,8 @@ void statistics_db::writeStatisticsInterval(const std::unordered_map<std::string
                 query.bind(40, e.mss_entropies[3]);
                 query.bind(41, e.ip_src_entropy_norm);
                 query.bind(42, e.ip_dst_entropy_norm);
-                query.bind(43, e.ip_src_cum_entropy/ip_src_cum_entropy);
-                query.bind(44, e.ip_dst_cum_entropy/ip_dst_cum_entropy);
+                query.bind(43, e.ip_src_cum_entropy_norm);
+                query.bind(44, e.ip_dst_cum_entropy_norm);
                 query.bind(45, e.ip_src_novel_entropy);
                 query.bind(46, e.ip_dst_novel_entropy);
                 query.bind(47, e.ip_src_novel_entropy_norm);

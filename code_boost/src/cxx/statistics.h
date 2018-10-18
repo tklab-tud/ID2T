@@ -252,6 +252,8 @@ struct entry_intervalStat {
     double ip_dst_novel_entropy_norm;
     double ip_src_cum_entropy;
     double ip_dst_cum_entropy;
+    double ip_src_cum_entropy_norm;
+    double ip_dst_cum_entropy_norm;
     std::vector<double> ttl_entropies;
     std::vector<double> win_size_entropies;
     std::vector<double> tos_entropies;
@@ -286,6 +288,8 @@ struct entry_intervalStat {
                && ip_dst_novel_entropy_norm == other.ip_dst_novel_entropy_norm
                && ip_src_cum_entropy == other.ip_src_cum_entropy
                && ip_dst_cum_entropy == other.ip_dst_cum_entropy
+               && ip_src_cum_entropy_norm == other.ip_src_cum_entropy_norm
+               && ip_dst_cum_entropy_norm == other.ip_dst_cum_entropy_norm
                && payload_count == other.payload_count
                && incorrect_tcp_checksum_count == other.incorrect_tcp_checksum_count
                && correct_tcp_checksum_count == other.correct_tcp_checksum_count

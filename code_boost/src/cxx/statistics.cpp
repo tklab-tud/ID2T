@@ -176,11 +176,14 @@ std::vector<double> statistics::calculateIPsCumEntropy(){
                 IPsDstEntropy += - IPsDstProb[i]*log2(IPsDstProb[i]);
         }
 
-        std::vector<double> entropies = {IPsSrcEntropy, IPsDstEntropy};
+        double norm_src_entropy = IPsSrcEntropy / log2(IPsSrcProb.size());
+        double norm_dst_entropy = IPsDstEntropy / log2(IPsDstProb.size());
+
+        std::vector<double> entropies = {IPsSrcEntropy, IPsDstEntropy, norm_src_entropy, norm_dst_entropy};
         return entropies;
     }
     else {
-        return {-1, -1};
+        return {-1, -1, -1, -1};
     }
 }
 
@@ -328,6 +331,8 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
     if(ipCumEntopies.size()>1){
         interval_statistics[lastPktTimestamp_s].ip_src_cum_entropy = ipCumEntopies[0];
         interval_statistics[lastPktTimestamp_s].ip_dst_cum_entropy = ipCumEntopies[1];
+        interval_statistics[lastPktTimestamp_s].ip_src_cum_entropy_norm = ipCumEntopies[2];
+        interval_statistics[lastPktTimestamp_s].ip_dst_cum_entropy_norm = ipCumEntopies[3];
     }
 }
 
