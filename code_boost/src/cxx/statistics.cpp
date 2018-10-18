@@ -150,37 +150,37 @@ std::vector<double> statistics::calculateLastIntervalIPsEntropy(std::chrono::mic
  * Calculates the cumulative entropy of the source and destination IPs, i.e., the entropy for packets from the beginning of the pcap file.
  * @return a vector: contains the cumulative entropies of source and destination IPs
  */
-std::vector<float> statistics::calculateIPsCumEntropy(){
+std::vector<double> statistics::calculateIPsCumEntropy(){
     if(this->getDoExtraTests()) {
         std::vector <std::string> IPs;
-        std::vector <float> IPsSrcProb;
-        std::vector <float> IPsDstProb;
+        std::vector <double> IPsSrcProb;
+        std::vector <double> IPsDstProb;
 
         for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
             IPs.push_back(i->first);
-            IPsSrcProb.push_back((float)i->second.pkts_sent/packetCount);
-            IPsDstProb.push_back((float)i->second.pkts_received/packetCount);
+            IPsSrcProb.push_back(static_cast<double>(i->second.pkts_sent/packetCount));
+            IPsDstProb.push_back(static_cast<double>(i->second.pkts_received/packetCount));
         }
 
         // Calculate IP source entropy
-        float IPsSrcEntropy = 0;
+        double IPsSrcEntropy = 0;
         for(unsigned i=0; i < IPsSrcProb.size();i++){
             if (IPsSrcProb[i] > 0)
                 IPsSrcEntropy += - IPsSrcProb[i]*log2(IPsSrcProb[i]);
         }
 
         // Calculate IP destination entropy
-        float IPsDstEntropy = 0;
+        double IPsDstEntropy = 0;
         for(unsigned i=0; i < IPsDstProb.size();i++){
             if (IPsDstProb[i] > 0)
                 IPsDstEntropy += - IPsDstProb[i]*log2(IPsDstProb[i]);
         }
 
-        std::vector<float> entropies = {IPsSrcEntropy, IPsDstEntropy};
+        std::vector<double> entropies = {IPsSrcEntropy, IPsDstEntropy};
         return entropies;
     }
     else {
-    return {-1, -1};
+        return {-1, -1};
     }
 }
 
@@ -267,7 +267,7 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
     calculateIPIntervalPacketRate(interval, intervalStartTimestamp);
     
     std::vector<double> ipEntopies = calculateLastIntervalIPsEntropy(intervalStartTimestamp);
-    std::vector<float> ipCumEntopies = calculateIPsCumEntropy();
+    std::vector<double> ipCumEntopies = calculateIPsCumEntropy();
     std::string lastPktTimestamp_s = std::to_string(intervalEndTimestamp.count());
     std::string  intervalStartTimestamp_s = std::to_string(intervalStartTimestamp.count());
 

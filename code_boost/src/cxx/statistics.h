@@ -574,7 +574,7 @@ public:
 
     void createCommIntervalStats();
 
-    std::vector<float> calculateIPsCumEntropy();
+    std::vector<double> calculateIPsCumEntropy();
 
     std::vector<double> calculateLastIntervalIPsEntropy(std::chrono::microseconds intervalStartTimestamp);
 
