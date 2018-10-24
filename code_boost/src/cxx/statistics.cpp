@@ -133,10 +133,22 @@ std::vector<double> statistics::calculateLastIntervalIPsEntropy(std::chrono::mic
         this->ip_src_novel_count = IPsSrcNovelPktsCounts.size();
         this->ip_dst_novel_count = IPsDstNovelPktsCounts.size();
 
-        double norm_src_entropy = IPsSrcEntropy / log2(IPsSrcPktsCounts.size());
-        double norm_dst_entropy = IPsDstEntropy / log2(IPsDstPktsCounts.size());
-        double norm_novel_src_entropy = IPsSrcNovelEntropy / log2(IPsSrcNovelPktsCounts.size());
-        double norm_novel_dst_entropy = IPsDstNovelEntropy / log2(IPsDstNovelPktsCounts.size());
+        double norm_src_entropy = 0;
+        if (IPsSrcPktsCounts.size() > 0) {
+            norm_src_entropy = IPsSrcEntropy / log2(IPsSrcPktsCounts.size());
+        }
+        double norm_dst_entropy = 0;
+        if (IPsDstPktsCounts.size() > 0) {
+            norm_dst_entropy = IPsDstEntropy / log2(IPsDstPktsCounts.size());
+        }
+        double norm_novel_src_entropy = 0;
+        if (IPsSrcNovelPktsCounts.size() > 0) {
+            norm_novel_src_entropy = IPsSrcNovelEntropy / log2(IPsSrcNovelPktsCounts.size());
+        }
+        double norm_novel_dst_entropy = 0;
+        if (IPsDstNovelPktsCounts.size() > 0) {
+            norm_novel_dst_entropy = IPsDstNovelEntropy / log2(IPsDstNovelPktsCounts.size());
+        }
 
         std::vector<double> entropies = {IPsSrcEntropy, IPsDstEntropy, IPsSrcNovelEntropy, IPsDstNovelEntropy, norm_src_entropy, norm_dst_entropy, norm_novel_src_entropy, norm_novel_dst_entropy};
         return entropies;
@@ -176,8 +188,14 @@ std::vector<double> statistics::calculateIPsCumEntropy(){
                 IPsDstEntropy += - IPsDstProb[i]*log2(IPsDstProb[i]);
         }
 
-        double norm_src_entropy = IPsSrcEntropy / log2(IPsSrcProb.size());
-        double norm_dst_entropy = IPsDstEntropy / log2(IPsDstProb.size());
+        double norm_src_entropy = 0;
+        if (IPsSrcProb.size() > 0) {
+            norm_src_entropy = IPsSrcEntropy / log2(IPsSrcProb.size());
+        }
+        double norm_dst_entropy = 0;
+        if (IPsDstProb.size() > 0) {
+            norm_dst_entropy = IPsDstEntropy / log2(IPsDstProb.size());
+        }
 
         std::vector<double> entropies = {IPsSrcEntropy, IPsDstEntropy, norm_src_entropy, norm_dst_entropy};
         return entropies;
@@ -253,8 +271,14 @@ std::vector<double> statistics::calculateEntropies(std::unordered_map<int, int> 
         novel_entropy += -1 * novel_prob * log2(novel_prob);
     }
 
-    double norm_entropy = entropy / log2(counts.size());
-    double norm_novel_entropy = novel_entropy / log2(novel_counts.size());
+    double norm_entropy = 0;
+    if (counts.size() > 0) {
+        norm_entropy = entropy / log2(counts.size());
+    }
+    double norm_novel_entropy = 0;
+    if (novel_counts.size() > 0) {
+        norm_novel_entropy = novel_entropy / log2(novel_counts.size());
+    }
 
     return {entropy, novel_entropy, norm_entropy, norm_novel_entropy};
 }
