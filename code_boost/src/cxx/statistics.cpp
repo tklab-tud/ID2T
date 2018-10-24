@@ -134,19 +134,19 @@ std::vector<double> statistics::calculateLastIntervalIPsEntropy(std::chrono::mic
         this->ip_dst_novel_count = IPsDstNovelPktsCounts.size();
 
         double norm_src_entropy = 0;
-        if (IPsSrcPktsCounts.size() > 0) {
+        if (IPsSrcPktsCounts.size() > 0 && log2(IPsSrcPktsCounts.size()) > 0) {
             norm_src_entropy = IPsSrcEntropy / log2(IPsSrcPktsCounts.size());
         }
         double norm_dst_entropy = 0;
-        if (IPsDstPktsCounts.size() > 0) {
+        if (IPsDstPktsCounts.size() > 0 && log2(IPsDstPktsCounts.size()) > 0) {
             norm_dst_entropy = IPsDstEntropy / log2(IPsDstPktsCounts.size());
         }
         double norm_novel_src_entropy = 0;
-        if (IPsSrcNovelPktsCounts.size() > 0) {
+        if (IPsSrcNovelPktsCounts.size() > 0 && log2(IPsSrcNovelPktsCounts.size()) > 0) {
             norm_novel_src_entropy = IPsSrcNovelEntropy / log2(IPsSrcNovelPktsCounts.size());
         }
         double norm_novel_dst_entropy = 0;
-        if (IPsDstNovelPktsCounts.size() > 0) {
+        if (IPsDstNovelPktsCounts.size() > 0 && log2(IPsDstNovelPktsCounts.size()) > 0) {
             norm_novel_dst_entropy = IPsDstNovelEntropy / log2(IPsDstNovelPktsCounts.size());
         }
 
@@ -189,11 +189,11 @@ std::vector<double> statistics::calculateIPsCumEntropy(){
         }
 
         double norm_src_entropy = 0;
-        if (IPsSrcProb.size() > 0) {
+        if (IPsSrcProb.size() > 0 && log2(IPsDstProb.size()) > 0) {
             norm_src_entropy = IPsSrcEntropy / log2(IPsSrcProb.size());
         }
         double norm_dst_entropy = 0;
-        if (IPsDstProb.size() > 0) {
+        if (IPsDstProb.size() > 0 && log2(IPsDstProb.size()) > 0) {
             norm_dst_entropy = IPsDstEntropy / log2(IPsDstProb.size());
         }
 
@@ -272,11 +272,11 @@ std::vector<double> statistics::calculateEntropies(std::unordered_map<int, int> 
     }
 
     double norm_entropy = 0;
-    if (counts.size() > 0) {
+    if (counts.size() > 0 && log2(counts.size()) > 0) {
         norm_entropy = entropy / log2(counts.size());
     }
     double norm_novel_entropy = 0;
-    if (novel_counts.size() > 0) {
+    if (novel_counts.size() > 0 && log2(novel_counts.size()) > 0) {
         norm_novel_entropy = novel_entropy / log2(novel_counts.size());
     }
 
