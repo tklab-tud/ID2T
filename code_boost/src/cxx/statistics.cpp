@@ -170,8 +170,8 @@ std::vector<double> statistics::calculateIPsCumEntropy(){
 
         for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
             IPs.push_back(i->first);
-            IPsSrcProb.push_back(static_cast<double>(i->second.pkts_sent/packetCount));
-            IPsDstProb.push_back(static_cast<double>(i->second.pkts_received/packetCount));
+            IPsSrcProb.push_back(static_cast<double>(i->second.pkts_sent)/static_cast<double>(packetCount));
+            IPsDstProb.push_back(static_cast<double>(i->second.pkts_received)/static_cast<double>(packetCount));
         }
 
         // Calculate IP source entropy
