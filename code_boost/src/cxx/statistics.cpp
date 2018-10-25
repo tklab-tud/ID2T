@@ -249,7 +249,7 @@ std::vector<double> statistics::calculateEntropies(std::unordered_map<int, int> 
             count_total += novel_count;
             novel_counts.push_back(novel_count);
             novel_count_total += novel_count;
-        } else if (old.count(iter.first) != map.count(iter.first)) {
+        } else if (iter.second != old[iter.first]) {
             // count all increased values
             double count = static_cast<double>(iter.second-old[iter.first]);
             if (count != 0.0) {
