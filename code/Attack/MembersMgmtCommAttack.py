@@ -355,7 +355,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
 
                     # check for local or external communication and update response timestamp with the respective
                     # avg delay
-                    if req_msg.src in external_ids or req_msg.dst in external_ids:
+                    if req_msg.src in external_ids or req_msg.dst in external_ids and avg_delay_external:
                         # external communication
                         external_dist = Lea.fromSeq(avg_delay_external)
                         respns_msg.time = req_msg.time + float(external_dist.random()) * 0.001
