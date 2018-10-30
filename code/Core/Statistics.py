@@ -856,26 +856,35 @@ class Statistics:
         else:
             return None
 
-    def get_avg_delay_distributions(self):
+    def get_avg_delay_distributions(self, input_pcap: bool=True):
         """
         :return: tuple consisting of avg delay distributions for local and external communication
         """
 
-        conv_delays = self.stats_db.process_user_defined_query(
+        if input_pcap:
+            delay_db = self.stats_db
+        else:
+            delay_db = statsDB.StatsDatabase(Util.get_botnet_pcap_db())
+
+        conv_delays = delay_db.process_user_defined_query(
             "SELECT ipAddressA, ipAddressB, avgDelay FROM conv_statistics")
+        conv_delays += delay_db.process_user_defined_query(
+            "SELECT ipAddressA, ipAddressB, avgDelay FROM conv_statistics_extended")
+
         if conv_delays:
             external_conv = []
             local_conv = []
 
             for conv in conv_delays:
-                ip_a = IPAddress.parse(conv[0])
-                ip_b = IPAddress.parse(conv[1])
+                if conv[2] is not None:
+                    ip_a = IPAddress.parse(conv[0])
+                    ip_b = IPAddress.parse(conv[1])
 
-                # split into local and external conversations
-                if not ip_a.is_private() or not ip_b.is_private():
-                    external_conv.append(conv)
-                else:
-                    local_conv.append(conv)
+                    # split into local and external conversations
+                    if not ip_a.is_private() or not ip_b.is_private():
+                        external_conv.append(conv)
+                    else:
+                        local_conv.append(conv)
 
             local_dist = []
             for conv in local_conv:
