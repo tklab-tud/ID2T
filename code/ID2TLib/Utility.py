@@ -403,6 +403,7 @@ def get_botnet_pcap_db():
 
     bot_pcap = PcapFile.PcapFile(BOTNET_PCAP)
     bot_stats = Core.Statistics.Statistics(bot_pcap)
+    bot_stats.do_extra_tests = True
     bot_stats.load_pcap_statistics(False, False, True, True, [], False, False)
 
     return bot_pcap.get_db_path()
