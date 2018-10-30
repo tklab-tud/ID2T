@@ -562,7 +562,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         zero_reference = self.get_param_value(Param.INJECT_AT_TIMESTAMP) - messages[0].time
 
         # calculate the average delay values for local and external responses
-        avg_delay_local, avg_delay_external = self.statistics.get_avg_delay_distributions()
+        avg_delay_local, avg_delay_external = self.statistics.get_avg_delay_distributions(False)
 
         # set timestamps
         assign_realistic_timestamps(messages, external_ids, local_ids, avg_delay_local, avg_delay_external,
