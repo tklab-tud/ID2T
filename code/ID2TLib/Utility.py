@@ -15,6 +15,7 @@ ROOT_DIR = CODE_DIR + "../"
 RESOURCE_DIR = ROOT_DIR + "resources/"
 TEST_DIR = RESOURCE_DIR + "test/"
 OUT_DIR = None
+BOTNET_PCAP = RESOURCE_DIR + "2017-11-23_win16_cut_bot_udp.pcap"
 
 # List of common operation systems
 platforms = {"win7", "win10", "winxp", "win8.1", "macos", "linux", "win8", "winvista", "winnt", "win2000"}
@@ -389,3 +390,19 @@ def remove_generic_ending(string):
         if string.endswith(end):
             return string[:-len(end)]
     return string
+
+
+def get_botnet_pcap_db():
+    """
+    Reads a botnet resource pcap, calculates statistics for it and returns the DB path.
+
+    :return: the database path for the botnet resource pcap statistics DB
+    """
+    import Core.Statistics
+    import ID2TLib.PcapFile as PcapFile
+
+    bot_pcap = PcapFile.PcapFile(BOTNET_PCAP)
+    bot_stats = Core.Statistics.Statistics(bot_pcap)
+    bot_stats.load_pcap_statistics(False, False, True, True, [], False, False)
+
+    return bot_pcap.get_db_path()
