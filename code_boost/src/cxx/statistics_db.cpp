@@ -574,9 +574,9 @@ void statistics_db::writeStatisticsConvExt(std::unordered_map<convWithProt, entr
                         minDelay = e.interarrival_time[i].count();
                 }
                 if (e.interarrival_time.size() > 0)
-                    e.avg_interarrival_time = (std::chrono::microseconds) sumDelay / e.interarrival_time.size(); // average
+                    e.avg_interarrival_time = static_cast<std::chrono::microseconds>(sumDelay) / e.interarrival_time.size(); // average
                 else
-                    e.avg_interarrival_time = (std::chrono::microseconds) 0;
+                    e.avg_interarrival_time = static_cast<std::chrono::microseconds>(0);
             }
 
             if (e.total_comm_duration == 0)
@@ -590,13 +590,13 @@ void statistics_db::writeStatisticsConvExt(std::unordered_map<convWithProt, entr
                 query.bindNoCopy(3, f.ipAddressB);
                 query.bind(4, f.portB);
                 query.bindNoCopy(5, f.protocol);
-                query.bind(6, (int) e.pkts_count);
-                query.bind(7, (float) e.avg_pkt_rate);
+                query.bind(6, static_cast<int>(e.pkts_count));
+                query.bind(7, static_cast<float>(e.avg_pkt_rate));
 
-                if (f.protocol == "UDP" || (f.protocol == "TCP" && e.pkts_count < 2))
+                if ((f.protocol == "UDP" || f.protocol == "TCP") && e.pkts_count < 2)
                     query.bind(8);
                 else
-                    query.bind(8, (int) e.avg_interarrival_time.count());
+                    query.bind(8, static_cast<int>(e.avg_interarrival_time.count()));
 
                 if (minDelay == -1)
                     query.bind(9);

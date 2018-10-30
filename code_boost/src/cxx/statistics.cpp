@@ -467,7 +467,7 @@ void statistics::createCommIntervalStats(){
                 time_between_ints_sum += intervals[i].start - intervals[i - 1].end;
             }
 
-            entry.avg_int_pkts_count = summed_pkts_count / ((double) intervals.size());
+            entry.avg_int_pkts_count = static_cast<double>(summed_pkts_count) / static_cast<double>(intervals.size());
             entry.avg_time_between_ints = (time_between_ints_sum.count() / (double) (intervals.size() - 1)) / (double) 1e6;
             entry.avg_interval_time = (summed_int_duration.count() / (double) intervals.size()) / (double) 1e6;
 
