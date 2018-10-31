@@ -357,13 +357,14 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                     # avg delay
                     if req_msg.src in external_ids or req_msg.dst in external_ids and avg_delay_external:
                         # external communication
-                        external_dist = Lea.fromSeq(avg_delay_external)
-                        respns_msg.time = req_msg.time + float(external_dist.random()) * 0.001
-
+                        dist = Lea.fromSeq(avg_delay_external)
                     else:
                         # local communication
-                        local_dist = Lea.fromSeq(avg_delay_local)
-                        respns_msg.time = req_msg.time + float(local_dist.random()) * 0.001
+                        dist = Lea.fromSeq(avg_delay_local)
+                    delay = 0
+                    while delay < 1:
+                        delay = dist.random()
+                    respns_msg.time = req_msg.time + float(delay) * 0.000001
 
                     updated_msgs.append(respns_msg)
                     last_response[(req_msg.src, req_msg.dst)] = respns_msg.time

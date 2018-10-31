@@ -565,7 +565,7 @@ void statistics_db::writeStatisticsConvExt(std::unordered_map<convWithProt, entr
             int minDelay = -1;
             int maxDelay = -1;
 
-            if (e.pkts_count > 1 && f.protocol == "TCP"){
+            if (e.pkts_count > 1 && (f.protocol == "UDP" || f.protocol == "TCP")){
                 for (int i = 0; (unsigned) i < e.interarrival_time.size(); i++) {
                     sumDelay += e.interarrival_time[i].count();
                     if (maxDelay < e.interarrival_time[i].count())
@@ -596,7 +596,7 @@ void statistics_db::writeStatisticsConvExt(std::unordered_map<convWithProt, entr
                 if ((f.protocol == "UDP" || f.protocol == "TCP") && e.pkts_count < 2)
                     query.bind(8);
                 else
-                    query.bind(8, static_cast<int>(e.avg_interarrival_time.count()));
+                    query.bind(8, abs(static_cast<int>(e.avg_interarrival_time.count())));
 
                 if (minDelay == -1)
                     query.bind(9);

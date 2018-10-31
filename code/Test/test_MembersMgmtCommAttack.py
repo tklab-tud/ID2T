@@ -1,7 +1,7 @@
 import Test.ID2TAttackTest as Test
 import ID2TLib.Utility as Util
 
-sha_default = '10080a8fcbee78a2fa58e394ca753ce547822a0a7e8f8f8903abb80ba29c5ae5'
+sha_default = 'cc4ec4dec2e9570512eb977e56ebd2793f95c9229ebb6fa640829e1839b016af'
 
 
 class UnitTestMembersMgmtCommAttack(Test.ID2TAttackTest):

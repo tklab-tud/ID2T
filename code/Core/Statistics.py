@@ -868,8 +868,9 @@ class Statistics:
 
         conv_delays = delay_db.process_user_defined_query(
             "SELECT ipAddressA, ipAddressB, avgDelay FROM conv_statistics")
-        conv_delays += delay_db.process_user_defined_query(
-            "SELECT ipAddressA, ipAddressB, avgDelay FROM conv_statistics_extended")
+        if len(conv_delays) < 2:
+            conv_delays = delay_db.process_user_defined_query(
+                "SELECT ipAddressA, ipAddressB, avgDelay FROM conv_statistics_extended")
 
         if conv_delays:
             external_conv = []
