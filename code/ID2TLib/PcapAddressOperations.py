@@ -163,35 +163,29 @@ class PcapAddressOperations():
 
         # retrieve local and external IPs
         all_ips_str = set(self.statistics.process_db_query("all(ipAddress)", print_results=False))
-        external_ips_str = set(self.statistics.process_db_query("ipAddress(macAddress=%s)" % self.get_probable_router_mac(), print_results=False))  # including router
-        local_ips_str = all_ips_str - external_ips_str
+        # external_ips_str = set(self.statistics.process_db_query("ipAddress(macAddress=%s)" % self.get_probable_router_mac(), print_results=False))  # including router
+        # local_ips_str = all_ips_str - external_ips_str
         external_ips = set()
         local_ips = set()
+        all_ips = set()
+
         self.contains_priv_ips = False
         self.priv_ip_segment = None
 
-        # convert local IP strings to IPv4.IPAddress representation
-        for ip in local_ips_str:
+        # convert IP strings to IPv4.IPAddress representation
+        for ip in all_ips_str:
             if is_ipv4(ip):
                 ip = IPAddress.parse(ip)
-                if ip.is_private() and not self.contains_priv_ips:
-                    self.contains_priv_ips = True
-                    self.priv_ip_segment = ip.get_private_segment()
                 # exclude local broadcast address and other special addresses
-                if (not str(ip) == "255.255.255.255") and (not ip.is_localhost()) and (not ip.is_multicast()) and (not ip.is_reserved()) and (not ip.is_zero_conf()):
-                    local_ips.add(ip)
+                if (not str(ip) == "255.255.255.255") and (not ip.is_localhost()) and (not ip.is_multicast()) and (
+                not ip.is_reserved()) and (not ip.is_zero_conf()):
+                    all_ips.add(ip)
 
-        # convert external IP strings to IPv4.IPAddress representation
-        for ip in external_ips_str:
-            if is_ipv4(ip):
-                ip = IPAddress.parse(ip)
-                # if router MAC can definitely be mapped to local/private IP, add it to local_ips (because at first it is stored in external_ips, see above)
-                # this depends on whether the local network is identified by a private IP address range or not.
-                if ip.is_private():
-                    local_ips.add(ip)
-                # exclude local broadcast address and other special addresses
-                elif (not str(ip) == "255.255.255.255") and (not ip.is_localhost()) and (not ip.is_multicast()) and (not ip.is_reserved()) and (not ip.is_zero_conf()):
-                    external_ips.add(ip)
+        for ip in all_ips:
+            if ip.is_private():
+                local_ips.add(ip)
+
+        external_ips = all_ips - local_ips
 
         # save the certain unused local IPs of the network
         # to do that, divide the unused local Addressspace into chunks of (chunks_size) Addresses
@@ -224,6 +218,8 @@ class PcapAddressOperations():
         self.remaining_external_ips = external_ips
         self.max_uncertain_local_ip = self.max_local_ip
         self.local_ips = frozenset(local_ips)
+        # print("External IPS: " + str(external_ips))
+        # print("LOCAL IPS: " + str(local_ips))
         self.remaining_local_ips = local_ips
         self.uncertain_local_ips = set()
 
