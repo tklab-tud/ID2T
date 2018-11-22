@@ -720,7 +720,7 @@ int statistics::getSumPacketSize() {
  */
 float statistics::getAvgPacketSize() const {
     // AvgPktSize = (Sum of all packet sizes / #Packets)
-    return (sumPacketSize / packetCount) / 1024;
+    return (sumPacketSize / static_cast<float>(packetCount)) / 1024;
 }
 
 /**
@@ -890,9 +890,9 @@ void statistics::writeToDatabase(std::string database_path, std::vector<std::chr
     }
 
     float avgPacketRate = (packetCount / duration);
-    long avgPacketSize = getAvgPacketSize();
+    float avgPacketSize = this->getAvgPacketSize();
     if(senderCountIP>0) {
-        long avgPacketsSentPerHost = (sumPacketsSent / senderCountIP);
+        float avgPacketsSentPerHost = (sumPacketsSent / senderCountIP);
         float avgBandwidthInKBits = (sumBandwidthIn / senderCountIP) * 8;
         float avgBandwidthOutInKBits = (sumBandwidthOut / senderCountIP) * 8;
 
