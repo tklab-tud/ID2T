@@ -38,6 +38,9 @@ fi
 # Activate the venv
 source .venv/bin/activate
 
+# Upgrade pip if necessary
+pip install --upgrade pip
+
 # Install wheel first
 pip3 install wheel
 
