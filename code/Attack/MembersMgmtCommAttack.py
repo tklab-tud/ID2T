@@ -362,7 +362,8 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                         # local communication
                         dist = Lea.fromSeq(avg_delay_local)
                     delay = 0
-                    while delay < 1:
+                    
+                 while delay < 50 or (float(delay)*0.000001 > 5):
                         delay = dist.random()
                     respns_msg.time = req_msg.time + float(delay) * 0.000001
 
