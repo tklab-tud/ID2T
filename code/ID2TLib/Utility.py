@@ -191,7 +191,7 @@ def get_filetime_format(timestamp):
     :param timestamp: a timestamp in seconds
     :return: MS FILETIME timestamp
     """
-    boot_datetime = dt.datetime.fromtimestamp(timestamp).astimezone(pytz.timezone('UTC'))
+    boot_datetime = dt.datetime.utcfromtimestamp(timestamp)
     boot_filetime = 116444736000000000 + (cal.timegm(boot_datetime.timetuple()) * 10000000)
     return boot_filetime + (boot_datetime.microsecond * 10)
 
