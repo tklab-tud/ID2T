@@ -14,6 +14,7 @@ class Parameter(enum.Enum):
     HOSTING_IP = 'hosting.ip'  # IP address(es) hosting the vulnerable service
     HOSTING_PERCENTAGE = 'hosting.percentage'  # percentage of target IPs hosting the vulnerable service
     IP_VICTIM = 'ip.victim'
+    INJECT_INTO_IPS = 'inject.ip'
     # recommended type: MAC address ------------------------------
     MAC_SOURCE = 'mac.src'  # MAC address of source
     MAC_DESTINATION = 'mac.dst'  # MAC address of destination

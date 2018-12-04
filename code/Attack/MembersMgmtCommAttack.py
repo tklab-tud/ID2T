@@ -50,6 +50,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
             Param.IP_REUSE_TOTAL: ParameterTypes.TYPE_PERCENTAGE,
             Param.IP_REUSE_LOCAL: ParameterTypes.TYPE_PERCENTAGE,
             Param.IP_REUSE_EXTERNAL: ParameterTypes.TYPE_PERCENTAGE,
+            Param.INJECT_INTO_IPS: ParameterTypes.TYPE_IP_ADDRESS,
 
             # the user-selected padding to add to every packet
             Param.PACKET_PADDING: ParameterTypes.TYPE_PADDING,
@@ -363,7 +364,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                         dist = Lea.fromSeq(avg_delay_local)
                     delay = 0
                     
-                 while delay < 50 or (float(delay)*0.000001 > 5):
+                    while delay < 50 or (float(delay)*0.000001 > 5):
                         delay = dist.random()
                     respns_msg.time = req_msg.time + float(delay) * 0.000001
 
@@ -542,9 +543,16 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         # assign addresses for local IDs
         if number_local_ids > 0:
             reuse_count_local = int(reuse_percent_total * reuse_percent_local * number_local_ids)
-            existing_local_ips = sorted(pcapops.get_existing_local_ips(reuse_count_local))
+            existing_local_ips=[]
+            if(self.get_param_value(Param.INJECT_INTO_IPS)):
+                existing_local_ips.append(self.get_param_value(Param.INJECT_INTO_IPS))
+                existing_local_ips+=(sorted(pcapops.get_existing_local_ips(reuse_count_local-1)))            
+            else:
+                existing_local_ips = (sorted(pcapops.get_existing_local_ips(reuse_count_local)))
             new_local_ips = sorted(pcapops.get_new_local_ips(number_local_ids - len(existing_local_ips)))
             add_ids_to_config(sorted(local_ids), existing_local_ips, new_local_ips, bot_configs)
+
+
 
         # assign addresses for external IDs
         if number_external_ids > 0:
