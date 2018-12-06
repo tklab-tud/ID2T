@@ -2,7 +2,7 @@
 
 install_pkg_arch()
 {
-    PACMAN_PKGS="cmake python python-pip sqlite tcpdump"
+    PACMAN_PKGS="cmake python python-pip sqlite tcpdump cairo"
 
     # Check first to avoid unnecessary sudo
     echo -e "Packages: Checking..."
@@ -43,7 +43,7 @@ install_pkg_arch()
 
 install_pkg_ubuntu()
 {
-    APT_PKGS='build-essential cmake python3-dev python3-pip python3-venv sqlite tcpdump libtins-dev libpcap-dev'
+    APT_PKGS='build-essential cmake python3-dev python3-pip python3-venv sqlite tcpdump libtins-dev libpcap-dev libcairo2-dev'
 
     which sudo >/dev/null
     if [ $? != 0 ]; then
@@ -67,7 +67,7 @@ install_pkg_ubuntu()
 
 install_pkg_darwin()
 {
-    BREW_PKGS="cmake python coreutils libdnet libtins sqlite"
+    BREW_PKGS="cmake python coreutils libdnet libtins sqlite cairo"
 
     # Check first to avoid unnecessary update
     echo -e "Packages: Checking..."
