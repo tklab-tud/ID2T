@@ -543,16 +543,17 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         # assign addresses for local IDs
         if number_local_ids > 0:
             reuse_count_local = int(reuse_percent_total * reuse_percent_local * number_local_ids)
-            existing_local_ips=[]
-            if(self.get_param_value(Param.INJECT_INTO_IPS)):
-                existing_local_ips.append(self.get_param_value(Param.INJECT_INTO_IPS))
-                existing_local_ips+=(sorted(pcapops.get_existing_local_ips(reuse_count_local-1)))            
+            existing_local_ips = []
+            inject_into_ips = self.get_param_value(Param.INJECT_INTO_IPS)
+            if inject_into_ips:
+                if not isinstance(inject_into_ips, list):
+                    inject_into_ips = [inject_into_ips]
+                existing_local_ips.extend(inject_into_ips)
+                existing_local_ips += sorted(pcapops.get_existing_local_ips(reuse_count_local-len(inject_into_ips)))
             else:
-                existing_local_ips = (sorted(pcapops.get_existing_local_ips(reuse_count_local)))
+                existing_local_ips = sorted(pcapops.get_existing_local_ips(reuse_count_local))
             new_local_ips = sorted(pcapops.get_new_local_ips(number_local_ids - len(existing_local_ips)))
             add_ids_to_config(sorted(local_ids), existing_local_ips, new_local_ips, bot_configs)
-
-
 
         # assign addresses for external IDs
         if number_external_ids > 0:
