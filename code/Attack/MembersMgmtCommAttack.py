@@ -544,16 +544,30 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         if number_local_ids > 0:
             reuse_count_local = int(reuse_percent_total * reuse_percent_local * number_local_ids)
             existing_local_ips = []
+            new_local_ips = []
             inject_into_ips = self.get_param_value(Param.INJECT_INTO_IPS)
             if inject_into_ips:
                 if not isinstance(inject_into_ips, list):
                     inject_into_ips = [inject_into_ips]
+                for ip in inject_into_ips:
+                    if not pcapops.in_remaining_local_ips(ip):
+                        new_local_ips.append(ip)
+                if new_local_ips is not []:
+                    print("\nWARNING: the following IPs are not in the source pcap:\n{}".
+                          format(str(new_local_ips)[1:-1]))
+                for ip in new_local_ips:
+                    inject_into_ips.remove(ip)
                 existing_local_ips.extend(inject_into_ips)
-                existing_local_ips += sorted(pcapops.get_existing_local_ips(reuse_count_local-len(inject_into_ips)))
+                existing_local_ips.extend(pcapops.get_existing_local_ips(reuse_count_local - len(inject_into_ips)))
             else:
-                existing_local_ips = sorted(pcapops.get_existing_local_ips(reuse_count_local))
-            new_local_ips = sorted(pcapops.get_new_local_ips(number_local_ids - len(existing_local_ips)))
-            add_ids_to_config(sorted(local_ids), existing_local_ips, new_local_ips, bot_configs)
+                existing_local_ips = pcapops.get_existing_local_ips(reuse_count_local)
+            remaining_ip_count = number_local_ids - len(existing_local_ips) - len(new_local_ips)
+            if remaining_ip_count < 0:
+                print("WARNING: too many IPs, reducing by {}".format(remaining_ip_count * -1))
+                new_local_ips = new_local_ips[:remaining_ip_count]
+            else:
+                new_local_ips.extend(pcapops.get_new_local_ips(remaining_ip_count))
+            add_ids_to_config(sorted(local_ids), sorted(existing_local_ips), sorted(new_local_ips), bot_configs)
 
         # assign addresses for external IDs
         if number_external_ids > 0:
