@@ -61,8 +61,12 @@ class PcapAddressOperations():
         :return: the chosen local IPs
         """
 
+        if count <= 0:
+            return []
+
         if count > len(self.remaining_local_ips):
             print("Warning: There are no more {} local IPs in the .pcap file. Returning all remaining local IPs.".format(count))
+
 
         total = min(len(self.remaining_local_ips), count)
 
@@ -85,6 +89,9 @@ class PcapAddressOperations():
         :param count: the number of new local IPs to return
         :return: the newly created local IP addresses
         """
+
+        if count <= 0:
+            return []
 
         # add more unused local ips to the pool, if needed
         while len(self.unused_local_ips) < count and self.expand_unused_local_ips() == True:
