@@ -53,6 +53,13 @@ class PcapAddressOperations():
         """
         return len(self.remaining_local_ips)
 
+    def in_remaining_local_ips(self, ip: str) -> bool:
+        """
+        Returns if IP is exists in pcap.
+        :return: True if the IP is in the remaining local ips, False if not
+        """
+        return ip in self.remaining_local_ips
+
     def get_existing_local_ips(self, count: int=1):
         """
         Returns the given number of local IPs that are existent in the pcap file.
