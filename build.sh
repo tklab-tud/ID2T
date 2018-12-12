@@ -39,7 +39,7 @@ fi
 source .venv/bin/activate
 
 # Upgrade pip if necessary
-pip install --upgrade pip
+pip3 install --upgrade pip
 
 # Install python packages
 pip3 install -r resources/requirements.txt
