@@ -41,9 +41,6 @@ source .venv/bin/activate
 # Upgrade pip if necessary
 pip install --upgrade pip
 
-# Install wheel first
-pip3 install wheel
-
 # Install python packages
 pip3 install -r resources/requirements.txt
 
