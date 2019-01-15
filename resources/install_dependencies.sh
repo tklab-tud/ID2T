@@ -85,6 +85,8 @@ install_pkg_darwin()
         # Install all missing packages
         echo -e "Packages: Installing..."
         brew install $BREW_PKGS
+        echo -e "Packages: Upgrading..."
+        brew upgrade $BREW_PKGS
     else
         echo -e "Packages: Found."
     fi
