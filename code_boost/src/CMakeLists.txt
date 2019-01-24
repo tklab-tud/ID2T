@@ -14,6 +14,10 @@ if(NOT LIBTINS_VERSION)
    set(LIBTINS_VERSION "0")
 endif()
 
+if(NOT LIBTINS_PATCH)
+   set(LIBTINS_PATCH "0")
+endif()
+
 if (CMAKE_BUILD_TYPE MATCHES Debug)
     message(STATUS "Running Debug configuration.")
 elseif (CMAKE_BUILD_TYPE MATCHES Release)
@@ -49,7 +53,7 @@ add_subdirectory(SQLiteCpp)
 include_directories(pybind11/include)
 
 # Find libtins library
-if(${LIBTINS_VERSION} VERSION_LESS "4.1")
+if(${LIBTINS_VERSION} VERSION_LESS "4.1" OR ${LIBTINS_PATCH} EQUAL 1)
     message(STATUS "Tins will be built from source.")
     set(TINS_LIBRARY tins)
     link_directories(BEFORE libtins/src)

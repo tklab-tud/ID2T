@@ -1,5 +1,16 @@
 #!/bin/bash
 
+PATCH_DIR=../../../resources/patches
+
+libtins_patches()
+{
+    cd code_boost/src/libtins
+    git apply --check ${PATCH_DIR}/0001-add-advertised_size-method.patch
+    git am --signoff < ${PATCH_DIR}/0001-add-advertised_size-method.patch
+    git apply --check ${PATCH_DIR}/0002-use-advertised_size-to-determine-frame-length.patch
+    git am --signoff < ${PATCH_DIR}/0002-use-advertised_size-to-determine-frame-length.patch
+}
+
 install_pkg_arch()
 {
     PACMAN_PKGS="cmake python python-pip sqlite tcpdump cairo"
@@ -88,6 +99,8 @@ install_pkg_darwin()
 # Make sure the submodules are there
 echo -e "Updating submodules"
 git submodule update --init --recursive
+
+libtins_patches
 
 KERNEL=$(uname)
 
