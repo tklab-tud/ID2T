@@ -36,7 +36,6 @@ install_pkg_arch()
         wget "https://aur.archlinux.org/cgit/aur.git/snapshot/libtins.tar.gz"
         tar -xzf libtins.tar.gz
         rm libtins.tar.gz
-        rm -R libtins
 
         pushd libtins
 
@@ -44,6 +43,7 @@ install_pkg_arch()
         makepkg -si
 
         popd
+        rm -R libtins
         popd
     else
         echo -e "Additional Packages: Found."
