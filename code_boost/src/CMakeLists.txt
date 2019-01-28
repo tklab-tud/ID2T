@@ -37,6 +37,9 @@ if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     set(DEBUG_FILES cxx/main.cpp cxx/pcap_processor.cpp cxx/pcap_processor.h cxx/statistics.cpp cxx/statistics.h cxx/statistics_db.cpp cxx/statistics_db.h cxx/utilities.h cxx/utilities.cpp)
 endif ()
 
+# macOS 10.14 seems to not add "/usr/local/include" as include path by default
+include_directories(/usr/local/include)
+
 # Include SQLiteCpp library and build it
 option(SQLITECPP_RUN_CPPLINT OFF)
 include_directories(SQLiteCpp/include)
