@@ -118,7 +118,7 @@ elif [ "$KERNEL" = 'Linux' ]; then
             install_pkg_arch
             exit 0
             ;;
-        debian)
+        debian|ubuntu)
             echo -e "Detected OS: Debian"
             install_pkg_ubuntu
             exit 0
