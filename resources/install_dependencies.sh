@@ -1,5 +1,7 @@
 #!/bin/bash
 
+RPM_PKGS="cmake make tcpdump coreutils gcc gcc-c++ libpcap-devel python3 python3-devel"
+
 PATCH_DIR=../../../resources/patches
 
 libtins_patches()
@@ -61,6 +63,38 @@ install_pkg_arch()
         popd
     else
         echo -e "Additional Packages: Found."
+    fi
+}
+
+install_pkg_fedora()
+{
+    DNF_PKGS="sqlite sqlite-devel openssl-devel boost-devel cairo"
+
+    # Check first to avoid unnecessary sudo
+    echo -e "Packages: Checking..."
+    rpm -q ${DNF_PKGS} ${RPM_PKGS} >/dev/null
+    if [ $? != 0 ]; then
+        # Install all missing packages
+        echo -e "Packages: Installing..."
+        sudo dnf install ${DNF_PKGS} ${RPM_PKGS}
+    else
+        echo -e "Packages: Found."
+    fi
+}
+
+install_pkg_suse()
+{
+    ZYPPER_PKGS="sqlite3 sqlite3-devel libboost_headers-devel libopenssl-devel libcairo2"
+
+    # Check first to avoid unnecessary sudo
+    echo -e "Packages: Checking..."
+    rpm -q ${ZYPPER_PKGS} ${RPM_PKGS} >/dev/null
+    if [ $? != 0 ]; then
+        # Install all missing packages
+        echo -e "Packages: Installing..."
+        sudo zypper install --download-as-needed ${ZYPPER_PKGS} ${RPM_PKGS}
+    else
+        echo -e "Packages: Found."
     fi
 }
 
@@ -128,11 +162,16 @@ if [ "$KERNEL" = 'Darwin' ]; then
 elif [ "$KERNEL" = 'Linux' ]; then
     # Kernel is Linux, check for supported distributions
     OS=$(awk '/DISTRIB_ID=/' /etc/*-release | sed 's/DISTRIB_ID=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]')
-    OS_LIKE=$(awk '/ID_LIKE=/' /etc/*-release | sed 's/ID_LIKE=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]')
+    OS_LIKE=$(awk '/ID_LIKE=/' /etc/*-release | sed 's/ID_LIKE=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]' | cut -d ' ' -f 1)
 
     if [ -z "$OS_LIKE" ]; then
         # This distribution is missing the os-release file, so try lsb_release
         OS_LIKE=$(lsb_release -si | tr '[:upper:]' '[:lower:]')
+    fi
+
+    if [ "$OS_LIKE" = '' ]; then
+        # This distribution is missing the ID_LIKE entry in the os-release file, so try the ID entry
+        OS_LIKE=$(awk '/ID=/' /etc/*-release | sed 's/ID=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]' | head -n 1)
     fi
 
     case $OS_LIKE in
@@ -144,6 +183,16 @@ elif [ "$KERNEL" = 'Linux' ]; then
         debian|ubuntu)
             echo -e "Detected OS: Debian"
             install_pkg_ubuntu
+            exit 0
+            ;;
+        suse|opensuse)
+            echo -e "Detected OS: openSuse"
+            install_pkg_suse
+            exit 0
+            ;;
+        fedora)
+            echo -e "Detected OS: Fedora"
+            install_pkg_fedora
             exit 0
             ;;
     esac
