@@ -3,6 +3,7 @@
 FULLBUILD=false
 NONINTERACTIVE=false
 BUILD_TYPE='Release'
+LIBTINS_VERSION=0
 
 while test $# -gt 0
 do
@@ -24,6 +25,8 @@ done
 if [ ! ${NONINTERACTIVE} = true ]; then
     ./resources/install_dependencies.sh
 fi
+
+LIBTINS_VERSION=$(./resources/libtins_version.sh)
 
 # Fullbuild or nonexistent venv
 if [ ${FULLBUILD} = true -o ! -d .venv ]; then
@@ -59,9 +62,11 @@ else
     exit
 fi
 
+CMAKE_ARGS="-D CMAKE_BUILD_TYPE="${BUILD_TYPE}" -D LIBTINS_VERSION="${LIBTINS_VERSION}
+
 which ninja &>/dev/null
 if [ $? != 0 ]; then
-    cmake -D CMAKE_BUILD_TYPE=${BUILD_TYPE} ..
+    cmake ${CMAKE_ARGS} ..
 
     # Make sure we're able to get the number of cores
     if [ $(uname) = 'Darwin' ]; then
@@ -71,13 +76,13 @@ if [ $? != 0 ]; then
     fi
 
     if [ -f Makefile ]; then
-        make -j$NUMCORES
+        make -j${NUMCORES}
     else
         echo "Error: 'cmake' did not finish successfully."
         exit
     fi
 else
-    cmake -D CMAKE_BUILD_TYPE=${BUILD_TYPE} .. -G Ninja
+    cmake ${CMAKE_ARGS} .. -G Ninja
 
     if [ -f build.ninja ]; then
         ninja

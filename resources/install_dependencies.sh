@@ -1,12 +1,5 @@
 #!/bin/bash
 
-libtins_warning()
-{
-    if [ ${libtins_version:0:3} != "4.1" ]; then
-        echo -e "Warning: libtins version ("$libtins_version") is older than 4.1. This will cause the MembersMgmtCommAttack to not work properly."
-    fi
-}
-
 install_pkg_arch()
 {
     PACMAN_PKGS="cmake python python-pip sqlite tcpdump cairo"
@@ -36,7 +29,6 @@ install_pkg_arch()
         wget "https://aur.archlinux.org/cgit/aur.git/snapshot/libtins.tar.gz"
         tar -xzf libtins.tar.gz
         rm libtins.tar.gz
-        rm -R libtins
 
         pushd libtins
 
@@ -44,6 +36,7 @@ install_pkg_arch()
         makepkg -si
 
         popd
+        rm -R libtins
         popd
     else
         echo -e "Additional Packages: Found."
@@ -94,7 +87,7 @@ install_pkg_darwin()
 
 # Make sure the submodules are there
 echo -e "Updating submodules"
-git submodule update --init
+git submodule update --init --recursive
 
 KERNEL=$(uname)
 
@@ -108,8 +101,6 @@ if [ "$KERNEL" = 'Darwin' ]; then
     fi
 
     install_pkg_darwin
-    #libtins_version=$(brew versions libtins | grep "*" | cut -d " " -f 3)
-    #libtins_warning
     exit 0
 elif [ "$KERNEL" = 'Linux' ]; then
     # Kernel is Linux, check for supported distributions
@@ -125,15 +116,11 @@ elif [ "$KERNEL" = 'Linux' ]; then
         archlinux|arch)
             echo -e "Detected OS: Arch Linux"
             install_pkg_arch
-            libtins_version=$(pacman -Qi libtins | grep "Version" | cut -d : -f 2 | xargs)
-            libtins_warning
             exit 0
             ;;
-        debian)
+        debian|ubuntu)
             echo -e "Detected OS: Debian"
             install_pkg_ubuntu
-            libtins_version=$(apt-cache policy libtins-dev | grep "*" | cut -d " " -f 3)
-            libtins_warning
             exit 0
             ;;
     esac

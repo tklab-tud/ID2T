@@ -659,7 +659,6 @@ void statistics_db::writeStatisticsInterval(const std::unordered_map<std::string
             default_table_name = query.getColumn(0).getString();
 
         } catch (std::exception &e) {
-            std::cerr << "Exception in statistics_db::" << __func__ << ": " << e.what() << std::endl;
         }
 
         // handle default interval only runs

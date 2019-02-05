@@ -16,15 +16,6 @@ install:
     # Workaround for unavailability of libtins >4.0 on Ubuntu Xenial
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sed -i 's/\<libtins\-dev\>//g' resources/install_dependencies.sh; fi
     - ./resources/install_dependencies.sh
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then wget "https://github.com/mfontanini/libtins/archive/v4.1.tar.gz"; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then tar -xf v4.1.tar.gz; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then cd libtins-4.1; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then mkdir build; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then cd build; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then cmake ../ -DLIBTINS_ENABLE_CXX11=1; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then make -j2; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo make install; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then cd ../../; fi
 
 script:
     - ./build.sh --non-interactive
