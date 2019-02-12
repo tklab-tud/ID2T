@@ -1,8 +1,18 @@
 #!/bin/bash
 
 RPM_PKGS="cmake make tcpdump coreutils gcc gcc-c++ libpcap-devel python3 python3-devel"
-
+YES=''
 PATCH_DIR=../../../resources/patches
+
+while test $# -gt 0
+do
+    case "$1" in
+        -y)
+            YES='-y'
+            ;;
+    esac
+    shift
+done
 
 libtins_patches()
 {
@@ -25,7 +35,7 @@ libtins_patches()
 
 install_pkg_arch()
 {
-    PACMAN_PKGS="cmake python python-pip sqlite tcpdump cairo"
+    PACMAN_PKGS="gcc make cmake python python-pip sqlite tcpdump cairo"
 
     # Check first to avoid unnecessary sudo
     echo -e "Packages: Checking..."
@@ -33,7 +43,10 @@ install_pkg_arch()
     if [ $? != 0 ]; then
         # Install all missing packages
         echo -e "Packages: Installing..."
-        sudo pacman -S --needed $PACMAN_PKGS
+        if [ ${YES} == '-y' ]; then
+            YES='--noconfirm'
+        fi
+        sudo pacman -S ${YES} --needed $PACMAN_PKGS
     else
         echo -e "Packages: Found."
     fi
@@ -76,7 +89,7 @@ install_pkg_fedora()
     if [ $? != 0 ]; then
         # Install all missing packages
         echo -e "Packages: Installing..."
-        sudo dnf install ${DNF_PKGS} ${RPM_PKGS}
+        sudo dnf install ${YES} ${DNF_PKGS} ${RPM_PKGS}
     else
         echo -e "Packages: Found."
     fi
@@ -92,7 +105,7 @@ install_pkg_suse()
     if [ $? != 0 ]; then
         # Install all missing packages
         echo -e "Packages: Installing..."
-        sudo zypper install --download-as-needed ${ZYPPER_PKGS} ${RPM_PKGS}
+        sudo zypper install ${YES} --download-as-needed ${ZYPPER_PKGS} ${RPM_PKGS}
     else
         echo -e "Packages: Found."
     fi
@@ -116,7 +129,7 @@ install_pkg_ubuntu()
     if [ $? != 0 ]; then
         # Install all missing packages
         echo -e "Packages: Installing..."
-        $SUDO apt-get install $APT_PKGS
+        $SUDO apt-get install ${YES} $APT_PKGS
     else
         echo -e "Packages: Found."
     fi
