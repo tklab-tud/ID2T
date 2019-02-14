@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/tklab-tud/ID2T.svg?branch=master)](https://travis-ci.org/tklab-tud/ID2T)
+[![Build Status](https://travis-ci.org/tklab-tud/ID2T.svg?branch=master)](https://travis-ci.org/Trace-Share/ID2T)
 
 <p align="center">
 <img src="https://git.tk.informatik.tu-darmstadt.de/SPIN/ID2T-toolkit/raw/master/logo/id2t.png"></p>
