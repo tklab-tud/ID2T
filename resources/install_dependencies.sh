@@ -1,5 +1,6 @@
 #!/bin/bash
 
+DEB_PKGS=''
 RPM_PKGS="cmake make tcpdump coreutils gcc gcc-c++ libpcap-devel python3 python3-devel"
 YES=''
 PATCH_DIR=../../../resources/patches
@@ -125,11 +126,11 @@ install_pkg_ubuntu()
 
     # Check first to avoid unnecessary sudo
     echo -e "Packages: Checking..."
-    dpkg -s $APT_PKGS &>/dev/null
+    dpkg -s $APT_PKGS $DEB_PKGS &>/dev/null
     if [ $? != 0 ]; then
         # Install all missing packages
         echo -e "Packages: Installing..."
-        $SUDO apt-get install ${YES} $APT_PKGS
+        $SUDO apt-get install ${YES} $APT_PKGS $DEB_PKGS
     else
         echo -e "Packages: Found."
     fi
@@ -174,7 +175,7 @@ if [ "$KERNEL" = 'Darwin' ]; then
     exit 0
 elif [ "$KERNEL" = 'Linux' ]; then
     # Kernel is Linux, check for supported distributions
-    OS=$(awk '/DISTRIB_ID=/' /etc/*-release | sed 's/DISTRIB_ID=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]')
+    OS=$(awk '/ID=/' /etc/*-release | sed '2q;d' | sed 's/ID=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]')
     OS_LIKE=$(awk '/ID_LIKE=/' /etc/*-release | sed 's/ID_LIKE=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]' | cut -d ' ' -f 1)
 
     if [ -z "$OS_LIKE" ]; then
@@ -187,7 +188,13 @@ elif [ "$KERNEL" = 'Linux' ]; then
         OS_LIKE=$(awk '/ID=/' /etc/*-release | sed 's/ID=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]' | head -n 1)
     fi
 
-    case $OS_LIKE in
+    supported='debian ubuntu arch archlinux fedora suse opensuse'
+    if ! [[ $supported =~ (^|[[:space:]])$OS_LIKE($|[[:space:]]) ]]; then
+        OS_LIKE=${OS}
+        DEB_PKGS='libffi-dev'
+    fi
+
+    case ${OS_LIKE} in
         archlinux|arch)
             echo -e "Detected OS: Arch Linux"
             install_pkg_arch
