@@ -1,0 +1,66 @@
+atk.file: default
+
+read.write: sequence
+
+timestamp:
+  generation: tcp_avg_shift
+  postprocess: 
+    - function: timestamp_delay_forIPlist
+  generation.alt: timestamp_dynamic_shift
+  random.treshold: 0.001
+
+ip.map:
+  - ip:
+      old: 0.0.0.0
+      new: 0.0.0.0
+
+mac.map:
+  - mac: 
+      old: 00:00:00:00:00:00
+      new: 00:00:00:00:00:00
+
+port.ip.map:
+  - ip:
+      type: old 
+      address: 0.0.0.0
+    port: 
+      old: 0
+      new: 0
+
+ttl.ip.exceptions:
+  - ip: 
+      type: old
+      address: 0.0.0.0
+
+mss.ip.exceptions:
+  - ip:
+      type: old
+      address: 0.0.0.0
+
+win.ip.exceptions:
+  - ip:
+      type: old 
+      address: 0.0.0.0
+
+tcp.delay:
+  - ip:
+      type: old
+      source.address: 0.0.0.0
+      destination.address: 0.0.0.0
+    delay: 0.001
+  - ip:
+      type: new
+      source.address: 0.0.0.0
+      destination.address: 0.0.0.0
+    delay: 0.001
+
+timestamp.random.tresholds:
+  - ip:
+      type: old
+      address: 0.0.0.0
+    treshold: 0.001
+
+timestamp.random.set:
+  - ip:
+      type: old
+      address: 0.0.0.0
