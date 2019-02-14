@@ -202,7 +202,7 @@ def ip_ttl_change(packet, data):
     """
     ip = packet.getfieldval('src')
     if ip not in data[TMdef.GLOBAL][TMdef.TARGET]['ttl_exceptions']:
-        ttl_new = data[TMdef.GLOBAL][TMdef.TARGET]['ip_ttl_map'].get( ip )
+        ttl_new = globalRWdict_findMatch(data, 'ip_ttl_map', ip)
         if ttl_new:
             packet.setfieldval('ttl', ttl_new)
         else:
@@ -263,11 +263,13 @@ def ipv6_hlim_change(packet, data):
     :param packet: IP packet; expected scapy IP packet.
     :param data: Dictionary containing field ip_ttl_map and ip_ttl_default.
     """
-    ttl_new = globalRWdict_findMatch(data, 'ip_ttl_map', packet.getfieldval('src'))
-    if ttl_new:
-        packet.setfieldval('hlim', ttl_new)
-    else:
-        packet.setfieldval('hlim', data[TMdef.GLOBAL][TMdef.TARGET]['ip_ttl_default'])
+    ip = packet.getfieldval('src')
+    if ip not in data[TMdef.GLOBAL][TMdef.TARGET]['ttl_exceptions']:
+        ttl_new = globalRWdict_findMatch(data, 'ip_ttl_map', ip)
+        if ttl_new:
+            packet.setfieldval('hlim', ttl_new)
+        else:
+            packet.setfieldval('hlim', data[TMdef.GLOBAL][TMdef.TARGET]['ip_ttl_default'])
 
 
 ###############################################
