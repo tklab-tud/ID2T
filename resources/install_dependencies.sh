@@ -218,5 +218,5 @@ elif [ "$KERNEL" = 'Linux' ]; then
     esac
 fi
 
-echo -e "Your OS is not supported by this script, please make sure to install the dependencies manually"
+echo -e "Your OS ("${OS_LIKE}") is not supported by this script, please make sure to install the dependencies manually"
 exit 0
