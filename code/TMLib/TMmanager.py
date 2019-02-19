@@ -23,6 +23,7 @@ PROCESSING = 'processing'
 PREPROCESSING = 'preprocessing'
 POSTPROCESSING = 'postprocessing'
 VALIDATION = 'validation'
+CONFIG_CHECK = 'configcheck'
 ENQUEUE = 'enqueue'
 PROTOCOL = 'protocol'
 FUNCTION = 'function'
@@ -33,11 +34,11 @@ FILL = 'load'
 
 
 """
-Single entry in f_dict represents single tranformation.
+Single entry in subsribed_functions represents single tranformation.
 Multiple processing, preprocessing & validation functions may be referenced
 in single entry (including other entries).
 
-An entry in f_dict must have:
+An entry in subsribed_functions must have:
 key - unique string name
 value - these possible keys
     PROCESSING - contains list of dicionaries with keys PROTOCOL and FUNCTION
@@ -47,10 +48,10 @@ value - these possible keys
     VALIDATION - contains list of dictionaries witn keys DICTIONARY and FUNCTION
                 representing TMdict dictionaries validation function and name of the dictionary
                 in rewrapper
-    ENQUEUE - contains list of entries from f_dict
+    ENQUEUE - contains list of entries from subsribed_functions
     FILL - list of functions that statistics, TMdicts and parsed config as dict on input and fill them with data
 """
-f_dict = { # dictionary of known transformation functions
+subsribed_functions = { # dictionary of known transformation functions
 
 #################
 #### Ether
@@ -524,7 +525,9 @@ def enqueue_function(rewrapper, name):
     :return: set of functions that fill dictionaries based on parsed config
     """
     fill = set()
-    record = f_dict.get(name)
+    config_validation = set()
+
+    record = subsribed_functions.get(name)
     if record:
         processing = record.get(PROCESSING)
         if processing:
@@ -535,6 +538,11 @@ def enqueue_function(rewrapper, name):
         if preprocessing:
             for entry in preprocessing:
                 rewrapper.enqueue_preprocessing_function(entry[PROTOCOL], entry[FUNCTION])
+
+        postprocessing = record.get(POSTPROCESSING)
+        if postprocessing:
+            for entry in postprocessing:
+                rewrapper.enqueue_postprocessing_function(entry[PROTOCOL], entry[FUNCTION])
 
         validation = record.get(VALIDATION)
         if validation:
@@ -547,12 +555,20 @@ def enqueue_function(rewrapper, name):
         enqueue = record.get(ENQUEUE)
         if enqueue:
             for entry in enqueue:
-                fill.update(enqueue_function(rewrapper, entry))
+                res = enqueue_function(rewrapper, entry)
+                if res:
+                    fill.update(res[0])
+                    config_validation.update(res[1])
+
+        cfg_validators = record.get(CONFIG_CHECK)
+        if cfg_validators:
+            config_validation.update(cfg_validators)
 
         fillers = record.get(FILL)
         if fillers:
             fill.update(fillers)
-    return fill
+
+    return fill, config_validation
 
 
 def change_timestamp_function(rewrapper, name):
@@ -568,6 +584,8 @@ def change_timestamp_function(rewrapper, name):
     :return: set of functions that fill dictionaries based on parsed config
     """
     fill = set()
+    config_validation = set()
+
     record = timestamp_function_dict.get(name)
     if record :
         rewrapper.set_timestamp_generator(record[FUNCTION])
@@ -587,10 +605,15 @@ def change_timestamp_function(rewrapper, name):
                 if tmdict:
                     tmdict.add_validation_function(entry[FUNCTION])
 
+        cfg_validators = record.get(CONFIG_CHECK)
+        if cfg_validators:
+            config_validation.update(cfg_validators)
+
         fillers = record.get(FILL)
         if fillers:
             fill.update(fillers)
-    return fill
+
+    return fill, config_validation
 
 
 def enqueue_timestamp_postprocess(rewrapper, name):
@@ -605,6 +628,8 @@ def enqueue_timestamp_postprocess(rewrapper, name):
     :return: set of functions that fill dictionaries based on parsed config
     """
     fill = set()
+    config_validation = set()
+
     record = timestamp_postprocess_dict.get(name)
     if record :
         rewrapper.enqueue_timestamp_postprocess(record[FUNCTION])
@@ -617,10 +642,16 @@ def enqueue_timestamp_postprocess(rewrapper, name):
                 if tmdict:
                     tmdict.add_validation_function(entry[FUNCTION])
 
+        cfg_validators = record.get(CONFIG_CHECK)
+        if cfg_validators:
+            config_validation.update(cfg_validators)
+
         fillers = record.get(FILL)
         if fillers:
             fill.update(fillers)
-    return fill
+
+
+    return fill, config_validation
 
 
 def enlist_alt_timestamp_generation_function(rewrapper, name):
@@ -635,6 +666,8 @@ def enlist_alt_timestamp_generation_function(rewrapper, name):
     :return: set of functions that fill dictionaries based on parsed config
     """
     fill = set()
+    config_validation = set()
+
     record = timestamp_alt_function_dict.get(name)
     if record :
         rewrapper.set_backup_timestamp_generator(record[FUNCTION])
@@ -647,10 +680,15 @@ def enlist_alt_timestamp_generation_function(rewrapper, name):
                 if tmdict:
                     tmdict.add_validation_function(entry[FUNCTION])
 
+        cfg_validators = record.get(CONFIG_CHECK)
+        if cfg_validators:
+            config_validation.update(cfg_validators)
+
         fillers = record.get(FILL)
         if fillers:
             fill.update(fillers)
-    return fill
+
+    return fill, config_validation
 
 
 def apply_timestamp_generation_mode(rewrapper, name):
@@ -667,6 +705,8 @@ def apply_timestamp_generation_mode(rewrapper, name):
     :return: set of functions that fill dictionaries based on parsed config
     """
     fill = set()
+    config_validation = set()
+
     record = timestamp_generation_mode.get(name)
     if record :
         process = record[FUNCTION]
@@ -700,4 +740,8 @@ def apply_timestamp_generation_mode(rewrapper, name):
         fillers = record.get(FILL)
         if fillers:
             fill.update(fillers)
-    return fill
+
+        cfg_validators = record.get(CONFIG_CHECK)
+        if cfg_validators:
+            config_validation.update(cfg_validators)
+    return fill, config_validation

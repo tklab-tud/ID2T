@@ -80,9 +80,9 @@ class ReWrapper(object):
         , TMdef.PACKET : _packetRWdict
         }
 
-        self.unwrap_dict = {} # unwrapping functions chosen for packet (support temporary data)
-        self.rewrap_dict = {} # rewrapping functions chosen for layers
-        # self.rc_dict = {} # recalculation functions chosen 
+        self.preprocess_dict = {} # preprocessing functions chosen for packet (support temporary data)
+        self.process_dict = {} # processing functions chosen for layers
+        self.postprocess_dict = {} # postrprocessing function chosen for layers
 
         self.timestamp_function = timestamp_function_dict['default']
         self.timestamp_postprocess = []
@@ -93,24 +93,7 @@ class ReWrapper(object):
 ###### Configuration 
 ##################################
 
-
-    def enqueue_processing_function(self, protocol, function):
-        """
-        Enqueue packet processing function for a protocol.
-
-        :param protocol: protocol, type of the packet layer object
-        :param function: packet processing function with two parameters: packet, data
-        """
-        if not function or not protocol:
-            raise TypeError('NoneType passed as packet processing function.')
-
-        queue = self.rewrap_dict.get(protocol)
-        if not protocol_dict:
-            queue = []
-            self.rewrap_dict[protocol] = queue
-        queue.append(function)
-
-
+    
     def enqueue_preprocessing_function(self, protocol, function):
         """
         Enqueue packet preprocessing function for a protocol.
@@ -123,10 +106,46 @@ class ReWrapper(object):
         if not function or not protocol:
             raise TypeError('NoneType passed as packet preprocessing function.')
 
-        queue = self.unwrap_dict.get(protocol)
+        queue = self.preprocess_dict.get(protocol)
         if not protocol_dict:
             queue = []
-            self.unwrap_dict[protocol] = queue
+            self.preprocess_dict[protocol] = queue
+        queue.append(function)
+
+
+    def enqueue_processing_function(self, protocol, function):
+        """
+        Enqueue packet processing function for a protocol.
+
+        :param protocol: protocol, type of the packet layer object
+        :param function: packet processing function with two parameters: packet, data
+        """
+        if not function or not protocol:
+            raise TypeError('NoneType passed as packet processing function.')
+
+        queue = self.process_dict.get(protocol)
+        if not protocol_dict:
+            queue = []
+            self.process_dict[protocol] = queue
+        queue.append(function)
+
+
+    def enqueue_postprocessing_function(self, protocol, function):
+        """
+        Enqueue packet preprocessing function for a protocol.
+
+        Preprocessing function is executed before processing functions.
+
+        :param protocol: protocol, type of the packet layer object
+        :param function: packet preprocessing function with two parameters: packet, data
+        """
+        if not function or not protocol:
+            raise TypeError('NoneType passed as packet preprocessing function.')
+
+        queue = self.postprocess_dict.get(protocol)
+        if not protocol_dict:
+            queue = []
+            self.postprocess_dict[protocol] = queue
         queue.append(function)
 
 
@@ -325,14 +344,19 @@ class ReWrapper(object):
         if protocol in recognized_protocols:
 #            self.layers.append(packet)
 
-            unwrapping_functions = self.unwrap_dict.get(protocol)
-            if unwrapping_functions:
-                for f in unwrapping_functions:
+            preprocess_f = self.preprocess_dict.get(protocol)
+            if preprocess_f:
+                for f in preprocess_f:
                     f(packet, self.data_dict)
 
-            tranform_functions = self.rewrap_dict.get(protocol)
-            if tranform_functions:
-                for f in tranform_functions: # TEST - does changing port prevent parsing protocol in TCP packet?
+            process_f = self.process_dict.get(protocol)
+            if process_f:
+                for f in process_f: # TEST - does changing port prevent parsing protocol in TCP packet?
+                    f(packet, self.data_dict)
+
+            postprocess_f = self.postprocess_dict.get(protocol)
+            if postprocess_f:
+                for f in postprocess_f:
                     f(packet, self.data_dict)
 
             self.unwrap(packet.payload)

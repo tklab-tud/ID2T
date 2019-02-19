@@ -34,7 +34,7 @@ def make_target_tcp_avg_delay_map(data, config):
         make_tcp_avg_delay_map(data.statistics, data, TMdef.TARGET)
 
 
-def make_tcp_avg_delay_map(statistics, data, source):
+def make_tcp_delay_map_forLabel(statistics, data, source, label):
     """
     Fills TMdef.GLOBAL dictionary map of tcp handshake average delays (tcp_avg_delay_map)
     based on provided statistics for each existing conversation in statistics.
@@ -43,16 +43,22 @@ def make_tcp_avg_delay_map(statistics, data, source):
     :param data: TMLib.TMdict.GlobalRWdict dictionary
     :param source: TMdef.ATTACK or TMdef.Target
     """
-    conversations = statistics.process_db_query('SELECT ipAddressA, ipAddressB, avgDelay FROM conv_statistics')
-    if isinstance(conversations, list):
-        if len(conversations) > 0: 
-            if not isinstance(conversations[0], list):
-                conversations = [conversations]
+    LABELS = {
+        'avg' : 'tcp_avg_delay_map'
+        , 'min' : 'tcp_min_delay_map'
+        , 'max' : 'tcp_max_delay_map'
+    }
 
-    delay_dict = data[source].get('tcp_avg_delay_map')
+    field = LABELS.get(label)
+    if not field:
+        return
+
+    conversations = statistics.process_db_query('SELECT ipAddressA, ipAddressB, avgDelay FROM conv_statistics')
+
+    delay_dict = data[source].get(field)
     if not delay_dict:
         delay_dict = {}
-        data[TMdef.GLOBAL][source]['tcp_avg_delay_map'] = delay_dict
+        data[TMdef.GLOBAL][source][field] = delay_dict
 
     for conversation in conversations:
         ip_dict = delay_dict.get(conversation[0])
@@ -66,6 +72,42 @@ def make_tcp_avg_delay_map(statistics, data, source):
             ip_dict = {}
             delay_dict[conversation[1]] = ip_dict
         ip_dict[conversation[0]] = conversation[2]
+
+
+def make_tcp_avg_delay_map(statistics, data, source):
+    """
+    Fills TMdef.GLOBAL dictionary map of tcp handshake average delays (tcp_avg_delay_map)
+    based on provided statistics for each existing conversation in statistics.
+
+    :param statistics: Core.Statistics.Statistics object containing pcap statistics
+    :param data: TMLib.TMdict.GlobalRWdict dictionary
+    :param source: TMdef.ATTACK or TMdef.Target
+    """
+    make_tcp_delay_map_forLabel('avg')
+
+
+def make_tcp_min_delay_map(statistics, data, source):
+    """
+    Fills TMdef.GLOBAL dictionary map of tcp handshake average delays (tcp_avg_delay_map)
+    based on provided statistics for each existing conversation in statistics.
+
+    :param statistics: Core.Statistics.Statistics object containing pcap statistics
+    :param data: TMLib.TMdict.GlobalRWdict dictionary
+    :param source: TMdef.ATTACK or TMdef.Target
+    """
+    make_tcp_delay_map_forLabel('min')
+
+
+def make_tcp_max_delay_map(statistics, data, source):
+    """
+    Fills TMdef.GLOBAL dictionary map of tcp handshake average delays (tcp_avg_delay_map)
+    based on provided statistics for each existing conversation in statistics.
+
+    :param statistics: Core.Statistics.Statistics object containing pcap statistics
+    :param data: TMLib.TMdict.GlobalRWdict dictionary
+    :param source: TMdef.ATTACK or TMdef.Target
+    """
+    make_tcp_delay_map_forLabel('max')
 
 
 def make_mac_map(data, config):

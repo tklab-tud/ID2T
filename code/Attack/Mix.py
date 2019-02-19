@@ -19,6 +19,8 @@ import TMLib.TMdict as TMdict
 
 import TMLib.Definitions as TMdef
 
+import TMLib.TMmanager as TMm
+
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 # noinspection PyPep8
@@ -74,14 +76,20 @@ class Mix(BaseAttack.BaseAttack):
         ### Filling dictionaries
         ###
 
-        rewrap = fill_dictionaries(self, param_dict)
+        rewrap = build_rewrapper(self, param_dict)
 
 
         ###
         ### Queuing functions
         ###
 
-        enqueue_functions(param_dict, rewrap)
+        fill, config_validate = enqueue_functions(param_dict, rewrap)
+
+        ###
+        ### Queuing functions
+        ###
+        
+        validate_and_fill_dict(param_dict, rewrap, fill, config_validate)
 
         ###
         ### Recalculating dictionaries 
@@ -127,7 +135,7 @@ def parse_config(config_path):
     return param_dict
 
 
-def fill_dictionaries(attack, param_dict):
+def build_rewrapper(attack, param_dict):
     """
     Fill dictinaries with data from config.
 
@@ -149,9 +157,6 @@ def fill_dictionaries(attack, param_dict):
     ## dicts stored in a dict under param data_dict under keys from TMdef
     rewrap = ReWrapper.ReWrapper(attack.statistics, global_dict, conversation_dict, packet_dict)
 
-    ## helper function defined in TMdict
-    TMdict.fill_global_dict(param_dict, global_dict)
-
     return rewrap
 
 
@@ -163,23 +168,26 @@ def enqueue_functions(param_dict, rewrap):
     :param rewrap: Rewrapper
     """
     ## check for timestamp generation section
+    fill = set()
+    config_validate = set()
+
     dict_ref = param_dict.get('timestamp')
     if dict_ref:
         ## required by random delay/oscilation functions
         threshold = dict_ref.get('random.threshold')
         if threshold:
-            rewrap.data_dict[TMdef.GLOBAL]['timestamp_threshold'] = threshold
+            TMm.data_dict[TMdef.GLOBAL]['timestamp_threshold'] = threshold
 
         ## main generator function
         timestamp_function = dict_ref.get('generation')
         if timestamp_function:
             timestamp_function_dependency(timestamp_function, rewrap.data_dict)
-            rewrap.change_timestamp_function(timestamp_function)
+            TMm.change_timestamp_function(timestamp_function)
 
         ## alterantive generation function
         timestamp_function = dict_ref.get('generation.alt')
         if timestamp_function:
-            rewrap.enlist_alt_timestamp_generation_function(timestamp_function)
+            TMm.enlist_alt_timestamp_generation_function(timestamp_function)
 
         ## postprocessing functions
         postprocess = dict_ref.get('postprocess')
@@ -188,25 +196,49 @@ def enqueue_functions(param_dict, rewrap):
                 timestamp_function_dependency(f['function'], rewrap.data_dict)
                 rewrap.enqueue_timestamp_postprocess(f['function'])
 
+    functions = [
     # Ether
-    rewrap.enqueue_function('mac_change_default')
+    'mac_change_default'
     # ARP
-    rewrap.enqueue_function('arp_change_default')
+    , 'arp_change_default'
     # IPv4 & IPv6
-    rewrap.enqueue_function('ip_change_default')
-    rewrap.enqueue_function('ipv6_change_default')
+    , 'ip_change_default'
+    , 'ipv6_change_default'
     # ICMP
-    rewrap.enqueue_function('icmp_ip_change_default')
-    rewrap.enqueue_function('icmp_tcp_change_default')
-    rewrap.enqueue_function('icmp_udp_change_default')
+    , 'icmp_ip_change_default'
+    , 'icmp_tcp_change_default'
+    , 'icmp_udp_change_default'
     # TCP
-    rewrap.enqueue_function('tcp_change_default')
+    , 'tcp_change_default'
     # UDP
-    rewrap.enqueue_function('udp_change_default')
+    , 'udp_change_default'
     # DNS
-    rewrap.enqueue_function('dns_change_ips')
+    , 'dns_change_ips'
     # HTTP
-    rewrap.enqueue_function('httpv1_regex_ip_swap')
+    , 'httpv1_regex_ip_swap'
+    ]
+
+    for f in functions:
+        _f, _c_v = TMm.enqueue_functions(rewrap, f)
+        fill.update(_f)
+        config_validate.update(_c_v)
+
+    return fill, config_validate
+
+
+def validate_and_fill_dict(param_dict, rewrap, fill, validate):
+    valid_config = True
+    data = rewrap.get
+    for f in validate:
+        valid &= f(param_dict)
+    ## ignored for now
+    if not valid:
+        print('[WARNING] Invalid config')
+
+    data = rewrap.data_dict
+    for f in fill:
+        f(data, param_dict)
+
 
 
 def rewrapping(attack, param_dict, rewrap, timestamp_next_pkt):

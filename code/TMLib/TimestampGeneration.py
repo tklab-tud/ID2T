@@ -5,8 +5,51 @@ import ID2TLib.Utility as Util
 import TMLib.Definitions as TMdef 
 
 ###############################################
-################## Timestamp avg delay
+################## Timestamp delay
 ###############################################
+
+
+def timestamp_tcp_label_shift(packet, data, prev_timestamp_old, prev_timestamp_new, curr_timestamp_old, curr_timestamp_new, label):
+    """
+    Generates new timestamp based on average delay in TCP handshake. The delay between packets in attack is
+    scaled by ratio target_avg/attack_avg. 
+    If no record for the pair of old and new IPS is found, a default function is called from data[TMdef.GLOBAL]
+    stored in key generate_timestamp_function_alt.
+
+    Requires data[TMdef.GLOBAL] to have key tcp_avg_delay_map under both TMdef.ATTACK and TMdef.TARGET keys.
+    Requires data[TMdef.PACKET] to have ip_src_old, ip_src_new, ip_dst_old, ip_dst_new keys.
+
+    :param packet: Ether scapy packet
+    :param data: dict containing TMLib.TMdict dictionaries
+    :param prev_timestamp_old: old (unchanged) timestamp of previous packet, float
+    :param prev_timestamp_new: new (generated) timestamp of previous packet, float
+    :param curr_timestamp_old: old (unchanged) timestamp of current packet, float
+    :param curr_timestamp_new: new timestamp value to be changed
+    :return: new timestamp of the packet, float 
+    """
+    LABELS = {
+        'avg' : 'tcp_avg_delay_map'
+        , 'min' : 'tcp_min_delay_map'
+        , 'max' : 'tcp_max_delay_map'
+    }
+
+    field = LABELS.get(label)
+    if not field:
+        return data[TMdef.GLOBAL]['generate_timestamp_function_alt'](packet, data, prev_timestamp_old, prev_timestamp_new, curr_timestamp_old, curr_timestamp_new)
+
+    attk_avg = data[TMdef.GLOBAL][TMdef.ATTACK][field].get(data[TMdef.PACKET]['ip_src_old'])
+    source_avg = data[TMdef.GLOBAL][TMdef.TARGET][field].get(data[TMdef.PACKET]['ip_src_new'])
+
+    if source_avg and attk_avg:
+        attk_avg = attk_avg.get(data[TMdef.PACKET]['ip_dst_old'])
+        source_avg = source_avg.get(data[TMdef.PACKET]['ip_dst_new'])
+
+    if source_avg and attk_avg:
+        delay = curr_timestamp_old - prev_timestamp_old
+        return prev_timestamp_new + delay*(source_avg/attk_avg)
+    else:
+        return data[TMdef.GLOBAL]['generate_timestamp_function_alt'](packet, data, prev_timestamp_old, prev_timestamp_new, curr_timestamp_old, curr_timestamp_new)
+
 
 def timestamp_tcp_avg_shift(packet, data, prev_timestamp_old, prev_timestamp_new, curr_timestamp_old, curr_timestamp_new):
     """
@@ -26,18 +69,53 @@ def timestamp_tcp_avg_shift(packet, data, prev_timestamp_old, prev_timestamp_new
     :param curr_timestamp_new: new timestamp value to be changed
     :return: new timestamp of the packet, float 
     """
-    attk_avg = data[TMdef.GLOBAL][TMdef.ATTACK]['tcp_avg_delay_map'].get(data[TMdef.PACKET]['ip_src_old'])
-    source_avg = data[TMdef.GLOBAL][TMdef.TARGET]['tcp_avg_delay_map'].get(data[TMdef.PACKET]['ip_src_new'])
+    label = 'avg'
+    return timestamp_tcp_label_shift(packet, data, prev_timestamp_old, prev_timestamp_new, curr_timestamp_old, curr_timestamp_new, label):
 
-    if source_avg and attk_avg:
-        attk_avg = attk_avg.get(data[TMdef.PACKET]['ip_dst_old'])
-        source_avg = source_avg.get(data[TMdef.PACKET]['ip_dst_new'])
+    
 
-    if source_avg and attk_avg:
-        delay = curr_timestamp_old - prev_timestamp_old
-        return prev_timestamp_new + delay*(source_avg/attk_avg)
-    else:
-        return data[TMdef.GLOBAL]['generate_timestamp_function_alt'](packet, data, prev_timestamp_old, prev_timestamp_new, curr_timestamp_old, curr_timestamp_new)
+def timestamp_tcp_min_shift(packet, data, prev_timestamp_old, prev_timestamp_new, curr_timestamp_old, curr_timestamp_new):
+    """
+    Generates new timestamp based on average delay in TCP handshake. The delay between packets in attack is
+    scaled by ratio target_avg/attack_avg. 
+    If no record for the pair of old and new IPS is found, a default function is called from data[TMdef.GLOBAL]
+    stored in key generate_timestamp_function_alt.
+
+    Requires data[TMdef.GLOBAL] to have key tcp_avg_delay_map under both TMdef.ATTACK and TMdef.TARGET keys.
+    Requires data[TMdef.PACKET] to have ip_src_old, ip_src_new, ip_dst_old, ip_dst_new keys.
+
+    :param packet: Ether scapy packet
+    :param data: dict containing TMLib.TMdict dictionaries
+    :param prev_timestamp_old: old (unchanged) timestamp of previous packet, float
+    :param prev_timestamp_new: new (generated) timestamp of previous packet, float
+    :param curr_timestamp_old: old (unchanged) timestamp of current packet, float
+    :param curr_timestamp_new: new timestamp value to be changed
+    :return: new timestamp of the packet, float 
+    """
+    label = 'min'
+    return timestamp_tcp_label_shift(packet, data, prev_timestamp_old, prev_timestamp_new, curr_timestamp_old, curr_timestamp_new, label):
+
+
+def timestamp_tcp_max_shift(packet, data, prev_timestamp_old, prev_timestamp_new, curr_timestamp_old, curr_timestamp_new):
+    """
+    Generates new timestamp based on average delay in TCP handshake. The delay between packets in attack is
+    scaled by ratio target_avg/attack_avg. 
+    If no record for the pair of old and new IPS is found, a default function is called from data[TMdef.GLOBAL]
+    stored in key generate_timestamp_function_alt.
+
+    Requires data[TMdef.GLOBAL] to have key tcp_avg_delay_map under both TMdef.ATTACK and TMdef.TARGET keys.
+    Requires data[TMdef.PACKET] to have ip_src_old, ip_src_new, ip_dst_old, ip_dst_new keys.
+
+    :param packet: Ether scapy packet
+    :param data: dict containing TMLib.TMdict dictionaries
+    :param prev_timestamp_old: old (unchanged) timestamp of previous packet, float
+    :param prev_timestamp_new: new (generated) timestamp of previous packet, float
+    :param curr_timestamp_old: old (unchanged) timestamp of current packet, float
+    :param curr_timestamp_new: new timestamp value to be changed
+    :return: new timestamp of the packet, float 
+    """
+    label = 'max'
+    return timestamp_tcp_label_shift(packet, data, prev_timestamp_old, prev_timestamp_new, curr_timestamp_old, curr_timestamp_new, label):
 
 
 ###############################################
