@@ -1,21 +1,33 @@
-os:
-    - linux
-    - osx
-
-dist: xenial
+matrix:
+    include:
+        - os: osx
+          env: DOCKER=0
+        - os: linux
+          dist: xenial
+          env: DOCKER=0
+        - env: DOCKER=1 distribution=ubuntu version=latest prerequisite="apt-get update -qq && apt-get install -y git sudo"
+        - env: DOCKER=1 distribution=ubuntu version=rolling prerequisite="apt-get update -qq && apt-get install -y git sudo"
+        - env: DOCKER=1 distribution=debian version=stable prerequisite="apt-get update -qq && apt-get install -y git sudo"
+        - env: DOCKER=1 distribution=fedora version=latest prerequisite="dnf install -y git sudo"
+        - env: DOCKER=1 distribution=opensuse/leap version=15 prerequisite="zypper install -y git sudo"
+        - env: DOCKER=1 distribution=opensuse/tumbleweed version=latest prerequisite="zypper install -y git sudo"
+        - env: DOCKER=1 distribution=archlinux/base version=latest prerequisite="pacman -Sy --noconfirm awk sudo git wget tar pkg-config"
 
 sudo: required
+
+services: docker
 
 language: cpp
 
 before_install:
     - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update -qq; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$DOCKER" == "0" ]]; then sudo apt-get update -qq; fi
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$DOCKER" == "1" ]]; then sudo docker pull ${distribution}:${version}; fi
 
 install:
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sed -i 's/\<libtins\-dev\>//g' resources/install_dependencies.sh; fi
-    - ./resources/install_dependencies.sh
+    - if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$DOCKER" == "0" ]]; then sed -i 's/\<libtins\-dev\>//g' resources/install_dependencies.sh; fi
+    - if [[ "$DOCKER" == "0" ]]; then ./resources/install_dependencies.sh; fi
 
 script:
-    - ./build.sh --non-interactive
-    - ./run_tests
+    - if [[ "$DOCKER" == "0" ]]; then ./build.sh --non-interactive; ./run_tests; fi
+    - if [[ "$DOCKER" == "1" ]]; then sudo docker run ${distribution}:${version} /bin/bash -c "${prerequisite} && git clone https://github.com/"${TRAVIS_REPO_SLUG}" && cd ID2T && git checkout suse_support && ./resources/install_dependencies.sh -y && ./build.sh --non-interactive && ./run_tests" --rm; fi
