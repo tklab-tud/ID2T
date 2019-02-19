@@ -13,7 +13,6 @@ before_install:
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update -qq; fi
 
 install:
-    # Workaround for unavailability of libtins >4.0 on Ubuntu Xenial
     - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sed -i 's/\<libtins\-dev\>//g' resources/install_dependencies.sh; fi
     - ./resources/install_dependencies.sh
 
