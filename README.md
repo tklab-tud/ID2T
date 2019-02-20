@@ -25,6 +25,11 @@ ID2T was also presented in Blackhat Europe 2017 as part of the Arsenal session (
 ### Dependencies
 ID2T is written using Python 3 and C++ 11. The main logic is programmed in Python whereas performance critical components are programmed in C++11. The C++11 module uses the [Libtins](https://github.com/mfontanini/libtins/) library. The python and c++ modules interact with each other through the [pybind11](https://github.com/pybind/pybind11) library.
 
+#### Dependency installation script
+ID2T provides a dependency installation script, which is called during the execution of ``./build.sh``.
+
+For supported operating systems see [Supported Systems](SupportedSystems.md).
+
 #### Required C++ Libraries/Programs
 The following packages/libraries are required to compile the ID2T C++ modules
 * ``cmake`` (minimum version 2.8)
@@ -63,11 +68,6 @@ The following python packages are required to run ID2T. Install the packages wit
 
 #### Notes on the Minimum Package Versions
 The minimum version stated in the previous requirements are the versions we used in the development of ID2T. Other (older) versions might also work; however, we can neither guarantee nor support them. Furthermore, some compilation scripts would need to be manually modified to accommodate these older versions.
-
-### Dependency installation script
-ID2T provides a dependency installation script, which is called during the execution of ``./build.sh``.
-
-For supported operating systems see [Supported Systems](SupportedSystems.md).
 
 ### Compilation and Installation
 Clone the repository to get started with the installation:
