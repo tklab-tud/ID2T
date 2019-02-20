@@ -40,6 +40,11 @@ matrix:
                 distribution=archlinux/base
                 version=latest
                 prerequisite="pacman -Sy --noconfirm awk sudo git wget tar pkg-config"
+        - env: >-
+                DOCKER=1
+                distribution=kalilinux/kali-linux-docker
+                version=latest
+                prerequisite="apt-get update -qq && apt-get install -y git sudo"
 
 sudo: required
 
