@@ -114,7 +114,11 @@ install_pkg_suse()
 
 install_pkg_ubuntu()
 {
-    APT_PKGS='build-essential cmake python3-dev python3-pip python3-venv sqlite tcpdump libtins-dev libpcap-dev libcairo2-dev'
+    APT_PKGS='build-essential cmake python3-dev python3-pip python3-venv sqlite tcpdump libpcap-dev libcairo2-dev'
+
+    if [ "$OS" = 'ubuntu' ] && [ "$VERSION" = '16.04' ]; then
+        DEB_LIBTINS='libtins-dev'
+    fi
 
     which sudo >/dev/null
     if [ $? != 0 ]; then
@@ -130,7 +134,7 @@ install_pkg_ubuntu()
     if [ $? != 0 ]; then
         # Install all missing packages
         echo -e "Packages: Installing..."
-        $SUDO apt-get install ${YES} $APT_PKGS $DEB_PKGS
+        $SUDO apt-get install ${YES} $APT_PKGS $DEB_PKGS $DEB_LIBTINS
     else
         echo -e "Packages: Found."
     fi
@@ -177,6 +181,7 @@ elif [ "$KERNEL" = 'Linux' ]; then
     # Kernel is Linux, check for supported distributions
     OS=$(awk '/ID=/' /etc/*-release | sed '2q;d' | sed 's/ID=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]')
     OS_LIKE=$(awk '/ID_LIKE=/' /etc/*-release | sed 's/ID_LIKE=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]' | cut -d ' ' -f 1)
+    VERSION=$(awk '/VERSION_ID=/' /etc/*-release | sed '2q;d' | sed 's/VERSION_ID=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]')
 
     if [ -z "$OS_LIKE" ]; then
         # This distribution is missing the os-release file, so try lsb_release
