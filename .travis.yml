@@ -81,10 +81,6 @@ before_install:
 
 install:
     - |
-      if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$DOCKER" == "0" ]]; then
-          sed -i 's/\<libtins\-dev\>//g' resources/install_dependencies.sh
-      fi
-    - |
       if [[ "$DOCKER" == "0" ]]; then
           ./resources/install_dependencies.sh
       fi
