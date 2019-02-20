@@ -5,13 +5,41 @@ matrix:
         - os: linux
           dist: xenial
           env: DOCKER=0
-        - env: DOCKER=1 distribution=ubuntu version=latest prerequisite="apt-get update -qq && apt-get install -y git sudo"
-        - env: DOCKER=1 distribution=ubuntu version=rolling prerequisite="apt-get update -qq && apt-get install -y git sudo"
-        - env: DOCKER=1 distribution=debian version=stable prerequisite="apt-get update -qq && apt-get install -y git sudo"
-        - env: DOCKER=1 distribution=fedora version=latest prerequisite="dnf install -y git sudo"
-        - env: DOCKER=1 distribution=opensuse/leap version=15 prerequisite="zypper install -y git sudo"
-        - env: DOCKER=1 distribution=opensuse/tumbleweed version=latest prerequisite="zypper install -y git sudo"
-        - env: DOCKER=1 distribution=archlinux/base version=latest prerequisite="pacman -Sy --noconfirm awk sudo git wget tar pkg-config"
+        - env: >-
+                DOCKER=1
+                distribution=ubuntu
+                version=latest
+                prerequisite="apt-get update -qq && apt-get install -y git sudo"
+        - env: >-
+                DOCKER=1
+                distribution=ubuntu
+                version=rolling
+                prerequisite="apt-get update -qq && apt-get install -y git sudo"
+        - env: >-
+                DOCKER=1
+                distribution=debian
+                version=stable
+                prerequisite="apt-get update -qq && apt-get install -y git sudo"
+        - env: >-
+                DOCKER=1
+                distribution=fedora
+                version=latest
+                prerequisite="dnf install -y git sudo"
+        - env: >-
+                DOCKER=1
+                distribution=opensuse/leap
+                version=15
+                prerequisite="zypper install -y git sudo"
+        - env: >-
+                DOCKER=1
+                distribution=opensuse/tumbleweed
+                version=latest
+                prerequisite="zypper install -y git sudo"
+        - env: >-
+                DOCKER=1
+                distribution=archlinux/base
+                version=latest
+                prerequisite="pacman -Sy --noconfirm awk sudo git wget tar pkg-config"
 
 sudo: required
 
