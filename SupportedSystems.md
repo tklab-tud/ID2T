@@ -18,7 +18,7 @@ The following operating systems are currently supported by the dependency instal
 
 In general every Debian-, Ubuntu- or ArchLinux-based distribution should work out of the box. If you have trouble with any of the listed operating systems or their "children" first checkout the dependency installation script or the readme for the packages required by your system and try to install them manually. If this does not work either, feel free to open an issue including the output of the dependency installation script, your distributions name and its version.
 
-Also feel free to suggest Linux distributions to support in the future or even contribute to the script via pull request.
+Also feel free to suggest Linux distributions to support in the future in [issue #83](https://github.com/tklab-tud/ID2T/issues/83) or even contribute to the script via pull request.
 
 #### Manually Tested
 The following operating systems were hand tested by developers, but do not have an official docker image for integration into TravisCI.
