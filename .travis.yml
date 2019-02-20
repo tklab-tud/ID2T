@@ -7,14 +7,14 @@ matrix:
           env: DOCKER=0
         - env: >-
                 DOCKER=1
-                distribution=ubuntu
+                distribution=kalilinux/kali-linux-docker
                 version=latest
                 prerequisite="apt-get update -qq && apt-get install -y git sudo"
         - env: >-
                 DOCKER=1
-                distribution=ubuntu
-                version=rolling
-                prerequisite="apt-get update -qq && apt-get install -y git sudo"
+                distribution=archlinux/base
+                version=latest
+                prerequisite="pacman -Sy --noconfirm awk sudo git wget tar pkg-config"
         - env: >-
                 DOCKER=1
                 distribution=debian
@@ -37,13 +37,13 @@ matrix:
                 prerequisite="zypper install -y git sudo"
         - env: >-
                 DOCKER=1
-                distribution=archlinux/base
+                distribution=ubuntu
                 version=latest
-                prerequisite="pacman -Sy --noconfirm awk sudo git wget tar pkg-config"
+                prerequisite="apt-get update -qq && apt-get install -y git sudo"
         - env: >-
                 DOCKER=1
-                distribution=kalilinux/kali-linux-docker
-                version=latest
+                distribution=ubuntu
+                version=rolling
                 prerequisite="apt-get update -qq && apt-get install -y git sudo"
 
 sudo: required
