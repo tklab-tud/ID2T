@@ -179,9 +179,9 @@ if [ "$KERNEL" = 'Darwin' ]; then
     exit 0
 elif [ "$KERNEL" = 'Linux' ]; then
     # Kernel is Linux, check for supported distributions
-    OS=$(awk '/ID=/' /etc/*-release | sed '2q;d' | sed 's/ID=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]')
-    OS_LIKE=$(awk '/ID_LIKE=/' /etc/*-release | sed 's/ID_LIKE=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]' | cut -d ' ' -f 1)
-    VERSION=$(awk '/VERSION_ID=/' /etc/*-release | sed '2q;d' | sed 's/VERSION_ID=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]')
+    OS=$(awk '/ID=/' /etc/os-release | sed '2q;d' | sed 's/ID=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]')
+    OS_LIKE=$(awk '/ID_LIKE=/' /etc/os-release | sed 's/ID_LIKE=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]' | cut -d ' ' -f 1)
+    VERSION=$(awk '/VERSION_ID=/' /etc/os-release | sed '2q;d' | sed 's/VERSION_ID=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]')
 
     if [ -z "$OS_LIKE" ]; then
         # This distribution is missing the os-release file, so try lsb_release
