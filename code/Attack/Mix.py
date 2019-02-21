@@ -194,7 +194,7 @@ def enqueue_functions(param_dict, rewrap):
         if postprocess:
             for f in postprocess:
                 timestamp_function_dependency(f['function'], rewrap.data_dict)
-                rewrap.enqueue_timestamp_postprocess(rewrap, f['function'])
+                TMm.enqueue_timestamp_postprocess(rewrap, f['function'])
 
     functions = [
     # Ether
