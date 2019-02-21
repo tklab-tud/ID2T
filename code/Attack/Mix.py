@@ -179,7 +179,7 @@ def enqueue_functions(param_dict, rewrap):
             rewrap.data_dict[TMdef.GLOBAL]['timestamp_threshold'] = threshold
 
         ## main generator function
-        timestamp_function = dict_ref.get(rewrap, 'generation')
+        timestamp_function = dict_ref.get('generation')
         if timestamp_function:
             timestamp_function_dependency(timestamp_function, rewrap.data_dict)
             TMm.change_timestamp_function(rewrap, timestamp_function)
