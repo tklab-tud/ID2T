@@ -119,7 +119,7 @@ def make_mac_map(data, config):
     """
     global_dict = data.get(TMdef.GLOBAL)
     if global_dict and isinstance(global_dict, dict):
-        mac_map = param_dict.get('mac.map')
+        mac_map = config.get('mac.map')
         if mac_map and isinstance(mac_map, list):
             for entry in mac_map:
                 entry = entry.get('mac')
@@ -139,7 +139,7 @@ def make_ip_map(data, config):
     """
     global_dict = data.get(TMdef.GLOBAL)
     if global_dict and isinstance(global_dict, dict):
-        ip_map = param_dict.get('ip.map')
+        ip_map = config.get('ip.map')
         if ip_map and isinstance(ip_map, list):
             for entry in ip_map:
                 entry = entry.get('ip')
@@ -158,10 +158,10 @@ def make_port_ip_map(data, config):
     :param config: config file parsed as dict
     """
     global_dict = data.get(TMdef.GLOBAL)
-    if not global_dict and not isinstance(global_dict, dict):
+    if not global_dict or not isinstance(global_dict, dict):
         return
-    port_ip_map = param_dict.get('port.ip.map')
-    if not port_ip_map and not isinstance(port_ip_map, list):
+    port_ip_map = config.get('port.ip.map')
+    if not port_ip_map or not isinstance(port_ip_map, list):
         return
     for entry in port_ip_map:
         ip = entry.get('ip')
@@ -190,10 +190,10 @@ def make_mss_ip_exceptions(data, config):
     :param config: config file parsed as dict
     """
     global_dict = data.get(TMdef.GLOBAL)
-    if not global_dict and not isinstance(global_dict, dict):
+    if not global_dict or not isinstance(global_dict, dict):
         return
-    mss_ip_exceptions = param_dict.get('mss.ip.exceptions')
-    if not mss_ip_exceptions and isinstance(mss_ip_exceptions, list):
+    mss_ip_exceptions = config.get('mss.ip.exceptions')
+    if not mss_ip_exceptions or isinstance(mss_ip_exceptions, list):
         return
     for entry in mss_ip_exceptions:
         ip = entry.get('ip')
@@ -215,9 +215,9 @@ def make_win_ip_exceptions(data, config):
     :param config: config file parsed as dict
     """
     global_dict = data.get(TMdef.GLOBAL)
-    if not global_dict and not isinstance(global_dict, dict):
+    if not global_dict or not isinstance(global_dict, dict):
         return
-    win_ip_exceptions = param_dict.get('win.ip.exceptions')
+    win_ip_exceptions = config.get('win.ip.exceptions')
     if not win_ip_exceptions or not isinstance(win_ip_exceptions, list):
         return
     for entry in win_ip_exceptions:
@@ -240,9 +240,9 @@ def make_ttl_ip_exceptions(data, config):
     :param config: config file parsed as dict
     """
     global_dict = data.get(TMdef.GLOBAL)
-    if not global_dict and not isinstance(global_dict, dict):
+    if not global_dict or not isinstance(global_dict, dict):
         return
-    ttl_exceptions = param_dict.get('win.ip.exceptions')
+    ttl_exceptions = config.get('win.ip.exceptions')
     if not ttl_exceptions or not isinstance(ttl_exceptions, list):
         return
     for entry in ttl_exceptions:
@@ -265,9 +265,9 @@ def make_userdef_tcp_delay(data, config):
     :param config: config file parsed as dict
     """
     global_dict = data.get(TMdef.GLOBAL)
-    if not global_dict and not isinstance(global_dict, dict):
+    if not global_dict or not isinstance(global_dict, dict):
         return
-    tcp_delay = param_dict.get('tcp.delay')
+    tcp_delay = config.get('tcp.delay')
     if not tcp_delay or not isinstance(tcp_delay, list):
         return
     for entry in tcp_delay:
@@ -282,7 +282,7 @@ def make_userdef_tcp_delay(data, config):
         if not ip_source or not ip_dest or isinstance(ip_source, str) or isinstance(ip_dest, str):
             continue
         delay = entry.get('delay')
-        if not delay and not isinstance(delay, numbers.Real):
+        if not delay or not isinstance(delay, numbers.Real):
             continue
         if ip_type == 'new':
             global_dict.add_tcp_avg_delay_record(TMdef.TARGET, ip_source,
@@ -300,9 +300,9 @@ def make_timestamp_random_treshold_map(data, config):
     :param config: config file parsed as dict
     """
     global_dict = data.get(TMdef.GLOBAL)
-    if not global_dict and not isinstance(global_dict, dict):
+    if not global_dict or not isinstance(global_dict, dict):
         return
-    timestamp_random_tresholds = param_dict.get('timestamp.random.thresholds')
+    timestamp_random_tresholds = config.get('timestamp.random.thresholds')
     if not timestamp_random_tresholds or not isinstance(timestamp_random_tresholds, list):
         return
     for entry in timestamp_random_tresholds:
@@ -316,7 +316,7 @@ def make_timestamp_random_treshold_map(data, config):
         if not ip_address or isinstance(ip_address, str):
             continue
         threshold = entry.get('threshold')
-        if not threshold and not isinstance(threshold, numbers.Real):
+        if not threshold or not isinstance(threshold, numbers.Real):
             continue
         if ip_type == 'old':
             global_dict.to_timestamp_random_delay_threshold_map(ip_address, threshold)
@@ -330,9 +330,9 @@ def make_timestamp_random_treshold_set(data, config):
     :param config: config file parsed as dict
     """
     global_dict = data.get(TMdef.GLOBAL)
-    if not global_dict and not isinstance(global_dict, dict):
+    if not global_dict or not isinstance(global_dict, dict):
         return
-    timestamp_random_tresholds = param_dict.get('timestamp.random.set')
+    timestamp_random_tresholds = config.get('timestamp.random.set')
     if not timestamp_random_tresholds or not isinstance(timestamp_random_tresholds, list):
         return
     for entry in timestamp_random_tresholds:
@@ -358,9 +358,9 @@ def make_random_treshold(data, config):
     :param config: config file parsed as dict
     """
     global_dict = data.get(TMdef.GLOBAL)
-    if not global_dict and not isinstance(global_dict, dict):
+    if not global_dict or not isinstance(global_dict, dict):
         return
-    dict_ref = param_dict.get('timestamp')
+    dict_ref = config.get('timestamp')
     if dict_ref:
         ## required by random delay/oscilation functions
         threshold = dict_ref.get('random.threshold')

@@ -176,25 +176,25 @@ def enqueue_functions(param_dict, rewrap):
         ## required by random delay/oscilation functions
         threshold = dict_ref.get('random.threshold')
         if threshold:
-            TMm.data_dict[TMdef.GLOBAL]['timestamp_threshold'] = threshold
+            rewrap.data_dict[TMdef.GLOBAL]['timestamp_threshold'] = threshold
 
         ## main generator function
-        timestamp_function = dict_ref.get('generation')
+        timestamp_function = dict_ref.get(rewrap, 'generation')
         if timestamp_function:
             timestamp_function_dependency(timestamp_function, rewrap.data_dict)
-            TMm.change_timestamp_function(timestamp_function)
+            TMm.change_timestamp_function(rewrap, timestamp_function)
 
         ## alterantive generation function
         timestamp_function = dict_ref.get('generation.alt')
         if timestamp_function:
-            TMm.enlist_alt_timestamp_generation_function(timestamp_function)
+            TMm.enlist_alt_timestamp_generation_function(rewrap, timestamp_function)
 
         ## postprocessing functions
         postprocess = dict_ref.get('postprocess')
         if postprocess:
             for f in postprocess:
                 timestamp_function_dependency(f['function'], rewrap.data_dict)
-                rewrap.enqueue_timestamp_postprocess(f['function'])
+                rewrap.enqueue_timestamp_postprocess(rewrap, f['function'])
 
     functions = [
     # Ether
@@ -219,7 +219,7 @@ def enqueue_functions(param_dict, rewrap):
     ]
 
     for f in functions:
-        _f, _c_v = TMm.enqueue_functions(rewrap, f)
+        _f, _c_v = TMm.enqueue_function(rewrap, f)
         fill.update(_f)
         config_validate.update(_c_v)
 
@@ -227,8 +227,8 @@ def enqueue_functions(param_dict, rewrap):
 
 
 def validate_and_fill_dict(param_dict, rewrap, fill, validate):
-    valid_config = True
-    data = rewrap.get
+    valid = True
+    data = rewrap.data_dict
     for f in validate:
         valid &= f(param_dict)
     ## ignored for now
@@ -238,7 +238,6 @@ def validate_and_fill_dict(param_dict, rewrap, fill, validate):
     data = rewrap.data_dict
     for f in fill:
         f(data, param_dict)
-
 
 
 def rewrapping(attack, param_dict, rewrap, timestamp_next_pkt):

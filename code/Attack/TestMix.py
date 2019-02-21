@@ -105,7 +105,7 @@ class TestMix(BaseAttack.BaseAttack):
 
         filling_start = perf_counter() # <------- TIMER
         
-        validate_and_fill_dict(param_dict, rewrap, fill, config_validate)
+        Mix.validate_and_fill_dict(param_dict, rewrap, fill, config_validate)
 
         ###
         ### Recalculating dictionaries 

@@ -70,7 +70,7 @@ def timestamp_tcp_avg_shift(packet, data, prev_timestamp_old, prev_timestamp_new
     :return: new timestamp of the packet, float 
     """
     label = 'avg'
-    return timestamp_tcp_label_shift(packet, data, prev_timestamp_old, prev_timestamp_new, curr_timestamp_old, curr_timestamp_new, label):
+    return timestamp_tcp_label_shift(packet, data, prev_timestamp_old, prev_timestamp_new, curr_timestamp_old, curr_timestamp_new, label)
 
     
 
@@ -93,7 +93,7 @@ def timestamp_tcp_min_shift(packet, data, prev_timestamp_old, prev_timestamp_new
     :return: new timestamp of the packet, float 
     """
     label = 'min'
-    return timestamp_tcp_label_shift(packet, data, prev_timestamp_old, prev_timestamp_new, curr_timestamp_old, curr_timestamp_new, label):
+    return timestamp_tcp_label_shift(packet, data, prev_timestamp_old, prev_timestamp_new, curr_timestamp_old, curr_timestamp_new, label)
 
 
 def timestamp_tcp_max_shift(packet, data, prev_timestamp_old, prev_timestamp_new, curr_timestamp_old, curr_timestamp_new):
@@ -115,7 +115,7 @@ def timestamp_tcp_max_shift(packet, data, prev_timestamp_old, prev_timestamp_new
     :return: new timestamp of the packet, float 
     """
     label = 'max'
-    return timestamp_tcp_label_shift(packet, data, prev_timestamp_old, prev_timestamp_new, curr_timestamp_old, curr_timestamp_new, label):
+    return timestamp_tcp_label_shift(packet, data, prev_timestamp_old, prev_timestamp_new, curr_timestamp_old, curr_timestamp_new, label)
 
 
 ###############################################

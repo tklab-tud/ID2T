@@ -57,7 +57,7 @@ class ReWrapper(object):
 
     def __init__(self, _statistics, _globalRWdict, _conversationRWdict, _packetRWdict):
 
-        if not _statistics or not _globalRWdict or not _conversationRWdict or not _packetRWdict:
+        if _statistics is None or _globalRWdict is None or _conversationRWdict is None or _packetRWdict is None:
             raise TypeError('NoneType passed on rewrapper init.')
 
         if not isinstance(_globalRWdict, TMdict.GlobalRWdict):
@@ -84,7 +84,7 @@ class ReWrapper(object):
         self.process_dict = {} # processing functions chosen for layers
         self.postprocess_dict = {} # postrprocessing function chosen for layers
 
-        self.timestamp_function = timestamp_function_dict['default']
+        self.timestamp_function = None
         self.timestamp_postprocess = []
         self.data_dict[TMdef.GLOBAL]['generate_timestamp_function_alt'] = TMtg.timestamp_dynamic_shift
 
@@ -107,7 +107,7 @@ class ReWrapper(object):
             raise TypeError('NoneType passed as packet preprocessing function.')
 
         queue = self.preprocess_dict.get(protocol)
-        if not protocol_dict:
+        if not queue:
             queue = []
             self.preprocess_dict[protocol] = queue
         queue.append(function)
@@ -124,14 +124,14 @@ class ReWrapper(object):
             raise TypeError('NoneType passed as packet processing function.')
 
         queue = self.process_dict.get(protocol)
-        if not protocol_dict:
+        if not queue:
             queue = []
             self.process_dict[protocol] = queue
         queue.append(function)
 
 
     def enqueue_postprocessing_function(self, protocol, function):
-        """
+        """ 
         Enqueue packet preprocessing function for a protocol.
 
         Preprocessing function is executed before processing functions.
@@ -143,7 +143,7 @@ class ReWrapper(object):
             raise TypeError('NoneType passed as packet preprocessing function.')
 
         queue = self.postprocess_dict.get(protocol)
-        if not protocol_dict:
+        if not queue:
             queue = []
             self.postprocess_dict[protocol] = queue
         queue.append(function)
@@ -302,7 +302,7 @@ class ReWrapper(object):
         if not previous_timestamp_old: 
             ## IF this is the first packet, only shift
             new_timestamp = packet.time + data[TMdef.GLOBAL][TMdef.ATTACK]['timestamp_shift']
-        else: ## Test every timestamp if new_timestamp >= prev_timestamp_new
+        else: ## Test every timestamp if new_timestamp >= previous_timestamp_new
             ## Apply base timestamp generation function
             new_timestamp = test_generated_timestamp_order(previous_timestamp_new,
                 self.timestamp_function(packet, data, previous_timestamp_old, previous_timestamp_new, current_timestamp_old, new_timestamp),
@@ -319,8 +319,8 @@ class ReWrapper(object):
             ## Default value with 0 delay
             new_timestamp = test_generated_timestamp_order(previous_timestamp_new,
                 new_timestamp,
-                f,
-                prev_timestamp_new)
+                "!all!",
+                previous_timestamp_new)
             ## Warn if 0 delay was generated
             if new_timestamp == previous_timestamp_new:
                 print('[WARNING] Final timestamp for packet with delay 0 generated at ', new_timestamp)
