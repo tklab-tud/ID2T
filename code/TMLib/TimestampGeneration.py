@@ -265,7 +265,7 @@ def timestamp_random_oscillation(packet, data, prev_timestamp_old, prev_timestam
     """
     threshold = data[TMdef.GLOBAL]['timestamp_threshold']
     lower = curr_timestamp_new - threshold
-    if (curr_timestamp_new - lower < prev_timestamp_new):
-        lower = curr_timestamp_new - prev_timestamp_new
+    if (lower < prev_timestamp_new):
+        lower = prev_timestamp_new
     curr_timestamp_new = random.uniform(lower, curr_timestamp_new + threshold)
     return curr_timestamp_new
