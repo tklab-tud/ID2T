@@ -508,7 +508,7 @@ def tcp_avg_delay_target(data, verbose=False):
     return tcp_avg_delay_univerzal(data, TMdef.TARGET, verbose)
 
 
-def tcp_avg_delay_univerzal(data, _name verbose=False):
+def tcp_avg_delay_univerzal(data, _name, verbose=False):
     """
     Tests if dictionary contains
 
