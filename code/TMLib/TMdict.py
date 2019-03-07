@@ -53,6 +53,8 @@ class GlobalRWdict(dict):
 
         self.statistics = kwargs['statistics']
         self.attack_statistics = kwargs['attack_statistics']
+
+        ## Some of the regularily used fields are hardcoded
         self.update({ # data used for rewrapping of layers
         TMdef.ATTACK : {
             'timestamp_shift' : 0 # used by timestamp_shift
@@ -84,6 +86,9 @@ class GlobalRWdict(dict):
             , 'tcp_avg_delay_map' : {}
         }
         })
+
+        ## stores functions meant to validate that the required fields exist
+        self.validation_functions = []
 
 
     ##################################
@@ -282,6 +287,35 @@ class GlobalRWdict(dict):
         self.recalculate_mss()
 
 
+    ##################################
+    ###### Validation 
+    ##################################
+
+
+    def add_validation_function(self, function):
+        """
+        Adds functions that validates specified fields in the dictionary.
+        Such function takes GlobalRWdict as a parameter. Returns True if fields are valid, else false.
+        All validation functions are executed by method validate().
+
+        :param function: Validation function that takes GlobalRWdict as param and returns True if data is valid, else False
+        """
+        if function not in self.validation_functions:
+            self.validation_functions.append(function)
+
+
+    def validate(self):
+        """
+        Executes all validation functions. Returns True if all functions passed, else False.
+
+        :return: True if all validation functions passed, else false.
+        """
+        check = True
+        for function in self.validation_functions:
+            check &= function(self)
+        return check
+
+
 class PacketDataRWdict(dict):
     """
     Extends dictionary for storing data for individual packets.
@@ -294,6 +328,38 @@ class PacketDataRWdict(dict):
         Can be initialized same as dictionary.
         """
         dict.__init__(self,*args,**kwargs)
+        ## stores functions meant to validate that the required fields exist
+        self.validation_functions = []
+
+
+    ##################################
+    ###### Validation 
+    ##################################
+
+
+    def add_validation_function(self, function):
+        """
+        Adds functions that validates specified fields in the dictionary.
+        Such function takes PacketDataRWdict as a parameter. Returns True if fields are valid, else false.
+        All validation functions are executed by method validate().
+
+        :param function: Validation function that takes PacketDataRWdict as param and returns True if data is valid, else False
+        """
+        if function not in self.validation_functions:
+            self.validation_functions.append(function)
+
+
+    def validate(self):
+        """
+        Executes all validation functions. Returns True if all functions passed, else False.
+
+        :return: True if all validation functions passed, else false.
+        """
+        check = True
+        for function in self.validation_functions:
+            check &= function(self)
+        return check
+
 
 class ConversationRWdict(dict):
     """
@@ -313,111 +379,36 @@ class ConversationRWdict(dict):
         self.update = {
         'timestamp_next_pkt' : 0
         }
+        ## stores functions meant to validate that the required fields exist
+        self.validation_functions = []
 
 
-##################################
-###### Fill
-##################################
-
-def fill_global_dict(param_dict, global_dict):
-    """
-    Fills the global dictionary with predefined data from parsed config file. 
-
-    Fills: mac map, ip map, port ip map, mss exceptions, win size exceptions, ttl exceptions
-
-    :param param_dict: parsed config, dict
-    :param global_dict: TMLib.TMdict.GlobalRWdict
-    """
-    data = param_dict.get('mac.map')
-    if data:
-        for entry in data:
-            try:
-                global_dict.to_mac_map(entry['mac']['old'], entry['mac']['new'])
-            except KeyError as exc:
-                print("Missing key in mac.map.")
-                raise KeyError("Missing key in mac.map") from exc
+    ##################################
+    ###### Validation 
+    ##################################
 
 
-    data = param_dict.get('ip.map')
-    if data:
-        for entry in data:
-            try:
-                global_dict.to_ip_map(entry['ip']['old'], entry['ip']['new'])
-            except KeyError as exc:
-                print("Missing key in ip.map.")
-                raise KeyError("Missing key in ip.map") from exc
+    def add_validation_function(self, function):
+        """
+        Adds functions that validates specified fields in the dictionary.
+        Such function takes PacketDataRWdict as a parameter and verbose flag (if True, print output).
+        Returns True if fields are valid, else false.
+        All validation functions are executed by method validate().
 
-    data = param_dict.get('port.ip.map')
-    if data:
-        for entry in data:
-            try:
-                if entry['ip']['type'] == 'old':
-                    global_dict.port_map_forIP(entry['ip']['address'], entry['port']['old'], entry['port']['new'])
-            except KeyError as exc:
-                print("Missing key in port.ip.map.")
-                raise KeyError("Missing key in port.ip.map") from exc
+        :param function: Validation function that takes PacketDataRWdict as param and returns True if data is valid, else False
+        """
+        if function not in self.validation_functions:
+            self.validation_functions.append(function)
 
-    data = param_dict.get('mss.ip.exceptions')
-    if data:
-        for entry in data:
-            try:
-                if entry['ip']['type'] == 'old':
-                    global_dict.to_mss_exceptions(entry['ip']['address'])
-            except KeyError as exc:
-                print("Missing key in ip.map.")
-                raise KeyError("Missing key in ip.map") from exc
 
-    data = param_dict.get('win.ip.exceptions')
-    if data:
-        for entry in data:
-            try:
-                if entry['ip']['type'] == 'old':
-                    global_dict.to_win_size_exceptions(entry['ip']['address'])
-            except KeyError as exc:
-                print("Missing key in win.ip.exceptions.")
-                raise KeyError("Missing key in win.ip.exceptions") from exc
+    def validate(self, verbose=False):
+        """
+        Executes all validation functions. Returns True if all functions passed, else False.
 
-    data = param_dict.get('ttl.ip.exceptions')
-    if data:
-        for entry in data:
-            try:
-                if entry['ip']['type'] == 'old':
-                    global_dict.to_ttl_exceptions(entry['ip']['address'])
-            except KeyError as exc:
-                print("Missing key in ttl.ip.exceptions.")
-                raise KeyError("Missing key in ttl.ip.exceptions") from exc
-
-    data = param_dict.get('tcp.delay')
-    if data:
-        for entry in data:
-            try:
-                if entry['ip']['type'] == 'old':
-                    global_dict.add_tcp_avg_delay_record(TMdef.ATTACK, entry['ip']['source.address'],
-                     entry['ip']['source.address'], entry['delay'])
-                elif entry['ip']['type'] == 'new':
-                    global_dict.add_tcp_avg_delay_record(TMdef.TARGET, entry['ip']['source.address'],
-                     entry['ip']['source.address'], entry['delay'])
-            except KeyError as exc:
-                print("Missing key in tcp.delay.")
-                raise KeyError("Missing key in tcp.delay") from exc
-
-    data = param_dict.get('timestamp.random.thresholds')
-    if data:
-        for entry in data:
-            try:
-                if entry['ip']['type'] == 'old':
-                    global_dict.to_timestamp_random_delay_threshold_map(entry['ip']['address'], entry['threshold'])
-            except KeyError as exc:
-                print("Missing key in timestamp.random.thresholds.")
-                raise KeyError("Missing key in timestamp.random.thresholds") from exc
-
-    data = param_dict.get('timestamp.random.set')
-    if data:
-        for entry in data:
-            try:
-                if entry['ip']['type'] == 'old':
-                    global_dict.to_timestamp_random_delay_set(entry['ip']['address'])
-            except KeyError as exc:
-                print("Missing key in timestamp.random.set.")
-                raise KeyError("Missing key in timestamp.random.set") from exc
+        :return: True if all validation functions passed, else false.
+        """
+        check = True
+        for function in self.validation_functions:
+            check &= function(self, verbose)
+        return check
 

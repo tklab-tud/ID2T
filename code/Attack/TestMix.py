@@ -86,9 +86,9 @@ class TestMix(BaseAttack.BaseAttack):
         ### Filling dictionaries
         ###
 
-        filling_start = perf_counter() # <------- TIMER
+        building_start = perf_counter() # <------- TIMER
 
-        rewrap = Mix.fill_dictionaries(self, param_dict)
+        rewrap = Mix.build_rewrapper(self, param_dict)
 
 
         ###
@@ -97,7 +97,15 @@ class TestMix(BaseAttack.BaseAttack):
 
         queuing_start = perf_counter() # <------- TIMER
 
-        Mix.enqueue_functions(param_dict, rewrap)
+        fill, config_validate = Mix.enqueue_functions(param_dict, rewrap)
+
+        ###
+        ### Queuing functions
+        ###
+
+        filling_start = perf_counter() # <------- TIMER
+        
+        Mix.validate_and_fill_dict(param_dict, rewrap, fill, config_validate)
 
         ###
         ### Recalculating dictionaries 
@@ -159,9 +167,10 @@ class TestMix(BaseAttack.BaseAttack):
 
         with open(os.path.join(self.output_path, 'performance.txt'), 'a') as pfile:
             pfile.write('Mixing ' + self.attack_file + ' at ' + str(datetime.now()) + '\n') 
-            pfile.write('    Parsing ' + str(filling_start - parsing_start) + '\n')
-            pfile.write('    Filling  ' + str(queuing_start - filling_start) + '\n')
-            pfile.write('    Queueing ' + str(recalc_start - queuing_start) + '\n')
+            pfile.write('    Parsing ' + str(building_start - parsing_start) + '\n')
+            pfile.write('    Building  ' + str(queuing_start - building_start) + '\n')
+            pfile.write('    Queueing ' + str(filling_start - queuing_start) + '\n')
+            pfile.write('    Filling ' + str(recalc_start - filling_start) + '\n')
             pfile.write('    Recalc ' + str(digest_start - recalc_start) + '\n')
             pfile.write('    Digest ' + str(digest_end - digest_start) + '\n')
             pfile.write(' > Total ' + str(digest_end - parsing_start) + '\n')

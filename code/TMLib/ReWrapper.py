@@ -39,147 +39,6 @@ inet.Ether
 , dns.DNS
 ]
 
-f_dict = { # dictionary of known transformation functions
-
-#################
-#### Ether
-#################
-'mac_src_change' : {'protocol' : inet.Ether
-                    , 'function' : TMpp.mac_src_change}
-, 'mac_dst_change' : {'protocol' : inet.Ether
-                    , 'function' : TMpp.mac_dst_change}
-, 'mac_change_default' : {'protocol' : inet.Ether
-                    , 'function' : TMpp.mac_change_default}
-#################
-#### ARP
-#################
-
-, 'arp_change_default' : {'protocol' : l2.ARP
-                    , 'function' : TMpp.arp_change_default}
-
-
-#################
-#### IPv4
-#################
-, 'ip_src_change' : {'protocol' : inet.IP
-                    , 'function' : TMpp.ip_src_change}
-, 'ip_dst_change' : {'protocol' : inet.IP
-                    , 'function' : TMpp.ip_dst_change}
-, 'ip_change_default' : {'protocol' : inet.IP
-                    , 'function' : TMpp.ip_change_default}
-, 'ip_ttl_change' : {'protocol' : inet.IP
-                    , 'function' : TMpp.ip_ttl_change}
-
-#################
-#### IPv6
-#################
-, 'ipv6_src_change' : {'protocol' : inet6.IPv6
-                    , 'function' : TMpp.ipv6_src_change}
-, 'ipv6_dst_change' : {'protocol' : inet6.IPv6
-                    , 'function' : TMpp.ipv6_dst_change}
-, 'ipv6_change_default' : {'protocol' : inet6.IPv6
-                    , 'function' : TMpp.ipv6_change_default}
-, 'ipv6_hlim_change' : {'protocol' : inet6.IPv6
-                    , 'function' : TMpp.ipv6_hlim_change}
-
-#################
-#### ICMPv4
-#################
-, 'icmp_ip_change_default' : {'protocol' : inet.IPerror
-                    , 'function' : TMpp.ip_change_default}
-, 'icmp_tcp_change_default' : {'protocol' : inet.TCPerror
-                    , 'function' : TMpp.tcp_change_default
-                    , 'preprocessing' : 
-                            { 
-                            inet.IP : TMpp.get_new_ips
-                            , inet6.IPv6 : TMpp.get_new_ips
-                            }
-                    }
-, 'icmp_udp_change_default' : {'protocol' : inet.UDPerror, 'function' : TMpp.udp_change_default
-                    , 'preprocessing' : 
-                            { 
-                            inet.IP : TMpp.get_new_ips
-                            , inet6.IPv6 : TMpp.get_new_ips
-                            }
-                    }
-
-#################
-#### TCP
-#################
-, 'tcp_win_size_change' : {'protocol' : inet.TCP
-                    , 'function' : TMpp.tcp_win_size_change
-                    , 'preprocessing' : 
-                            { 
-                            inet.IP : TMpp.get_new_ips
-                            , inet6.IPv6 : TMpp.get_new_ips
-                            }
-                    }
-, 'tcp_mss_change' : {'protocol' : inet.TCP
-                    , 'function' : TMpp.tcp_mss_change
-                    , 'preprocessing' : 
-                            { 
-                            inet.IP : TMpp.get_new_ips
-                            , inet6.IPv6 : TMpp.get_new_ips
-                            }
-                    }
-, 'tcp_change_default' : {'protocol' : inet.TCP
-                    , 'function' : TMpp.tcp_change_default
-                    , 'preprocessing' : 
-                            { 
-                            inet.IP : TMpp.get_new_ips
-                            , inet6.IPv6 : TMpp.get_new_ips
-                            }
-                    }
-
-#################
-#### UDP
-#################
-, 'udp_change_default' : {'protocol' : inet.UDP
-                    , 'function' : TMpp.udp_change_default
-                    , 'preprocessing' : 
-                            { 
-                            inet.IP : TMpp.get_new_ips
-                            , inet6.IPv6 : TMpp.get_new_ips
-                            }
-                    }
-#################
-#### DNS
-#################
-, 'dns_change_ips' : {'protocol' : dns.DNS
-                    , 'function' : TMpp.dns_change_ips}
-
-#################
-#### HTTPv1
-#################
-, 'httpv1_regex_ip_swap' : {'protocol' : http.HTTPv1 
-                    , 'function' : TMpp.httpv1_regex_ip_swap}
-
-}
-
-
-timestamp_function_dict = { # dictionary of known timestamp generation functions
-'default' : TMtg.timestamp_dynamic_shift
-, 'timestamp_shift' : TMtg.timestamp_static_shift
-, 'tcp_avg_shift' : TMtg.timestamp_tcp_avg_shift
-, 'tcp_min_shit' : TMtg.timestamp_tcp_min_shift
-, 'tcp_max_shift' : TMtg.timestamp_tcp_max_shift
-, 'timestamp_dynamic_shift' : TMtg.timestamp_dynamic_shift
-}
-
-
-timestamp_postprocess_dict = {
-'timestamp_delay' : TMtg.timestamp_delay
-, 'timestamp_delay_forIPlist' : TMtg.timestamp_delay_forIPlist
-, 'timestamp_delay_forIPconst' : TMtg.timestamp_delay_forIPconst
-, 'timestamp_random_oscillation' : TMtg.timestamp_random_oscillation
-}
-
-timestamp_alt_function_dict = { # dictionary of known timestamp generation functions
-'default' : TMtg.timestamp_dynamic_shift
-, 'timestamp_shift' : TMtg.timestamp_static_shift
-, 'timestamp_dynamic_shift' : TMtg.timestamp_dynamic_shift
-}
-
 class ReWrapper(object):
     """
     Class for rewrapping packets.
@@ -198,6 +57,18 @@ class ReWrapper(object):
 
     def __init__(self, _statistics, _globalRWdict, _conversationRWdict, _packetRWdict):
 
+        if _statistics is None or _globalRWdict is None or _conversationRWdict is None or _packetRWdict is None:
+            raise TypeError('NoneType passed on rewrapper init.')
+
+        if not isinstance(_globalRWdict, TMdict.GlobalRWdict):
+            raise TypeError('Wrong dictionary type passed on rewrapper init, TMdict.GlobalRWdict expected but got ' + type(_globalRWdict))
+
+        if not isinstance(_conversationRWdict, TMdict.ConversationRWdict):
+            raise TypeError('Wrong dictionary type passed on rewrapper init, TMdict.ConversationRWdict expected but got ' + type(_conversationRWdict))
+
+        if not isinstance(_packetRWdict, TMdict.PacketDataRWdict):
+            raise TypeError('Wrong dictionary type passed on rewrapper init, TMdict.PacketDataRWdict expected but got ' + type(_packetRWdict))
+        
         self.statistics = _statistics
 
         # self.queue = []
@@ -209,11 +80,11 @@ class ReWrapper(object):
         , TMdef.PACKET : _packetRWdict
         }
 
-        self.unwrap_dict = {} # unwrapping functions chosen for packet (support temporary data)
-        self.rewrap_dict = {} # rewrapping functions chosen for layers
-        # self.rc_dict = {} # recalculation functions chosen 
+        self.preprocess_dict = {} # preprocessing functions chosen for packet (support temporary data)
+        self.process_dict = {} # processing functions chosen for layers
+        self.postprocess_dict = {} # postrprocessing function chosen for layers
 
-        self.timestamp_function = timestamp_function_dict['default']
+        self.timestamp_function = None
         self.timestamp_postprocess = []
         self.data_dict[TMdef.GLOBAL]['generate_timestamp_function_alt'] = TMtg.timestamp_dynamic_shift
 
@@ -222,66 +93,123 @@ class ReWrapper(object):
 ###### Configuration 
 ##################################
 
-
-    def enqueue_function(self, name):
+    
+    def enqueue_preprocessing_function(self, protocol, function):
         """
-        Enqueue transformation function (for specific protocol, based on function). 
-        Searches for known functions based on name match.
-        During rewrapping, functions are executed in enqueue order.
+        Enqueue packet preprocessing function for a protocol.
 
-        :param name: Name of the function. If such function is known, it will be enqueued.
+        Preprocessing function is executed before processing functions.
+
+        :param protocol: protocol, type of the packet layer object
+        :param function: packet preprocessing function with two parameters: packet, data
         """
-        record = f_dict.get(name)
-        if record:
-            if record['protocol'] not in self.rewrap_dict:
-                self.rewrap_dict[ record['protocol'] ] = []
-            
-            if record['function'] not in self.rewrap_dict[ record['protocol'] ]:
-                self.rewrap_dict[ record['protocol'] ].append( record['function'] )
-            
-            record = record.get('preprocessing')
-            if record:
-                for protocol, function in record.items():
-                    if protocol not in self.unwrap_dict:
-                        self.unwrap_dict[ protocol ] = []
-                    if function not in self.unwrap_dict[ protocol ]:
-                        self.unwrap_dict[ protocol ].append(function)
+        if not function or not protocol:
+            raise TypeError('NoneType passed as packet preprocessing function.')
+
+        queue = self.preprocess_dict.get(protocol)
+        if not queue:
+            queue = []
+            self.preprocess_dict[protocol] = queue
+        queue.append(function)
 
 
-
-    def change_timestamp_function(self, name):
+    def enqueue_processing_function(self, protocol, function):
         """
-        Changes timestamp generating function. Functions are searched from known functions based on name match.
+        Enqueue packet processing function for a protocol.
 
-        Timestamp generation functions may require specific parameter to be set.
-
-        :param name: Name of the functions. If such function is known, it will replace previous function
+        :param protocol: protocol, type of the packet layer object
+        :param function: packet processing function with two parameters: packet, data
         """
-        f = timestamp_function_dict.get(name)
-        if name :
-            self.timestamp_function = f
+        if not function or not protocol:
+            raise TypeError('NoneType passed as packet processing function.')
+
+        queue = self.process_dict.get(protocol)
+        if not queue:
+            queue = []
+            self.process_dict[protocol] = queue
+        queue.append(function)
 
 
-    def enqueue_timestamp_postprocess(self, name):
+    def enqueue_postprocessing_function(self, protocol, function):
+        """ 
+        Enqueue packet preprocessing function for a protocol.
+
+        Preprocessing function is executed before processing functions.
+
+        :param protocol: protocol, type of the packet layer object
+        :param function: packet preprocessing function with two parameters: packet, data
+        """
+        if not function or not protocol:
+            raise TypeError('NoneType passed as packet preprocessing function.')
+
+        queue = self.postprocess_dict.get(protocol)
+        if not queue:
+            queue = []
+            self.postprocess_dict[protocol] = queue
+        queue.append(function)
+
+
+    def set_timestamp_generator(self, function):
+        """
+        Set timestamp generation function.
+        
+        Function must have these parameters:
+            packet - current packet
+            data - data dict
+            previous_timestamp_old - original timestamp of previous packet
+            previous_timestamp_new - final (after application of all functions) generated timestamp of the previous packte
+            current_timestamp_old - original timestamp of the current packet
+            new_timestamp - new (after application of all previous functions) timestamp of the current packet,
+                            if none was applied then current_timestamp_old == new_timestamp
+        Function must return new timestamp value and returned_value >= previous_timestamp_new must hold.
+
+        :param function: timestamp generator function
+        """
+        if not function:
+            raise TypeError('NoneType passed as timestamp generator function.')
+        self.timestamp_function = function
+
+
+    def set_backup_timestamp_generator(self, function):
+        """
+        Set backup timestamp generation function. May be required/used by the main timestamp generation function.
+        
+        Function must have these parameters:
+            packet - current packet
+            data - data dict
+            previous_timestamp_old - original timestamp of previous packet
+            previous_timestamp_new - final (after application of all functions) generated timestamp of the previous packte
+            current_timestamp_old - original timestamp of the current packet
+            new_timestamp - new (after application of all previous functions) timestamp of the current packet,
+                            if none was applied then current_timestamp_old == new_timestamp
+        Function must return new timestamp value and returned_value >= previous_timestamp_new must hold.
+
+        :param function: timestamp generator function
+        """
+        if not function:
+            raise TypeError('NoneType passed as alternative timestamp generator function.')
+        self.data_dict[TMdef.GLOBAL]['generate_timestamp_function_alt'] = function
+
+
+    def enqueue_timestamp_postprocess(self, function):
         """
         Enqueues postprocessing function that is applied after main timestamp generator function.
+        
+        Function must have these parameters:
+            packet - current packet
+            data - data dict
+            previous_timestamp_old - original timestamp of previous packet
+            previous_timestamp_new - final (after application of all functions) generated timestamp of the previous packte
+            current_timestamp_old - original timestamp of the current packet
+            new_timestamp - new (after application of all previous functions) timestamp of the current packet,
+                            if none was applied then current_timestamp_old == new_timestamp
+        Function must return new timestamp value and returned_value >= previous_timestamp_new must hold.
 
-        :param name: name of the function. If such name is found, it will append the function.
+        :param function: name of the function. If such name is found, it will append the function.
         """
-        f = timestamp_postprocess_dict.get(name)
-        if name :
-            self.timestamp_postprocess.append(f)
-
-
-    def enlist_alt_timestamp_generation_function(self, name):
-        """
-        Select alternative generation function that may be required/used by the timestamp generation function.
-
-        :param name: name of the function. If such name is found, it will be selected as alt generation function
-        """
-        f = timestamp_alt_function_dict.get(name)
-        if name :
-            self.data_dict[TMdef.GLOBAL]['generate_timestamp_function_alt'] = f
+        if not function:
+            raise TypeError('NoneType passed as timestamp postprocess function.')
+        self.timestamp_postprocess.append(function)
 
 
     def set_timestamp_next_pkt(self, timestamp_next_pkt):
@@ -290,6 +218,8 @@ class ReWrapper(object):
 
         :param timestamp_next_pkt: Timestamp for next packet. 
         """
+        if not timestamp_next_pkt:
+            raise TypeError('NoneType passed as timestamp_next_pkt value.')
         self.data_dict[TMdef.CONVERSATION]['timestamp_next_pkt'] = timestamp_next_pkt
 
 
@@ -308,6 +238,8 @@ class ReWrapper(object):
 
         :param timestamp_shift: Timestamp shift.
         """
+        if not timestamp_shift:
+            raise TypeError('NoneType passed as timestamp_shift value.')
         self.data_dict[TMdef.GLOBAL][TMdef.ATTACK]['timestamp_shift'] = timestamp_shift
 
 
@@ -328,10 +260,20 @@ class ReWrapper(object):
         """
         Executes all recalcuate functions
         """
-        for _type in ['min', 'max', 'avg']:
-            TMtg.make_tcp_delay_map(_type, self.statistics, self.data_dict, TMdef.TARGET)
-            TMtg.make_tcp_delay_map(_type, self.data_dict[TMdef.GLOBAL].attack_statistics, self.data_dict, TMdef.ATTACK)
         self.data_dict[TMdef.GLOBAL].recalculate()
+
+##################################
+###### validate dicts
+##################################
+
+    def validate_global_dict(self, verbose=False):
+        return self.data_dict[TMdef.GLOBAL].validate()
+
+    def validate_conv_dict(self):
+        return self.data_dict[TMdef.CONVERSATION].validate()
+
+    def validate_packet_dict(self):
+        return self.data_dict[TMdef.PACKET].validate()
 
 
 ##################################
@@ -340,23 +282,48 @@ class ReWrapper(object):
 
 
     def generate_timestamp(self, packet, data):
+        """
+        Generates new timestamp by applying timestamp processing and postprocessing functions.
+
+        If generated timestamp is lower than the final timestamp of previous packet, 0 delay is used and warning is printed.
+
+        :param packet: current packet, scapy packet (frame)
+        :param data: data dict
+        """
         ## Get timestamp data
-        previous_timestamp_old = data[TMdef.CONVERSATION].get('previous_timestamp_old')
-        previous_timestamp_new = data[TMdef.CONVERSATION].get('previous_timestamp_new')
-        current_timestamp_old = packet.time
+        previous_timestamp_old = data[TMdef.CONVERSATION].get('previous_timestamp_old') ## get old timestamp of prev packet
+        previous_timestamp_new = data[TMdef.CONVERSATION].get('previous_timestamp_new') ## get new timestamp of prev packet
+        current_timestamp_old = packet.time ## get old timestamp of cur packet
 
         ## Update timestamp data
-        data[TMdef.CONVERSATION]['previous_timestamp_old'] = current_timestamp_old
-        new_timestamp = current_timestamp_old
+        data[TMdef.CONVERSATION]['previous_timestamp_old'] = current_timestamp_old ## update data from next iteration
+        ## Default value
+        new_timestamp = current_timestamp_old 
         if not previous_timestamp_old: 
             ## IF this is the first packet, only shift
             new_timestamp = packet.time + data[TMdef.GLOBAL][TMdef.ATTACK]['timestamp_shift']
-        else:        
+        else: ## Test every timestamp if new_timestamp >= previous_timestamp_new
             ## Apply base timestamp generation function
-            new_timestamp = self.timestamp_function(packet, data, previous_timestamp_old, previous_timestamp_new, current_timestamp_old, new_timestamp)
+            new_timestamp = test_generated_timestamp_order(previous_timestamp_new,
+                self.timestamp_function(packet, data, previous_timestamp_old, previous_timestamp_new, current_timestamp_old, new_timestamp),
+                self.timestamp_function, 
+                new_timestamp)
             ## Apply PostProcess functions
             for f in self.timestamp_postprocess:
-                new_timestamp = f(packet, data, previous_timestamp_old, previous_timestamp_new, current_timestamp_old, new_timestamp)
+                new_timestamp = test_generated_timestamp_order(previous_timestamp_new,
+                    f(packet, data, previous_timestamp_old, previous_timestamp_new, current_timestamp_old, new_timestamp),
+                    f,
+                    new_timestamp)
+            
+            ## Final test in case every function failed the check
+            ## Default value with 0 delay
+            new_timestamp = test_generated_timestamp_order(previous_timestamp_new,
+                new_timestamp,
+                "!all!",
+                previous_timestamp_new)
+            ## Warn if 0 delay was generated
+            if new_timestamp == previous_timestamp_new:
+                print('[WARNING] Final timestamp for packet with delay 0 generated at ', new_timestamp)
         
         ## Update timestamp data
         data[TMdef.CONVERSATION]['previous_timestamp_new'] = new_timestamp
@@ -377,34 +344,22 @@ class ReWrapper(object):
         if protocol in recognized_protocols:
 #            self.layers.append(packet)
 
-            unwrapping_functions = self.unwrap_dict.get(protocol)
-            if unwrapping_functions:
-                for f in unwrapping_functions:
+            preprocess_f = self.preprocess_dict.get(protocol)
+            if preprocess_f:
+                for f in preprocess_f:
                     f(packet, self.data_dict)
 
-            tranform_functions = self.rewrap_dict.get(protocol)
-            if tranform_functions:
-                #elf.queue.append( tranform_functions ) # list of transformation functions
-                for f in tranform_functions: # TEST - does changing port prevent parsing protocol in TCP packet?
+            process_f = self.process_dict.get(protocol)
+            if process_f:
+                for f in process_f: # TEST - does changing port prevent parsing protocol in TCP packet?
                     f(packet, self.data_dict)
-            # else:
-            #     self.queue.append([])
+
+            postprocess_f = self.postprocess_dict.get(protocol)
+            if postprocess_f:
+                for f in postprocess_f:
+                    f(packet, self.data_dict)
 
             self.unwrap(packet.payload)
-
-
-
-    # def rewrap(self, packet):
-    #     """
-    #     Applies transformation functions to packet-layers top-to-bottom and changes resulting packets timestamp
-
-    #     :param packet: Transformed packet; expected scapy Ether packet
-    #     """
-    #     for i in range(len(self.layers)-1,-1,-1):
-    #         for f in self.queue[i]:
-    #             f(self.layers[i], self.data_dict)
-    #     packet.time = self.generate_timestamp(packet, self.data_dict)
-    #     return packet
 
 
     def digest(self, packet):
@@ -415,9 +370,33 @@ class ReWrapper(object):
 
         :return: Transformed packet.
         """
-        # self.queue = []
-        # self.layers = []
+        if not packet:
+            raise TypeError('NoneType passed as packet for digestion.')
+
         self.unwrap(packet)
-        # return self.rewrap(packet)
         packet.time = self.generate_timestamp(packet, self.data_dict)
         return packet
+
+
+##################################
+###### Helpers 
+##################################
+
+def test_generated_timestamp_order(previous_timestamp_new, new_timestamp, function, backup_timestamp):
+    """
+    Test if the newly generated timestamp is smaller then timestamp of previous packet. 
+    If yes, return backup timestamp and print warning.
+
+    :param previous_timestamp_new: final timestamp of previous packet, float
+    :param new_timestamp: newest generated timestamp for final packet, float
+    :param function: function that generated the timestamp
+    :param backup_timestamp: value to be returned if condition does not hold
+
+    :return: new_timestamp if condition holds, else backup_timestamp
+    """
+    if new_timestamp < previous_timestamp_new:
+        print('[WARNING] Erronous timestamp generated by', function, 'with new timestamp', new_timestamp, '<', previous_timestamp_new,
+            '. Replacing by', backup_timestamp)
+        return backup_timestamp
+    return new_timestamp
+
