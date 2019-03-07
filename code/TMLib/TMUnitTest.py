@@ -5,6 +5,7 @@ import TMLib.Definitions as TMdef
 
 def build_mock_dict():
 	data = dict()
+	tmp = {}
 	tmp[TMdef.TARGET] = {
 		'mac_address_map' : {
 			'F6:DA:77:F3:E2:E0' : '8C:37:E1:F2:C8:E5'
