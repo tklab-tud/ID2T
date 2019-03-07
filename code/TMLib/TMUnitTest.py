@@ -5,7 +5,7 @@ import TMLib.Definitions as TMdef
 
 def build_mock_dict():
 	data = dict()
-	data[TMdef.GLOBAL] = {
+	tmp[TMdef.TARGET] = {
 		'mac_address_map' : {
 			'F6:DA:77:F3:E2:E0' : '8C:37:E1:F2:C8:E5'
 			, 'ED:FA:E9:69:21:90' : 'FB:88:E6:CE:48:69'
@@ -54,6 +54,13 @@ def build_mock_dict():
 
         , 'tcp_avg_delay_map' : {}
 	}
+	tmp[TMdef.ATTACK] = {
+		'timestamp_shift' : 0 # used by timestamp_shift
+        , 'tcp_avg_delay_map' : {}
+        , 'timestamp_delay_map' : {}
+        , 'timestamp_delay_set' : set()
+	}
+	data[TMdef.GLOBAL] = tmp
 	data[TMdef.CONVERSATION] = dict()
 	data[TMdef.PACKET] = dict()
 
