@@ -1,6 +1,7 @@
 import unittest
 import scapy.layers.inet as inet
 import scapy.layers.l2 as l2
+import scapy.layers.dns as dns
 
 import TMLib.TMUnitTest as lib
 
@@ -537,3 +538,68 @@ class TMPacketProcessing(unittest.TestCase):
 ################## DNS
 ###############################################
 
+
+	def dns_qd_question_ipNotExist(self):
+		src_ref = '83.78.233.252'
+		dst_ref = '125.195.213.93'
+
+		src_rev = '252.233.78.83.in-addr.arpa'
+		
+		ref_pkt = dns.DNS(qdcount=1, qd=[DNSQR(qtype=12, qname=src_rev)])
+		mac_pkt = dns.DNS(qdcount=1, qd=[DNSQR(qtype=12, qname=src_rev)])
+
+		data = lib.build_mock_dict()
+
+		pp.dns_change_ips(mac_pkt, data)
+
+		self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+
+
+	def dns_qd_questions_ipNotExist(self):
+		src_ref = '83.78.233.252'
+		dst_ref = '125.195.213.93'
+
+		src_rev = '252.233.78.83.in-addr.arpa'
+		src_rev = '93.213.195.125.in-addr.arpa'
+		
+		ref_pkt = dns.DNS(qdcount=2, qd=[DNSQR(qtype=12, qname=src_rev), DNSQR(qtype=12, qname=src_rev) ])
+		mac_pkt = dns.DNS(qdcount=2, qd=[DNSQR(qtype=12, qname=src_rev), DNSQR(qtype=12, qname=src_rev) ])
+
+		data = lib.build_mock_dict()
+
+		pp.dns_change_ips(mac_pkt, data)
+
+		self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+
+
+	def dns_qd_question_ipExist(self):
+		src_ref = '181.149.152.176'
+		dst_ref = '125.195.213.93'
+
+		src_rev = '176.152.149.181.in-addr.arpa'
+		
+		ref_pkt = dns.DNS(qdcount=1, qd=[DNSQR(qtype=12, qname='79.255.233.124.in-addr.arpa')])
+		mac_pkt = dns.DNS(qdcount=1, qd=[DNSQR(qtype=12, qname=src_rev)])
+
+		data = lib.build_mock_dict()
+
+		pp.dns_change_ips(mac_pkt, data)
+
+		self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+
+
+	def dns_qd_questions_ipExist(self):
+		src_ref = '181.149.152.176'
+		dst_ref = '80.142.128.2'
+
+		src_rev = '176.152.149.181.in-addr.arpa'
+		dst_rev = '2.128.142.80.in-addr.arpa'
+		
+		ref_pkt = dns.DNS(qdcount=2, qd=[DNSQR(qtype=12, qname='79.255.233.124.in-addr.arpa'), DNSQR(qtype=12, qname='121.163.47.167.in-addr.arpa') ])
+		mac_pkt = dns.DNS(qdcount=2, qd=[DNSQR(qtype=12, qname=src_rev), DNSQR(qtype=12, qname=dst_rev ) ])
+
+		data = lib.build_mock_dict()
+
+		pp.dns_change_ips(mac_pkt, data)
+
+		self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
