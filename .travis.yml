@@ -1,22 +1,96 @@
-os:
-    - linux
-    - osx
-
-dist: xenial
+matrix:
+    include:
+        # Run macOS and Kali first to decrease travis CI runtime
+        # macOS 10.13 High Sierra
+        - os: osx
+          env: DOCKER=0
+        # macOS 10.12 Sierra
+        - os: osx
+          osx_image: xcode9.2
+          env: DOCKER=0
+        # Kali Linux
+        - env: >-
+                DOCKER=1
+                distribution=kalilinux/kali-linux-docker
+                version=latest
+                prerequisite="apt-get update -qq && apt-get install -y git sudo"
+        # ArchLinux
+        - env: >-
+                DOCKER=1
+                distribution=archlinux/base
+                version=latest
+                prerequisite="pacman -Sy --noconfirm awk sudo git wget tar pkg-config"
+        # Debian 9
+        - env: >-
+                DOCKER=1
+                distribution=debian
+                version=stable
+                prerequisite="apt-get update -qq && apt-get install -y git sudo"
+        # Fedora 29
+        - env: >-
+                DOCKER=1
+                distribution=fedora
+                version=latest
+                prerequisite="dnf install -y git sudo"
+        # OpenSUSE Leap (stable)
+        - env: >-
+                DOCKER=1
+                distribution=opensuse/leap
+                version=15
+                prerequisite="zypper install -y git sudo"
+        # OpenSUSE Tumbleweed (rolling)
+        - env: >-
+                DOCKER=1
+                distribution=opensuse/tumbleweed
+                version=latest
+                prerequisite="zypper install -y git sudo"
+        # Ubuntu 18.10
+        - env: >-
+                DOCKER=1
+                distribution=ubuntu
+                version=rolling
+                prerequisite="apt-get update -qq && apt-get install -y git sudo"
+        # Ubuntu 18.04
+        - env: >-
+                DOCKER=1
+                distribution=ubuntu
+                version=latest
+                prerequisite="apt-get update -qq && apt-get install -y git sudo"
+        # Ubuntu 16.04
+        - os: linux
+          dist: xenial
+          env: DOCKER=0
 
 sudo: required
-
+services: docker
 language: cpp
 
 before_install:
-    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update; fi
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt-get update -qq; fi
+    - |
+      if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+          brew update
+      fi
+    - |
+      if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$DOCKER" == "0" ]]; then
+          sudo apt-get update -qq
+      fi
+    - |
+      if [[ "$TRAVIS_OS_NAME" == "linux" ]] && [[ "$DOCKER" == "1" ]]; then
+          sudo docker pull ${distribution}:${version}
+      fi
 
 install:
-    # Workaround for unavailability of libtins >4.0 on Ubuntu Xenial
-    - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sed -i 's/\<libtins\-dev\>//g' resources/install_dependencies.sh; fi
-    - ./resources/install_dependencies.sh
+    - |
+      if [[ "$DOCKER" == "0" ]]; then
+          ./resources/install_dependencies.sh
+      fi
 
 script:
-    - ./build.sh --non-interactive
-    - ./run_tests
+    - |
+      if [[ "$DOCKER" == "0" ]]; then
+          ./build.sh --non-interactive; ./run_tests
+      fi
+    - |
+      if [[ "$DOCKER" == "1" ]]; then
+          sudo docker run ${distribution}:${version} /bin/bash -c "${prerequisite} && git clone https://github.com/"${TRAVIS_REPO_SLUG}" && cd ID2T && git checkout suse_support && ./resources/install_dependencies.sh -y && ./build.sh --non-interactive && ./run_tests" --rm
+      fi

@@ -1,19 +1,42 @@
 #!/bin/bash
 
+DEB_PKGS=''
+RPM_PKGS="cmake make tcpdump coreutils gcc gcc-c++ libpcap-devel python3 python3-devel"
+YES=''
 PATCH_DIR=../../../resources/patches
+
+while test $# -gt 0
+do
+    case "$1" in
+        -y)
+            YES='-y'
+            ;;
+    esac
+    shift
+done
 
 libtins_patches()
 {
     cd code_boost/src/libtins
+    echo -e "git user: Checking..."
+    git config user.name
+    if [ $? != 0 ]; then
+        echo -e "git user: there is no user specified globally!"
+        echo -e "git user: Setting user for libtins..."
+        git config user.name dependency_installer
+        git config user.email dependency@installer.de
+    fi
+    echo -e "Patches: Applying libtins patches..."
     git apply --check ${PATCH_DIR}/0001-add-advertised_size-method.patch
-    git am --signoff < ${PATCH_DIR}/0001-add-advertised_size-method.patch
+    git am --signoff --committer-date-is-author-date < ${PATCH_DIR}/0001-add-advertised_size-method.patch
     git apply --check ${PATCH_DIR}/0002-use-advertised_size-to-determine-frame-length.patch
-    git am --signoff < ${PATCH_DIR}/0002-use-advertised_size-to-determine-frame-length.patch
+    git am --signoff --committer-date-is-author-date < ${PATCH_DIR}/0002-use-advertised_size-to-determine-frame-length.patch
+    echo -e "Patches: done."
 }
 
 install_pkg_arch()
 {
-    PACMAN_PKGS="cmake python python-pip sqlite tcpdump cairo"
+    PACMAN_PKGS="gcc make cmake python python-pip sqlite tcpdump cairo"
 
     # Check first to avoid unnecessary sudo
     echo -e "Packages: Checking..."
@@ -21,7 +44,10 @@ install_pkg_arch()
     if [ $? != 0 ]; then
         # Install all missing packages
         echo -e "Packages: Installing..."
-        sudo pacman -S --needed $PACMAN_PKGS
+        if [ ${YES} == '-y' ]; then
+            YES='--noconfirm'
+        fi
+        sudo pacman -S ${YES} --needed $PACMAN_PKGS
     else
         echo -e "Packages: Found."
     fi
@@ -54,9 +80,45 @@ install_pkg_arch()
     fi
 }
 
+install_pkg_fedora()
+{
+    DNF_PKGS="sqlite sqlite-devel openssl-devel boost-devel cairo"
+
+    # Check first to avoid unnecessary sudo
+    echo -e "Packages: Checking..."
+    rpm -q ${DNF_PKGS} ${RPM_PKGS} >/dev/null
+    if [ $? != 0 ]; then
+        # Install all missing packages
+        echo -e "Packages: Installing..."
+        sudo dnf install ${YES} ${DNF_PKGS} ${RPM_PKGS}
+    else
+        echo -e "Packages: Found."
+    fi
+}
+
+install_pkg_suse()
+{
+    ZYPPER_PKGS="sqlite3 sqlite3-devel libboost_headers-devel libopenssl-devel libcairo2"
+
+    # Check first to avoid unnecessary sudo
+    echo -e "Packages: Checking..."
+    rpm -q ${ZYPPER_PKGS} ${RPM_PKGS} >/dev/null
+    if [ $? != 0 ]; then
+        # Install all missing packages
+        echo -e "Packages: Installing..."
+        sudo zypper install ${YES} --download-as-needed ${ZYPPER_PKGS} ${RPM_PKGS}
+    else
+        echo -e "Packages: Found."
+    fi
+}
+
 install_pkg_ubuntu()
 {
-    APT_PKGS='build-essential cmake python3-dev python3-pip python3-venv sqlite tcpdump libtins-dev libpcap-dev libcairo2-dev'
+    APT_PKGS='build-essential cmake python3-dev python3-pip python3-venv sqlite tcpdump libpcap-dev libcairo2-dev'
+
+    if [ "$OS" = 'ubuntu' ] && [ "$VERSION" = '16.04' ]; then
+        DEB_LIBTINS='libtins-dev'
+    fi
 
     which sudo >/dev/null
     if [ $? != 0 ]; then
@@ -68,11 +130,11 @@ install_pkg_ubuntu()
 
     # Check first to avoid unnecessary sudo
     echo -e "Packages: Checking..."
-    dpkg -s $APT_PKGS &>/dev/null
+    dpkg -s $APT_PKGS $DEB_PKGS &>/dev/null
     if [ $? != 0 ]; then
         # Install all missing packages
         echo -e "Packages: Installing..."
-        $SUDO apt-get install $APT_PKGS
+        $SUDO apt-get install ${YES} $APT_PKGS $DEB_PKGS $DEB_LIBTINS
     else
         echo -e "Packages: Found."
     fi
@@ -117,15 +179,27 @@ if [ "$KERNEL" = 'Darwin' ]; then
     exit 0
 elif [ "$KERNEL" = 'Linux' ]; then
     # Kernel is Linux, check for supported distributions
-    OS=$(awk '/DISTRIB_ID=/' /etc/*-release | sed 's/DISTRIB_ID=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]')
-    OS_LIKE=$(awk '/ID_LIKE=/' /etc/*-release | sed 's/ID_LIKE=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]')
+    OS=$(awk '/ID=/' /etc/os-release | sed '2q;d' | sed 's/ID=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]')
+    OS_LIKE=$(awk '/ID_LIKE=/' /etc/os-release | sed 's/ID_LIKE=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]' | cut -d ' ' -f 1)
+    VERSION=$(awk '/VERSION_ID=/' /etc/os-release | sed '2q;d' | sed 's/VERSION_ID=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]')
 
     if [ -z "$OS_LIKE" ]; then
         # This distribution is missing the os-release file, so try lsb_release
         OS_LIKE=$(lsb_release -si | tr '[:upper:]' '[:lower:]')
     fi
 
-    case $OS_LIKE in
+    if [ "$OS_LIKE" = '' ]; then
+        # This distribution is missing the ID_LIKE entry in the os-release file, so try the ID entry
+        OS_LIKE=$(awk '/ID=/' /etc/*-release | sed 's/ID=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]' | head -n 1)
+    fi
+
+    supported='debian ubuntu arch archlinux fedora suse opensuse'
+    if ! [[ $supported =~ (^|[[:space:]])$OS_LIKE($|[[:space:]]) ]]; then
+        OS_LIKE=${OS}
+        DEB_PKGS='libffi-dev'
+    fi
+
+    case ${OS_LIKE} in
         archlinux|arch)
             echo -e "Detected OS: Arch Linux"
             install_pkg_arch
@@ -136,8 +210,18 @@ elif [ "$KERNEL" = 'Linux' ]; then
             install_pkg_ubuntu
             exit 0
             ;;
+        suse|opensuse)
+            echo -e "Detected OS: openSuse"
+            install_pkg_suse
+            exit 0
+            ;;
+        fedora)
+            echo -e "Detected OS: Fedora"
+            install_pkg_fedora
+            exit 0
+            ;;
     esac
 fi
 
-echo -e "Your OS is not supported by this script, please make sure to install the dependencies manually"
+echo -e "Your OS ("${OS_LIKE}") is not supported by this script, please make sure to install the dependencies manually"
 exit 0
