@@ -40,7 +40,6 @@ void statistics_db::getNoneExtraTestsInveralStats(std::vector<double>& intervals
                 tables.push_back(query.getColumn(0));
             }
         } catch (std::exception &e) {
-            std::cerr << "Exception in statistics_db::" << __func__ << ": " << e.what() << std::endl;
         }
         if (tables.size() != 0) {
             std::string table_name;
