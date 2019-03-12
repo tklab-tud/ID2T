@@ -1,8 +1,36 @@
+
 # Trace-Share: ID2T
 
 Fork of the official **[ID2T repository](https://github.com/tklab-tud/ID2T)** extended by functions to modify and combine existing packet traces.
 
 [![Build Status](https://travis-ci.org/Trace-Share/ID2T.svg?branch=master)](https://travis-ci.org/Trace-Share/ID2T)
+
+
+## Requirements
+
+We are trying to avoid adding any additional requirements to maintain backward compatibility with the official repository. All information about ID2T dependencies and required libraries are available at official project Readme (see section [Getting Started](https://github.com/tklab-tud/ID2T#getting-started)).
+
+
+## Installation
+
+Installation steps are similar to the official repository (see section [Compilation and Installation](https://github.com/tklab-tud/ID2T#compilation-and-installation)). The following list presents a basic installation and build commands only, for a more detailed guide see the official repository.
+
+* `$ ./build.sh` – install dependencies, initialize submodules, build the C++ modules and create the ID2T executables
+* `$ ./build.sh --non-interactive` – build without dependencies installation
+* `$ ./id2t -h` – see ID2T usage and check if everything is correctly installed
+
+
+## Usage
+
+ID2T is an awesome tool with lots of interesting functionality for the creation of network traffic datasets. You can use it for injection of **simulated attack** into the existing network traffic data or get **detailed statistic** about existing data. Check out the [Usage examples](https://github.com/tklab-tud/ID2T#usage-examples) section of the official repository to get more information about ID2T capabilities.
+
+The following sections present extended ID2T functionality with a focus on **modification and insertion of existing packet traces**.
+
+### Injection Configuration
+
+### Basic Commands
+
+
 
 
 ## Contribution
