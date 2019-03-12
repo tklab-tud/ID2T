@@ -13,7 +13,7 @@ We are trying to avoid adding any additional requirements to maintain backward c
 
 ## Installation
 
-Installation steps are similar to the official repository (see section [Compilation and Installation](https://github.com/tklab-tud/ID2T#compilation-and-installation)). The following list presents a basic installation and build commands only, for a more detailed guide see the official repository.
+Installation steps are similar to the official repository (see section [Compilation and Installation](https://github.com/tklab-tud/ID2T#compilation-and-installation)). The following list provides a basic installation and build commands only. For a more detailed guide see the official repository.
 
 * `$ ./build.sh` – install dependencies, initialize submodules, build the C++ modules and create the ID2T executables
 * `$ ./build.sh --non-interactive` – build without dependencies installation
@@ -22,15 +22,19 @@ Installation steps are similar to the official repository (see section [Compilat
 
 ## Usage
 
-ID2T is an awesome tool with lots of interesting functionality for the creation of network traffic datasets. You can use it for injection of **simulated attack** into the existing network traffic data or get **detailed statistic** about existing data. Check out the [Usage examples](https://github.com/tklab-tud/ID2T#usage-examples) section of the official repository to get more information about ID2T capabilities.
+ID2T is an awesome tool with lots of interesting functionality for the creation of network traffic datasets. You can use it for injection of **simulated attack** into the existing network traffic data or get **detailed statistics** about existing data. Check out the [Usage examples](https://github.com/tklab-tud/ID2T#usage-examples) section of the official repository to get more information about ID2T capabilities.
 
-The following sections present extended ID2T functionality with a focus on **modification and insertion of existing packet traces**.
+The following sections present extended ID2T functionality with a focus on **modification and insertion of existing packet traces**. The goal of this functionality is to modify shared annotated units of network traffic instead of their artificial generation.
 
-### Injection Configuration
+### Inject Configuration
+
+
 
 ### Basic Commands
 
+Use the following command to start injection of an annotated unit into the target trace file using properties specified in the configuration. The command produces a target file with the injected unit in the same directory as the target file. If you want to get only annotated unit modified by statistics from target file, append argument `-ie`.
 
+`$ ./id2t -i <target_file> -a Mix custom.payload.file=<configuration> inject.at-timestamp=<inject_timestamp>`
 
 
 ## Contribution
