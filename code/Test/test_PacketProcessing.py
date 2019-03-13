@@ -27,7 +27,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.mac_src_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
     def test_mac_dst_addressNotExist(self):
@@ -41,7 +41,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.mac_dst_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
     def test_mac_src_addressExists(self):
         src_ref = 'F6:DA:77:F3:E2:E0'
@@ -54,20 +54,20 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.mac_src_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
-    def test_mac_dst_addressNotExist(self):
+    def test_mac_dst_addressExists(self):
         src_ref = 'FB:1E:DC:3A:69:00'
         dst_ref = 'F6:DA:77:F3:E2:E0'
         
-        ref_pkt = inet.Ether(src=src_ref, dst=dst_ref)
-        mac_pkt = inet.Ether(src=src_ref, dst='8C:37:E1:F2:C8:E5')
+        ref_pkt = inet.Ether(src=src_ref, dst='8C:37:E1:F2:C8:E5')
+        mac_pkt = inet.Ether(src=src_ref, dst=dst_ref)
 
-        data = lib.build_mock_dict()
+        data = lib.build_mock_dict()    
 
         pp.mac_dst_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 ###########################################
 ############### ARP
@@ -84,7 +84,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.arp_hwsrc_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
     def hwdst_adrNotExist(self):
@@ -98,7 +98,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.arp_hwdst_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
     def hwsrc_adrExists(self):
         src_ref = 'F6:DA:77:F3:E2:E0'
@@ -111,7 +111,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.arp_hwsrc_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
     def hwdst_adrExists(self):
@@ -125,7 +125,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.arp_hwdst_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
     def psrc_adrNotExist(self):
@@ -139,7 +139,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.arp_psrc_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
     def pdst_adrNotExist(self):
@@ -153,7 +153,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.arp_pdst_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
     def psrc_adrExists(self):
@@ -167,7 +167,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.arp_psrc_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
     def pdst_adrExists(self):
@@ -181,7 +181,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.arp_pdst_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
 ###########################################
@@ -199,7 +199,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.ip_src_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
     def ipdst_adrNotExist(self):
@@ -213,7 +213,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.ip_dst_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
     def ipsrc_adrExists(self):
@@ -227,7 +227,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.ip_src_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
     def ipdst_adrExists(self):
@@ -241,7 +241,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.ip_dst_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
     def ttl_default(self):
@@ -255,7 +255,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.ip_ttl_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
     def ttl_src_replace(self):
@@ -269,7 +269,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.ip_ttl_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
     def ttl_dst_default(self):
@@ -283,7 +283,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.ip_ttl_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
     def ttl_exception(self):
@@ -297,7 +297,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.ip_ttl_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
 ###############################################
@@ -318,7 +318,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.tcp_win_size_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
     def win_src_replace(self):
@@ -334,7 +334,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.tcp_win_size_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
     def win_except(self):
@@ -350,7 +350,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.tcp_win_size_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
     def mss_default(self):
@@ -366,7 +366,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.tcp_mss_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
     def mss_src_replace(self):
@@ -382,7 +382,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.tcp_mss_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
     def mss_except(self):
@@ -398,7 +398,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.tcp_mss_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
     def sport_notMapped(self):
@@ -414,7 +414,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.tcp_sport_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
     def sport_Mapped(self):
@@ -430,7 +430,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.tcp_sport_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
     def dport_notMapped(self):
@@ -446,7 +446,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.tcp_dport_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
     def dport_Mapped(self):
@@ -462,7 +462,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.tcp_dport_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
 ###############################################
@@ -483,7 +483,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.tcp_sport_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
     def udp_sport_Mapped(self):
@@ -499,7 +499,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.tcp_sport_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
     def udp_dport_notMapped(self):
@@ -515,7 +515,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.tcp_dport_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
     def udp_dport_Mapped(self):
@@ -531,7 +531,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.tcp_dport_change(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
 ###############################################
@@ -552,7 +552,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.dns_change_ips(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
     def dns_qd_questions_ipNotExist(self):
@@ -569,7 +569,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.dns_change_ips(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
     def dns_qd_question_ipExist(self):
@@ -585,7 +585,7 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.dns_change_ips(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )
 
 
     def dns_qd_questions_ipExist(self):
@@ -602,4 +602,4 @@ class TMPacketProcessing(unittest.TestCase):
 
         pp.dns_change_ips(mac_pkt, data)
 
-        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt) )
+        self.assertTrue( lib.compare_mac_pkts(ref_pkt, mac_pkt), msg= (str(ref_pkt) + ' == ' + str(mac_pkt)) )

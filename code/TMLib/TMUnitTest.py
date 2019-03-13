@@ -72,5 +72,6 @@ def build_mock_dict():
 def compare_mac_pkts(_f, _s):
     result = True
     for field in _f.fields_desc:
+        field = field.name
         result &= ( _f.getfieldval(field) == _s.getfieldval(field) )
     return result
