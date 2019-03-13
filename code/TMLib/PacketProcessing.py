@@ -209,6 +209,10 @@ def ip_ttl_change(packet, data):
             packet.setfieldval('ttl', data[TMdef.GLOBAL][TMdef.TARGET]['ip_ttl_default'])
 
 
+def ip_auto_checksum(packet, data):
+    packet.setfieldval("chksum", None)
+
+
 ###########################################
 ############### IPv6
 ###########################################
@@ -498,6 +502,10 @@ def tcp_dport_change(packet, data):
             packet.setfieldval('dport', port_new)
 
 
+def tcp_auto_checksum(packet, data):
+    packet.setfieldval("chksum", None)
+
+
 ###############################################
 ################## UDP
 ###############################################
@@ -546,6 +554,10 @@ def udp_dport_change(packet, data):
         port_new = port_map.get(port)
         if port_new:
             packet.setfieldval('dport', port_new)
+
+
+def udp_auto_checksum(packet, data):
+    packet.setfieldval("chksum", None)
 
 
 ###############################################
