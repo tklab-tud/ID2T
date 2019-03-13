@@ -461,10 +461,12 @@ def tcp_mss_change(packet, data):
                 options[i] = ('MSS', mss)
                 mss = None
                 break
-        if mss:
-            if isinstance(options, dict):
-                options = []
-            options.append(('MSS', mss))
+        ## Unused, casuses bug where options are extended into padding
+        ## If original packet doesn't specify MSS, new one shouldn't either
+        # if mss:
+        #     if isinstance(options, dict):
+        #         options = []
+        #     options.append(('MSS', mss))
         packet.setfieldval('options', options)
 
 
