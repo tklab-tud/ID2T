@@ -15,8 +15,8 @@ We are trying to avoid adding any additional requirements to maintain backward c
 
 Installation steps are similar to the official repository (see section [Compilation and Installation](https://github.com/tklab-tud/ID2T#compilation-and-installation)). The following list provides basic installation and build commands only. For a more detailed guide see the official repository.
 
-* `$ ./build.sh` – install dependencies, initialize submodules, build the C++ modules and create the ID2T executables
-* `$ ./id2t -h` – see ID2T usage and check if everything is correctly installed
+* `$ ./build.sh` – install dependencies, initialize submodules, build the C++ modules and create ID2T executables
+* `$ ./id2t -h` – show ID2T usage and check if everything is correctly installed
 
 
 ## Usage
