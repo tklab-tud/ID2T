@@ -25,26 +25,11 @@ ID2T is an awesome tool with lots of interesting functionality for the creation 
 
 The following sections present extended ID2T functionality with a focus on **modification and insertion of existing packet traces**. The goal of this functionality is to modify shared annotated units of network traffic instead of their artificial generation.
 
-
-### Basic Commands
-
-Use the following command to start injection of an annotated unit into the target trace file using properties specified in the configuration. The command produces *&lt;output&gt;.pcap* containing result mix and *&lt;output&gt;_labels.xml* with mix information. If you want to get only annotated unit modified by statistics from target file, append argument `-ie`.
-
-```bash
-$ ./id2t -i <target_file> -a Mix custom.payload.file=<configuration> inject.at-timestamp=<timestamp> -o <output>
-```
-
-The following example shows a combination of SSH attack with the testing packet trace using default configuration available in this repository.
-
-```bash
-$ ./id2t -i ./resources/test/reference_1998.pcap -a Mix custom.payload.file=./resources/mix_config.yml \
-inject.at-timestamp=500 -o ./mixed
-```
-
-
 ### Inject Configuration
 
 Packet injection is configured using a YAML configuration file specified by `custom.payload.file=` argument. A default example of inject configuration file can be found in [./resources/mix_config.yml](resources/mix_config.yml). Copy the configuration file and update all required options according to your inject scenario.
+
+#### Configuration Options
 
 The following list introduces all available configuration options together with their brief explanation:
 
@@ -97,6 +82,72 @@ port.ip.map:
     port: 
       old: 22
       new: 2222
+```
+
+* **ttl.ip.exceptions**: List of IP addresses whose Time to Live value should not be changed. Option *type* in *ip* determines if the defined address is old or newer one after IPs mapping (available options are *old* or *new*).
+```yaml
+  - ip: 
+      type: old
+      address: 240.0.0.2
+```
+
+* **mss.ip.exceptions**: List of IP addresses whose Maximum Segment Size value should not be changed. Option *type* in *ip* determines if the defined address is old or newer one after IPs mapping (available options are *old* or *new*).
+```yaml
+mss.ip.exceptions:
+  - ip:
+      type: new
+      address: 192.168.0.11
+```
+
+* **win.ip.exceptions**: List of IP addresses whose Windows Size value should not be changed. Option *type* in *ip* determines if the defined address is old or newer one after IPs mapping (available options are *old* or *new*).
+```yaml
+win.ip.exceptions:
+  - ip:
+      type: old 
+      address: 240.0.0.2
+```
+
+* **tcp.delay**: Specifycation of delay values in TCP communication used by timestamp generation function *tcp_avg_shift*.
+```yaml
+tcp.delay:
+  - ip:
+      type: old
+      source.address: 240.0.0.2
+      destination.address: 240.1.0.3
+    delay: 0.030
+```
+
+* **timestamp.random.tresholds**: Specification of IP addresses whose packets will be given random delay by *timestamp_delay_forIPlist* function.
+```yaml
+timestamp.random.tresholds:
+  - ip:
+      type: old
+      address: 240.0.0.2
+    treshold: 0.482
+```
+
+* **timestamp.random.set**: Specification of set of IPs whose timestamp will be given random delay with default treshold by *timestamp_delay_forIPconst* function.
+```yaml
+timestamp.random.set:
+  - ip:
+      type: new
+      address: 192.168.0.11
+```
+
+
+### Basic Commands
+
+Use the following command to start injection of an annotated unit into the target trace file using properties specified in the configuration. The command produces *&lt;output&gt;.pcap* containing result mix and *&lt;output&gt;_labels.xml* with mix information. If you want to get only annotated unit modified by statistics from target file, append argument `-ie`.
+
+```bash
+$ ./id2t -i <target_file> -a Mix custom.payload.file=<configuration> inject.at-timestamp=<timestamp> -o <output>
+```
+
+The following example shows a combination of SSH attack with the testing packet trace using default configuration available in this repository.
+
+```bash
+$ ./id2t -i ./resources/test/reference_1998.pcap -a Mix custom.payload.file=./resources/mix_config.yml \
+inject.at-timestamp=500 -o ./mixed
 ```
 
 
