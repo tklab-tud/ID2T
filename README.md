@@ -27,6 +27,21 @@ The following sections present extended ID2T functionality with a focus on **mod
 
 ### Inject Configuration
 
+Packet injection is configured using a YAML configuration file specified by `custom.payload.file=` argument. A default example of inject configuration file can be found in [./resources/mix_config.yml](resources/mix_config.yml). Copy the configuration file and update all required options accroding to your inject scenario.
+
+#### Configuration Options
+
+The following list introduces all available configuration options together with their brief explanation:
+
+* **atk.file** (mandatory): Path to the annotated unit trace file. Option *default* will inject [./resources/hydra-1_tasks.pcap](resources/hydra-1_tasks.pcap) packet trace.
+```yaml
+atk.file: default
+```
+
+* **read.write** (mandatory): Packet processing option 
+```yaml
+read.write: sequence
+```
 
 
 ### Basic Commands
