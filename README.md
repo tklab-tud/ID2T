@@ -31,7 +31,7 @@ The following sections present extended ID2T functionality with a focus on **mod
 
 ### Basic Commands
 
-Use the following command to start injection of an annotated unit into the target trace file using properties specified in the configuration. The command produces a target file *mixed.pcap* with the injected unit and *mixed_labels.xml* with mix information. If you want to get only annotated unit modified by statistics from target file, append argument `-ie`.
+Use the following command to start injection of an annotated unit into the target trace file using properties specified in the configuration. The command produces *mixed.pcap* containing result mix and *mixed_labels.xml* with mix information. If you want to get only annotated unit modified by statistics from target file, append argument `-ie`.
 
 ```bash
 $ ./id2t -i <target_file> -a Mix custom.payload.file=<configuration> inject.at-timestamp=<timestamp> -o ./mixed
