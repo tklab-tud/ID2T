@@ -27,7 +27,7 @@ The following sections present extended ID2T functionality with a focus on **mod
 
 ### Inject Configuration
 
-Packet injection is configured using a YAML configuration file specified by `custom.payload.file=` argument. A default example of inject configuration file can be found in [./resources/mix_config.yml](resources/mix_config.yml). Copy the configuration file and update all required options accroding to your inject scenario.
+Packet injection is configured using a YAML configuration file specified by `custom.payload.file=` argument. A default example of inject configuration file can be found in [./resources/mix_config.yml](resources/mix_config.yml). Copy the configuration file and update all required options according to your inject scenario.
 
 #### Configuration Options
 
@@ -38,11 +38,40 @@ The following list introduces all available configuration options together with 
 atk.file: default
 ```
 
-* **read.write** (mandatory): Packet processing option 
+* **read.write** (mandatory): Specify an approach of packets processing. Use *sequence* for processing packets one by one (consumes less memory), or *bulk* for processing packets all at once.
 ```yaml
 read.write: sequence
 ```
 
+* **timestamp** (mandatory): Specification of functions used for timestamp adaptation. The following list contains all available options:
+  * **generation** – *default*, *timestamp_shift*, *tcp_avg_shift*, *timestamp_dynamic_shift*;
+  * **postprocess** – *timestamp_delay*, *timestamp_delay_forIPlist*, *timestamp_delay_forIPconst*, *timestamp_random_oscillation* (postprocess functions are applied in specified order);
+  * **generation.alt** – *default*, *timestamp_shift*, *timestamp_dynamic_shift*;
+  * **random.threshold** – float value (used by postprocessesing functions *timestamp_random_oscillation*, *timestamp_delay_forIPconst*, *timestamp_delay*).
+```yaml
+timestamp:
+  generation: tcp_avg_shift
+  postprocess: 
+    - function: timestamp_delay_forIPlist
+  generation.alt: timestamp_dynamic_shift
+  random.treshold: 0.001
+```
+
+* **ip.map**: Mapping of IP addresses in the annotated unit to addresses in the target trace file. No additional adaptation of annotated unit is performed if selected IPs are not presented in the target trace file.
+```yaml
+ip.map:
+  - ip:
+      old: 240.0.0.2
+      new: 192.168.0.11
+```
+
+* **mac.map**: Mapping of MAC addresses in the annotated unit to addresses in the target trace file.
+```yaml
+mac.map:
+  - mac: 
+      old: 08:00:27:bd:c2:37
+      new: 00:11:09:95:26:FE
+```
 
 ### Basic Commands
 
