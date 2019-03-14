@@ -13,10 +13,9 @@ We are trying to avoid adding any additional requirements to maintain backward c
 
 ## Installation
 
-Installation steps are similar to the official repository (see section [Compilation and Installation](https://github.com/tklab-tud/ID2T#compilation-and-installation)). The following list provides a basic installation and build commands only. For a more detailed guide see the official repository.
+Installation steps are similar to the official repository (see section [Compilation and Installation](https://github.com/tklab-tud/ID2T#compilation-and-installation)). The following list provides basic installation and build commands only. For a more detailed guide see the official repository.
 
 * `$ ./build.sh` – install dependencies, initialize submodules, build the C++ modules and create the ID2T executables
-* `$ ./build.sh --non-interactive` – build without dependencies installation
 * `$ ./id2t -h` – see ID2T usage and check if everything is correctly installed
 
 
@@ -32,9 +31,18 @@ The following sections present extended ID2T functionality with a focus on **mod
 
 ### Basic Commands
 
-Use the following command to start injection of an annotated unit into the target trace file using properties specified in the configuration. The command produces a target file with the injected unit in the same directory as the target file. If you want to get only annotated unit modified by statistics from target file, append argument `-ie`.
+Use the following command to start injection of an annotated unit into the target trace file using properties specified in the configuration. The command produces a target file *mixed.pcap* with the injected unit and *mixed_labels.xml* with mix information. If you want to get only annotated unit modified by statistics from target file, append argument `-ie`.
 
-`$ ./id2t -i <target_file> -a Mix custom.payload.file=<configuration> inject.at-timestamp=<inject_timestamp>`
+```bash
+$ ./id2t -i <target_file> -a Mix custom.payload.file=<configuration> inject.at-timestamp=<timestamp> -o ./mixed
+```
+
+The following example shows a combination of SSH attack with the testing packet trace using default configuration available in this repository.
+
+```bash
+$ ./id2t -i ./resources/test/reference_1998.pcap -a Mix custom.payload.file=./resources/mix_config.yml \
+inject.at-timestamp=500 -o ./mixed
+```
 
 
 ## Contribution
