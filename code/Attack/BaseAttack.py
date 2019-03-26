@@ -520,13 +520,13 @@ class BaseAttack(metaclass=abc.ABCMeta):
 
     def get_reply_delay(self, ip_dst, default=2000):
         """
-           Gets the minimum and the maximum reply delay for all the connections of a specific IP.
+        Gets the minimum and the maximum reply delay for all the connections of a specific IP.
 
-           :param ip_dst: The IP to reterive its reply delay.
-           :param default: The default value to return if no delay could be fount. If < 0 raise an exception instead
-           :return minDelay: minimum delay
-           :return maxDelay: maximum delay
-           """
+        :param ip_dst: The IP to reterive its reply delay.
+        :param default: The default value to return if no delay could be fount. If < 0 raise an exception instead
+        :return minDelay: minimum delay
+        :return maxDelay: maximum delay
+        """
         result = self.statistics.process_db_query(
             "SELECT MIN(minDelay), MAX(maxDelay) FROM conv_statistics WHERE ipAddressB='" + ip_dst + "';")
         if result[0][0] and result[0][1]:
