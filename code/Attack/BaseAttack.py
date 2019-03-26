@@ -526,10 +526,9 @@ class BaseAttack(metaclass=abc.ABCMeta):
            :param default: The default value to return if no delay could be fount. If < 0 raise an exception instead
            :return minDelay: minimum delay
            :return maxDelay: maximum delay
-
            """
         result = self.statistics.process_db_query(
-            "SELECT AVG(minDelay), AVG(maxDelay) FROM conv_statistics WHERE ipAddressB='" + ip_dst + "';")
+            "SELECT MIN(minDelay), MAX(maxDelay) FROM conv_statistics WHERE ipAddressB='" + ip_dst + "';")
         if result[0][0] and result[0][1]:
             min_delay = result[0][0]
             max_delay = result[0][1]
