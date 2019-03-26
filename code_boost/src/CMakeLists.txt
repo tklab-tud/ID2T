@@ -53,7 +53,7 @@ add_subdirectory(SQLiteCpp)
 include_directories(pybind11/include)
 
 # Find libtins library
-if(${LIBTINS_VERSION} VERSION_LESS "4.1" OR ${LIBTINS_PATCH} EQUAL 1)
+if(${LIBTINS_VERSION} VERSION_LESS "4.2" OR ${LIBTINS_PATCH} EQUAL 1)
     message(STATUS "Tins will be built from source.")
     set(TINS_LIBRARY tins)
     link_directories(BEFORE libtins/src)

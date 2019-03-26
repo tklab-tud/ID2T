@@ -57,7 +57,7 @@ install_pkg_arch()
     # libtins is not provided by Arch repos, check seperately
     echo -e "Additional Packages: Checking..."
     pacman -Qi libtins >/dev/null
-    if [ $? != 0 ] || [ ${libtins_version:0:3} != "4.1" ]; then
+    if [ $? != 0 ] || [ ${libtins_version:0:3} != "4.2" ]; then
         echo -e "Additional Packages: Installing..."
 
         pushd /tmp
