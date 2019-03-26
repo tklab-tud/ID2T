@@ -46,17 +46,26 @@ def update_timestamp(timestamp: float, pps: float, delay: float=0, inj_pps: floa
     """
     Calculates the next timestamp to be used based on the packet per second rate (pps) and the maximum delay.
 
+    :param timestamp: the base timestamp to update
+    :param pps: the packets per second specified by the user
+    :param delay: the delay calculated from the statistics db
+    :param inj_pps: packets to inject each second
+    :param inj_timestamp: timestamp of the begin of the attack
     :return: Timestamp to be used for the next packet.
     """
     # FIXME: throw Exception if pps==0
-    second = 0
     packets_this_second = 0
+
     if inj_pps != 0 and inj_timestamp != 0:
+        # time past since the beginning of the attack
         time = timestamp - inj_timestamp
+        # packets injected so far
         packets_so_far = time / inj_pps
+        # packets to be injected this second
         packets_this_second = packets_so_far % inj_pps
     else:
         inj_pps = 0
+
     if delay == 0:
         # Calculate request timestamp
         # To imitate the bursty behavior of traffic
