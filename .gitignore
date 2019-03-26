@@ -18,6 +18,8 @@ captures/*
 #labels
 tures/*
 
+*.pcap
+*.xml
 code/*.pcap
 code/*.xml
 .coverage
@@ -33,6 +35,7 @@ resources/test/id2t_results
 # legacy dir
 resources/test/ID2T_results
 
+# executables
 id2t
 run_tests
 test_efficiency
@@ -44,4 +47,11 @@ test_efficiency
 # Python environment
 .venv
 
+# macOS
 .DS_Store
+
+# qtcreator
+*.config
+*.creator*
+*.files
+*.includes
