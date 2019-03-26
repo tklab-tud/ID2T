@@ -229,7 +229,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                 # Get MSS, TTL and Window size value for destination IP
                 destination_mss_value, destination_ttl_value, destination_win_value = self.get_ip_data(ip)
 
-                min_delay, max_delay = self.get_reply_delay(ip)
+                min_delay, max_delay = self.get_reply_latency(ip)
 
                 # New connection, new random TCP sequence numbers
                 attacker_seq = rnd.randint(1000, 50000)

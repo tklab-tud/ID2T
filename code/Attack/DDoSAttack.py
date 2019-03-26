@@ -154,7 +154,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         self.path_attack_pcap = None
 
-        min_delay, max_delay = self.get_reply_delay(ip_destination)
+        min_latency, max_latency = self.get_reply_latency(ip_destination)
         victim_buffer = self.get_param_value(atkParam.Parameter.VICTIM_BUFFER)
 
         attack_duration = self.get_param_value(atkParam.Parameter.ATTACK_DURATION)
@@ -205,9 +205,9 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 timestamps_tuples.append((timestamp_next_pkt, attacker+1))
 
                 # Calculate timestamp of victim ACK-packet
-                timestamp_reply = Util.update_timestamp(timestamp_next_pkt, attacker_pps, min_delay)
+                timestamp_reply = Util.update_timestamp(timestamp_next_pkt, attacker_pps, min_latency)
                 while timestamp_reply <= timestamp_prv_reply:
-                    timestamp_reply = Util.update_timestamp(timestamp_prv_reply, attacker_pps, min_delay)
+                    timestamp_reply = Util.update_timestamp(timestamp_prv_reply, attacker_pps, min_latency)
                 timestamp_prv_reply = timestamp_reply
 
                 # Add timestamp of victim ACK-packet(victim always has id=0)
