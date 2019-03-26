@@ -186,6 +186,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         previous_attacker_port = []
         replies_count = 0
         self.total_pkt_num = 0
+        already_used_pkts = 0
         # For each attacker, generate his own packets, then merge all packets
         for attacker in range(num_attackers):
             # Initialize empty port "FIFO" for current attacker
@@ -194,7 +195,14 @@ class DDoSAttack(BaseAttack.BaseAttack):
             timestamp_next_pkt = self.get_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP)
             attack_ends_time = timestamp_next_pkt + attack_duration
             timestamp_next_pkt = rnd.uniform(timestamp_next_pkt, Util.update_timestamp(timestamp_next_pkt, attacker_pps))
-            attacker_pkts_num = int(pkts_num / num_attackers) + rnd.randint(0, 100)
+            # calculate each attackers packet count without exceeding the total number of attackers
+            attacker_pkts_num = 0
+            if already_used_pkts < pkts_num:
+                random_offset = rnd.randint(0, 50)
+                if attacker == num_attackers-1:
+                    random_offset = 0
+                attacker_pkts_num = int((pkts_num - already_used_pkts) / (num_attackers - attacker)) + random_offset
+                already_used_pkts += attacker_pkts_num
             timestamp_prv_reply = 0
             for pkt_num in range(attacker_pkts_num):
                 # Stop the attack when it exceeds the duration
