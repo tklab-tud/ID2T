@@ -194,7 +194,9 @@ class DDoSAttack(BaseAttack.BaseAttack):
             # Calculate timestamp of first SYN-packet of attacker
             timestamp_next_pkt = self.get_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP)
             attack_ends_time = timestamp_next_pkt + attack_duration
-            timestamp_next_pkt = rnd.uniform(timestamp_next_pkt, Util.update_timestamp(timestamp_next_pkt, attacker_pps))
+            # FIXME: maybe here (correct timestamp)
+            if attacker != 0:
+                timestamp_next_pkt = rnd.uniform(timestamp_next_pkt, Util.update_timestamp(timestamp_next_pkt, attacker_pps))
             # calculate each attackers packet count without exceeding the total number of attackers
             attacker_pkts_num = 0
             if already_used_pkts < pkts_num:
