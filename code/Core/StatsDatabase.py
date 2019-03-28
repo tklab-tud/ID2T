@@ -188,11 +188,11 @@ class StatsDatabase:
                     substr = "The default interval will used after it is calculated."
                 print("No user specified interval found. " + substr)
             else:
-                self.current_interval_statistics_tables.append("interval_statistics_" +
-                                                               str(int(current_interval*1000000)))
+                table_name = "interval_statistics_" + str(int(current_interval*1000000))
                 if current_interval == current_intervals[0]:
                     print("User specified interval(s) found. Using first interval length given for internal "
                           "calculations: " + str(current_interval) + "s")
+            self.current_interval_statistics_tables.append(table_name)
 
     def named_query_parameterized(self, keyword: str, param_op_val: list):
         """
