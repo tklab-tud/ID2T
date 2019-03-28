@@ -25,6 +25,7 @@ class Statistics:
         self.pcap_proc = None
         self.do_extra_tests = False
         self.file_info = None
+        self.kbyte_rate = {"local": None, "public": None}
 
         # Create folder for statistics database if required
         self.path_db = pcap_file.get_db_path()
@@ -265,6 +266,59 @@ class Statistics:
         inverted_table["interval_count"] = len(inverted_table[column_names[0]])
 
         return sorted(inverted_table.items())
+
+    def get_kbyte_rate(self, mode: str="local", custom_bandwidth_local: float=0, custom_bandwidth_public: float=0):
+        """
+        Takes a modes "local" or "public" and returns the maximal kybte rate based on the pcaps IP statistics and a
+        predefined minimum.
+
+        :param mode: a string that is either "local", "public" or "unknown"
+        :param custom_bandwidth_local: bandwidth minimum for local traffic
+        :param custom_bandwidth_public: bandwidth minimum for public traffic
+        :return: bandwidth in kbyte/sec
+        """
+        # default bandwidth in kbytes/sec
+        bandwidth_local = 12500 # 100 mbit/s
+        bandwidth_public = 1250 #  10 mbit/s
+
+        if custom_bandwidth_public != 0:
+            bandwidth_public = custom_bandwidth_public
+        if custom_bandwidth_local != 0:
+            bandwidth_local = custom_bandwidth_local
+
+        minimum_rate = {"local": bandwidth_local, "public": bandwidth_public}
+
+        if mode=="unknown":
+            return minimum_rate["local"]
+
+        table = "ip_statistics"
+
+        if not self.kbyte_rate[mode]:
+            if mode=="local":
+                self.kbyte_rate[mode] = self.stats_db.process_interval_statistics_query\
+                    ("select max(maxKByteRate) from %s where (ipClass like 'private') or (ipClass in ('A-unused','D')",
+                     table)[0][0]
+            elif mode=="public":
+                self.kbyte_rate[mode] = self.stats_db.process_interval_statistics_query\
+                    ("select max(maxKByteRate) from %s where ipClass in ('A','B','C','E')", table)[0][0]
+
+        if mode == "local":
+            i = 0
+            # for local networks
+            # set bandwidth to tenfold of its minimum until it is larger than the pcap bandwidth
+            while self.kbyte_rate[mode] > minimum_rate[mode]:
+                i += 1
+                minimum_rate[mode] *= 10 * i
+            self.kbyte_rate[mode] = minimum_rate[mode]
+        else:
+            # for public networks
+            # increase the bandwidth by a multiple of 2 mbit/s according to the pcap bandwidth
+            self.kbyte_rate[mode] = ceil(self.kbyte_rate[mode])
+            remainder = self.kbyte_rate[mode] % 250
+            if remainder != 0:
+                self.kbyte_rate[mode] += 250 - remainder
+
+        return max([self.kbyte_rate[mode], minimum_rate[mode]])
 
     @staticmethod
     def write_list(desc_val_unit_list, func, line_ending="\n"):
