@@ -31,46 +31,48 @@ void split_str(const std::string& s, char delim,std::vector<std::string>& v) {
 
 /**
  * Get the class (A,B,C,D,E) of IP address.
- * @param ipAddress IP that we get its class.
+ * @param ipAddress to get the class from.
+ * @return the IP Class as a string.
  */
-std::string getIPv4Class(const std::string &ipAddress){
+std::string getIPv4Class(const std::string &ipAddress) {
     std::string ipClass="Unknown";
-    
+
     std::vector<std::string> ipBytes;
     split_str(ipAddress, '.',ipBytes);
-    
-    //std::cout<< ipAddress << "\n";
-    
-    if(ipBytes.size()>1){
+
+    if (ipBytes.size() <= 1) {
+        return ipClass;
+    }
+
     int b1 = std::stoi(ipBytes[0]);
     int b2 = std::stoi(ipBytes[1]);
-    
-    if(b1 >= 1 && b1 <= 126){
+
+    if(b1 >= 1 && b1 <= 126) {
         if(b1 == 10)
             ipClass = "A-private";
         else
             ipClass = "A";
-    }
-    else if(b1 == 127){
+    } else if(b1 == 127) {
+        // can be consider private
         ipClass = "A-unused"; // cannot be used and is reserved for loopback and diagnostic functions.
-    }
-    else if (b1 >= 128 && b1 <= 191){
-        if(b1 == 172 && b2 >= 16 && b2 <= 31) 
+    } else if (b1 >= 128 && b1 <= 191) {
+        if(b1 == 172 && b2 >= 16 && b2 <= 31)
             ipClass = "B-private";
         else
             ipClass = "B";
-    }
-    else if (b1 >= 192 && b1 <= 223){
-         if(b1 == 192 && b2 == 168) 
+    } else if (b1 >= 192 && b1 <= 223) {
+         if(b1 == 192 && b2 == 168)
             ipClass = "C-private";
          else
             ipClass = "C";
-    }
-    else if (b1 >= 224 && b1 <= 239)
+    } else if (b1 >= 224 && b1 <= 239) {
+        // can be consider private
         ipClass = "D"; // Reserved for Multicasting
-    else if (b1 >= 240 && b1 <= 254)
-        ipClass = "E"; // Experimental; used for research    
+    } else if (b1 >= 240 && b1 <= 254) {
+        // can be consider public
+        ipClass = "E"; // Experimental; used for research
     }
+
     return ipClass;
 }
 
