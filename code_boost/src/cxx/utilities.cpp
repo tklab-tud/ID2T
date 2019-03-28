@@ -31,7 +31,8 @@ void split_str(const std::string& s, char delim,std::vector<std::string>& v) {
 
 /**
  * Get the class (A,B,C,D,E) of IP address.
- * @param ipAddress IP that we get its class.
+ * @param ipAddress to get the class from.
+ * @return the IP Class as a string.
  */
 std::string getIPv4Class(const std::string &ipAddress) {
     std::string ipClass="Unknown";
