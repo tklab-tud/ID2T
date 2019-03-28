@@ -1,66 +1,125 @@
 atk.file: default
+# path to the attack pcap
+# 'default' for default pcap.
 
 read.write: sequence
+# 'sequence' for reading & writing packets one by one, consumes less memory
+# 'bulk' for reading & writing packets all at once
 
 timestamp:
   generation: tcp_avg_shift
+# accepted values are default, timestamp_shift, tcp_avg_shift, timestamp_dynamic_shift
+# timestamp generation function
+
   postprocess: 
     - function: timestamp_delay_forIPlist
+# contains list of postprocess function applied to timestamps after generation function
+# postprocess functions are applied in specified order
+
   generation.alt: timestamp_dynamic_shift
+#alternative timestamp generation function, may be required by timestamp generation function
+
   random.treshold: 0.001
+# expects float value
+# threshold value for random timestamp generation
 
 ip.map:
+# ap of old to new ips for changing IP addresses
   - ip:
       old: 0.0.0.0
+      # Address in attack pcap
       new: 0.0.0.0
+      # Address in target pcap
 
 mac.map:
+# map of old to new macs for changing MAC addresses
   - mac: 
       old: 00:00:00:00:00:00
+      # Address in attack pcap
       new: 00:00:00:00:00:00
+      # Address in target pcap
 
 port.ip.map:
+# map of old to new ports based on ip address
   - ip:
+# host ip address
       type: old 
+# new if IP address after IP address mapping
+# old if IP address before IP address mapping
       address: 0.0.0.0
+# IP address
     port: 
       old: 0
+# port in attack pcap
       new: 0
+# port in target pcap
 
 ttl.ip.exceptions:
+# list of addresses for which ttl should not be recalculated
   - ip: 
       type: old
+# new if IP address after IP address mapping
+# old if IP address before IP address mapping
       address: 0.0.0.0
+# IP address
 
 mss.ip.exceptions:
-  - ip:
+# list of addresses for which mss should not be recalculated
+  - ip: 
       type: old
+# new if IP address after IP address mapping
+# old if IP address before IP address mapping
       address: 0.0.0.0
+# IP address
 
 win.ip.exceptions:
-  - ip:
-      type: old 
+# list of addresses for which win should not be recalculated
+  - ip: 
+      type: old
+# new if IP address after IP address mapping
+# old if IP address before IP address mapping
       address: 0.0.0.0
+# IP address
 
 tcp.delay:
+# map of additional statistics for average tcp handshake delay
   - ip:
       type: old
+# new if IP address after IP address mapping
+# old if IP address before IP address mapping
       source.address: 0.0.0.0
+# sender IP
       destination.address: 0.0.0.0
+# recipient IP
     delay: 0.001
+# average delay
   - ip:
       type: new
+# new if IP address after IP address mapping
+# old if IP address before IP address mapping
       source.address: 0.0.0.0
+# sender IP
       destination.address: 0.0.0.0
+# recipient IP
     delay: 0.001
+# average delay
 
 timestamp.random.tresholds:
+# map of IPs and their tresholds for generating random fluctuations in timestamp delays
   - ip:
       type: old
+# new if IP address after IP address mapping
+# old if IP address before IP address mapping
       address: 0.0.0.0
+# ip address
     treshold: 0.001
+# delay treshold
 
 timestamp.random.set:
+# set of IP addresses for which random delay fluctuation  should be calculated
   - ip:
       type: old
+# new if IP address after IP address mapping
+# old if IP address before IP address mapping
       address: 0.0.0.0
+# IP address
