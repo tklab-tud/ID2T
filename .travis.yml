@@ -92,5 +92,5 @@ script:
       fi
     - |
       if [[ "$DOCKER" == "1" ]]; then
-          sudo docker run ${distribution}:${version} /bin/bash -c "${prerequisite} && git clone https://github.com/"${TRAVIS_REPO_SLUG}" && cd ID2T && git checkout suse_support && ./resources/install_dependencies.sh -y && ./build.sh --non-interactive && ./run_tests" --rm
+          sudo docker run ${distribution}:${version} /bin/bash -c "${prerequisite} && git clone https://github.com/"${TRAVIS_REPO_SLUG}" && cd ID2T && git checkout ${TRAVIS_BRANCH} && ./resources/install_dependencies.sh -y && ./build.sh --non-interactive && ./run_tests" --rm
       fi
