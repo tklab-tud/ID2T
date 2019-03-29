@@ -430,6 +430,32 @@ void statistics_db::writeStatisticsFile(int packetCount, float captureDuration, 
     }
 }
 
+/**
+ * @brief statistics_db::calculate_latency This function
+ * @param interarrival_times Pointer to vector containing inter arrival times.
+ * @param sumLatency Pointer to sumLatency int.
+ * @param maxLatency Pointer to maxLatency int.
+ * @param minLatency Pointer to minLatency int.
+ */
+void statistics_db::calculate_latency(std::vector<std::chrono::microseconds> *interarrival_times, int *maxLatency, int *minLatency, std::chrono::microseconds *avg_interarrival_time) {
+    int sumLatency = 0;
+    *minLatency = -1;
+    *maxLatency = -1;
+    int interTime = 0;
+    for (auto iter = interarrival_times->begin(); iter != interarrival_times->end(); iter++) {
+        interTime = static_cast<int>(iter->count());
+        sumLatency += iter->count();
+        if (*maxLatency < interTime)
+            *maxLatency = interTime;
+        if (*minLatency > interTime || *minLatency == -1)
+            *minLatency = interTime;
+    }
+    if (interarrival_times->size() > 0) {
+        *avg_interarrival_time = static_cast<std::chrono::microseconds>(sumLatency) / interarrival_times->size();
+    } else {
+        *avg_interarrival_time = static_cast<std::chrono::microseconds>(0);
+    }
+}
 
 /**
  * Writes the conversation statistics into the database.
@@ -459,19 +485,9 @@ void statistics_db::writeStatisticsConv(std::unordered_map<conv, entry_convStat>
             const conv &f = it->first;
             entry_convStat &e = it->second;
             if (e.pkts_count > 1){
-                int sumDelay = 0;
-                int minDelay = -1;
-                int maxDelay = -1;
-                for (int i = 0; (unsigned) i < e.interarrival_time.size(); i++) {
-                    sumDelay += e.interarrival_time[i].count();
-                    if (maxDelay < e.interarrival_time[i].count())
-                        maxDelay = e.interarrival_time[i].count();
-                    if (minDelay > e.interarrival_time[i].count() || minDelay == -1)
-                        minDelay = e.interarrival_time[i].count();
-                }
-                if (e.interarrival_time.size() > 0)
-                    e.avg_interarrival_time = (std::chrono::microseconds) sumDelay / e.interarrival_time.size(); // average
-                else e.avg_interarrival_time = (std::chrono::microseconds) 0;
+                int minDelay;
+                int maxDelay;
+                calculate_latency(&e.interarrival_time, &maxDelay, &minDelay, &e.avg_interarrival_time);
 
                 std::vector<std::chrono::microseconds>::const_iterator i1;
                 std::vector<small_uint<12>>::const_iterator i2;
