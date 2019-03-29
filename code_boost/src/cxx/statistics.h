@@ -692,7 +692,6 @@ private:
 
     int default_interval = 0;
 
-
     /*
      * Data containers
      */
@@ -755,6 +754,11 @@ private:
 
     // {Source MAC, Destination MAC, typeNumber, #count, #timestamp of last occurrence}
     std::unordered_map<unrecognized_PDU, unrecognized_PDU_stat> unrecognized_PDUs;
+
+    /*
+     * Helper functions
+     */
+    void storeConvStat(conv *conversation, const std::chrono::microseconds timestamp, const small_uint<12> *flags);
 };
 
 

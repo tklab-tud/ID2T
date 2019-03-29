@@ -370,6 +370,22 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
 }
 
 /**
+ * @brief statistics::storeConvStat A helper function for addConvStat.
+ * @param conversation The conversation to which to add the timestamp.
+ * @param timestamp The timestamp of the packet.
+ * @param flags TCP flags in one hot encode.
+ */
+void statistics::storeConvStat(conv *conversation, const std::chrono::microseconds timestamp, const small_uint<12> *flags) {
+    conv_statistics[*conversation].pkts_count++;
+    if ((conv_statistics[*conversation].pkts_timestamp.size() || conv_statistics[*conversation].pkts_timestamp.size() > 0) && conv_statistics[*conversation].pkts_count <= 3) {
+        auto interarrival_time = std::chrono::duration_cast<std::chrono::microseconds>(timestamp - conv_statistics[*conversation].pkts_timestamp.back());
+        conv_statistics[*conversation].interarrival_time.push_back(interarrival_time);
+    }
+    conv_statistics[*conversation].pkts_timestamp.push_back(timestamp);
+    conv_statistics[*conversation].tcp_types.push_back(*flags);
+}
+
+/**
  * Registers statistical data for a sent packet in a given conversation (two IPs, two ports).
  * Increments the counter packets_A_B or packets_B_A.
  * Adds the timestamp of the packet in pkts_A_B_timestamp or pkts_B_A_timestamp.
@@ -378,27 +394,18 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
  * @param ipAddressReceiver The receiver IP address.
  * @param dport The destination port.
  * @param timestamp The timestamp of the packet.
+ * @param flags TCP flags in one hot encode.
  */
-void statistics::addConvStat(const std::string &ipAddressSender,int sport,const std::string &ipAddressReceiver,int dport, std::chrono::microseconds timestamp, small_uint<12> flags){
-
+void statistics::addConvStat(const std::string &ipAddressSender,int sport,const std::string &ipAddressReceiver,int dport, std::chrono::microseconds timestamp, small_uint<12> flags) {
     conv f1 = {ipAddressReceiver, dport, ipAddressSender, sport};
     conv f2 = {ipAddressSender, sport, ipAddressReceiver, dport};
 
     // if already exist A(ipAddressReceiver, dport), B(ipAddressSender, sport) conversation
-    if (conv_statistics.count(f1)>0){
-        conv_statistics[f1].pkts_count++;
-        if(conv_statistics[f1].pkts_count<=3)
-            conv_statistics[f1].interarrival_time.push_back(std::chrono::duration_cast<std::chrono::microseconds> (timestamp - conv_statistics[f1].pkts_timestamp.back()));
-        conv_statistics[f1].pkts_timestamp.push_back(timestamp);
-        conv_statistics[f1].tcp_types.push_back(flags);
-    }
-    // Add new conversation A(ipAddressSender, sport), B(ipAddressReceiver, dport)
-    else{
-        conv_statistics[f2].pkts_count++;
-        if(conv_statistics[f2].pkts_timestamp.size()>0 && conv_statistics[f2].pkts_count<=3 )
-            conv_statistics[f2].interarrival_time.push_back(std::chrono::duration_cast<std::chrono::microseconds> (timestamp - conv_statistics[f2].pkts_timestamp.back()));
-        conv_statistics[f2].pkts_timestamp.push_back(timestamp);
-        conv_statistics[f2].tcp_types.push_back(flags);
+    if (conv_statistics.count(f1) > 0) {
+        storeConvStat(&f1, timestamp, &flags);
+    } else {
+        // Add new conversation A(ipAddressSender, sport), B(ipAddressReceiver, dport)
+        storeConvStat(&f2, timestamp, &flags);
     }
 }
 
