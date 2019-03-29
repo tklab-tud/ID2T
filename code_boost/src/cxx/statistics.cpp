@@ -212,19 +212,38 @@ std::vector<double> statistics::calculateIPsCumEntropy(){
 void statistics::calculateIPIntervalPacketRate(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp){
     for (auto ip = ip_statistics.begin(); ip != ip_statistics.end(); ip++) {
         int IPsSrcPktsCount = 0;
-        for (auto pktTS = ip->second.pkts_sent_timestamp.begin(); pktTS != ip->second.pkts_sent_timestamp.end(); pktTS++) {
+        float IPsSrcPktsKBytes = 0;
+
+        // iterate over all relevant pkts for the interval
+        auto pktTS = ip->second.pkts_sent_timestamp.begin();
+        auto kbytes = ip->second.pkts_kbytes.begin();
+        for (; pktTS != ip->second.pkts_sent_timestamp.end() && kbytes != ip->second.pkts_kbytes.end(); pktTS++, kbytes++) {
             if (*pktTS >= intervalStartTimestamp) {
                 IPsSrcPktsCount++;
+                IPsSrcPktsKBytes += *kbytes;
             }
         }
 
-        float interval_pkt_rate = static_cast<float>(IPsSrcPktsCount) * 1000000 / interval.count(); // used 10^6 because interval in microseconds
+        // multiply by 10^6 because interval count is in microseconds
+        float interval_pkt_rate = static_cast<float>(IPsSrcPktsCount) * 1000000 / interval.count();
+        float interval_kbyte_rate = IPsSrcPktsKBytes * 100000 / interval.count();
+
+        // save interval pkt rate and min, max if applicable
         ip->second.interval_pkt_rate.push_back(interval_pkt_rate);
         if (interval_pkt_rate > ip->second.max_interval_pkt_rate || ip->second.max_interval_pkt_rate == 0) {
             ip->second.max_interval_pkt_rate = interval_pkt_rate;
         }
         if (interval_pkt_rate < ip->second.min_interval_pkt_rate || ip->second.min_interval_pkt_rate == 0) {
             ip->second.min_interval_pkt_rate = interval_pkt_rate;
+        }
+
+        // save interval kbyte rate and min, max if applicable
+        ip->second.interval_kbyte_rate.push_back(interval_kbyte_rate);
+        if (interval_kbyte_rate > ip->second.max_interval_kybte_rate || ip->second.max_interval_kybte_rate == 0) {
+            ip->second.max_interval_kybte_rate = interval_kbyte_rate;
+        }
+        if (interval_kbyte_rate < ip->second.min_interval_kybte_rate || ip->second.min_interval_kybte_rate == 0) {
+            ip->second.min_interval_kybte_rate = interval_kbyte_rate;
         }
     }
 }
@@ -641,13 +660,17 @@ void statistics::addIpStat_packetSent(const std::string &ipAddressSender, const 
         ip_statistics[ipAddressReceiver].ip_class = getIPv4Class(ipAddressReceiver);
     }
 
+    float kbytes = (float(bytesSent) / 1024);
+
     // Update stats for packet sender
-    ip_statistics[ipAddressSender].kbytes_sent += (float(bytesSent) / 1024);
+    ip_statistics[ipAddressSender].kbytes_sent += kbytes;
+    ip_statistics[ipAddressSender].pkts_kbytes.push_back(kbytes);
     ip_statistics[ipAddressSender].pkts_sent++;
     ip_statistics[ipAddressSender].pkts_sent_timestamp.push_back(timestamp);
 
     // Update stats for packet receiver
-    ip_statistics[ipAddressReceiver].kbytes_received += (float(bytesSent) / 1024);
+    ip_statistics[ipAddressReceiver].kbytes_received += kbytes;
+    ip_statistics[ipAddressReceiver].pkts_kbytes.push_back(kbytes);
     ip_statistics[ipAddressReceiver].pkts_received++;
     ip_statistics[ipAddressReceiver].pkts_received_timestamp.push_back(timestamp);
 

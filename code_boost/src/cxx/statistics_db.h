@@ -26,7 +26,7 @@ public:
     /*
      * Database version: Increment number on every change in the C++ code!
      */
-    static const int DB_VERSION = 27;
+    static const int DB_VERSION = 28;
 
     /*
      * Methods to read from database
