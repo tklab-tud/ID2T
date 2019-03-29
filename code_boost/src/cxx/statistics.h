@@ -182,6 +182,10 @@ struct entry_ipStat {
     std::vector<float> interval_pkt_rate;
     float max_interval_pkt_rate;
     float min_interval_pkt_rate;
+    std::vector<float> pkts_kbytes;
+    std::vector<float> interval_kbyte_rate;
+    float max_interval_kybte_rate;
+    float min_interval_kybte_rate;
     std::vector<std::chrono::microseconds> pkts_sent_timestamp;
     std::vector<std::chrono::microseconds> pkts_received_timestamp;
 
@@ -193,6 +197,10 @@ struct entry_ipStat {
                && interval_pkt_rate == other.interval_pkt_rate
                && max_interval_pkt_rate == other.max_interval_pkt_rate
                && min_interval_pkt_rate == other.min_interval_pkt_rate
+               && pkts_kbytes == other.pkts_kbytes
+               && interval_kbyte_rate == other.interval_kbyte_rate
+               && max_interval_kybte_rate == other.max_interval_kybte_rate
+               && min_interval_kybte_rate == other.min_interval_kybte_rate
                && ip_class == other.ip_class
                && pkts_sent_timestamp == other.pkts_sent_timestamp
                && pkts_received_timestamp == other.pkts_received_timestamp;

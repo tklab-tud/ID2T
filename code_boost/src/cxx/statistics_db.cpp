@@ -74,10 +74,12 @@ void statistics_db::writeStatisticsIP(const std::unordered_map<std::string, entr
                 "kbytesSent REAL, "
                 "maxPktRate REAL,"
                 "minPktRate REAL,"
+                "maxKByteRate REAL,"
+                "minKByteRate REAL,"
                 "ipClass TEXT COLLATE NOCASE, "
                 "PRIMARY KEY(ipAddress));";
         db->exec(createTable);
-        SQLite::Statement query(*db, "INSERT INTO ip_statistics VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+        SQLite::Statement query(*db, "INSERT INTO ip_statistics VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         for (auto it = ipStatistics.begin(); it != ipStatistics.end(); ++it) {
             const entry_ipStat &e = it->second;
             query.bindNoCopy(1, it->first);
@@ -87,7 +89,9 @@ void statistics_db::writeStatisticsIP(const std::unordered_map<std::string, entr
             query.bind(5, e.kbytes_sent);
             query.bind(6, e.max_interval_pkt_rate);
             query.bind(7, e.min_interval_pkt_rate);
-            query.bindNoCopy(8, e.ip_class);
+            query.bind(8, e.max_interval_kybte_rate);
+            query.bind(9, e.min_interval_kybte_rate);
+            query.bindNoCopy(10, e.ip_class);
             query.exec();
             query.reset();
 
