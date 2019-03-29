@@ -296,7 +296,7 @@ std::vector<double> statistics::calculateEntropies(std::unordered_map<int, int> 
 void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval, std::chrono::microseconds intervalStartTimestamp, std::chrono::microseconds intervalEndTimestamp){
     // Add packet rate for each IP to ip_statistics map
     calculateIPIntervalPacketRate(interval, intervalStartTimestamp);
-    
+
     std::vector<double> ipEntopies = calculateLastIntervalIPsEntropy(intervalStartTimestamp);
     std::vector<double> ipCumEntopies = calculateIPsCumEntropy();
     std::string lastPktTimestamp_s = std::to_string(intervalEndTimestamp.count());
@@ -351,7 +351,7 @@ void statistics::addIntervalStat(std::chrono::duration<int, std::micro> interval
 }
 
 /**
- * Registers statistical data for a sent packet in a given conversation (two IPs, two ports). 
+ * Registers statistical data for a sent packet in a given conversation (two IPs, two ports).
  * Increments the counter packets_A_B or packets_B_A.
  * Adds the timestamp of the packet in pkts_A_B_timestamp or pkts_B_A_timestamp.
  * @param ipAddressSender The sender IP address.
@@ -384,7 +384,7 @@ void statistics::addConvStat(const std::string &ipAddressSender,int sport,const 
 }
 
 /**
- * Registers statistical data for a sent packet in a given extended conversation (two IPs, two ports, protocol). 
+ * Registers statistical data for a sent packet in a given extended conversation (two IPs, two ports, protocol).
  * Increments the counter packets_A_B or packets_B_A.
  * Adds the timestamp of the packet in pkts_A_B_timestamp or pkts_B_A_timestamp.
  * Updates all other statistics of conv_statistics_extended
@@ -629,15 +629,14 @@ void statistics::assignMacAddress(const std::string &ipAddress, const std::strin
  * @param bytesSent The packet's size.
  */
 void statistics::addIpStat_packetSent(const std::string &ipAddressSender, const std::string &ipAddressReceiver, long bytesSent, std::chrono::microseconds timestamp) {
-
     // Adding IP as a sender for first time
-    if(ip_statistics[ipAddressSender].pkts_sent==0){  
+    if (ip_statistics[ipAddressSender].pkts_sent==0) {
         // Add the IP class
         ip_statistics[ipAddressSender].ip_class = getIPv4Class(ipAddressSender);
     }
-    
+
     // Adding IP as a receiver for first time
-    if(ip_statistics[ipAddressReceiver].pkts_received==0){
+    if (ip_statistics[ipAddressReceiver].pkts_received==0){
         // Add the IP class
         ip_statistics[ipAddressReceiver].ip_class = getIPv4Class(ipAddressReceiver);
     }
@@ -646,13 +645,13 @@ void statistics::addIpStat_packetSent(const std::string &ipAddressSender, const 
     ip_statistics[ipAddressSender].kbytes_sent += (float(bytesSent) / 1024);
     ip_statistics[ipAddressSender].pkts_sent++;
     ip_statistics[ipAddressSender].pkts_sent_timestamp.push_back(timestamp);
-                
+
     // Update stats for packet receiver
     ip_statistics[ipAddressReceiver].kbytes_received += (float(bytesSent) / 1024);
     ip_statistics[ipAddressReceiver].pkts_received++;
     ip_statistics[ipAddressReceiver].pkts_received_timestamp.push_back(timestamp);
 
-    if(this->getDoExtraTests()) {
+    if (this->getDoExtraTests()) {
         // Increment Degrees for sender and receiver, if Sender sends its first packet to this receiver
         std::unordered_set<std::string>::const_iterator found_receiver = contacted_ips[ipAddressSender].find(ipAddressReceiver);
         if(found_receiver == contacted_ips[ipAddressSender].end()){
@@ -663,7 +662,7 @@ void statistics::addIpStat_packetSent(const std::string &ipAddressSender, const 
             // Increment overall_degree only if this is the first packet for the connection (both directions)
             // Therefore check, whether Receiver has contacted Sender before
             std::unordered_set<std::string>::const_iterator sender_contacted = contacted_ips[ipAddressReceiver].find(ipAddressSender);
-            if(sender_contacted == contacted_ips[ipAddressReceiver].end()){
+            if (sender_contacted == contacted_ips[ipAddressReceiver].end()) {
                 ip_statistics[ipAddressSender].overall_degree++;
                 ip_statistics[ipAddressReceiver].overall_degree++;
             }
