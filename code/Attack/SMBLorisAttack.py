@@ -126,7 +126,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
         # Get MSS, TTL and Window size value for destination IP
         destination_mss_value, destination_ttl_value, destination_win_value = self.get_ip_data(ip_destination)
 
-        min_delay, max_delay = self.get_reply_delay(ip_destination)
+        min_delay, max_delay = self.get_reply_latency(ip_destination)
 
         attack_duration = self.get_param_value(atkParam.Parameter.ATTACK_DURATION)
         attack_ends_time = first_timestamp + attack_duration

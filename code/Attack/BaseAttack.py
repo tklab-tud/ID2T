@@ -57,8 +57,8 @@ class BaseAttack(metaclass=abc.ABCMeta):
         self.path_attack_pcap = ""
 
         # get_reply_delay
-        self.all_min_delays = None
-        self.all_max_delays = None
+        self.all_min_latencies = None
+        self.all_max_latencies = None
         self.most_used_mss_value = None
         self.most_used_ttl_value = None
         self.most_used_win_size = None
@@ -74,8 +74,8 @@ class BaseAttack(metaclass=abc.ABCMeta):
         self.statistics = statistics
 
         # get_reply_delay
-        self.all_min_delays = self.statistics.process_db_query("SELECT minDelay FROM conv_statistics LIMIT 500;")
-        self.all_max_delays = self.statistics.process_db_query("SELECT maxDelay FROM conv_statistics LIMIT 500;")
+        self.all_min_latencies = self.statistics.process_db_query("SELECT minDelay FROM conv_statistics LIMIT 500;")
+        self.all_max_latencies = self.statistics.process_db_query("SELECT maxDelay FROM conv_statistics LIMIT 500;")
         self.most_used_mss_value = self.statistics.get_most_used_mss_value()
         self.most_used_ttl_value = self.statistics.get_most_used_ttl_value()
         self.most_used_win_size = self.statistics.get_most_used_win_size()
@@ -563,34 +563,33 @@ class BaseAttack(metaclass=abc.ABCMeta):
         print(remaining_bandwidth)
         return remaining_bandwidth
 
-    def get_reply_delay(self, ip_dst, default=2000):
+    def get_reply_latency(self, ip_dst, default=2000):
         """
-        Gets the minimum and the maximum reply delay for all the connections of a specific IP.
+        Gets the minimum and the maximum reply latency for all the connections of a specific IP.
 
-        :param ip_dst: The IP to reterive its reply delay.
-        :param default: The default value to return if no delay could be fount. If < 0 raise an exception instead
-        :return minDelay: minimum delay
-        :return maxDelay: maximum delay
+        :param ip_dst: The IP for which to retrieve the reply latency.
+        :param default: The default value to return if no latency could be calculated. Raises an exception, if < 0.
+        :return minimum and maximum latency
         """
         result = self.statistics.process_db_query(
             "SELECT MIN(minDelay), MAX(maxDelay) FROM conv_statistics WHERE ipAddressB='" + ip_dst + "';")
         if result[0][0] and result[0][1]:
-            min_delay = result[0][0]
-            max_delay = result[0][1]
+            min_latency = result[0][0]
+            max_latency = result[0][1]
         else:
-            min_delay = np.median(self.all_min_delays)
-            max_delay = np.median(self.all_max_delays)
+            min_latency = np.median(self.all_min_latencies)
+            max_latency = np.median(self.all_max_latencies)
 
-            if math.isnan(min_delay):  # max_delay is nan too then
+            if math.isnan(min_latency):  # max_latency is nan too then
                 if default < 0:
-                    raise ValueError("Could not calculate min/max_delay")
+                    raise ValueError("Could not calculate min/max_latency")
 
-                min_delay = default
-                max_delay = default
+                min_latency = default
+                max_latency = default
 
-        min_delay = int(min_delay) * 10 ** -6  # convert from micro to seconds
-        max_delay = int(max_delay) * 10 ** -6
-        return min_delay, max_delay
+        min_latency = int(min_latency) * 10 ** -6  # convert from micro to seconds
+        max_latency = int(max_latency) * 10 ** -6
+        return min_latency, max_latency
 
     @staticmethod
     def packets_to_convs(exploit_raw_packets):
