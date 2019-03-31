@@ -268,15 +268,25 @@ class Statistics:
 
         return sorted(inverted_table.items())
 
-    def get_kbyte_rate(self, mode: str="local"):
+    def get_kbyte_rate(self, mode: str="local", custom_bandwidth_local: float=0, custom_bandwidth_public: float=0):
         """
         Takes a modes "local" or "public" and returns the maximal kybte rate based on the pcaps IP statistics and a
         predefined minimum.
 
         :param mode: a string that is either "local", "public" or "unknown"
+        :param custom_bandwidth_local: bandwidth minimum for local traffic
+        :param custom_bandwidth_public: bandwidth minimum for public traffic
         :return: bandwidth in kbyte/sec
         """
-        minimum_rate = {"local": 12500, "public": 1250}
+        bandwidth_local = 12500
+        bandwidth_public = 1250
+
+        if custom_bandwidth_public != 0:
+            bandwidth_public = custom_bandwidth_public
+        if custom_bandwidth_local != 0:
+            bandwidth_local = custom_bandwidth_local
+
+        minimum_rate = {"local": bandwidth_local, "public": bandwidth_public}
 
         if mode=="unknown":
             return minimum_rate["local"]
