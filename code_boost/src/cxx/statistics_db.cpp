@@ -76,12 +76,19 @@ void statistics_db::writeStatisticsIP(const std::unordered_map<std::string, entr
                 "minPktRate REAL,"
                 "maxKByteRate REAL,"
                 "minKByteRate REAL,"
+                "maxLatency INTEGER,"
+                "minLatency INTEGER,"
+                "avgLatency INTEGER,"
                 "ipClass TEXT COLLATE NOCASE, "
                 "PRIMARY KEY(ipAddress));";
         db->exec(createTable);
-        SQLite::Statement query(*db, "INSERT INTO ip_statistics VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        SQLite::Statement query(*db, "INSERT INTO ip_statistics VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         for (auto it = ipStatistics.begin(); it != ipStatistics.end(); ++it) {
             const entry_ipStat &e = it->second;
+            int minDelay;
+            int maxDelay;
+            std::chrono::microseconds avgDelay;
+            calculate_latency(&e.interarrival_times, &maxDelay, &minDelay, &avgDelay);
             query.bindNoCopy(1, it->first);
             query.bind(2, (int) e.pkts_received);
             query.bind(3, (int) e.pkts_sent);
@@ -91,7 +98,10 @@ void statistics_db::writeStatisticsIP(const std::unordered_map<std::string, entr
             query.bind(7, e.min_interval_pkt_rate);
             query.bind(8, e.max_interval_kybte_rate);
             query.bind(9, e.min_interval_kybte_rate);
-            query.bindNoCopy(10, e.ip_class);
+            query.bind(10, maxDelay);
+            query.bind(11, minDelay);
+            query.bind(12, static_cast<int>(avgDelay.count()));
+            query.bindNoCopy(13, e.ip_class);
             query.exec();
             query.reset();
 
@@ -437,7 +447,7 @@ void statistics_db::writeStatisticsFile(int packetCount, float captureDuration, 
  * @param maxLatency Pointer to maxLatency int.
  * @param minLatency Pointer to minLatency int.
  */
-void statistics_db::calculate_latency(std::vector<std::chrono::microseconds> *interarrival_times, int *maxLatency, int *minLatency, std::chrono::microseconds *avg_interarrival_time) {
+void statistics_db::calculate_latency(const std::vector<std::chrono::microseconds> *interarrival_times, int *maxLatency, int *minLatency, std::chrono::microseconds *avg_interarrival_time) {
     int sumLatency = 0;
     *minLatency = -1;
     *maxLatency = -1;

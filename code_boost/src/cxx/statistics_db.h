@@ -26,7 +26,7 @@ public:
     /*
      * Database version: Increment number on every change in the C++ code!
      */
-    static const int DB_VERSION = 28;
+    static const int DB_VERSION = 29;
 
     /*
      * Methods to read from database
@@ -82,7 +82,7 @@ private:
 
     // Helper functions
 
-    void calculate_latency(std::vector<std::chrono::microseconds> *interarrival_times, int *maxLatency, int *minLatency, std::chrono::microseconds *avg_interarrival_time);
+    void calculate_latency(const std::vector<std::chrono::microseconds> *interarrival_times, int *maxLatency, int *minLatency, std::chrono::microseconds *avg_interarrival_time);
 
 };
 

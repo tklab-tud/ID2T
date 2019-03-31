@@ -224,6 +224,17 @@ void statistics::calculateIPIntervalPacketRate(std::chrono::duration<int, std::m
             }
         }
 
+        for (auto conv = conv_statistics.begin(); conv != conv_statistics.end(); conv++) {
+            if (conv->first.ipAddressA == ip->first || conv->first.ipAddressB == ip->first) {
+                auto pktTS = conv->second.pkts_timestamp.begin();
+                auto interTime = conv->second.interarrival_time.begin();
+                for (; pktTS != conv->second.pkts_timestamp.end() && interTime != conv->second.interarrival_time.end();
+                     pktTS++, interTime++) {
+                    ip->second.interarrival_times.push_back(*interTime);
+                }
+            }
+        }
+
         // multiply by 10^6 because interval count is in microseconds
         float interval_pkt_rate = static_cast<float>(IPsSrcPktsCount) * 1000000 / interval.count();
         float interval_kbyte_rate = IPsSrcPktsKBytes * 100000 / interval.count();
