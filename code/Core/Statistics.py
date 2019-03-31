@@ -26,6 +26,7 @@ class Statistics:
         self.do_extra_tests = False
         self.file_info = None
         self.kbyte_rate = {"local": None, "public": None}
+        self.interval_stat = {}
         self.interval_len = None
 
         # Create folder for statistics database if required
@@ -329,6 +330,53 @@ class Statistics:
             current_table = self.stats_db.get_current_interval_statistics_table()
             self.interval_len = int(current_table[len("statistics_interval_"):])
         return self.interval_len
+
+    def get_interval_stat(self, table_name: str, field: str="", timestamp: int=0):
+        """
+        Takes an interval statistics table name, field/column name and a timestamp and provides the requested stat.
+
+        :param table_name: name of the interval statistics table, from which to grab the field
+        :param field: the name of the field, which to grab from the interval statistics table
+        :param timestamp: the timestamp is used to determine the interval, from which to get the field
+        :return: the content of an interval stat defined by interval and field name OR None if there is no interval stat
+                 e.g. "kbytes" sent of a specific interval
+        """
+        if field not in self.interval_stat.keys():
+            self.interval_stat[field] = {}
+
+        # get unix timestamp depending on pcap start timestamp
+        start = int(Util.get_timestamp_from_datetime_str(self.get_pcap_timestamp_start()) * 1000000)
+        diff = timestamp * 1000000
+        # catch --inject-empty timestamp issue
+        if diff > start:
+            diff -= start
+        unix_timestamp = start + diff
+
+        # get interval length
+        interval_length = self.get_current_interval_len()
+
+        interval = start + int(diff/interval_length) * interval_length
+
+        if interval not in self.interval_stat[field].keys():
+            # get interval borders
+            lower = int(unix_timestamp - interval_length)
+            upper = int(unix_timestamp)
+            # catch negative borders
+            if lower < 0:
+                lower = 0
+
+            # get interval start timestamps
+            query_result = self.stats_db.process_interval_statistics_query\
+                ("SELECT {0} FROM %s WHERE {1} BETWEEN {2} AND {3}".format(field, "first_pkt_timestamp", lower, upper),
+                 table_name)
+
+            result = None
+            if query_result:
+                result = query_result[0][0]
+
+            self.interval_stat[field][interval] = result
+
+        return self.interval_stat[field][interval]
 
     @staticmethod
     def write_list(desc_val_unit_list, func, line_ending="\n"):
