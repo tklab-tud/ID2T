@@ -186,6 +186,7 @@ struct entry_ipStat {
     std::vector<float> interval_kbyte_rate;
     float max_interval_kybte_rate;
     float min_interval_kybte_rate;
+    std::vector<std::chrono::microseconds> interarrival_times;
     std::vector<std::chrono::microseconds> pkts_sent_timestamp;
     std::vector<std::chrono::microseconds> pkts_received_timestamp;
 

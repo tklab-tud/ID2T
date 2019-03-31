@@ -380,6 +380,8 @@ void statistics::storeConvStat(conv *conversation, const std::chrono::microsecon
     if ((conv_statistics[*conversation].pkts_timestamp.size() || conv_statistics[*conversation].pkts_timestamp.size() > 0) && conv_statistics[*conversation].pkts_count <= 3) {
         auto interarrival_time = std::chrono::duration_cast<std::chrono::microseconds>(timestamp - conv_statistics[*conversation].pkts_timestamp.back());
         conv_statistics[*conversation].interarrival_time.push_back(interarrival_time);
+        ip_statistics[conversation->ipAddressA].interarrival_times.push_back(interarrival_time);
+        ip_statistics[conversation->ipAddressB].interarrival_times.push_back(interarrival_time);
     }
     conv_statistics[*conversation].pkts_timestamp.push_back(timestamp);
     conv_statistics[*conversation].tcp_types.push_back(*flags);
