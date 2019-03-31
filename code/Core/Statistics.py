@@ -269,6 +269,13 @@ class Statistics:
         return sorted(inverted_table.items())
 
     def get_kbyte_rate(self, mode: str="local"):
+        """
+        Takes a modes "local" or "public" and returns the maximal kybte rate based on the pcaps IP statistics and a
+        predefined minimum.
+
+        :param mode: a string that is either "local", "public" or "unknown"
+        :return: bandwidth in kbyte/sec
+        """
         minimum_rate = {"local": 12500, "public": 1250}
 
         if mode=="unknown":
