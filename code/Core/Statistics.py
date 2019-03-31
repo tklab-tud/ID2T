@@ -267,23 +267,20 @@ class Statistics:
 
         return sorted(inverted_table.items())
 
-    def get_local_kbyte_rate(self):
-        minimum_rate = 12500
+    def get_kbyte_rate(self, mode: str="local"):
+        minimum_rate = {"local": 12500, "public": 1250}
+        kbyte_rate = 0
 
         table = self.stats_db.get_current_interval_statistics_table()
-        kbyte_rate = self.stats_db.process_interval_statistics_query\
-            ("select maxKByteRate from %s where ipclass like 'private'", table)[0][0]
 
-        return max([kbyte_rate, minimum_rate])
+        if mode=="local":
+            kbyte_rate = self.stats_db.process_interval_statistics_query\
+                ("select maxKByteRate from %s where ipclass like 'private'", table)[0][0]
+        elif mode=="public":
+            kbyte_rate = self.stats_db.process_interval_statistics_query\
+                ("select maxKByteRate from %s where ipclass in ('A','B','C')", table)[0][0]
 
-    def get_public_kbyte_rate(self):
-        minimum_rate = 1250
-
-        table = self.stats_db.get_current_interval_statistics_table()
-        kbyte_rate = self.stats_db.process_interval_statistics_query\
-            ("select maxKByteRate from %s where ipclass in ('A','B','C')", table)[0][0]
-
-        return max([kbyte_rate, minimum_rate])
+        return max([kbyte_rate, minimum_rate[mode]])
 
     @staticmethod
     def write_list(desc_val_unit_list, func, line_ending="\n"):
