@@ -449,15 +449,15 @@ void statistics_db::writeStatisticsFile(int packetCount, float captureDuration, 
  */
 void statistics_db::calculate_latency(const std::vector<std::chrono::microseconds> *interarrival_times, int *maxLatency, int *minLatency, std::chrono::microseconds *avg_interarrival_time) {
     int sumLatency = 0;
-    *minLatency = -1;
-    *maxLatency = -1;
+    *minLatency = 0;
+    *maxLatency = 0;
     int interTime = 0;
     for (auto iter = interarrival_times->begin(); iter != interarrival_times->end(); iter++) {
         interTime = static_cast<int>(iter->count());
         sumLatency += iter->count();
         if (*maxLatency < interTime)
             *maxLatency = interTime;
-        if (*minLatency > interTime || *minLatency == -1)
+        if (*minLatency > interTime || *minLatency == 0)
             *minLatency = interTime;
     }
     if (interarrival_times->size() > 0) {
