@@ -519,9 +519,19 @@ class BaseAttack(metaclass=abc.ABCMeta):
 
         return destination
 
-    def get_remaining_bandwidth(self, timestamp: int=0, ip: str=""):
+    def get_remaining_bandwidth(self, timestamp: int=0, ip: str="", custom_max_bandwidth: float=0,
+                                custom_bandwidth_local: float=0, custom_bandwidth_public: float=0):
         """
-        :return: the delay based on the maximum bandwidth
+        This function calculates the remaining bandwidth based on the maximum bandwidth available and the kbytes already
+        sent inside the interval corresponding to the timestamp given.
+
+        !!! custom_max_bandwidth is mutually exclusive to custom_bandwidth_local and/or custom_bandwidth_public
+        :param timestamp: the timestamp of the current packet
+        :param ip: the destination IP
+        :param custom_max_bandwidth: maximum bandwidth to be set as a hard limit, discarding the pcaps bandwidth
+        :param custom_bandwidth_local: bandwidth minimum for local traffic
+        :param custom_bandwidth_public: bandwidth minimum for public traffic
+        :return: the remaining bandwidth in kbyte/s
         """
         ip_class = cpputils.getIPv4Class(ip)
 
@@ -532,8 +542,12 @@ class BaseAttack(metaclass=abc.ABCMeta):
         else:
             mode="unknown"
 
-        max_bandwidth = self.statistics.get_kbyte_rate(mode)
-        remaining_bandwidth = max_bandwidth
+        if custom_max_bandwidth != 0:
+            bandwidth = custom_max_bandwidth
+        else:
+            bandwidth = self.statistics.get_kbyte_rate(mode, custom_bandwidth_local, custom_bandwidth_public)
+
+        remaining_bandwidth = bandwidth
 
         current_table = self.statistics.stats_db.get_current_interval_statistics_table()
         kbytes_sent = self.statistics.get_interval_stat(table_name=current_table, field="kbytes", timestamp=timestamp)
