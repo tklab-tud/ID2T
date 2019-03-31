@@ -518,6 +518,41 @@ class BaseAttack(metaclass=abc.ABCMeta):
 
         return destination
 
+    def get_remaining_bandwidth(self, timestamp: int=0, ip_src: str= "", ip_dst: str= "", custom_max_bandwidth: float=0,
+                                custom_bandwidth_local: float=0, custom_bandwidth_public: float=0):
+        """
+        This function calculates the remaining bandwidth based on the maximum bandwidth available and the kbytes already
+        sent inside the interval corresponding to the timestamp given.
+
+        !!! custom_max_bandwidth is mutually exclusive to custom_bandwidth_local and/or custom_bandwidth_public
+        :param timestamp: the timestamp of the current packet
+        :param ip_src: the source IP
+        :param ip_dst: the destination IP
+        :param custom_max_bandwidth: maximum bandwidth to be set as a hard limit, discarding the pcaps bandwidth
+        :param custom_bandwidth_local: bandwidth minimum for local traffic
+        :param custom_bandwidth_public: bandwidth minimum for public traffic
+        :return: the remaining bandwidth in kbyte/s
+        """
+        mode = Util.get_network_mode(ip_src, ip_dst)
+
+        if custom_max_bandwidth != 0:
+            bandwidth = custom_max_bandwidth
+        else:
+            bandwidth = self.statistics.get_kbyte_rate(mode, custom_bandwidth_local, custom_bandwidth_public)
+
+        remaining_bandwidth = bandwidth
+
+        current_table = self.statistics.stats_db.get_current_interval_statistics_table()
+        kbytes_sent = self.statistics.get_interval_stat(table_name=current_table, field="kbytes", timestamp=timestamp)
+        if not kbytes_sent:
+            kbytes_sent = 0
+        kbytes_sent = kbytes_sent
+
+        duration = self.statistics.get_current_interval_len()
+        used_bandwidth = float((kbytes_sent * 1000) / duration)
+        remaining_bandwidth -= used_bandwidth
+        return remaining_bandwidth
+
     def get_reply_latency(self, ip_src, ip_dst, default: int=0, mode: str=None):
         """
         Gets the minimum and the maximum reply latency for all the connections of a specific IP.
