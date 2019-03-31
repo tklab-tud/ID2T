@@ -271,7 +271,10 @@ class Statistics:
     def get_kbyte_rate(self, mode: str="local"):
         minimum_rate = {"local": 12500, "public": 1250}
 
-        table = self.stats_db.get_current_interval_statistics_table()
+        if mode=="unknown":
+            return minimum_rate["local"]
+
+        table = "ip_statistics"
 
         if self.kbyte_rate[mode] == 0:
             if mode=="local":
