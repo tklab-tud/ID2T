@@ -33,6 +33,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Add the library source files
 set(SOURCE_FILES cxx/pcap_processor.cpp cxx/pcap_processor.h cxx/statistics.cpp cxx/statistics.h cxx/statistics_db.cpp cxx/statistics_db.h cxx/utilities.h cxx/utilities.cpp)
 
+# Add the utils lib source files
+set(UTILS_LIB_SOURCE cxx/utilities.h cxx/utilities.cpp)
+
 # Add botnet comm processor source files
 set(BOT_COMM_PROC_SOURCE cxx/botnet_comm_processor.h cxx/botnet_comm_processor.cpp)
 
@@ -83,6 +86,9 @@ set_target_properties(sqlite3 PROPERTIES POSITION_INDEPENDENT_CODE ON)
 add_library(pcapreader SHARED ${SOURCE_FILES})
 # Libs pthread and dl are prerequisites of SQLiteCpp
 target_link_libraries(pcapreader ${TINS_LIBRARY} ${PYTHON_LIBRARIES} SQLiteCpp sqlite3 pthread dl pcap)
+
+add_library(cpputils SHARED ${UTILS_LIB_SOURCE})
+target_link_libraries(cpputils ${TINS_LIBRARY} ${PYTHON_LIBRARIES})
 
 add_library(botnetcomm SHARED ${BOT_COMM_PROC_SOURCE})
 target_link_libraries(botnetcomm ${PYTHON_LIBRARIES})

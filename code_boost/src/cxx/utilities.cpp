@@ -1,4 +1,5 @@
 #include "utilities.h"
+#include <pybind11/pybind11.h>
 
 using namespace Tins;
 
@@ -185,4 +186,8 @@ bool check_tcpChecksum(const std::string &ipAddressSender, const std::string &ip
     calculatedChecsum = tcp_sum_calc(bufferArray_8.size(), ipAddressSender_bytes, ipAddressReceiver_bytes, padding, buff_16);
 
     return (calculatedChecsum == checksum);
+}
+
+PYBIND11_MODULE (libcpputils, m) {
+    m.def("getIPv4Class", getIPv4Class, "");
 }
