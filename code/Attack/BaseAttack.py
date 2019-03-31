@@ -563,29 +563,37 @@ class BaseAttack(metaclass=abc.ABCMeta):
         print(remaining_bandwidth)
         return remaining_bandwidth
 
-    def get_reply_latency(self, ip_dst, default=2000):
+    def get_reply_latency(self, ip_dst, default: int=0, mode: str="local"):
         """
         Gets the minimum and the maximum reply latency for all the connections of a specific IP.
 
         :param ip_dst: The IP for which to retrieve the reply latency.
         :param default: The default value to return if no latency could be calculated. Raises an exception, if < 0.
+        :param mode: either "local" or "public"
         :return minimum and maximum latency
         """
-        result = self.statistics.process_db_query(
-            "SELECT MIN(minDelay), MAX(maxDelay) FROM conv_statistics WHERE ipAddressB='" + ip_dst + "';")
-        if result[0][0] and result[0][1]:
+        minimum = {"local": 900, "public": 3000}
+
+        if default != 0:
+            minimum[mode] = default
+
+        result = self.statistics.process_db_query\
+                ("SELECT minLatency, maxLatency FROM ip_statistics WHERE ipAddress='" + ip_dst + "';")
+
+        if result and result[0][0]:
             min_latency = result[0][0]
+        else:
+            # FIXME: use only latencies from mode
+            min_latency = np.median(self.all_min_latencies)
+
+        if result and result[0][1]:
             max_latency = result[0][1]
         else:
-            min_latency = np.median(self.all_min_latencies)
+            # FIXME: use only latencies from mode
             max_latency = np.median(self.all_max_latencies)
 
-            if math.isnan(min_latency):  # max_latency is nan too then
-                if default < 0:
-                    raise ValueError("Could not calculate min/max_latency")
-
-                min_latency = default
-                max_latency = default
+        min_latency = min(minimum[mode], min_latency)
+        max_latency = max(minimum[mode], max_latency)
 
         min_latency = int(min_latency) * 10 ** -6  # convert from micro to seconds
         max_latency = int(max_latency) * 10 ** -6

@@ -1,10 +1,10 @@
 import ID2TLib.TestLibrary as Lib
 import Test.ID2TAttackTest as Test
 
-sha_default = '901d38f855210ed7d3cddb26788947ad37422066148ec3708500780306618ae9'
-sha_one_attacker = 'c56b1f6d15142f61df2ef75268f72c5af2d1d43d41157eed4d4cb96550b9384e'
-sha_sixteen_attackers = '7681eb409918b8baafaf58fba8e99bc602014bf776195c4e3b69997bd24a8054'
-sha_ips_in_pcap = '96786fc8952292414b74ebf23bcf6158890b74c7b3eb5dbc1229f91f50269ffd'
+sha_default = 'a63a7f926b8e8ccf18c1f207caa7cc4abf4562ddedba0c811b009a0730963cb2'
+sha_one_attacker = '542fbe7da83fa668e70d4fd5203c67cc75d34349bb613627d7b52a44b9e502e3'
+sha_sixteen_attackers = 'a8efc926a47a8bcd4601bf4752568fefdf72f69295daa5e90e79d62c82c6e48e'
+sha_ips_in_pcap = '9a1bbad4d61a33102062d2bc28d3149cefd7f19ae4ba8a2c11e07e9cdbb82d2f'
 
 # TODO: improve coverage
 
