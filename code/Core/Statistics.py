@@ -27,6 +27,7 @@ class Statistics:
         self.pcap_proc = None
         self.do_extra_tests = False
         self.file_info = None
+        self.kbyte_rate = {"local": 0, "public": 0}
 
         # Create folder for statistics database if required
         self.path_db = pcap_file.get_db_path()
@@ -269,18 +270,18 @@ class Statistics:
 
     def get_kbyte_rate(self, mode: str="local"):
         minimum_rate = {"local": 12500, "public": 1250}
-        kbyte_rate = 0
 
         table = self.stats_db.get_current_interval_statistics_table()
 
-        if mode=="local":
-            kbyte_rate = self.stats_db.process_interval_statistics_query\
-                ("select maxKByteRate from %s where ipclass like 'private'", table)[0][0]
-        elif mode=="public":
-            kbyte_rate = self.stats_db.process_interval_statistics_query\
-                ("select maxKByteRate from %s where ipclass in ('A','B','C')", table)[0][0]
+        if self.kbyte_rate[mode] == 0:
+            if mode=="local":
+                self.kbyte_rate[mode] = self.stats_db.process_interval_statistics_query\
+                    ("select maxKByteRate from %s where ipclass like 'private'", table)[0][0]
+            elif mode=="public":
+                self.kbyte_rate[mode] = self.stats_db.process_interval_statistics_query\
+                    ("select maxKByteRate from %s where ipclass in ('A','B','C')", table)[0][0]
 
-        return max([kbyte_rate, minimum_rate[mode]])
+        return max([self.kbyte_rate[mode], minimum_rate[mode]])
 
     @staticmethod
     def write_list(desc_val_unit_list, func, line_ending="\n"):
