@@ -15,6 +15,7 @@ import collections
 import typing as t
 
 import ID2TLib.libpcapreader as pr
+import ID2TLib.libcpputils as cpputils
 import lea
 import numpy as np
 import scapy.layers.inet as inet
@@ -517,6 +518,36 @@ class BaseAttack(metaclass=abc.ABCMeta):
         pktdump.close()
 
         return destination
+
+    def get_remaining_bandwidth(self, timestamp: int=0, ip: str=""):
+        """
+        :return: the delay based on the maximum bandwidth
+        """
+        ip_class = cpputils.getIPv4Class(ip)
+
+        if "private" in ip_class:
+            mode="local"
+        elif ip_class in ["A", "B", "C"]:
+            mode="public"
+        else:
+            mode="unknown"
+
+        max_bandwidth = self.statistics.get_kbyte_rate(mode)
+        remaining_bandwidth = max_bandwidth
+
+        current_table = self.statistics.stats_db.get_current_interval_statistics_table()
+        kbytes_sent = self.statistics.get_interval_stat(table_name=current_table, field="kbytes", timestamp=timestamp)
+        if not kbytes_sent:
+            # FIXME: warning here, since pcap length succeeded
+            kbytes_sent = [0]
+        print(kbytes_sent)
+        kbytes_sent = kbytes_sent[0]
+
+        duration = int(current_table.replace("interval_statistics_", ""))
+        used_bandwidth = float((kbytes_sent * 1000) / duration)
+        remaining_bandwidth -= used_bandwidth
+        print(remaining_bandwidth)
+        return remaining_bandwidth
 
     def get_reply_delay(self, ip_dst, default=2000):
         """
