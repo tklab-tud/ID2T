@@ -224,17 +224,6 @@ void statistics::calculateIPIntervalPacketRate(std::chrono::duration<int, std::m
             }
         }
 
-        for (auto conv = conv_statistics.begin(); conv != conv_statistics.end(); conv++) {
-            if (conv->first.ipAddressA == ip->first || conv->first.ipAddressB == ip->first) {
-                auto pktTS = conv->second.pkts_timestamp.begin();
-                auto interTime = conv->second.interarrival_time.begin();
-                for (; pktTS != conv->second.pkts_timestamp.end() && interTime != conv->second.interarrival_time.end();
-                     pktTS++, interTime++) {
-                    ip->second.interarrival_times.push_back(*interTime);
-                }
-            }
-        }
-
         // multiply by 10^6 because interval count is in microseconds
         float interval_pkt_rate = static_cast<float>(IPsSrcPktsCount) * 1000000 / interval.count();
         float interval_kbyte_rate = IPsSrcPktsKBytes * 100000 / interval.count();
@@ -391,6 +380,8 @@ void statistics::storeConvStat(conv *conversation, const std::chrono::microsecon
     if ((conv_statistics[*conversation].pkts_timestamp.size() || conv_statistics[*conversation].pkts_timestamp.size() > 0) && conv_statistics[*conversation].pkts_count <= 3) {
         auto interarrival_time = std::chrono::duration_cast<std::chrono::microseconds>(timestamp - conv_statistics[*conversation].pkts_timestamp.back());
         conv_statistics[*conversation].interarrival_time.push_back(interarrival_time);
+        ip_statistics[conversation->ipAddressA].interarrival_times.push_back(interarrival_time);
+        ip_statistics[conversation->ipAddressB].interarrival_times.push_back(interarrival_time);
     }
     conv_statistics[*conversation].pkts_timestamp.push_back(timestamp);
     conv_statistics[*conversation].tcp_types.push_back(*flags);
