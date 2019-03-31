@@ -286,6 +286,38 @@ class Statistics:
 
         return max([self.kbyte_rate[mode], minimum_rate[mode]])
 
+    def get_interval_stat(self, table_name: str, field: str="", timestamp: int=0):
+        """
+
+        :param table_name:
+        :param field:
+        :param timestamp:
+        :return:
+        """
+        start = self.stats_db.process_interval_statistics_query("select first_pkt_timestamp from %s order by first_pkt_timestamp asc limit 2", table_name)
+        interval_length = int(start[1][0])-int(start[0][0])
+        start = int(start[0][0])
+
+        print(start)
+        print(start + timestamp * 1000000)
+
+        lower = int(start + timestamp * 1000000 - (interval_length / 2))
+        upper = int(start + timestamp * 1000000 + (interval_length / 2))
+        if lower < 0:
+            lower = 0
+        print("low: "+ str(lower))
+        print("up: "+ str(upper))
+
+        query_result = self.stats_db.process_interval_statistics_query\
+            ("SELECT {0} FROM %s WHERE {1} BETWEEN {2} AND {3}".format(field, "first_pkt_timestamp", lower, upper), table_name)
+        print(query_result)
+
+        result = []
+        for elem in query_result:
+            result.append(elem[0])
+
+        return result
+
     @staticmethod
     def write_list(desc_val_unit_list, func, line_ending="\n"):
         """
