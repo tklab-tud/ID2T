@@ -288,11 +288,13 @@ class Statistics:
 
     def get_interval_stat(self, table_name: str, field: str="", timestamp: int=0):
         """
+        Takes an interval statistics table name, field/column name and a timestamp and provides the requested stat.
 
-        :param table_name:
-        :param field:
-        :param timestamp:
-        :return:
+        :param table_name: name of the interval statistics table, from which to grab the field
+        :param field: the name of the field, which to grab from the interval statistics table
+        :param timestamp: the timestamp is used to determine the interval, from which to get the field
+        :return: the content of an interval stat defined by interval and field name
+                 e.g. "kbytes" sent of a specific interval
         """
         start = self.stats_db.process_interval_statistics_query("select first_pkt_timestamp from %s order by first_pkt_timestamp asc limit 2", table_name)
         interval_length = int(start[1][0])-int(start[0][0])
