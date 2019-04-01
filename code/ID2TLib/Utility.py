@@ -42,8 +42,7 @@ attacker_ttl_mapping = {}
 generic_attack_names = {"attack", "exploit"}
 
 
-def update_timestamp(timestamp: float, pps: float, latency: float=0, inj_pps: float=0, inj_timestamp: float=0,
-                     delay: float=0):
+def update_timestamp(timestamp: float, pps: float, latency: float=0, inj_pps: float=0, inj_timestamp: float=0):
     """
     Calculates the next timestamp to be used based on the packet per second rate (pps) and the maximum delay.
 
@@ -57,12 +56,25 @@ def update_timestamp(timestamp: float, pps: float, latency: float=0, inj_pps: fl
     """
     # FIXME: throw Exception if pps==0
     packets_this_second = 0
+    delay = 0.00008
+    custom_delay = 1 / pps
 
-    if delay == 0:
-        delay = 0.00008
+    # Check custom_delay against limits
+    if custom_delay < 0.00001:
+        print("Warning: PPS is too high. Generated traffic might look unrealistic."
+              "Recommended are values equal or lower 100000.", end="\r")
+    elif custom_delay > 10*delay:
+        # FIXME: drop this warning?
+        print("Warning: PPS is rather low. Are you sure about it?", end="\r")
+    elif custom_delay > 1:
+        print("Warning: PPS is too low. Generated traffic might look unrealistic.", end="\r")
+        # TODO: drop to default?
 
-    result_delay = delay
+    delay = custom_delay
 
+    # FIXME: is this really necessary?
+    # TODO: maybe remove this
+    # SMBScan code
     if inj_pps != 0 and inj_timestamp != 0:
         # time past since the beginning of the attack
         time = timestamp - inj_timestamp
@@ -76,17 +88,15 @@ def update_timestamp(timestamp: float, pps: float, latency: float=0, inj_pps: fl
     if latency != 0:
         # Calculate reply timestamp
         random_delay = lea.Lea.fromValFreqsDict({latency / 2: 70, latency / 3: 20, latency / 5: 7, latency / 10: 3})
-        result_delay = rnd.uniform(1 / pps + latency, 1 / pps + random_delay.random())
-    elif delay != 0:
+        delay = rnd.uniform(1 / pps + latency, 1 / pps + random_delay.random())
+    else:
         # Calculate request timestamp
         # To imitate the bursty behavior of traffic
         random_delay = lea.Lea.fromValFreqsDict({delay: 70, delay / 2: 20, delay / 3: 7, delay / 5: 3})
-        result_delay = rnd.uniform(1 / pps + delay, 1 / pps + random_delay.random())
-        #OLD
-        #random_delay = lea.Lea.fromValFreqsDict({1 / pps: 70, 2 / pps: 20, 5 / pps: 7, 10 / pps: 3})
-        #result_delay = rnd.uniform(1 / pps, random_delay.random())
+        delay = rnd.uniform(1 / pps + delay, 1 / pps + random_delay.random())
 
-    result = timestamp + result_delay
+    # add latency or delay to timestamp
+    result = timestamp + delay
     if inj_pps > packets_this_second and int(result) - int(timestamp) != 1:
         result = result + 1
     return result
