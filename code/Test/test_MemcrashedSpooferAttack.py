@@ -1,7 +1,7 @@
 import Test.ID2TAttackTest as Test
 
-sha_default = "88c62360baee6067a8f0e9c002c329bf800b59aab2c7f97ccad5e76cfd00a5b2"
-sha_ips_not_in_pcap = "83d47486673a87fda0bed8842e406738053cdff519746165565d71cda6d968cc"
+sha_default = "85f8112304b346bf7381d6cbdf18e510f9a90ac641308cd743bd2d9eb3c2c6d2"
+sha_ips_not_in_pcap = "b7a1149593be981fe1776889c43342033730cb8ba5b98b142581164986db3a77"
 
 
 class UnitTestMemcrashedSpooferAttack(Test.ID2TAttackTest):

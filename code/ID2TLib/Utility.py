@@ -51,7 +51,6 @@ def update_timestamp(timestamp: float, pps: float, latency: float=0, inj_pps: fl
     :param latency: the delay calculated from the statistics db
     :param inj_pps: packets to inject each second
     :param inj_timestamp: timestamp of the begin of the attack
-    :param delay
     :return: Timestamp to be used for the next packet.
     """
     # FIXME: throw Exception if pps==0
@@ -87,13 +86,11 @@ def update_timestamp(timestamp: float, pps: float, latency: float=0, inj_pps: fl
 
     if latency != 0:
         # Calculate reply timestamp
-        random_delay = lea.Lea.fromValFreqsDict({latency / 2: 70, latency / 3: 20, latency / 5: 7, latency / 10: 3})
-        delay = rnd.uniform(1 / pps + latency, 1 / pps + random_delay.random())
-    else:
-        # Calculate request timestamp
-        # To imitate the bursty behavior of traffic
-        random_delay = lea.Lea.fromValFreqsDict({delay: 70, delay / 2: 20, delay / 3: 7, delay / 5: 3})
-        delay = rnd.uniform(1 / pps + delay, 1 / pps + random_delay.random())
+        delay = latency
+    #else Calculate request timestamp
+
+    random_delay = lea.Lea.fromValFreqsDict({delay * 2: 10, delay * 1.5: 15, delay: 50, delay / 2: 15, delay / 3: 7, delay / 5: 3})
+    delay = rnd.uniform(delay, random_delay.random())
 
     # add latency or delay to timestamp
     result = timestamp + delay
