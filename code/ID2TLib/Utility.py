@@ -42,19 +42,26 @@ attacker_ttl_mapping = {}
 generic_attack_names = {"attack", "exploit"}
 
 
-def update_timestamp(timestamp: float, pps: float, delay: float=0, inj_pps: float=0, inj_timestamp: float=0):
+def update_timestamp(timestamp: float, pps: float, latency: float=0, inj_pps: float=0, inj_timestamp: float=0,
+                     delay: float=0):
     """
     Calculates the next timestamp to be used based on the packet per second rate (pps) and the maximum delay.
 
     :param timestamp: the base timestamp to update
     :param pps: the packets per second specified by the user
-    :param delay: the delay calculated from the statistics db
+    :param latency: the delay calculated from the statistics db
     :param inj_pps: packets to inject each second
     :param inj_timestamp: timestamp of the begin of the attack
+    :param delay
     :return: Timestamp to be used for the next packet.
     """
     # FIXME: throw Exception if pps==0
     packets_this_second = 0
+
+    if delay == 0:
+        delay = 0.00008
+
+    result_delay = delay
 
     if inj_pps != 0 and inj_timestamp != 0:
         # time past since the beginning of the attack
@@ -66,15 +73,18 @@ def update_timestamp(timestamp: float, pps: float, delay: float=0, inj_pps: floa
     else:
         inj_pps = 0
 
-    if delay == 0:
+    if latency != 0:
+        # Calculate reply timestamp
+        random_delay = lea.Lea.fromValFreqsDict({latency / 2: 70, latency / 3: 20, latency / 5: 7, latency / 10: 3})
+        result_delay = rnd.uniform(1 / pps + latency, 1 / pps + random_delay.random())
+    elif delay != 0:
         # Calculate request timestamp
         # To imitate the bursty behavior of traffic
-        random_delay = lea.Lea.fromValFreqsDict({1 / pps: 70, 2 / pps: 20, 5 / pps: 7, 10 / pps: 3})
-        result_delay = rnd.uniform(1 / pps, random_delay.random())
-    else:
-        # Calculate reply timestamp
-        random_delay = lea.Lea.fromValFreqsDict({delay / 2: 70, delay / 3: 20, delay / 5: 7, delay / 10: 3})
+        random_delay = lea.Lea.fromValFreqsDict({delay: 70, delay / 2: 20, delay / 3: 7, delay / 5: 3})
         result_delay = rnd.uniform(1 / pps + delay, 1 / pps + random_delay.random())
+        #OLD
+        #random_delay = lea.Lea.fromValFreqsDict({1 / pps: 70, 2 / pps: 20, 5 / pps: 7, 10 / pps: 3})
+        #result_delay = rnd.uniform(1 / pps, random_delay.random())
 
     result = timestamp + result_delay
     if inj_pps > packets_this_second and int(result) - int(timestamp) != 1:
