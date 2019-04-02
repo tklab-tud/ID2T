@@ -40,7 +40,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
             atkParam.Parameter.PACKETS_PER_SECOND: atkParam.ParameterTypes.TYPE_FLOAT,
             atkParam.Parameter.NUMBER_ATTACKERS: atkParam.ParameterTypes.TYPE_INTEGER_POSITIVE,
             atkParam.Parameter.ATTACK_DURATION: atkParam.ParameterTypes.TYPE_INTEGER_POSITIVE,
-            atkParam.Parameter.VICTIM_BUFFER: atkParam.ParameterTypes.TYPE_INTEGER_POSITIVE
+            atkParam.Parameter.VICTIM_BUFFER: atkParam.ParameterTypes.TYPE_INTEGER_POSITIVE,
+            atkParam.Parameter.LATENCY_MAX: atkParam.ParameterTypes.TYPE_FLOAT
         })
 
     def init_params(self):
@@ -73,6 +74,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
             destination_mac = self.generate_random_mac_address()
         self.add_param_value(atkParam.Parameter.MAC_DESTINATION, destination_mac)
         self.add_param_value(atkParam.Parameter.VICTIM_BUFFER, rnd.randint(1000, 10000))
+
+        self.add_param_value(atkParam.Parameter.LATENCY_MAX, 0)
 
     def generate_attack_packets(self):
         """
@@ -154,7 +157,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         self.path_attack_pcap = None
 
-        min_latency, max_latency = self.get_reply_latency(ip_destination)
         victim_buffer = self.get_param_value(atkParam.Parameter.VICTIM_BUFFER)
 
         attack_duration = self.get_param_value(atkParam.Parameter.ATTACK_DURATION)
@@ -178,6 +180,15 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         mss_dst = Util.handle_most_used_outputs(mss_dst)
 
+        # set latency limit to either the minimal latency occurring in the pcap, the default or the user specified limit
+        # get minimal and maximal latency found in the pcap
+        min_latency, max_latency = self.get_reply_latency(ip_destination)
+        latency_limit = min_latency
+        # check user defined latency
+        latency_max = self.get_param_value(atkParam.Parameter.LATENCY_MAX)
+        if latency_max != 0:
+            latency_limit = latency_max
+
         # Stores triples of (timestamp, source_id, destination_id) for each timestamp.
         # Victim has id=0. Attacker tuple does not need to specify the destination because it's always the victim.
         timestamps_tuples = []
@@ -187,16 +198,19 @@ class DDoSAttack(BaseAttack.BaseAttack):
         replies_count = 0
         self.total_pkt_num = 0
         already_used_pkts = 0
+        wcount=0
         # For each attacker, generate his own packets, then merge all packets
         for attacker in range(num_attackers):
             # Initialize empty port "FIFO" for current attacker
             previous_attacker_port.append([])
             # Calculate timestamp of first SYN-packet of attacker
             timestamp_next_pkt = self.get_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP)
+            self.attack_start_utime = self.get_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP)
             attack_ends_time = timestamp_next_pkt + attack_duration
-            # FIXME: maybe here (correct timestamp)
             if attacker != 0:
-                timestamp_next_pkt = rnd.uniform(timestamp_next_pkt, Util.update_timestamp(timestamp_next_pkt, attacker_pps))
+                timestamp_next_pkt = rnd.uniform(timestamp_next_pkt,
+                                                 Util.update_timestamp(timestamp_next_pkt, attacker_pps,
+                                                                       latency=latency_limit))
             # calculate each attackers packet count without exceeding the total number of attackers
             attacker_pkts_num = 0
             if already_used_pkts < pkts_num:
@@ -205,32 +219,52 @@ class DDoSAttack(BaseAttack.BaseAttack):
                     random_offset = 0
                 attacker_pkts_num = int((pkts_num - already_used_pkts) / (num_attackers - attacker)) + random_offset
                 already_used_pkts += attacker_pkts_num
+                # each attacker gets a different pps according to his pkt count offset
+                ratio = attacker_pkts_num / pkts_num
+                attacker_pps = pps * ratio
+
             timestamp_prv_reply = 0
             for pkt_num in range(attacker_pkts_num):
                 # Stop the attack when it exceeds the duration
                 if timestamp_next_pkt > attack_ends_time:
-                    break
+                    wcount += 1
 
                 # Add timestamp of attacker SYN-packet. Attacker tuples do not need to specify destination
                 timestamps_tuples.append((timestamp_next_pkt, attacker+1))
 
                 # Calculate timestamp of victim ACK-packet
-                timestamp_reply = Util.update_timestamp(timestamp_next_pkt, attacker_pps, min_latency)
+                timestamp_reply = Util.update_timestamp(timestamp_next_pkt, attacker_pps, latency=latency_limit)
                 while timestamp_reply <= timestamp_prv_reply:
-                    timestamp_reply = Util.update_timestamp(timestamp_prv_reply, attacker_pps, min_latency)
+                    timestamp_reply = Util.update_timestamp(timestamp_prv_reply, attacker_pps, latency=latency_limit)
                 timestamp_prv_reply = timestamp_reply
 
                 # Add timestamp of victim ACK-packet(victim always has id=0)
                 timestamps_tuples.append((timestamp_reply, 0, attacker+1))
 
                 # Calculate timestamp for next attacker SYN-packet
-                attacker_pps = max(Util.get_interval_pps(complement_interval_attacker_pps, timestamp_next_pkt),
-                                   (pps / num_attackers) / 2)
+                # TODO: scrap complement interval stuff for now
+                # TODO: use bandwidth here!!!
+                #attacker_pps = max(Util.get_interval_pps(complement_interval_attacker_pps, timestamp_next_pkt),
+                #                   (pps / num_attackers) / 2)
                 timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, attacker_pps)
 
         # Sort timestamp-triples according to their timestamps in ascending order
         timestamps_tuples.sort(key=lambda tmstmp: tmstmp[0])
         self.attack_start_utime = timestamps_tuples[0][0]
+
+        # print linebreak for warnings in loop
+        print("")
+        time_diff = abs(abs((timestamps_tuples[0][0] - timestamps_tuples[-1][0])) - attack_duration)
+        if wcount > 0 and time_diff > 1:
+            print("Warning: attack duration was exceeded by {0} seconds ({1} attack pkts).".format(time_diff, wcount))
+        elif time_diff > 1:
+            print("Warning: attack duration was not reached by generated pkts by {} seconds.".format(time_diff))
+
+        # Warning if pcap length gets exceeded
+        time_diff = Util.get_timestamp_from_datetime_str(self.statistics.get_pcap_timestamp_end()) \
+                    - timestamps_tuples[-1][0]
+        if time_diff < 0:
+            print("Warning: end of pcap exceeded by " + str((-1*time_diff)) + "microsec.")
 
         # For each triple, generate packet
         for timestamp in timestamps_tuples:
