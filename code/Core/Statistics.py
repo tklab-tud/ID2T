@@ -297,10 +297,11 @@ class Statistics:
         if self.kbyte_rate[mode] == 0:
             if mode=="local":
                 self.kbyte_rate[mode] = self.stats_db.process_interval_statistics_query\
-                    ("select maxKByteRate from %s where ipclass like 'private'", table)[0][0]
+                    ("select maxKByteRate from %s where (ipClass like 'private') or (ipClass in ('A-unused','D')",
+                     table)[0][0]
             elif mode=="public":
                 self.kbyte_rate[mode] = self.stats_db.process_interval_statistics_query\
-                    ("select maxKByteRate from %s where ipclass in ('A','B','C')", table)[0][0]
+                    ("select maxKByteRate from %s where ipClass in ('A','B','C','E')", table)[0][0]
 
         if mode == "local":
             i = 0
