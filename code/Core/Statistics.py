@@ -328,7 +328,7 @@ class Statistics:
         :param table_name: name of the interval statistics table, from which to grab the field
         :param field: the name of the field, which to grab from the interval statistics table
         :param timestamp: the timestamp is used to determine the interval, from which to get the field
-        :return: the content of an interval stat defined by interval and field name
+        :return: the content of an interval stat defined by interval and field name OR None if there is no interval stat
                  e.g. "kbytes" sent of a specific interval
         """
         # get unix timestamp depending on pcap start timestamp
@@ -351,7 +351,7 @@ class Statistics:
             ("SELECT {0} FROM %s WHERE {1} BETWEEN {2} AND {3}".format(field, "first_pkt_timestamp", lower, upper),
              table_name)
 
-        result = 0
+        result = None
         if query_result:
             result = query_result[-1][0]
 
