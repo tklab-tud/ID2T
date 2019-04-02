@@ -278,8 +278,9 @@ class Statistics:
         :param custom_bandwidth_public: bandwidth minimum for public traffic
         :return: bandwidth in kbyte/sec
         """
-        bandwidth_local = 12500
-        bandwidth_public = 1250
+        # default bandwidth in kbytes/sec
+        bandwidth_local = 12500 # 100 mbit/s
+        bandwidth_public = 1250 #  10 mbit/s
 
         if custom_bandwidth_public != 0:
             bandwidth_public = custom_bandwidth_public
@@ -300,6 +301,22 @@ class Statistics:
             elif mode=="public":
                 self.kbyte_rate[mode] = self.stats_db.process_interval_statistics_query\
                     ("select maxKByteRate from %s where ipclass in ('A','B','C')", table)[0][0]
+
+        if mode == "local":
+            i = 0
+            # for local networks
+            # set bandwidth to tenfold of its minimum until it is larger than the pcap bandwidth
+            while self.kbyte_rate[mode] > minimum_rate[mode]:
+                i += 1
+                minimum_rate[mode] *= 10 * i
+            self.kbyte_rate[mode] = minimum_rate[mode]
+        else:
+            # for public networks
+            # increase the bandwidth by a multiple of 2 mbit/s according to the pcap bandwidth
+            self.kbyte_rate[mode] = ceil(self.kbyte_rate[mode])
+            remainder = self.kbyte_rate[mode] % 250
+            if remainder != 0:
+                self.kbyte_rate[mode] += 250 - remainder
 
         return max([self.kbyte_rate[mode], minimum_rate[mode]])
 
