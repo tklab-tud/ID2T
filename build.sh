@@ -195,10 +195,43 @@ deactivate
 exit \$error
 EOF
 
+# Create the makeshift test script
+cat >./run_tests_makeshift  <<EOF
+#!/bin/bash
+# Find the executable
+if [ $(uname) = 'Darwin' ]; then
+    ID2T_DIR=\$(greadlink -f \$0)
+else
+    ID2T_DIR=\$(readlink -f \$0)
+fi
+SCRIPT_PATH=\${ID2T_DIR%/*}
+cd \$SCRIPT_PATH
+source .venv/bin/activate
+# Regenerate the statistics DB
+./id2t -i resources/test/reference_1998.pcap -rd >/dev/null
+cd code
+# Execute tests
+set -e
+PRINT_COV=true
+testpath="discover -s Test_makeshift/"
+if [ -e "Test_makeshift/test_\$1.py" ]; then
+    testpath="Test_makeshift/test_\$1.py"
+    PRINT_COV=false
+fi
+PYTHONWARNINGS="ignore" python3 -m coverage run --source=. -m unittest \$testpath >/dev/null
+if \$PRINT_COV ; then
+    python3 -m coverage html
+    python3 -m coverage report -m
+fi
+deactivate
+EOF
+
 chmod +x ./code/CLI.py
 chmod +x ./id2t
 chmod +x ./run_tests
 chmod +x ./test_efficiency
+
+chmod +x ./run_tests_makeshift
 
 echo -e "\n\nAll is set. ID2T is ready."
 echo -e "\nRun efficiency tests with the command './test_efficiency'"
