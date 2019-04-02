@@ -214,13 +214,13 @@ class DDoSAttack(BaseAttack.BaseAttack):
             # calculate each attackers packet count without exceeding the total number of attackers
             attacker_pkts_num = 0
             if already_used_pkts < pkts_num:
-                random_offset = rnd.randint(0, 50)
+                random_offset = rnd.randint(0, int(pkts_num / num_attackers / 2))
                 if attacker == num_attackers-1:
                     random_offset = 0
                 attacker_pkts_num = int((pkts_num - already_used_pkts) / (num_attackers - attacker)) + random_offset
                 already_used_pkts += attacker_pkts_num
                 # each attacker gets a different pps according to his pkt count offset
-                ratio = attacker_pkts_num / pkts_num
+                ratio = float(attacker_pkts_num) / float(pkts_num)
                 attacker_pps = pps * ratio
 
             timestamp_prv_reply = 0
