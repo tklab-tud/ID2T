@@ -54,6 +54,7 @@ std::string getIPv4Class(const std::string &ipAddress) {
         else
             ipClass = "A";
     } else if(b1 == 127) {
+        // can be consider private
         ipClass = "A-unused"; // cannot be used and is reserved for loopback and diagnostic functions.
     } else if (b1 >= 128 && b1 <= 191) {
         if(b1 == 172 && b2 >= 16 && b2 <= 31)
@@ -66,8 +67,10 @@ std::string getIPv4Class(const std::string &ipAddress) {
          else
             ipClass = "C";
     } else if (b1 >= 224 && b1 <= 239) {
+        // can be consider private
         ipClass = "D"; // Reserved for Multicasting
     } else if (b1 >= 240 && b1 <= 254) {
+        // can be consider public
         ipClass = "E"; // Experimental; used for research
     }
 
