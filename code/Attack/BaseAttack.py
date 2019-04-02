@@ -519,7 +519,8 @@ class BaseAttack(metaclass=abc.ABCMeta):
 
         return destination
 
-    def get_remaining_bandwidth(self, timestamp: int=0, ip: str="", custom_max_bandwidth: float=0,
+    # TODO: maybe separate local vs public determination into helper function
+    def get_remaining_bandwidth(self, timestamp: int=0, ip_src: str= "", ip_dst: str= "", custom_max_bandwidth: float=0,
                                 custom_bandwidth_local: float=0, custom_bandwidth_public: float=0):
         """
         This function calculates the remaining bandwidth based on the maximum bandwidth available and the kbytes already
@@ -527,17 +528,19 @@ class BaseAttack(metaclass=abc.ABCMeta):
 
         !!! custom_max_bandwidth is mutually exclusive to custom_bandwidth_local and/or custom_bandwidth_public
         :param timestamp: the timestamp of the current packet
-        :param ip: the destination IP
+        :param ip_src: the source IP
+        :param ip_dst: the destination IP
         :param custom_max_bandwidth: maximum bandwidth to be set as a hard limit, discarding the pcaps bandwidth
         :param custom_bandwidth_local: bandwidth minimum for local traffic
         :param custom_bandwidth_public: bandwidth minimum for public traffic
         :return: the remaining bandwidth in kbyte/s
         """
-        ip_class = cpputils.getIPv4Class(ip)
+        ip_class_src = cpputils.getIPv4Class(ip_src)
+        ip_class_dst = cpputils.getIPv4Class(ip_dst)
 
-        if "private" in ip_class:
+        if "private" in ip_class_src and "private" in ip_class_dst:
             mode="local"
-        elif ip_class in ["A", "B", "C"]:
+        elif (ip_class_src or ip_class_dst) in ["A", "B", "C"]:
             mode="public"
         else:
             mode="unknown"
