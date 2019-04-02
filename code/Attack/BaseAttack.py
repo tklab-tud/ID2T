@@ -538,9 +538,10 @@ class BaseAttack(metaclass=abc.ABCMeta):
         ip_class_src = cpputils.getIPv4Class(ip_src)
         ip_class_dst = cpputils.getIPv4Class(ip_dst)
 
-        if "private" in ip_class_src and "private" in ip_class_dst:
+        if ("private" in ip_class_src or ip_class_src in ["A-unused", "D"]) and \
+           ("private" in ip_class_dst or ip_class_dst in ["A-unused", "D"]):
             mode="local"
-        elif (ip_class_src or ip_class_dst) in ["A", "B", "C"]:
+        elif (ip_class_src or ip_class_dst) in ["A", "B", "C", "E"]:
             mode="public"
         else:
             mode="unknown"
