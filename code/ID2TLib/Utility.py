@@ -62,12 +62,10 @@ def update_timestamp(timestamp: float, pps: float, latency: float=0, inj_pps: fl
     if custom_delay < 0.00001:
         print("Warning: PPS is too high. Generated traffic might look unrealistic."
               "Recommended are values equal or lower 100000.", end="\r")
-    elif custom_delay > 10*delay:
-        # FIXME: drop this warning?
-        print("Warning: PPS is rather low. Are you sure about it?", end="\r")
-    elif custom_delay > 1:
-        print("Warning: PPS is too low. Generated traffic might look unrealistic.", end="\r")
-        # TODO: drop to default?
+    elif custom_delay < 0.000001:
+        custom_delay = 0.000001
+        print("Warning: PPS is too high. Delay application not feasible."
+              "Dropping to 1,000,000 pps.", end="\r")
 
     delay = custom_delay
 
