@@ -331,27 +331,29 @@ class Statistics:
         :return: the content of an interval stat defined by interval and field name
                  e.g. "kbytes" sent of a specific interval
         """
-        start = self.stats_db.process_interval_statistics_query("select first_pkt_timestamp from %s order by first_pkt_timestamp asc limit 2", table_name)
-        interval_length = int(start[1][0])-int(start[0][0])
-        start = int(start[0][0])
+        # get unix timestamp depending on pcap start timestamp
+        start = int(Util.get_timestamp_from_datetime_str(self.get_pcap_timestamp_start()) * 1000000)
+        diff = timestamp * 1000000
+        unix_timestamp = start + diff
 
-        print(start)
-        print(start + timestamp * 1000000)
+        # get interval length
+        interval_length = int(table_name[len("statistics_interval_"):])
 
-        lower = int(start + timestamp * 1000000 - (interval_length / 2))
-        upper = int(start + timestamp * 1000000 + (interval_length / 2))
+        # get interval borders
+        lower = int(unix_timestamp - interval_length)
+        upper = int(unix_timestamp)
+        # catch negative borders
         if lower < 0:
             lower = 0
-        print("low: "+ str(lower))
-        print("up: "+ str(upper))
 
+        # get interval start timestamps
         query_result = self.stats_db.process_interval_statistics_query\
-            ("SELECT {0} FROM %s WHERE {1} BETWEEN {2} AND {3}".format(field, "first_pkt_timestamp", lower, upper), table_name)
-        print(query_result)
+            ("SELECT {0} FROM %s WHERE {1} BETWEEN {2} AND {3}".format(field, "first_pkt_timestamp", lower, upper),
+             table_name)
 
-        result = []
-        for elem in query_result:
-            result.append(elem[0])
+        result = 0
+        if query_result:
+            result = query_result[-1][0]
 
         return result
 
