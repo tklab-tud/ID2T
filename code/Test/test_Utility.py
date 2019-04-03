@@ -8,10 +8,21 @@ import ID2TLib.Utility as Utility
 
 class TestUtility(unittest.TestCase):
     def test_update_timestamp_no_delay(self):
-        self.assertTrue(100 + 10 / 5 >= Utility.update_timestamp(100, 5) >= 100 + 1 / 5)
+        timestamp = 100
+        pps = 5
+        for i in range(100):
+            val = Utility.update_timestamp(timestamp, pps)
+            print("\n{}\n".format(val))
+            self.assertTrue(timestamp + 10 / pps >= val >= timestamp + 1 / pps)
 
     def test_update_timestamp_with_delay(self):
-        self.assertTrue(100 + 1 / 5 + 10/10 <= Utility.update_timestamp(100, 5, 10) <= 100 + 1 / 5 + 10)
+        timestamp = 100
+        pps = 5
+        latency = 10
+        for i in range(100):
+            val = Utility.update_timestamp(timestamp, 5, 10)
+            print("\n{}\n".format(val))
+            self.assertTrue(timestamp + 1 / pps + latency / 10 <= val <= timestamp + 1 / pps + latency)
 
     def test_update_timestamp_comparison(self):
         self.assertTrue(Utility.update_timestamp(100, 5) <= Utility.update_timestamp(100, 5, 10))
