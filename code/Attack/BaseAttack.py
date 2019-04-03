@@ -15,7 +15,6 @@ import collections
 import typing as t
 
 import ID2TLib.libpcapreader as pr
-import ID2TLib.libcpputils as cpputils
 import lea
 import numpy as np
 import scapy.layers.inet as inet
@@ -535,16 +534,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         :param custom_bandwidth_public: bandwidth minimum for public traffic
         :return: the remaining bandwidth in kbyte/s
         """
-        ip_class_src = cpputils.getIPv4Class(ip_src)
-        ip_class_dst = cpputils.getIPv4Class(ip_dst)
-
-        if ("private" in ip_class_src or ip_class_src in ["A-unused", "D"]) and \
-           ("private" in ip_class_dst or ip_class_dst in ["A-unused", "D"]):
-            mode="local"
-        elif (ip_class_src or ip_class_dst) in ["A", "B", "C", "E"]:
-            mode="public"
-        else:
-            mode="unknown"
+        mode = Util.get_network_mode(ip_src, ip_dst)
 
         if custom_max_bandwidth != 0:
             bandwidth = custom_max_bandwidth
@@ -565,16 +555,18 @@ class BaseAttack(metaclass=abc.ABCMeta):
         remaining_bandwidth -= used_bandwidth
         return remaining_bandwidth
 
-    def get_reply_latency(self, ip_src, ip_dst, default: int=0, mode: str="local"):
+    def get_reply_latency(self, ip_src, ip_dst, default: int=0, mode: str=None):
         """
         Gets the minimum and the maximum reply latency for all the connections of a specific IP.
 
         :param ip_src: The source IP for which to retrieve the reply latency.
         :param ip_dst: The destination IP for which to retrieve the reply latency.
-        :param default: The default value to return if no latency could be calculated. Raises an exception, if < 0.
+        :param default: The default value to return if no latency could be calculated.
         :param mode: either "local" or "public"
         :return minimum and maximum latency
         """
+        if not mode:
+            mode = Util.get_network_mode(ip_src, ip_dst)
         minimum = {"local": 900, "public": 3000}
 
         if default != 0:

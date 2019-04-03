@@ -1,6 +1,7 @@
 import calendar as cal
 import datetime as dt
 import ipaddress
+import ID2TLib.libcpputils as cpputils
 import os
 import random as rnd
 import lea
@@ -40,6 +41,25 @@ attacker_port_mapping = {}
 attacker_ttl_mapping = {}
 # Identifier for attacks
 generic_attack_names = {"attack", "exploit"}
+
+local_classes = ["A-private", "B-private", "C-private", "A-unused", "D"]
+public_classes = ["A", "B", "C", "E"]
+
+
+def get_network_mode(ip_src: str, ip_dst: str):
+    ip_class_src = cpputils.getIPv4Class(ip_src)
+    ip_class_dst = cpputils.getIPv4Class(ip_dst)
+
+    if ip_class_src in local_classes and \
+       ip_class_dst in local_classes:
+        mode = "local"
+    elif ip_class_src in public_classes or \
+         ip_class_dst in public_classes:
+        mode = "public"
+    else:
+        mode = "unknown"
+
+    return mode
 
 
 def update_timestamp(timestamp: float, pps: float, latency: float=0, inj_pps: float=0, inj_timestamp: float=0):
