@@ -180,11 +180,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         mss_dst = Util.handle_most_used_outputs(mss_dst)
 
-        # set latency limit to either the minimal latency occurring in the pcap, the default or the user specified limit
-        # get minimal and maximal latency found in the pcap
-        min_latency, max_latency = self.get_reply_latency(ip_destination)
-        latency_limit = min_latency
         # check user defined latency
+        latency_limit = None
         latency_max = self.get_param_value(atkParam.Parameter.LATENCY_MAX)
         if latency_max != 0:
             latency_limit = latency_max
@@ -201,6 +198,12 @@ class DDoSAttack(BaseAttack.BaseAttack):
         wcount=0
         # For each attacker, generate his own packets, then merge all packets
         for attacker in range(num_attackers):
+            # set latency limit to either the minimal latency occurring in the pcap, the default or the user specified limit
+            # get minimal and maximal latency found in the pcap
+            if not latency_limit:
+                min_latency, max_latency = self.get_reply_latency(ip_source_list[attacker], ip_destination)
+                latency_limit = min_latency
+
             # Initialize empty port "FIFO" for current attacker
             previous_attacker_port.append([])
             # Calculate timestamp of first SYN-packet of attacker

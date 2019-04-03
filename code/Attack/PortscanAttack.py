@@ -180,7 +180,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
             else:
                 destination_win_value = Util.handle_most_used_outputs(self.statistics.get_most_used_win_size())
 
-            min_delay, max_delay = self.get_reply_latency(ip)
+            min_delay, max_delay = self.get_reply_latency(ip_source, ip)
 
             for dport in dest_ports:
                 # Parameters changing each iteration

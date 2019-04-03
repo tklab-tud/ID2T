@@ -565,11 +565,12 @@ class BaseAttack(metaclass=abc.ABCMeta):
         remaining_bandwidth -= used_bandwidth
         return remaining_bandwidth
 
-    def get_reply_latency(self, ip_dst, default: int=0, mode: str="local"):
+    def get_reply_latency(self, ip_src, ip_dst, default: int=0, mode: str="local"):
         """
         Gets the minimum and the maximum reply latency for all the connections of a specific IP.
 
-        :param ip_dst: The IP for which to retrieve the reply latency.
+        :param ip_src: The source IP for which to retrieve the reply latency.
+        :param ip_dst: The destination IP for which to retrieve the reply latency.
         :param default: The default value to return if no latency could be calculated. Raises an exception, if < 0.
         :param mode: either "local" or "public"
         :return minimum and maximum latency
@@ -580,22 +581,26 @@ class BaseAttack(metaclass=abc.ABCMeta):
             minimum[mode] = default
 
         result = self.statistics.process_db_query\
-                ("SELECT minLatency, maxLatency FROM ip_statistics WHERE ipAddress='" + ip_dst + "';")
+                ("SELECT minLatency, maxLatency FROM ip_statistics WHERE ipAddress in ('{0}, {1}');".
+                 format(ip_src, ip_dst))
 
-        if result and result[0][0]:
-            min_latency = result[0][0]
-        else:
-            # FIXME: use only latencies from mode
-            min_latency = np.median(self.all_min_latencies)
+        min_latency = minimum[mode]
+        max_latency = minimum[mode]
 
-        if result and result[0][1]:
-            max_latency = result[0][1]
-        else:
-            # FIXME: use only latencies from mode
-            max_latency = np.median(self.all_max_latencies)
+        for ip in result:
+            # retrieve minimum latency
+            if ip[0]:
+                retrieved = ip[0]
+            else:
+                retrieved = np.median(self.all_min_latencies)
+            min_latency = min(min_latency, retrieved)
 
-        min_latency = min(minimum[mode], min_latency)
-        max_latency = max(minimum[mode], max_latency)
+            # retrieve maximum latency
+            if ip[1]:
+                retrieved = ip[1]
+            else:
+                retrieved = np.median(self.all_max_latencies)
+            max_latency = min(max_latency, retrieved)
 
         min_latency = int(min_latency) * 10 ** -6  # convert from micro to seconds
         max_latency = int(max_latency) * 10 ** -6
