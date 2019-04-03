@@ -3,8 +3,8 @@ import unittest.mock as mock
 import ID2TLib.TestLibrary as Lib
 import Test.ID2TAttackTest as Test
 
-sha_botnet_basic = '309bd109a94ca9b9dcbf6597c8f415a55f26e15eeb470d45d4be9b7f9f649d5b'
-sha_botnet_most_used_ip_in_list = '309bd109a94ca9b9dcbf6597c8f415a55f26e15eeb470d45d4be9b7f9f649d5b'
+sha_botnet_basic = 'd1f17fcb4f8b475e43f23f8a5bd9655489ed432133b0dd8b34433131da6bc18d'
+sha_botnet_most_used_ip_in_list = 'd1f17fcb4f8b475e43f23f8a5bd9655489ed432133b0dd8b34433131da6bc18d'
 
 
 class UnitTestSalityBotnet(Test.ID2TAttackTest):

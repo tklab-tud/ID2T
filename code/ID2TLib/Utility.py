@@ -87,7 +87,8 @@ def update_timestamp(timestamp: float, pps: float, latency: float=0, inj_pps: fl
         delay = latency
     #else Calculate request timestamp
 
-    random_delay = lea.Lea.fromValFreqsDict({delay * 2: 10, delay * 1.5: 15, delay: 50, delay / 2: 15, delay / 3: 7, delay / 5: 3})
+    random_delay = lea.Lea.fromValFreqsDict({delay * 1.3: 12, delay * 1.2: 13, delay * 1.1: 15, delay: 20,
+                                             delay / 1.1: 15, delay / 1.2: 13, delay / 1.3: 12})
     delay = rnd.uniform(delay, random_delay.random())
 
     # add latency or delay to timestamp
