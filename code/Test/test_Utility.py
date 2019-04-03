@@ -10,10 +10,11 @@ class TestUtility(unittest.TestCase):
     def test_update_timestamp_no_delay(self):
         timestamp = 100
         pps = 5
+        latency = 1 / pps
         for i in range(100):
             val = Utility.update_timestamp(timestamp, pps)
             print("\n{}\n".format(val))
-            self.assertTrue(timestamp + 10 / pps >= val >= timestamp + 1 / pps)
+            self.assertTrue(timestamp + latency / 1.3 <= val <= timestamp + latency * 1.3)
 
     def test_update_timestamp_with_delay(self):
         timestamp = 100
@@ -22,7 +23,7 @@ class TestUtility(unittest.TestCase):
         for i in range(100):
             val = Utility.update_timestamp(timestamp, 5, 10)
             print("\n{}\n".format(val))
-            self.assertTrue(timestamp + 1 / pps + latency / 10 <= val <= timestamp + 1 / pps + latency)
+            self.assertTrue(timestamp + latency / 1.3 <= val <= timestamp + latency * 1.3)
 
     def test_update_timestamp_comparison(self):
         self.assertTrue(Utility.update_timestamp(100, 5) <= Utility.update_timestamp(100, 5, 10))
