@@ -41,6 +41,9 @@ class DDoSAttack(BaseAttack.BaseAttack):
             atkParam.Parameter.NUMBER_ATTACKERS: atkParam.ParameterTypes.TYPE_INTEGER_POSITIVE,
             atkParam.Parameter.ATTACK_DURATION: atkParam.ParameterTypes.TYPE_INTEGER_POSITIVE,
             atkParam.Parameter.VICTIM_BUFFER: atkParam.ParameterTypes.TYPE_INTEGER_POSITIVE,
+            atkParam.Parameter.BANDWIDTH_MAX: atkParam.ParameterTypes.TYPE_FLOAT,
+            atkParam.Parameter.BANDWIDTH_MIN_LOCAL: atkParam.ParameterTypes.TYPE_FLOAT,
+            atkParam.Parameter.BANDWIDTH_MIN_PUBLIC: atkParam.ParameterTypes.TYPE_FLOAT,
             atkParam.Parameter.LATENCY_MAX: atkParam.ParameterTypes.TYPE_FLOAT
         })
 
@@ -75,6 +78,9 @@ class DDoSAttack(BaseAttack.BaseAttack):
         self.add_param_value(atkParam.Parameter.MAC_DESTINATION, destination_mac)
         self.add_param_value(atkParam.Parameter.VICTIM_BUFFER, rnd.randint(1000, 10000))
 
+        self.add_param_value(atkParam.Parameter.BANDWIDTH_MAX, 0)
+        self.add_param_value(atkParam.Parameter.BANDWIDTH_MIN_LOCAL, 0)
+        self.add_param_value(atkParam.Parameter.BANDWIDTH_MIN_PUBLIC, 0)
         self.add_param_value(atkParam.Parameter.LATENCY_MAX, 0)
 
     def generate_attack_packets(self):
@@ -180,6 +186,11 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         mss_dst = Util.handle_most_used_outputs(mss_dst)
 
+        # get user defined bandwidth
+        bandwidth_max = self.get_param_value(atkParam.Parameter.BANDWIDTH_MAX)
+        bandwidth_min_local = self.get_param_value(atkParam.Parameter.BANDWIDTH_MIN_LOCAL)
+        bandwidth_min_public = self.get_param_value(atkParam.Parameter.BANDWIDTH_MIN_PUBLIC)
+
         # check user defined latency
         latency_limit = None
         latency_max = self.get_param_value(atkParam.Parameter.LATENCY_MAX)
@@ -273,6 +284,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         # For each triple, generate packet
         for timestamp in timestamps_tuples:
+            # TODO: check if triple or tuple
+            # tuple layout: [timestamp, attacker_id]
 
             # If current current triple is an attacker
             if timestamp[1] != 0:
@@ -304,9 +317,18 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
                 request = (request_ether / request_ip / request_tcp)
                 request.time = timestamp[0]
-                # Append request
-                self.packets.append(request)
-                self.total_pkt_num += 1
+
+                bytes = len(request)
+
+                remaining_bytes = self.get_remaining_bandwidth(request.time, ip_source, ip_destination, bandwidth_max,
+                                                               bandwidth_min_local, bandwidth_min_public) * 1000
+
+                if remaining_bytes - bytes >= 0:
+                    print(bytes)
+                    print(remaining_bytes)
+                    # Append request
+                    self.packets.append(request)
+                    self.total_pkt_num += 1
 
             # If current triple is the victim
             else:
@@ -314,18 +336,28 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 # Build reply package
                 if replies_count <= victim_buffer:
                     attacker_id = timestamp[2]-1
+                    ip_source = ip_source_list[attacker_id]
 
                     reply_ether = inet.Ether(src=mac_destination, dst=mac_source_list[attacker_id])
-                    reply_ip = inet.IP(src=ip_destination, dst=ip_source_list[attacker_id], flags='DF')
+                    reply_ip = inet.IP(src=ip_destination, dst=ip_source, flags='DF')
                     # Pop port from attacker's port "FIFO" into destination port
                     reply_tcp = inet.TCP(sport=port_destination, dport=previous_attacker_port[attacker_id].pop(), seq=0,
                                          ack=1, flags='SA', window=destination_win_value, options=[('MSS', mss_dst)])
                     reply = (reply_ether / reply_ip / reply_tcp)
 
                     reply.time = timestamp[0]
-                    self.packets.append(reply)
-                    replies_count += 1
-                    self.total_pkt_num += 1
+
+                    bytes = len(reply)
+
+                    remaining_bytes = self.get_remaining_bandwidth(reply.time, ip_source, ip_destination, bandwidth_max,
+                                                                   bandwidth_min_local, bandwidth_min_public) * 1000
+
+                    if remaining_bytes - bytes >= 0:
+                        print(bytes)
+                        print(remaining_bytes)
+                        self.packets.append(reply)
+                        replies_count += 1
+                        self.total_pkt_num += 1
 
             # every 1000 packets write them to the pcap file (append)
             if (self.total_pkt_num > 0) and (self.total_pkt_num % buffer_size == 0) and (len(self.packets) > 0):

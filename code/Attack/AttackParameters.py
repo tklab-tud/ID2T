@@ -37,6 +37,9 @@ class Parameter(enum.Enum):
     PACKETS_PER_SECOND = 'packets.per-second'  # packets per second
     INJECT_PPS = 'inject.pps'  # packets per seconds injected by the attack
     INJECT_AT_TIMESTAMP = 'inject.at-timestamp'  # unix epoch time (seconds.millis) where attack should be injected
+    BANDWIDTH_MAX = 'bandwidth.max'
+    BANDWIDTH_MIN_LOCAL = 'bandwidth.min.local'
+    BANDWIDTH_MIN_PUBLIC = 'bandwidth.min.public'
     LATENCY_MAX = 'latency.max'
     # recommended type: Packet Position ----------------------------------
     INJECT_AFTER_PACKET = 'inject.after-pkt'  # packet after which attack should be injected
