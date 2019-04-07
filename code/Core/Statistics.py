@@ -170,8 +170,9 @@ class Statistics:
             else:
                 final_intervals = intervals
 
-            self.pcap_proc.collect_statistics(final_intervals)
-            self.pcap_proc.write_new_interval_statistics(self.path_db, final_intervals)
+            if final_intervals != [0.0]:
+                self.pcap_proc.collect_statistics(final_intervals)
+                self.pcap_proc.write_new_interval_statistics(self.path_db, final_intervals)
 
         self.stats_db.set_current_interval_statistics_tables(current_intervals)
 
