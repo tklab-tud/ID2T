@@ -77,7 +77,9 @@ def update_timestamp(timestamp: float, pps: float, latency: float=0, inj_pps: fl
     # FIXME: throw Exception if pps==0
     packets_this_second = 0
     delay = 0.00008
-    custom_delay = 1 / pps
+    custom_delay = delay
+    if pps != 0:
+        custom_delay = 1 / pps
 
     # Check custom_delay against limits
     if custom_delay < 0.00001:

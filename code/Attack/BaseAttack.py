@@ -550,7 +550,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
             kbytes_sent = 0
         kbytes_sent = kbytes_sent
 
-        duration = int(current_table.replace("interval_statistics_", ""))
+        duration = self.statistics.get_current_interval_len()
         used_bandwidth = float((kbytes_sent * 1000) / duration)
         remaining_bandwidth -= used_bandwidth
         return remaining_bandwidth

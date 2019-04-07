@@ -282,6 +282,9 @@ class DDoSAttack(BaseAttack.BaseAttack):
         if time_diff < 0:
             print("Warning: end of pcap exceeded by " + str(round(-1*time_diff, 2)) + " seconds.")
 
+        sent_bytes = 0
+        previous_interval = 0
+
         # For each triple, generate packet
         for timestamp in timestamps_tuples:
             # TODO: check if triple or tuple
@@ -321,11 +324,10 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 bytes = len(request)
 
                 remaining_bytes = self.get_remaining_bandwidth(request.time, ip_source, ip_destination, bandwidth_max,
-                                                               bandwidth_min_local, bandwidth_min_public) * 1000
+                                                               bandwidth_min_local, bandwidth_min_public) * 1000\
+                                  - sent_bytes
 
-                if remaining_bytes - bytes >= 0:
-                    print(bytes)
-                    print(remaining_bytes)
+                if remaining_bytes <= bytes:
                     # Append request
                     self.packets.append(request)
                     self.total_pkt_num += 1
@@ -350,14 +352,22 @@ class DDoSAttack(BaseAttack.BaseAttack):
                     bytes = len(reply)
 
                     remaining_bytes = self.get_remaining_bandwidth(reply.time, ip_source, ip_destination, bandwidth_max,
-                                                                   bandwidth_min_local, bandwidth_min_public) * 1000
+                                                                   bandwidth_min_local, bandwidth_min_public) * 1000\
+                                      - sent_bytes
 
-                    if remaining_bytes - bytes >= 0:
-                        print(bytes)
-                        print(remaining_bytes)
+                    if remaining_bytes <= bytes:
                         self.packets.append(reply)
                         replies_count += 1
                         self.total_pkt_num += 1
+
+            if remaining_bytes <= bytes:
+                #print(remaining_bytes, end='\r')
+                current_interval = int(timestamp[0] / self.statistics.get_current_interval_len())
+                if previous_interval != current_interval:
+                    print(remaining_bytes)
+                    sent_bytes = 0
+                sent_bytes += bytes
+                previous_interval = current_interval
 
             # every 1000 packets write them to the pcap file (append)
             if (self.total_pkt_num > 0) and (self.total_pkt_num % buffer_size == 0) and (len(self.packets) > 0):
