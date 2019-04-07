@@ -62,6 +62,7 @@ def get_network_mode(ip_src: str, ip_dst: str):
     return mode
 
 
+# TODO: create class, params -> constructor, object in base attack
 def update_timestamp(timestamp: float, pps: float, latency: float=0, inj_pps: float=0, inj_timestamp: float=0):
     """
     Calculates the next timestamp to be used based on the packet per second rate (pps) and the maximum delay.
@@ -80,12 +81,11 @@ def update_timestamp(timestamp: float, pps: float, latency: float=0, inj_pps: fl
 
     # Check custom_delay against limits
     if custom_delay < 0.00001:
-        print("Warning: PPS is too high. Generated traffic might look unrealistic."
+        print("Warning: PPS is too high. Generated traffic might look unrealistic.\n"
               "Recommended are values equal or lower 100000.", end="\r")
     elif custom_delay < 0.000001:
         custom_delay = 0.000001
-        print("Warning: PPS is too high. Delay application not feasible."
-              "Dropping to 1,000,000 pps.", end="\r")
+        print("Warning: PPS is too high. Dropping to 1,000,000 pps.", end="\r")
 
     delay = custom_delay
 

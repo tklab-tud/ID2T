@@ -257,6 +257,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         # print linebreak for warnings in loop
         print("")
+
+        # TODO: move to attack controller
         time_diff = abs(abs((timestamps_tuples[0][0] - timestamps_tuples[-1][0])) - attack_duration)
         if wcount > 0 and time_diff > 1:
             print("Warning: attack duration was exceeded by {0} seconds ({1} attack pkts).".format(time_diff, wcount))
@@ -264,10 +266,10 @@ class DDoSAttack(BaseAttack.BaseAttack):
             print("Warning: attack duration was not reached by generated pkts by {} seconds.".format(time_diff))
 
         # Warning if pcap length gets exceeded
-        time_diff = Util.get_timestamp_from_datetime_str(self.statistics.get_pcap_timestamp_end()) \
-                    - timestamps_tuples[-1][0]
+        pcap_end = Util.get_timestamp_from_datetime_str(self.statistics.get_pcap_timestamp_end())
+        time_diff = pcap_end - timestamps_tuples[-1][0]
         if time_diff < 0:
-            print("Warning: end of pcap exceeded by " + str((-1*time_diff)) + "microsec.")
+            print("Warning: end of pcap exceeded by " + str(round(-1*time_diff, 2)) + " seconds.")
 
         # For each triple, generate packet
         for timestamp in timestamps_tuples:
