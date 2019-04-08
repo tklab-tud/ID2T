@@ -256,10 +256,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 timestamps_tuples.append((timestamp_reply, 0, attacker+1))
 
                 # Calculate timestamp for next attacker SYN-packet
-                # TODO: scrap complement interval stuff for now
-                # TODO: use bandwidth here!!!
-                #attacker_pps = max(Util.get_interval_pps(complement_interval_attacker_pps, timestamp_next_pkt),
-                #                   (pps / num_attackers) / 2)
                 timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, attacker_pps)
 
         # Sort timestamp-triples according to their timestamps in ascending order
@@ -287,7 +283,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         # For each triple, generate packet
         for timestamp in timestamps_tuples:
-            # TODO: check if triple or tuple
             # tuple layout: [timestamp, attacker_id]
 
             # If current current triple is an attacker

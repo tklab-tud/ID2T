@@ -445,6 +445,7 @@ class Statistics:
         else:
             return entropy
 
+    # TODO: replace complement packet rates with bandwidth calculations
     def calculate_complement_packet_rates(self, pps):
         """
         Calculates the complement packet rates of the background traffic packet rates for each interval.
