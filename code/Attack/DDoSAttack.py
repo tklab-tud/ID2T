@@ -327,7 +327,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
                                                                bandwidth_min_local, bandwidth_min_public) * 1000\
                                   - sent_bytes
 
-                if remaining_bytes <= bytes:
+                if remaining_bytes >= bytes:
                     # Append request
                     self.packets.append(request)
                     self.total_pkt_num += 1
@@ -355,12 +355,12 @@ class DDoSAttack(BaseAttack.BaseAttack):
                                                                    bandwidth_min_local, bandwidth_min_public) * 1000\
                                       - sent_bytes
 
-                    if remaining_bytes <= bytes:
+                    if remaining_bytes >= bytes:
                         self.packets.append(reply)
                         replies_count += 1
                         self.total_pkt_num += 1
 
-            if remaining_bytes <= bytes:
+            if remaining_bytes >= bytes:
                 #print(remaining_bytes, end='\r')
                 current_interval = int(timestamp[0] / self.statistics.get_current_interval_len())
                 if previous_interval != current_interval:
