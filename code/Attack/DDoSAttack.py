@@ -206,7 +206,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
         replies_count = 0
         self.total_pkt_num = 0
         already_used_pkts = 0
-        wcount=0
         # For each attacker, generate his own packets, then merge all packets
         for attacker in range(num_attackers):
             # set latency limit to either the minimal latency occurring in the pcap, the default or the user specified limit
@@ -239,9 +238,9 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
             timestamp_prv_reply = 0
             for pkt_num in range(attacker_pkts_num):
-                # Stop the attack when it exceeds the duration
+                # Count attack packets that exceed the attack duration
                 if timestamp_next_pkt > attack_ends_time:
-                    wcount += 1
+                    self.exceeding_pakcets += 1
 
                 # Add timestamp of attacker SYN-packet. Attacker tuples do not need to specify destination
                 timestamps_tuples.append((timestamp_next_pkt, attacker+1))
@@ -264,19 +263,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         # print linebreak for warnings in loop
         print("")
-
-        # TODO: move to attack controller
-        time_diff = abs(abs((timestamps_tuples[0][0] - timestamps_tuples[-1][0])) - attack_duration)
-        if wcount > 0 and time_diff > 1:
-            print("Warning: attack duration was exceeded by {0} seconds ({1} attack pkts).".format(time_diff, wcount))
-        elif time_diff > 1:
-            print("Warning: attack duration was not reached by generated pkts by {} seconds.".format(time_diff))
-
-        # Warning if pcap length gets exceeded
-        pcap_end = Util.get_timestamp_from_datetime_str(self.statistics.get_pcap_timestamp_end())
-        time_diff = pcap_end - timestamps_tuples[-1][0]
-        if time_diff < 0:
-            print("Warning: end of pcap exceeded by " + str(round(-1*time_diff, 2)) + " seconds.")
 
         sent_bytes = 0
         previous_interval = 0
