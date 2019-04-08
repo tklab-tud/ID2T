@@ -164,16 +164,18 @@ class AttackController:
         else:
             attack_note = "This attack used only (random) default parameters."
 
-        # Write attack into pcap file
         print("Generating attack packets...", end=" ")
         sys.stdout.flush()  # force python to print text immediately
         if time:
             self.current_attack.set_start_time()
+        # Generate attack packets
         self.current_attack.generate_attack_packets()
         if time:
             self.current_attack.set_finish_time()
         duration = self.current_attack.get_packet_generation_time()
+        # Write attack into pcap file
         attack_result = self.current_attack.generate_attack_pcap()
+
         self.total_packets = attack_result[0]
         temp_attack_pcap_path = attack_result[1]
         if len(attack_result) == 3:
@@ -183,6 +185,26 @@ class AttackController:
         if time:
             print(" in ", duration, " seconds", end="")
         print(".)")
+
+        # Warning if attack duration gets exceeded by more than 1 second
+        if atkParam.Parameter.ATTACK_DURATION in self.current_attack.supported_params and \
+                        self.current_attack.get_param_value(atkParam.Parameter.ATTACK_DURATION) != 0:
+            attack_duration = self.current_attack.get_param_value(atkParam.Parameter.ATTACK_DURATION)
+            packet_duration = abs(self.current_attack.attack_end_utime - self.current_attack.attack_start_utime)
+            time_diff = abs(attack_duration - packet_duration)
+            if self.current_attack.exceeding_packets > 0 and time_diff > 1:
+                exceeding_packets = ""
+                if self.current_attack.exceeding_packets:
+                    exceeding_packets = " ({} attack pkts)".format(self.current_attack.exceeding_packets)
+                print("Warning: attack duration was exceeded by {0} seconds{1}.".format(time_diff, exceeding_packets))
+            elif time_diff > 1:
+                print("Warning: attack duration was not reached by generated pkts by {} seconds.".format(time_diff))
+
+        # Warning if pcap length gets exceeded
+        pcap_end = Util.get_timestamp_from_datetime_str(self.statistics.get_pcap_timestamp_end())
+        time_diff = pcap_end - self.current_attack.attack_end_utime
+        if time_diff < 0:
+            print("Warning: end of pcap exceeded by " + str(round(abs(time_diff), 2)) + " seconds.")
 
         # Store label into LabelManager
         label = Label.Label(attack, self.get_attack_start_utime(), self.get_attack_end_utime(),

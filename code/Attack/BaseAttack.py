@@ -53,6 +53,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         self.start_time = 0
         self.finish_time = 0
         self.packets = []
+        self.exceeding_packets = 0
         self.path_attack_pcap = ""
 
         # get_reply_delay
