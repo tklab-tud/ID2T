@@ -4,8 +4,6 @@ import typing
 import sqlite3
 import sys
 
-# TODO: double check this import
-# does it complain because libpcapreader is not a .py?
 import ID2TLib.libpcapreader as pr
 import Core.QueryParser as qp
 import pyparsing as pp
