@@ -297,8 +297,7 @@ class Statistics:
 
         table = "ip_statistics"
 
-        # FIXME: the queries get called all the time -.-
-        if self.kbyte_rate[mode] == None:
+        if not self.kbyte_rate[mode]:
             if mode=="local":
                 self.kbyte_rate[mode] = self.stats_db.process_interval_statistics_query\
                     ("select maxKByteRate from %s where (ipClass like 'private') or (ipClass in ('A-unused','D')",
