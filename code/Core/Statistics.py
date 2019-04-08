@@ -5,8 +5,6 @@ import numpy
 from math import sqrt, ceil, log
 from operator import itemgetter
 
-# TODO: double check this import
-# does it complain because libpcapreader is not a .py?
 import ID2TLib.libpcapreader as pr
 import Core.StatsDatabase as statsDB
 import ID2TLib.PcapFile as PcapFile
