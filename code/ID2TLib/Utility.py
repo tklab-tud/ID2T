@@ -63,7 +63,7 @@ def get_network_mode(ip_src: str, ip_dst: str):
 
 
 # TODO: create class, params -> constructor, object in base attack
-def update_timestamp(timestamp: float, pps: float, latency: float=0, inj_pps: float=0, inj_timestamp: float=0):
+def update_timestamp(timestamp: float, pps: float, latency: float=0):
     """
     Calculates the next timestamp to be used based on the packet per second rate (pps) and the maximum delay.
 
@@ -75,7 +75,6 @@ def update_timestamp(timestamp: float, pps: float, latency: float=0, inj_pps: fl
     :return: Timestamp to be used for the next packet.
     """
     # FIXME: throw Exception if pps==0
-    packets_this_second = 0
     delay = 0.00008
     custom_delay = delay
     if pps != 0:
@@ -91,19 +90,6 @@ def update_timestamp(timestamp: float, pps: float, latency: float=0, inj_pps: fl
 
     delay = custom_delay
 
-    # FIXME: is this really necessary?
-    # TODO: maybe remove this
-    # SMBScan code
-    if inj_pps != 0 and inj_timestamp != 0:
-        # time past since the beginning of the attack
-        time = timestamp - inj_timestamp
-        # packets injected so far
-        packets_so_far = time / inj_pps
-        # packets to be injected this second
-        packets_this_second = packets_so_far % inj_pps
-    else:
-        inj_pps = 0
-
     if latency != 0:
         # Calculate reply timestamp
         delay = latency
@@ -114,10 +100,7 @@ def update_timestamp(timestamp: float, pps: float, latency: float=0, inj_pps: fl
     delay = rnd.uniform(delay, random_delay.random())
 
     # add latency or delay to timestamp
-    result = timestamp + delay
-    if inj_pps > packets_this_second and int(result) - int(timestamp) != 1:
-        result = result + 1
-    return result
+    return timestamp + delay
 
 
 def get_timestamp_from_datetime_str(time: str):

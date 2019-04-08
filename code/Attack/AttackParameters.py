@@ -35,7 +35,6 @@ class Parameter(enum.Enum):
     TARGET_HOST = 'target.host'
     # recommended type: Float ------------------------------------
     PACKETS_PER_SECOND = 'packets.per-second'  # packets per second
-    INJECT_PPS = 'inject.pps'  # packets per seconds injected by the attack
     INJECT_AT_TIMESTAMP = 'inject.at-timestamp'  # unix epoch time (seconds.millis) where attack should be injected
     BANDWIDTH_MAX = 'bandwidth.max'
     BANDWIDTH_MIN_LOCAL = 'bandwidth.min.local'
