@@ -70,8 +70,6 @@ def update_timestamp(timestamp: float, pps: float, latency: float=0):
     :param timestamp: the base timestamp to update
     :param pps: the packets per second specified by the user
     :param latency: the delay calculated from the statistics db
-    :param inj_pps: packets to inject each second
-    :param inj_timestamp: timestamp of the begin of the attack
     :return: Timestamp to be used for the next packet.
     """
     # FIXME: throw Exception if pps==0
