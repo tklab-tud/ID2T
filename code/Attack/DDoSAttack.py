@@ -140,7 +140,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         # Calculate complement packet rates of the background traffic for each interval
         attacker_pps = pps / num_attackers
-        complement_interval_attacker_pps = self.statistics.calculate_complement_packet_rates(attacker_pps)
+        #complement_interval_attacker_pps = self.statistics.calculate_complement_packet_rates(attacker_pps)
 
         # Check ip.src == ip.dst
         self.ip_src_dst_equal_check(ip_source_list, ip_destination)
@@ -208,7 +208,9 @@ class DDoSAttack(BaseAttack.BaseAttack):
         already_used_pkts = 0
         sum_diff = 0
 
-        attack_ends_time = self.get_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP) + attack_duration
+        self.attack_start_utime = self.get_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP)
+        self.timestamp_controller.set_pps(attacker_pps)
+        attack_ends_time = self.timestamp_controller.get_timestamp() + attack_duration
 
         # For each attacker, generate his own packets, then merge all packets
         for attacker in range(num_attackers):
@@ -221,12 +223,10 @@ class DDoSAttack(BaseAttack.BaseAttack):
             # Initialize empty port "FIFO" for current attacker
             previous_attacker_port.append([])
             # Calculate timestamp of first SYN-packet of attacker
-            timestamp_next_pkt = self.get_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP)
-            self.attack_start_utime = self.get_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP)
+            timestamp_next_pkt = self.timestamp_controller.reset_timestamp()
             if attacker != 0:
                 timestamp_next_pkt = rnd.uniform(timestamp_next_pkt,
-                                                 Util.update_timestamp(timestamp_next_pkt, attacker_pps,
-                                                                       latency=latency_limit))
+                                                 self.timestamp_controller.next_timestamp(latency=latency_limit))
             # calculate each attackers packet count without exceeding the total number of attackers
             attacker_pkts_num = 0
             if already_used_pkts < pkts_num:
@@ -238,6 +238,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 # each attacker gets a different pps according to his pkt count offset
                 ratio = float(attacker_pkts_num) / float(pkts_num)
                 attacker_pps = pps * ratio
+                self.timestamp_controller.set_pps(attacker_pps)
 
             timestamp_prv_reply = 0
             for pkt_num in range(attacker_pkts_num):
@@ -251,16 +252,18 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 timestamps_tuples.append((timestamp_next_pkt, attacker+1))
 
                 # Calculate timestamp of victim ACK-packet
-                timestamp_reply = Util.update_timestamp(timestamp_next_pkt, attacker_pps, latency=latency_limit)
+                timestamp_reply = self.timestamp_controller.next_timestamp(latency=latency_limit)
                 while timestamp_reply <= timestamp_prv_reply:
-                    timestamp_reply = Util.update_timestamp(timestamp_prv_reply, attacker_pps, latency=latency_limit)
+                    self.timestamp_controller.set_timestamp(timestamp_prv_reply)
+                    timestamp_reply = self.timestamp_controller.next_timestamp(latency=latency_limit)
                 timestamp_prv_reply = timestamp_reply
 
                 # Add timestamp of victim ACK-packet(victim always has id=0)
                 timestamps_tuples.append((timestamp_reply, 0, attacker+1))
 
                 # Calculate timestamp for next attacker SYN-packet
-                timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, attacker_pps)
+                self.timestamp_controller.set_timestamp(timestamp_next_pkt)
+                timestamp_next_pkt = self.timestamp_controller.next_timestamp()
 
         # Sort timestamp-triples according to their timestamps in ascending order
         timestamps_tuples.sort(key=lambda tmstmp: tmstmp[0])

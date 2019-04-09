@@ -184,7 +184,8 @@ class MS17ScanAttack(BaseAttack.BaseAttack):
                 new_pkt.time = timestamp_next_pkt
 
                 pps = max(Util.get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
-                timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps) + inter_arrival_times[
+
+                timestamp_next_pkt = self.timestamp_controller.next_timestamp() + inter_arrival_times[
                     self.pkt_num]  # float(timeSteps.random())
             # Reply
             else:
@@ -212,7 +213,7 @@ class MS17ScanAttack(BaseAttack.BaseAttack):
                         tcp_pkt.setfieldval("options", tcp_options)
 
                 new_pkt = (eth_frame / ip_pkt / tcp_pkt)
-                timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps) + inter_arrival_times[
+                timestamp_next_pkt = self.timestamp_controller.next_timestamp() + inter_arrival_times[
                     self.pkt_num]  # + float(timeSteps.random())
                 new_pkt.time = timestamp_next_pkt
 

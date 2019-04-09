@@ -211,9 +211,10 @@ class PortscanAttack(BaseAttack.BaseAttack):
                                          options=[('MSS', destination_mss_value)])
                     reply = (reply_ether / reply_ip / reply_tcp)
 
-                    timestamp_reply = Util.update_timestamp(timestamp_next_pkt, pps, min_delay)
+                    timestamp_reply = self.timestamp_controller.next_timestamp(latency=min_delay)
                     while timestamp_reply <= timestamp_prv_reply:
-                        timestamp_reply = Util.update_timestamp(timestamp_prv_reply, pps, min_delay)
+                        self.timestamp_controller.set_timestamp(timestamp_prv_reply)
+                        timestamp_reply = self.timestamp_controller.next_timestamp(latency=min_delay)
                     timestamp_prv_reply = timestamp_reply
 
                     reply.time = timestamp_reply
@@ -224,14 +225,16 @@ class PortscanAttack(BaseAttack.BaseAttack):
                     confirm_ip = request_ip
                     confirm_tcp = inet.TCP(sport=sport, dport=dport, seq=1, window=0, flags='R')
                     confirm = (confirm_ether / confirm_ip / confirm_tcp)
-                    timestamp_confirm = Util.update_timestamp(timestamp_reply, pps, min_delay)
+                    self.timestamp_controller.set_timestamp(timestamp_reply)
+                    timestamp_confirm = self.timestamp_controller.next_timestamp(latency=min_delay)
                     confirm.time = timestamp_confirm
                     self.packets.append(confirm)
 
                     # else: destination port is NOT OPEN -> no reply is sent by target
 
                 pps = max(Util.get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
-                timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps)
+                self.timestamp_controller.set_timestamp(timestamp_next_pkt)
+                timestamp_next_pkt = self.timestamp_controller.next_timestamp()
 
     def generate_attack_pcap(self):
         """

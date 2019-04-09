@@ -247,9 +247,10 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                 self.packets.append(request)
 
                 # Update timestamp for next package
-                timestamp_reply = Util.update_timestamp(timestamp_next_pkt, pps, min_delay)
+                timestamp_reply = self.timestamp_controller.next_timestamp(min_delay)
                 while timestamp_reply <= timestamp_prv_reply:
-                    timestamp_reply = Util.update_timestamp(timestamp_prv_reply, pps, min_delay)
+                    self.timestamp_controller.set_timestamp(timestamp_prv_reply)
+                    timestamp_reply = self.timestamp_controller.next_timestamp(min_delay)
                 timestamp_prv_reply = timestamp_reply
 
                 if ip in hosting_ip:
@@ -273,7 +274,8 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     confirm_tcp = inet.TCP(sport=sport, dport=SMBLib.smb_port, seq=attacker_seq, ack=victim_seq,
                                            window=source_win_value, flags='A')
                     confirm = (confirm_ether / confirm_ip / confirm_tcp)
-                    timestamp_confirm = Util.update_timestamp(timestamp_reply, pps, min_delay)
+                    self.timestamp_controller.set_timestamp(timestamp_reply)
+                    timestamp_confirm = self.timestamp_controller.next_timestamp(min_delay)
                     confirm.time = timestamp_confirm
                     self.packets.append(confirm)
 
@@ -312,7 +314,8 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     for i in range(0, len(smb_req_tail_arr)):
                         smb_req_combined = smb_req_combined / smb_req_tail_arr[i]
 
-                    timestamp_smb_req = Util.update_timestamp(timestamp_confirm, pps, min_delay)
+                    self.timestamp_controller.set_timestamp(timestamp_confirm)
+                    timestamp_smb_req = self.timestamp_controller.next_timestamp(min_delay)
                     smb_req_combined.time = timestamp_smb_req
                     self.packets.append(smb_req_combined)
 
@@ -320,7 +323,8 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     reply_tcp = inet.TCP(sport=SMBLib.smb_port, dport=sport, seq=victim_seq, ack=attacker_seq,
                                          window=destination_win_value, flags='A')
                     confirm_smb_req = (reply_ether / reply_ip / reply_tcp)
-                    timestamp_reply = Util.update_timestamp(timestamp_smb_req, pps, min_delay)
+                    self.timestamp_controller.set_timestamp(timestamp_smb_req)
+                    timestamp_reply = self.timestamp_controller.next_timestamp(min_delay)
                     confirm_smb_req.time = timestamp_reply
                     self.packets.append(confirm_smb_req)
 
@@ -329,7 +333,8 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     server_guid, security_blob, capabilities, data_size, server_start_time =\
                         SMBLib.get_smb_platform_data(self.host_os, first_timestamp)
 
-                    timestamp_smb_rsp = Util.update_timestamp(timestamp_reply, pps, min_delay)
+                    self.timestamp_controller.set_timestamp(timestamp_reply)
+                    timestamp_smb_rsp = self.timestamp_controller.next_timestamp(min_delay)
                     diff = timestamp_smb_rsp - timestamp_smb_req
                     begin = Util.get_filetime_format(timestamp_smb_req + diff * 0.1)
                     end = Util.get_filetime_format(timestamp_smb_rsp - diff * 0.1)
@@ -372,7 +377,8 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     confirm_tcp = inet.TCP(sport=sport, dport=SMBLib.smb_port, seq=attacker_seq, ack=victim_seq,
                                            window=source_win_value, flags='A')
                     confirm_smb_res = (confirm_ether / confirm_ip / confirm_tcp)
-                    timestamp_confirm = Util.update_timestamp(timestamp_smb_rsp, pps, min_delay)
+                    self.timestamp_controller.set_timestamp(timestamp_smb_rsp)
+                    timestamp_confirm = self.timestamp_controller.next_timestamp(min_delay)
                     confirm_smb_res.time = timestamp_confirm
                     self.packets.append(confirm_smb_res)
 
@@ -380,7 +386,8 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     confirm_tcp = inet.TCP(sport=sport, dport=SMBLib.smb_port, seq=attacker_seq, ack=victim_seq,
                                            window=source_win_value, flags='FA')
                     source_fin_ack = (confirm_ether / confirm_ip / confirm_tcp)
-                    timestamp_src_fin_ack = Util.update_timestamp(timestamp_confirm, pps, min_delay)
+                    self.timestamp_controller.set_timestamp(timestamp_confirm)
+                    timestamp_src_fin_ack = self.timestamp_controller.next_timestamp(min_delay)
                     source_fin_ack.time = timestamp_src_fin_ack
                     attacker_seq += 1
                     self.packets.append(source_fin_ack)
@@ -389,7 +396,8 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     reply_tcp = inet.TCP(sport=SMBLib.smb_port, dport=sport, seq=victim_seq, ack=attacker_seq,
                                          window=destination_win_value, flags='FA')
                     destination_fin_ack = (reply_ether / reply_ip / reply_tcp)
-                    timestamp_dest_fin_ack = Util.update_timestamp(timestamp_src_fin_ack, pps, min_delay)
+                    self.timestamp_controller.set_timestamp(timestamp_src_fin_ack)
+                    timestamp_dest_fin_ack = self.timestamp_controller.next_timestamp(min_delay)
                     victim_seq += 1
                     destination_fin_ack.time = timestamp_dest_fin_ack
                     self.packets.append(destination_fin_ack)
@@ -398,7 +406,8 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     confirm_tcp = inet.TCP(sport=sport, dport=SMBLib.smb_port, seq=attacker_seq, ack=victim_seq,
                                            window=source_win_value, flags='A')
                     final_ack = (confirm_ether / confirm_ip / confirm_tcp)
-                    timestamp_final_ack = Util.update_timestamp(timestamp_dest_fin_ack, pps, min_delay)
+                    self.timestamp_controller.set_timestamp(timestamp_dest_fin_ack)
+                    timestamp_final_ack = self.timestamp_controller.next_timestamp(min_delay)
                     final_ack.time = timestamp_final_ack
                     self.packets.append(final_ack)
 
@@ -413,7 +422,8 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     self.packets.append(reply)
 
             pps = max(Util.get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
-            timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps)
+            self.timestamp_controller.set_timestamp(timestamp_next_pkt)
+            timestamp_next_pkt = self.timestamp_controller.next_timestamp()
 
     def generate_attack_pcap(self):
         """

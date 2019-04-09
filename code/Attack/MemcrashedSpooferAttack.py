@@ -88,7 +88,7 @@ class MemcrashedSpooferAttack(BaseAttack.BaseAttack):
 
             self.packets.append(request)
 
-            timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps)
+            timestamp_next_pkt = self.timestamp_controller.next_timestamp()
 
     def generate_attack_pcap(self) -> typing.Tuple[int, str]:
         # store end time of attack

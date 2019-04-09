@@ -22,6 +22,7 @@ import scapy.utils
 
 import Attack.AttackParameters as atkParam
 import ID2TLib.Utility as Util
+import Core.TimestampController as tc
 
 
 class BaseAttack(metaclass=abc.ABCMeta):
@@ -55,6 +56,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         self.packets = []
         self.exceeding_packets = 0
         self.path_attack_pcap = ""
+        self.timestamp_controller = None
 
         # get_reply_delay
         self.all_min_latencies = None
@@ -79,6 +81,10 @@ class BaseAttack(metaclass=abc.ABCMeta):
         self.most_used_mss_value = self.statistics.get_most_used_mss_value()
         self.most_used_ttl_value = self.statistics.get_most_used_ttl_value()
         self.most_used_win_size = self.statistics.get_most_used_win_size()
+
+    def init_objects(self):
+        self.timestamp_controller = tc.TimestampController(self.get_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP),
+                                                           self.get_param_value(atkParam.Parameter.PACKETS_PER_SECOND))
 
     @abc.abstractmethod
     def init_params(self):
@@ -408,6 +414,17 @@ class BaseAttack(metaclass=abc.ABCMeta):
             # e.g. inject.at-timestamp=123456 -> is changed to: 123456.[random digits]
             if param_name == atkParam.Parameter.INJECT_AT_TIMESTAMP and is_valid and ((value - int(value)) == 0):
                 value = value + random.uniform(0, 0.999999)
+            # Check user specified pps against limits
+            if param_name == atkParam.Parameter.PACKETS_PER_SECOND and is_valid and user_specified:
+                if value > 1000000:
+                    value = 1000000
+                    print("PPS is too high. Dropping to 1,000,000 pps.")
+                elif value > 100000:
+                    print("Warning: PPS is too high. Generated traffic might look unrealistic.\n"
+                          "Recommended are values equal or lower 100000.")
+                #elif value == 0:
+                #    value = 12500
+                #    print("No PPS was specified. Default value ({}) was used.".format(value))
         elif param_type == atkParam.ParameterTypes.TYPE_TIMESTAMP:
             is_valid = self._is_timestamp(value)
         elif param_type == atkParam.ParameterTypes.TYPE_BOOLEAN:
