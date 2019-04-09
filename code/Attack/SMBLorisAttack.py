@@ -130,6 +130,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
         attack_ends_time = first_timestamp + attack_duration
 
         victim_pps = pps * num_attackers
+        self.timestamp_controller.set_pps(victim_pps)
 
         for attacker in range(num_attackers):
             # Get MSS, TTL and Window size value for source IP(attacker)
@@ -143,7 +144,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
             min_delay, max_delay = self.get_reply_latency(ip_source_list[attacker], ip_destination)
 
             # Timestamps of first self.packets shouldn't be exactly the same to look more realistic
-            timestamp_next_pkt = rnd.uniform(first_timestamp, Util.update_timestamp(first_timestamp, pps))
+            timestamp_next_pkt = rnd.uniform(first_timestamp, self.timestamp_controller.next_timestamp())
 
             while timestamp_next_pkt <= attack_ends_time:
                 # Establish TCP connection
@@ -164,7 +165,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
                 attacker_seq += 1
                 syn = (attacker_ether / attacker_ip / syn_tcp)
                 syn.time = timestamp_next_pkt
-                timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, victim_pps, min_delay)
+                timestamp_next_pkt = self.timestamp_controller.next_timestamp(min_delay)
                 self.packets.append(syn)
 
                 # response from victim (server)
@@ -173,7 +174,8 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
                 victim_seq += 1
                 synack = (victim_ether / victim_ip / synack_tcp)
                 synack.time = timestamp_next_pkt
-                timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps, min_delay)
+                self.timestamp_controller.set_pps(pps)
+                timestamp_next_pkt = self.timestamp_controller.next_timestamp(min_delay)
                 self.packets.append(synack)
 
                 # acknowledgement from attacker (client)
@@ -181,7 +183,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
                                    window=source_win_value, options=[('MSS', source_mss_value)])
                 ack = (attacker_ether / attacker_ip / ack_tcp)
                 ack.time = timestamp_next_pkt
-                timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps)
+                timestamp_next_pkt = self.timestamp_controller.next_timestamp()
                 self.packets.append(ack)
 
                 # send NBT session header packet with maximum LENGTH-field
@@ -192,7 +194,8 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
                 attacker_seq += len(req_payload)
                 req = (attacker_ether / attacker_ip / req_tcp / req_payload)
                 req.time = timestamp_next_pkt
-                timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, victim_pps, min_delay)
+                self.timestamp_controller.set_pps(victim_pps)
+                timestamp_next_pkt = self.timestamp_controller.next_timestamp(min_delay)
                 self.packets.append(req)
 
                 # final ack from victim (server)
@@ -200,7 +203,8 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
                                         window=destination_win_value, options=[('MSS', destination_mss_value)])
                 last_ack = (victim_ether / victim_ip / last_ack_tcp)
                 last_ack.time = timestamp_next_pkt
-                timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps, min_delay)
+                self.timestamp_controller.set_pps(pps)
+                timestamp_next_pkt = self.timestamp_controller.next_timestamp(min_delay)
                 self.packets.append(last_ack)
 
                 sport += 1
