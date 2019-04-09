@@ -118,10 +118,6 @@ class AttackController:
 
         self.current_attack.init_params()
 
-        # Unset the user-specified-flag for all parameters set in init_params
-        for k, v in self.current_attack.params.items():
-            self.current_attack.params[k] = self.current_attack.ValuePair(v.value, False)
-
         # Record the attack
         self.added_attacks.append(self.current_attack)
 
@@ -239,4 +235,4 @@ class AttackController:
         :return: None
         """
         for param_key, param_value in params.items():
-            self.current_attack.add_param_value(param_key, param_value)
+            self.current_attack.add_param_value(param_key, param_value, user_specified=True)
