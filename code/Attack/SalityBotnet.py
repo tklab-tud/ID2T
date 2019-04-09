@@ -128,7 +128,7 @@ class SalityBotnet(BaseAttack.BaseAttack):
             new_pkt.time = timestamp_next_pkt
 
             pps = max(Util.get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
-            timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps)
+            timestamp_next_pkt = self.timestamp_controller.next_timestamp()
 
             self.packets.append(new_pkt)
 
