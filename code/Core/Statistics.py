@@ -355,8 +355,6 @@ class Statistics:
         interval = start + int(diff/interval_length) * interval_length
 
         if interval not in self.interval_stat[field].keys():
-            print(interval)
-            print(self.interval_stat)
             # get interval borders
             lower = int(unix_timestamp - interval_length)
             upper = int(unix_timestamp)
@@ -368,7 +366,6 @@ class Statistics:
             query_result = self.stats_db.process_interval_statistics_query\
                 ("SELECT {0} FROM %s WHERE {1} BETWEEN {2} AND {3}".format(field, "first_pkt_timestamp", lower, upper),
                  table_name)
-            print(query_result)
 
             result = None
             if query_result:
