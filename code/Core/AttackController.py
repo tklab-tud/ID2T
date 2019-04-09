@@ -164,6 +164,8 @@ class AttackController:
         else:
             attack_note = "This attack used only (random) default parameters."
 
+        self.current_attack.init_objects()
+
         print("Generating attack packets...", end=" ")
         sys.stdout.flush()  # force python to print text immediately
         if time:
