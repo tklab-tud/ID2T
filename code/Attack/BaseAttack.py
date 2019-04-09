@@ -341,7 +341,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         """
         return self.finish_time - self.start_time
 
-    def add_param_value(self, param, value, user_specified: bool = True) -> None:
+    def add_param_value(self, param, value, user_specified: bool = False) -> None:
         """
         Adds the pair param : value to the dictionary of attack parameters. Prints and error message and skips the
         parameter if the validation fails.
