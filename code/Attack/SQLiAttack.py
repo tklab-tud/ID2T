@@ -207,7 +207,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
                 new_pkt.time = timestamp_next_pkt
 
                 pps = max(Util.get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
-                timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps) + float(time_steps.random())
+                timestamp_next_pkt = self.timestamp_controller.next_timestamp() + float(time_steps.random())
 
             # Victim --> attacker
             else:
@@ -236,7 +236,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
                     victim_seq += max(strLen, 1)
 
                 new_pkt = (eth_frame / ip_pkt / tcp_pkt / str_tcp_seg)
-                timestamp_next_pkt = Util.update_timestamp(timestamp_next_pkt, pps) + float(time_steps.random())
+                timestamp_next_pkt = self.timestamp_controller.next_timestamp() + float(time_steps.random())
                 new_pkt.time = timestamp_next_pkt
 
             self.packets.append(new_pkt)
