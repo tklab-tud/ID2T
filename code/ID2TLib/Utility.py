@@ -62,45 +62,6 @@ def get_network_mode(ip_src: str, ip_dst: str):
     return mode
 
 
-# TODO: create class, params -> constructor, object in base attack
-def update_timestamp(timestamp: float, pps: float, latency: float=0):
-    """
-    Calculates the next timestamp to be used based on the packet per second rate (pps) and the maximum delay.
-    Parameter consideration order: latency > pps > default delay
-
-    :param timestamp: the base timestamp to update
-    :param pps: the packets per second for request pkts
-    :param latency: the latency for reply pkts
-    :return: timestamp to be used for the next packet.
-    """
-    # default delay
-    delay = 0.00008
-
-    # user specified delay by pps
-    if pps != 0:
-        delay = 1 / pps
-
-    # Check user specified delay against limits
-    if delay < 0.00001:
-        print("Warning: PPS is too high. Generated traffic might look unrealistic.\n"
-              "Recommended are values equal or lower 100000.", end="\r")
-    elif delay < 0.000001:
-        delay = 0.000001
-        print("Warning: PPS is too high. Dropping to 1,000,000 pps.", end="\r")
-
-    if latency != 0:
-        # Calculate reply timestamp
-        delay = latency
-    #else Calculate request timestamp
-
-    random_delay = lea.Lea.fromValFreqsDict({delay * 1.3: 12, delay * 1.2: 13, delay * 1.1: 15, delay: 20,
-                                             delay / 1.1: 15, delay / 1.2: 13, delay / 1.3: 12})
-    delay = rnd.uniform(delay, random_delay.random())
-
-    # add latency or delay to timestamp
-    return timestamp + delay
-
-
 def get_timestamp_from_datetime_str(time: str):
     return pytz.timezone('UTC').localize(dt.datetime.strptime(time, "%Y-%m-%d %H:%M:%S.%f")).timestamp()
 
