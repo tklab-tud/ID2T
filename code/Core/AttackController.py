@@ -178,6 +178,16 @@ class AttackController:
         # Write attack into pcap file
         attack_result = self.current_attack.generate_attack_pcap()
 
+        self.total_packets = attack_result[0]
+        temp_attack_pcap_path = attack_result[1]
+        if len(attack_result) == 3:
+            # Extract the list of additional files, if available
+            self.additional_files += attack_result[2]
+        print("done. (total: " + str(self.total_packets) + " pkts", end="")
+        if time:
+            print(" in ", duration, " seconds", end="")
+        print(".)")
+
         # Warning if attack duration gets exceeded by more than 1 second
         if atkParam.Parameter.ATTACK_DURATION in self.current_attack.supported_params and \
                         self.current_attack.get_param_value(atkParam.Parameter.ATTACK_DURATION) != 0:
@@ -198,16 +208,6 @@ class AttackController:
         time_diff = pcap_end - pcap_start - self.current_attack.attack_end_utime
         if time_diff < 0:
             print("Warning: end of pcap exceeded by " + str(round(abs(time_diff), 2)) + " seconds.")
-
-        self.total_packets = attack_result[0]
-        temp_attack_pcap_path = attack_result[1]
-        if len(attack_result) == 3:
-            # Extract the list of additional files, if available
-            self.additional_files += attack_result[2]
-        print("done. (total: " + str(self.total_packets) + " pkts", end="")
-        if time:
-            print(" in ", duration, " seconds", end="")
-        print(".)")
 
         # Store label into LabelManager
         label = Label.Label(attack, self.get_attack_start_utime(), self.get_attack_end_utime(),
