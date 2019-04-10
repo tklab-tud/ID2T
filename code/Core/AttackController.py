@@ -194,10 +194,10 @@ class AttackController:
             attack_duration = self.current_attack.get_param_value(atkParam.Parameter.ATTACK_DURATION)
             packet_duration = abs(self.current_attack.attack_end_utime - self.current_attack.attack_start_utime)
             time_diff = abs(attack_duration - packet_duration)
-            if self.current_attack.exceeding_pakcets > 0 and time_diff > 1:
+            if self.current_attack.exceeding_packets > 0 and time_diff > 1:
                 exceeding_packets = ""
-                if self.current_attack.exceeding_pakcets:
-                    exceeding_packets = " ({} attack pkts)".format(self.current_attack.exceeding_pakcets)
+                if self.current_attack.exceeding_packets:
+                    exceeding_packets = " ({} attack pkts)".format(self.current_attack.exceeding_packets)
                 print("Warning: attack duration was exceeded by {0} seconds{1}.".format(time_diff, exceeding_packets))
             elif time_diff > 1:
                 print("Warning: attack duration was not reached by generated pkts by {} seconds.".format(time_diff))

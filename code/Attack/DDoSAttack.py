@@ -243,7 +243,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
             for pkt_num in range(attacker_pkts_num):
                 # Count attack packets that exceed the attack duration
                 if timestamp_next_pkt > attack_ends_time:
-                    self.exceeding_pakcets += 1
+                    self.exceeding_packets += 1
 
                 # Add timestamp of attacker SYN-packet. Attacker tuples do not need to specify destination
                 timestamps_tuples.append((timestamp_next_pkt, attacker+1))
