@@ -17,37 +17,33 @@ class TimestampController:
 
     def get_pps(self):
         """
-
-        :return:
+        :return: the currently used packets per seconds
         """
         return self.pps
 
     def set_pps(self, pps: float):
         """
-
-        :param pps:
+        :param pps: the packets per second for request pkts
         """
         self.pps = pps
 
     def get_timestamp(self):
         """
-
-        :return:
+        :return: the base timestamp, which will be updated
         """
         return self.previous_timestamp
 
     def reset_timestamp(self):
         """
-
-        :return:
+        Resets the current timestamp to the timestamp the object was initialized with.
+        :return: the base timestamp, which will be updated
         """
         self.previous_timestamp = self.first_timestamp
         return self.previous_timestamp
 
     def set_timestamp(self, timestamp: int):
         """
-
-        :param timestamp:
+        :param timestamp: the base timestamp to update
         """
         self.previous_timestamp = timestamp
 
