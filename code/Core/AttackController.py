@@ -204,8 +204,7 @@ class AttackController:
 
         # Warning if pcap length gets exceeded
         pcap_end = Util.get_timestamp_from_datetime_str(self.statistics.get_pcap_timestamp_end())
-        pcap_start = Util.get_timestamp_from_datetime_str(self.statistics.get_pcap_timestamp_start())
-        time_diff = pcap_end - pcap_start - self.current_attack.attack_end_utime
+        time_diff = pcap_end - self.current_attack.attack_end_utime
         if time_diff < 0:
             print("Warning: end of pcap exceeded by " + str(round(abs(time_diff), 2)) + " seconds.")
 
