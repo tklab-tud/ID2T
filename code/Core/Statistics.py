@@ -347,6 +347,9 @@ class Statistics:
         # get unix timestamp depending on pcap start timestamp
         start = int(Util.get_timestamp_from_datetime_str(self.get_pcap_timestamp_start()) * 1000000)
         diff = timestamp * 1000000
+        # catch --inject-empty timestamp issue
+        if diff > start:
+            diff -= start
         unix_timestamp = start + diff
 
         # get interval length
