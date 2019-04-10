@@ -51,7 +51,6 @@ class TimestampController:
         """
         self.previous_timestamp = timestamp
 
-    # TODO: create class, params -> constructor, object in base attack
     def next_timestamp(self, latency: float=0):
         """
         Calculates the next timestamp to be used based on the packet per second rate (pps) and the maximum delay.
