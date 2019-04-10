@@ -12,7 +12,7 @@ class TimestampController:
         :return:
         """
         self.first_timestamp = timestamp
-        self.previous_timestamp = timestamp
+        self.current_timestamp = timestamp
         self.pps = pps
 
     def get_pps(self):
@@ -31,21 +31,21 @@ class TimestampController:
         """
         :return: the base timestamp, which will be updated
         """
-        return self.previous_timestamp
+        return self.current_timestamp
 
     def reset_timestamp(self):
         """
         Resets the current timestamp to the timestamp the object was initialized with.
         :return: the base timestamp, which will be updated
         """
-        self.previous_timestamp = self.first_timestamp
-        return self.previous_timestamp
+        self.current_timestamp = self.first_timestamp
+        return self.current_timestamp
 
     def set_timestamp(self, timestamp: int):
         """
         :param timestamp: the base timestamp to update
         """
-        self.previous_timestamp = timestamp
+        self.current_timestamp = timestamp
 
     def next_timestamp(self, latency: float=0):
         """
@@ -68,5 +68,5 @@ class TimestampController:
         delay = rnd.uniform(delay, random_delay.random())
 
         # add latency or delay to timestamp
-        self.previous_timestamp = self.previous_timestamp + delay
-        return self.previous_timestamp
+        self.current_timestamp = self.current_timestamp + delay
+        return self.current_timestamp
