@@ -266,9 +266,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
         timestamps_tuples.sort(key=lambda tmstmp: tmstmp[0])
         self.attack_start_utime = timestamps_tuples[0][0]
 
-        # print linebreak for warnings in loop
-        print("")
-
         sent_bytes = 0
         previous_interval = 0
 
@@ -347,10 +344,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
                         self.total_pkt_num += 1
 
             if remaining_bytes >= bytes:
-                #print(remaining_bytes, end='\r')
                 current_interval = int(timestamp[0] / self.statistics.get_current_interval_len())
                 if previous_interval != current_interval:
-                    print(remaining_bytes)
                     sent_bytes = 0
                 sent_bytes += bytes
                 previous_interval = current_interval
