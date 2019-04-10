@@ -536,7 +536,6 @@ class BaseAttack(metaclass=abc.ABCMeta):
 
         return destination
 
-    # TODO: maybe separate local vs public determination into helper function
     def get_remaining_bandwidth(self, timestamp: int=0, ip_src: str= "", ip_dst: str= "", custom_max_bandwidth: float=0,
                                 custom_bandwidth_local: float=0, custom_bandwidth_public: float=0):
         """
@@ -564,7 +563,6 @@ class BaseAttack(metaclass=abc.ABCMeta):
         current_table = self.statistics.stats_db.get_current_interval_statistics_table()
         kbytes_sent = self.statistics.get_interval_stat(table_name=current_table, field="kbytes", timestamp=timestamp)
         if not kbytes_sent:
-            # FIXME: warning here, since pcap length succeeded
             kbytes_sent = 0
         kbytes_sent = kbytes_sent
 
