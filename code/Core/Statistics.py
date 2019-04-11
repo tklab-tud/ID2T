@@ -376,7 +376,7 @@ class Statistics:
 
             self.interval_stat[field][interval] = result
 
-        return self.interval_stat[field][interval]
+        return self.interval_stat[field][interval], interval
 
     @staticmethod
     def write_list(desc_val_unit_list, func, line_ending="\n"):
