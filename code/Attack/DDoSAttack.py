@@ -206,9 +206,12 @@ class DDoSAttack(BaseAttack.BaseAttack):
         replies_count = 0
         self.total_pkt_num = 0
         already_used_pkts = 0
+        sum_diff = 0
 
         self.attack_start_utime = self.get_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP)
         self.timestamp_controller.set_pps(attacker_pps)
+
+        attack_ends_time = self.timestamp_controller.get_timestamp() + attack_duration
 
         # For each attacker, generate his own packets, then merge all packets
         for attacker in range(num_attackers):
@@ -222,7 +225,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
             previous_attacker_port.append([])
             # Calculate timestamp of first SYN-packet of attacker
             timestamp_next_pkt = self.timestamp_controller.reset_timestamp()
-            attack_ends_time = timestamp_next_pkt + attack_duration
             if attacker != 0:
                 timestamp_next_pkt = rnd.uniform(timestamp_next_pkt,
                                                  self.timestamp_controller.next_timestamp(latency=latency_limit))
@@ -243,6 +245,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
             for pkt_num in range(attacker_pkts_num):
                 # Count attack packets that exceed the attack duration
                 if timestamp_next_pkt > attack_ends_time:
+                    diff = timestamp_next_pkt-attack_ends_time
+                    sum_diff += diff
                     self.exceeding_packets += 1
 
                 # Add timestamp of attacker SYN-packet. Attacker tuples do not need to specify destination
@@ -267,7 +271,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
         self.attack_start_utime = timestamps_tuples[0][0]
 
         sent_bytes = 0
-        previous_interval = 0
 
         # For each triple, generate packet
         for timestamp in timestamps_tuples:
@@ -304,16 +307,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 request = (request_ether / request_ip / request_tcp)
                 request.time = timestamp[0]
 
-                bytes = len(request)
-
-                remaining_bytes = self.get_remaining_bandwidth(request.time, ip_source, ip_destination, bandwidth_max,
-                                                               bandwidth_min_local, bandwidth_min_public) * 1000\
-                                  - sent_bytes
-
-                if remaining_bytes >= bytes:
-                    # Append request
-                    self.packets.append(request)
-                    self.total_pkt_num += 1
+                pkt = request
 
             # If current triple is the victim
             else:
@@ -332,23 +326,25 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
                     reply.time = timestamp[0]
 
-                    bytes = len(reply)
+                    pkt = reply
 
-                    remaining_bytes = self.get_remaining_bandwidth(reply.time, ip_source, ip_destination, bandwidth_max,
-                                                                   bandwidth_min_local, bandwidth_min_public) * 1000\
-                                      - sent_bytes
+            bytes = len(pkt)
 
-                    if remaining_bytes >= bytes:
-                        self.packets.append(reply)
-                        replies_count += 1
-                        self.total_pkt_num += 1
+            remaining_bytes = self.get_remaining_bandwidth(pkt.time, ip_source, ip_destination, bandwidth_max,
+                                                           bandwidth_min_local, bandwidth_min_public)
+
+            remaining_bytes *= 1000
+            remaining_bytes -= sent_bytes
 
             if remaining_bytes >= bytes:
-                current_interval = int(timestamp[0] / self.statistics.get_current_interval_len())
-                if previous_interval != current_interval:
-                    sent_bytes = 0
+                self.packets.append(pkt)
+                self.total_pkt_num += 1
+                if pkt == reply:
+                    replies_count += 1
                 sent_bytes += bytes
-                previous_interval = current_interval
+            else:
+                print("Warning: generated attack packets exceeded bandwidth. Packets after timestamp {} "
+                      "were omitted.". format(pkt.time))
 
             # every 1000 packets write them to the pcap file (append)
             if (self.total_pkt_num > 0) and (self.total_pkt_num % buffer_size == 0) and (len(self.packets) > 0):
