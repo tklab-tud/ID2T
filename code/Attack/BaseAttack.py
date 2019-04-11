@@ -561,7 +561,8 @@ class BaseAttack(metaclass=abc.ABCMeta):
         remaining_bandwidth = bandwidth
 
         current_table = self.statistics.stats_db.get_current_interval_statistics_table()
-        kbytes_sent = self.statistics.get_interval_stat(table_name=current_table, field="kbytes", timestamp=timestamp)
+        kbytes_sent, interval = self.statistics.get_interval_stat(table_name=current_table, field="kbytes",
+                                                                  timestamp=timestamp)
         if not kbytes_sent:
             kbytes_sent = 0
         kbytes_sent = kbytes_sent
@@ -569,7 +570,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         duration = self.statistics.get_current_interval_len()
         used_bandwidth = float((kbytes_sent * 1000) / duration)
         remaining_bandwidth -= used_bandwidth
-        return remaining_bandwidth
+        return remaining_bandwidth, interval
 
     def get_reply_latency(self, ip_src, ip_dst, default: int=0, mode: str=None):
         """
