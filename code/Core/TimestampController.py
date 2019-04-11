@@ -15,7 +15,7 @@ class TimestampController:
         self.current_timestamp = timestamp
         self.pps = pps
 
-    def get_pps(self):
+    def get_pps(self) -> float:
         """
         :return: the currently used packets per seconds
         """
@@ -27,13 +27,13 @@ class TimestampController:
         """
         self.pps = pps
 
-    def get_timestamp(self):
+    def get_timestamp(self) -> float:
         """
         :return: the base timestamp, which will be updated
         """
         return self.current_timestamp
 
-    def reset_timestamp(self):
+    def reset_timestamp(self) -> float:
         """
         Resets the current timestamp to the timestamp the object was initialized with.
         :return: the base timestamp, which will be updated
@@ -41,13 +41,13 @@ class TimestampController:
         self.current_timestamp = self.first_timestamp
         return self.current_timestamp
 
-    def set_timestamp(self, timestamp: int):
+    def set_timestamp(self, timestamp: float):
         """
         :param timestamp: the base timestamp to update
         """
         self.current_timestamp = timestamp
 
-    def next_timestamp(self, latency: float=0):
+    def next_timestamp(self, latency: float=0) -> float:
         """
         Calculates the next timestamp to be used based on the packet per second rate (pps) and the maximum delay.
         Parameter consideration order: latency > pps > default delay
