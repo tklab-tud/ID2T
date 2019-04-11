@@ -271,6 +271,9 @@ class DDoSAttack(BaseAttack.BaseAttack):
         self.attack_start_utime = timestamps_tuples[0][0]
 
         sent_bytes = 0
+        current_interval = 0
+        previous_interval = 0
+        reply = None
 
         # For each triple, generate packet
         for timestamp in timestamps_tuples:
@@ -333,6 +336,11 @@ class DDoSAttack(BaseAttack.BaseAttack):
             remaining_bytes = self.get_remaining_bandwidth(pkt.time, ip_source, ip_destination, bandwidth_max,
                                                            bandwidth_min_local, bandwidth_min_public)
 
+            if previous_interval != current_interval:
+                sent_bytes = 0
+
+            previous_interval = current_interval
+
             remaining_bytes *= 1000
             remaining_bytes -= sent_bytes
 
@@ -343,8 +351,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
                     replies_count += 1
                 sent_bytes += bytes
             else:
-                print("Warning: generated attack packets exceeded bandwidth. Packets after timestamp {} "
-                      "were omitted.". format(pkt.time))
+                print("Warning: generated attack packets exceeded bandwidth. Packets in interval {} "
+                      "were omitted.".format(current_interval))
 
             # every 1000 packets write them to the pcap file (append)
             if (self.total_pkt_num > 0) and (self.total_pkt_num % buffer_size == 0) and (len(self.packets) > 0):

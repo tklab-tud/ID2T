@@ -195,6 +195,7 @@ class AttackController:
             packet_duration = abs(self.current_attack.attack_end_utime - self.current_attack.attack_start_utime)
             time_diff = abs(attack_duration - packet_duration)
             if self.current_attack.exceeding_packets > 0 and time_diff > 1:
+                print(self.current_attack.exceeding_packets)
                 exceeding_packets = ""
                 if self.current_attack.exceeding_packets:
                     exceeding_packets = " ({} attack pkts)".format(self.current_attack.exceeding_packets)
