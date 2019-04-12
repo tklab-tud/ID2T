@@ -241,7 +241,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 attacker_pps = pps * ratio
                 self.timestamp_controller.set_pps(attacker_pps)
 
-            timestamp_prv_reply = 0
             for pkt_num in range(attacker_pkts_num):
                 # Count attack packets that exceed the attack duration
                 if timestamp_next_pkt > attack_ends_time:
@@ -254,10 +253,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
                 # Calculate timestamp of victim ACK-packet
                 timestamp_reply = self.timestamp_controller.next_timestamp(latency=latency_limit)
-                while timestamp_reply <= timestamp_prv_reply:
-                    self.timestamp_controller.set_timestamp(timestamp_prv_reply)
-                    timestamp_reply = self.timestamp_controller.next_timestamp(latency=latency_limit)
-                timestamp_prv_reply = timestamp_reply
 
                 # Add timestamp of victim ACK-packet(victim always has id=0)
                 timestamps_tuples.append((timestamp_reply, 0, attacker+1))
