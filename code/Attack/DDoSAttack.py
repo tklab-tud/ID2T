@@ -240,7 +240,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 attacker_pps = pps * ratio
                 self.timestamp_controller.set_pps(attacker_pps)
 
-            timestamp_prv_reply = 0
             for pkt_num in range(attacker_pkts_num):
                 # Count attack packets that exceed the attack duration
                 if timestamp_next_pkt > attack_ends_time:
@@ -253,10 +252,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
                 # Calculate timestamp of victim ACK-packet
                 timestamp_reply = self.timestamp_controller.next_timestamp(latency=latency_limit)
-                while timestamp_reply <= timestamp_prv_reply:
-                    self.timestamp_controller.set_timestamp(timestamp_prv_reply)
-                    timestamp_reply = self.timestamp_controller.next_timestamp(latency=latency_limit)
-                timestamp_prv_reply = timestamp_reply
 
                 # Add timestamp of victim ACK-packet(victim always has id=0)
                 timestamps_tuples.append((timestamp_reply, 0, attacker+1))
@@ -335,22 +330,21 @@ class DDoSAttack(BaseAttack.BaseAttack):
             remaining_bytes, current_interval = self.get_remaining_bandwidth(pkt.time, ip_source, ip_destination,
                                                                              bandwidth_max, bandwidth_min_local,
                                                                              bandwidth_min_public)
-
             if previous_interval != current_interval:
                 sent_bytes = 0
+
+            previous_interval = current_interval
 
             if current_interval != full_interval:
                 remaining_bytes *= 1000
                 remaining_bytes -= sent_bytes
 
-                previous_interval = current_interval
-
                 if remaining_bytes >= bytes:
+                    sent_bytes += bytes
                     self.packets.append(pkt)
                     self.total_pkt_num += 1
                     if pkt == reply:
                         replies_count += 1
-                    sent_bytes += bytes
                 else:
                     print("Warning: generated attack packets exceeded bandwidth. Packets in interval {} "
                           "were omitted.".format(current_interval))
