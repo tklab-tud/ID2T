@@ -336,22 +336,23 @@ class DDoSAttack(BaseAttack.BaseAttack):
             remaining_bytes, current_interval = self.get_remaining_bandwidth(pkt.time, ip_source, ip_destination,
                                                                              bandwidth_max, bandwidth_min_local,
                                                                              bandwidth_min_public)
-
             if previous_interval != current_interval:
                 sent_bytes = 0
+
+            previous_interval = current_interval
 
             if current_interval != full_interval:
                 remaining_bytes *= 1000
                 remaining_bytes -= sent_bytes
 
-                previous_interval = current_interval
+                print("pkts:" , self.total_pkt_num, "cur: ", current_interval, "sent_bytes:", sent_bytes, "remaining bytes:", remaining_bytes, "bytes: ", bytes)
 
                 if remaining_bytes >= bytes:
+                    sent_bytes += bytes
                     self.packets.append(pkt)
                     self.total_pkt_num += 1
                     if pkt == reply:
                         replies_count += 1
-                    sent_bytes += bytes
                 else:
                     print("Warning: generated attack packets exceeded bandwidth. Packets in interval {} "
                           "were omitted.".format(current_interval))
