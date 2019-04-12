@@ -62,44 +62,43 @@ def get_network_mode(ip_src: str, ip_dst: str):
     return mode
 
 
-def update_timestamp(timestamp: float, pps: float, delay: float=0, inj_pps: float=0, inj_timestamp: float=0):
+# TODO: create class, params -> constructor, object in base attack
+def update_timestamp(timestamp: float, pps: float, latency: float=0):
     """
     Calculates the next timestamp to be used based on the packet per second rate (pps) and the maximum delay.
+    Parameter consideration order: latency > pps > default delay
 
     :param timestamp: the base timestamp to update
-    :param pps: the packets per second specified by the user
-    :param delay: the delay calculated from the statistics db
-    :param inj_pps: packets to inject each second
-    :param inj_timestamp: timestamp of the begin of the attack
-    :return: Timestamp to be used for the next packet.
+    :param pps: the packets per second for request pkts
+    :param latency: the latency for reply pkts
+    :return: timestamp to be used for the next packet.
     """
-    # FIXME: throw Exception if pps==0
-    packets_this_second = 0
+    # default delay
+    delay = 0.00008
 
-    if inj_pps != 0 and inj_timestamp != 0:
-        # time past since the beginning of the attack
-        time = timestamp - inj_timestamp
-        # packets injected so far
-        packets_so_far = time / inj_pps
-        # packets to be injected this second
-        packets_this_second = packets_so_far % inj_pps
-    else:
-        inj_pps = 0
+    # user specified delay by pps
+    if pps != 0:
+        delay = 1 / pps
 
-    if delay == 0:
-        # Calculate request timestamp
-        # To imitate the bursty behavior of traffic
-        random_delay = lea.Lea.fromValFreqsDict({1 / pps: 70, 2 / pps: 20, 5 / pps: 7, 10 / pps: 3})
-        result_delay = rnd.uniform(1 / pps, random_delay.random())
-    else:
+    # Check user specified delay against limits
+    if delay < 0.00001:
+        print("Warning: PPS is too high. Generated traffic might look unrealistic.\n"
+              "Recommended are values equal or lower 100000.", end="\r")
+    elif delay < 0.000001:
+        delay = 0.000001
+        print("Warning: PPS is too high. Dropping to 1,000,000 pps.", end="\r")
+
+    if latency != 0:
         # Calculate reply timestamp
-        random_delay = lea.Lea.fromValFreqsDict({delay / 2: 70, delay / 3: 20, delay / 5: 7, delay / 10: 3})
-        result_delay = rnd.uniform(1 / pps + delay, 1 / pps + random_delay.random())
+        delay = latency
+    #else Calculate request timestamp
 
-    result = timestamp + result_delay
-    if inj_pps > packets_this_second and int(result) - int(timestamp) != 1:
-        result = result + 1
-    return result
+    random_delay = lea.Lea.fromValFreqsDict({delay * 1.3: 12, delay * 1.2: 13, delay * 1.1: 15, delay: 20,
+                                             delay / 1.1: 15, delay / 1.2: 13, delay / 1.3: 12})
+    delay = rnd.uniform(delay, random_delay.random())
+
+    # add latency or delay to timestamp
+    return timestamp + delay
 
 
 def get_timestamp_from_datetime_str(time: str):
