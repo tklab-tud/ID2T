@@ -154,7 +154,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         self.path_attack_pcap = None
 
-        min_latency, max_latency = self.get_reply_latency(ip_destination)
         victim_buffer = self.get_param_value(atkParam.Parameter.VICTIM_BUFFER)
 
         attack_duration = self.get_param_value(atkParam.Parameter.ATTACK_DURATION)
@@ -188,6 +187,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         self.total_pkt_num = 0
         # For each attacker, generate his own packets, then merge all packets
         for attacker in range(num_attackers):
+            min_latency, max_latency = self.get_reply_latency(ip_source_list[attacker], ip_destination)
             # Initialize empty port "FIFO" for current attacker
             previous_attacker_port.append([])
             # Calculate timestamp of first SYN-packet of attacker

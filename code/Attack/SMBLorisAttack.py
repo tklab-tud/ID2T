@@ -126,8 +126,6 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
         # Get MSS, TTL and Window size value for destination IP
         destination_mss_value, destination_ttl_value, destination_win_value = self.get_ip_data(ip_destination)
 
-        min_delay, max_delay = self.get_reply_latency(ip_destination)
-
         attack_duration = self.get_param_value(atkParam.Parameter.ATTACK_DURATION)
         attack_ends_time = first_timestamp + attack_duration
 
@@ -141,6 +139,8 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
             victim_seq = rnd.randint(1000, 50000)
 
             sport = 1025
+
+            min_delay, max_delay = self.get_reply_latency(ip_source_list[attacker], ip_destination)
 
             # Timestamps of first self.packets shouldn't be exactly the same to look more realistic
             timestamp_next_pkt = rnd.uniform(first_timestamp, Util.update_timestamp(first_timestamp, pps))
