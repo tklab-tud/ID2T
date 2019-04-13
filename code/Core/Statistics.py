@@ -26,6 +26,7 @@ class Statistics:
         self.do_extra_tests = False
         self.file_info = None
         self.kbyte_rate = {"local": None, "public": None}
+        self.interval_len = None
 
         # Create folder for statistics database if required
         self.path_db = pcap_file.get_db_path()
@@ -319,6 +320,15 @@ class Statistics:
                 self.kbyte_rate[mode] += 250 - remainder
 
         return max([self.kbyte_rate[mode], minimum_rate[mode]])
+
+    def get_current_interval_len(self):
+        """
+        :return: the current interval length
+        """
+        if not self.interval_len:
+            current_table = self.stats_db.get_current_interval_statistics_table()
+            self.interval_len = int(current_table[len("statistics_interval_"):])
+        return self.interval_len
 
     @staticmethod
     def write_list(desc_val_unit_list, func, line_ending="\n"):
