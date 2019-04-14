@@ -106,7 +106,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
         target_uri = "/"  # self.get_param_value(atkParam.Parameter.TARGET_URI)
 
         # Check ip.src == ip.dst
-        self.ip_src_dst_equal_check(ip_source, ip_destination)
+        self.ip_src_dst_catch_equal(ip_source, ip_destination)
 
         # Set TTL based on TTL distribution of IP address
         source_ttl_dist = self.statistics.get_ttl_distribution(ip_source)

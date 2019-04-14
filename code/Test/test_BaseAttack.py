@@ -153,12 +153,20 @@ class TestBaseAttack(unittest.TestCase):
     def test_is_valid_ipaddress_invalid(self):
         self.assertFalse(BAtk.BaseAttack.is_valid_ip_address("192.168.1789.42"))
 
-    def test_ip_src_dst_equal_check_equal(self):
+    def test_ip_src_dst_catch_equal_equal(self):
         with self.assertRaises(SystemExit):
-            BAtk.BaseAttack.ip_src_dst_equal_check("192.168.178.42", "192.168.178.42")
+            BAtk.BaseAttack.ip_src_dst_catch_equal("192.168.178.42", "192.168.178.42")
+
+    def test_ip_src_dst_catch_equal_unequal(self):
+        BAtk.BaseAttack.ip_src_dst_catch_equal("192.168.178.42", "192.168.178.43")
+
+    def test_ip_src_dst_equal_check_equal(self):
+        result = BAtk.BaseAttack.ip_src_dst_equal_check("192.168.178.42", "192.168.178.42")
+        self.assertTrue(result)
 
     def test_ip_src_dst_equal_check_unequal(self):
-        BAtk.BaseAttack.ip_src_dst_equal_check("192.168.178.42", "192.168.178.43")
+        result = BAtk.BaseAttack.ip_src_dst_equal_check("192.168.178.42", "192.168.178.43")
+        self.assertFalse(result)
 
     def test_clean_whitespaces(self):
         self.assertEqual("a\nb\rc\td\'e", BAtk.BaseAttack.clean_white_spaces("a\\nb\\rc\\td\\\'e"))

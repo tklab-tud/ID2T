@@ -98,7 +98,7 @@ class MS17ScanAttack(BaseAttack.BaseAttack):
         port_destination = self.get_param_value(atkParam.Parameter.PORT_DESTINATION)
 
         # Check ip.src == ip.dst
-        self.ip_src_dst_equal_check(ip_source, ip_destination)
+        self.ip_src_dst_catch_equal(ip_source, ip_destination)
 
         # Set TTL based on TTL distribution of IP address
         source_ttl_dist = self.statistics.get_ttl_distribution(ip_source)

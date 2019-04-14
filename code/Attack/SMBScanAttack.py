@@ -177,7 +177,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
             if len(ip_destinations) == 0:
                 ip_destinations = self.generate_random_ipv4_address("Unknown", 1)
             # Check ip.src == ip.dst
-            self.ip_src_dst_equal_check(ip_source, ip_destinations)
+            self.ip_src_dst_catch_equal(ip_source, ip_destinations)
 
         ip_dests = []
         if isinstance(ip_destinations, list):
@@ -216,7 +216,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                         ip_from_mac = self.statistics.get_ip_address_from_mac(mac_dest)
                         if len(ip_from_mac) != 0:
                             ip = ip_from_mac
-                            self.ip_src_dst_equal_check(ip_source, ip)
+                            self.ip_src_dst_catch_equal(ip_source, ip)
                         mac_destination = mac_dest
                     else:
                         mac_destination = self.generate_random_mac_address()

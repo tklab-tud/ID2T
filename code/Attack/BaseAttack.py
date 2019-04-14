@@ -672,12 +672,25 @@ class BaseAttack(metaclass=abc.ABCMeta):
             return False
 
     @staticmethod
+    def ip_src_dst_catch_equal(ip_source, ip_destination):
+        """
+        Exits if ip src and ip dst are equal or have an intersection.
+
+        :param ip_source: source IP address.
+        :param ip_destination: destination IP address.
+        """
+        if BaseAttack.ip_src_dst_equal_check(ip_source, ip_destination):
+            print("\nERROR: Invalid IP addresses; source IP is the same as destination IP: " + ip_destination + ".")
+            sys.exit(1)
+
+    @staticmethod
     def ip_src_dst_equal_check(ip_source, ip_destination):
         """
         Checks if the source IP and destination IP are equal.
 
         :param ip_source: source IP address.
         :param ip_destination: destination IP address.
+        :return True if ip src and ip dst are equal or have an intersection. False if otherwise.
         """
         equal = False
         if isinstance(ip_source, list) and isinstance(ip_destination, list):
@@ -693,9 +706,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         else:
             if ip_source == ip_destination:
                 equal = True
-        if equal:
-            print("\nERROR: Invalid IP addresses; source IP is the same as destination IP: " + ip_destination + ".")
-            sys.exit(0)
+        return equal
 
     @staticmethod
     def get_inter_arrival_time(packets, distribution: bool = False):

@@ -143,7 +143,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         #complement_interval_attacker_pps = self.statistics.calculate_complement_packet_rates(attacker_pps)
 
         # Check ip.src == ip.dst
-        self.ip_src_dst_equal_check(ip_source_list, ip_destination)
+        self.ip_src_dst_catch_equal(ip_source_list, ip_destination)
 
         port_destination = self.get_param_value(atkParam.Parameter.PORT_DESTINATION)
         if not port_destination:  # user did not define port_dest

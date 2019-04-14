@@ -115,7 +115,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
             ip_destination = [ip_destination]
 
         # Check ip.src == ip.dst
-        self.ip_src_dst_equal_check(ip_source, ip_destination)
+        self.ip_src_dst_catch_equal(ip_source, ip_destination)
 
         for ip in ip_destination:
             # Select open ports

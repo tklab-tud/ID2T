@@ -121,7 +121,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
             num_attackers = min(len(ip_source_list), len(mac_source_list))
 
         # Check ip.src == ip.dst
-        self.ip_src_dst_equal_check(ip_source_list, ip_destination)
+        self.ip_src_dst_catch_equal(ip_source_list, ip_destination)
 
         # Get MSS, TTL and Window size value for destination IP
         destination_mss_value, destination_ttl_value, destination_win_value = self.get_ip_data(ip_destination)
