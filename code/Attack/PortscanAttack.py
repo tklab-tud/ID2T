@@ -212,10 +212,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
                     reply = (reply_ether / reply_ip / reply_tcp)
 
                     timestamp_reply = self.timestamp_controller.next_timestamp(latency=min_delay)
-                    while timestamp_reply <= timestamp_prv_reply:
-                        self.timestamp_controller.set_timestamp(timestamp_prv_reply)
-                        timestamp_reply = self.timestamp_controller.next_timestamp(latency=min_delay)
-                    timestamp_prv_reply = timestamp_reply
 
                     reply.time = timestamp_reply
                     self.packets.append(reply)
