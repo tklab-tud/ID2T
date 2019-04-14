@@ -63,11 +63,6 @@ class SalityBotnet(BaseAttack.BaseAttack):
         # Timestamp
         timestamp_next_pkt = self.get_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP)
 
-        pps = self.get_param_value(atkParam.Parameter.PACKETS_PER_SECOND)
-
-        # Calculate complement packet rates of BG traffic per interval
-        complement_interval_pps = self.statistics.calculate_complement_packet_rates(pps)
-
         # Initialize parameters
         self.packets = []
         mac_source = self.get_param_value(atkParam.Parameter.MAC_SOURCE)
@@ -127,7 +122,6 @@ class SalityBotnet(BaseAttack.BaseAttack):
             new_pkt = (eth_frame / ip_pkt)
             new_pkt.time = timestamp_next_pkt
 
-            pps = max(Util.get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
             timestamp_next_pkt = self.timestamp_controller.next_timestamp()
 
             self.packets.append(new_pkt)
