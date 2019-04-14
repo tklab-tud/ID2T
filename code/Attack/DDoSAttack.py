@@ -266,6 +266,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         sent_bytes = 0
         previous_interval = 0
+        interval_count = 0
         full_interval = None
         reply = None
 
@@ -332,6 +333,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
                                                                              bandwidth_min_public)
             if previous_interval != current_interval:
                 sent_bytes = 0
+                interval_count += 1
 
             previous_interval = current_interval
 
@@ -347,7 +349,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
                         replies_count += 1
                 else:
                     print("Warning: generated attack packets exceeded bandwidth. Packets in interval {} "
-                          "were omitted.".format(current_interval))
+                          "were omitted.".format(interval_count))
                     full_interval = current_interval
 
             # every 1000 packets write them to the pcap file (append)
