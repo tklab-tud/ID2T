@@ -83,10 +83,6 @@ class MS17ScanAttack(BaseAttack.BaseAttack):
         """
         # Timestamp
         timestamp_next_pkt = self.get_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP)
-        pps = self.get_param_value(atkParam.Parameter.PACKETS_PER_SECOND)
-
-        # calculate complement packet rates of BG traffic per interval
-        complement_interval_pps = self.statistics.calculate_complement_packet_rates(pps)
 
         # Initialize parameters
         self.packets = []
@@ -183,8 +179,7 @@ class MS17ScanAttack(BaseAttack.BaseAttack):
                 new_pkt = (eth_frame / ip_pkt / tcp_pkt)
                 new_pkt.time = timestamp_next_pkt
 
-                pps = max(Util.get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
-
+                # FIXME: double check inter_arrival_times calculation
                 timestamp_next_pkt = self.timestamp_controller.next_timestamp() + inter_arrival_times[
                     self.pkt_num]  # float(timeSteps.random())
             # Reply
@@ -213,6 +208,7 @@ class MS17ScanAttack(BaseAttack.BaseAttack):
                         tcp_pkt.setfieldval("options", tcp_options)
 
                 new_pkt = (eth_frame / ip_pkt / tcp_pkt)
+                # FIXME: double check inter_arrival_times calculation
                 timestamp_next_pkt = self.timestamp_controller.next_timestamp() + inter_arrival_times[
                     self.pkt_num]  # + float(timeSteps.random())
                 new_pkt.time = timestamp_next_pkt
