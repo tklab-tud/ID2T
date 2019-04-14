@@ -65,8 +65,6 @@ class MemcrashedSpooferAttack(BaseAttack.BaseAttack):
         mac_amplifier = self.get_param_value(atkParam.Parameter.MAC_DESTINATION)
         ip_victim = self.get_param_value(atkParam.Parameter.IP_VICTIM)
 
-        pps = self.get_param_value(atkParam.Parameter.PACKETS_PER_SECOND)
-
         timestamp_next_pkt = self.get_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP)
         self.attack_start_utime = timestamp_next_pkt
 
