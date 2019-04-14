@@ -82,10 +82,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
         """
         mac_source = self.get_param_value(atkParam.Parameter.MAC_SOURCE)
         mac_destination = self.get_param_value(atkParam.Parameter.MAC_DESTINATION)
-        pps = self.get_param_value(atkParam.Parameter.PACKETS_PER_SECOND)
-
-        # Calculate complement packet rates of the background traffic for each interval
-        complement_interval_pps = self.statistics.calculate_complement_packet_rates(pps)
 
         # Determine ports
         dest_ports = self.get_param_value(atkParam.Parameter.PORT_DESTINATION)
@@ -103,7 +99,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
         timestamp_next_pkt = self.get_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP)
         # store start time of attack
         self.attack_start_utime = timestamp_next_pkt
-        timestamp_prv_reply, timestamp_confirm = 0, 0
 
         # Initialize parameters
         self.packets = []
@@ -228,7 +223,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
 
                     # else: destination port is NOT OPEN -> no reply is sent by target
 
-                pps = max(Util.get_interval_pps(complement_interval_pps, timestamp_next_pkt), 10)
                 self.timestamp_controller.set_timestamp(timestamp_next_pkt)
                 timestamp_next_pkt = self.timestamp_controller.next_timestamp()
 
