@@ -248,10 +248,6 @@ class SMBScanAttack(BaseAttack.BaseAttack):
 
                 # Update timestamp for next package
                 timestamp_reply = self.timestamp_controller.next_timestamp(min_delay)
-                while timestamp_reply <= timestamp_prv_reply:
-                    self.timestamp_controller.set_timestamp(timestamp_prv_reply)
-                    timestamp_reply = self.timestamp_controller.next_timestamp(min_delay)
-                timestamp_prv_reply = timestamp_reply
 
                 if ip in hosting_ip:
 
