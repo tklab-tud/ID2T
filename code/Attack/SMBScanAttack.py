@@ -24,7 +24,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
         If port 445 is open, it will simulate and inject the SMB Protocol Negotiation too.
         """
         # Initialize attack
-        super(SMBScanAttack, self).__init__("SmbScan Attack", "Injects an SMB scan",
+        super(SMBScanAttack, self).__init__("SMBScan Attack", "Injects an SMB scan",
                                             "Scanning/Probing")
 
         self.host_os = Util.get_rnd_os()
