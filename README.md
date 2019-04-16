@@ -71,7 +71,7 @@ The _named queries_ can be further divided into two classes:
 - _extractors_ - can be applied on gathered data and always reduce the result set to a single element
   - e.g. ``random(...)`` returns a randomly chosen element of the list
 
-A complete list of supported named queries can be found in section [Named Queries](#named-queries). The database scheme, required for building SQL queries, is documented in the wiki article [DB Tables and Fields](/wiki/Statistics-DB%3A-Tables)
+A complete list of supported named queries can be found in section [Named Queries](#named-queries). The database scheme, required for building SQL queries, is documented in the wiki article [DB Tables and Fields](https://github.com/tklab-tud/ID2T/wiki/ID2Tv1.0-Statistics-DB:-Tables)
 
 If  ``-q/--query`` is called without an argument, the application enters into REPL query mode. This mode is like a standard read-eval-print-loop (REPL) for SQL queries. In this mode, the user can repeatedly input queries (each query must finish with a ";" (semicolon)); send the query by pressing ENTER and see the response in the terminal:
 
