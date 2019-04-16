@@ -178,6 +178,10 @@ last(...)    -> returns the last element from a list
 ```
 Named queries are designed to be combined with extractors, like ``random(all(ipAddress))``
 
+## Contributors
+
+For information on Contributors and how to contribute see our [Contributors file](./CONTRIBUTORS.md).
+
 ## Versioning
 The [SemVer](http://semver.org/spec/v2.0.0.html) is used for versioning. For currently available versions of ID2T, see page [releases](https://github.com/tklab-tud/ID2T/releases).
 
@@ -185,40 +189,6 @@ The [SemVer](http://semver.org/spec/v2.0.0.html) is used for versioning. For cur
 
 * 0.1.0: Initial release
 	* Added attack: Portscan Attack
-
-## Authors
-
-- __Dr. Emmanouil Vasilomanolakis__ - _ID2T idea, guidance and suggestions during development_
-
-- __Carlos Garcia__ - _ID2T idea, guidance and suggestions during development_
-
-- __Aidmar Wainakh__ - _analysis and development of attacks as part of his Master Thesis_
-
-- __Jens Keim__ - _current maintainer, development of multiple attacks and general improvements_
-
-- __Stefan Schmidt__ - _volunteer contributor, development of multiple attacks and general improvements_
-
-- __Leon Böck__ - _guidance and suggestions during development of Membership Management Communication Attack_
-
-- __Nikolay Milanov__ - _development of first prototype within his Master Thesis_
-
-- __Patrick Jattke__ - _development of first public release as part of his Bachelor Thesis_
-
-- __Dustin Born__ - _development of Membership Management Communication Attack_
-
-- __Christof Jugel__ - _development of Membership Management Communication Attack_
-
-- __Marcel Juschak__ - _development of Membership Management Communication Attack_
-
-- __Joshua Kühlberg__ - _development of Membership Management Communication Attack_
-
-- __Denis Waßmann__ - _development of Membership Management Communication Attack_
-
-- __Stefano Acquaviti__ - _development of multiple attacks and general improvements_
-
-- __Roey Regev__ - _development of multiple attacks and general improvements_
-
-- __Jonathan Speth__ - _development of multiple attacks and general improvements_
 
 ## License
 
