@@ -179,7 +179,7 @@ last(...)    -> returns the last element from a list
 Named queries are designed to be combined with extractors, like ``random(all(ipAddress))``
 
 ## Versioning
-The [SemVer](http://semver.org/spec/v2.0.0.html) is used for versioning. For currently available versions of ID2T, see page [releases](https://git.tk.informatik.tu-darmstadt.de/SPIN/ID2T-toolkit/releases).
+The [SemVer](http://semver.org/spec/v2.0.0.html) is used for versioning. For currently available versions of ID2T, see page [releases](https://github.com/tklab-tud/ID2T/releases).
 
 ## Release History
 
