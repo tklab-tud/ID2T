@@ -22,47 +22,13 @@ ID2T was also presented in Blackhat Europe 2017 as part of the Arsenal session (
 
 ## Getting Started
 
-### Dependencies
-ID2T is written using Python 3 and C++ 11. The main logic is programmed in Python whereas performance critical components are programmed in C++11. The C++11 module uses the [Libtins](https://github.com/mfontanini/libtins/) library. The python and c++ modules interact with each other through the [pybind11](https://github.com/pybind/pybind11) library.
-
-#### Dependency installation script
-ID2T provides a dependency installation script, which is called during the execution of ``./build.sh``.
-
-For supported operating systems see [Supported Systems](SupportedSystems.md).
-
-#### Required C++ Libraries/Programs
-The following packages/libraries are required to compile the ID2T C++ modules
-* ``cmake`` (minimum version 3.2)
-* ``g++``
-* ``python`` development libraries
-    - ``python-venv``
-* ``coreutils``
-* ``sqlite`` (minimum version 3.0)
-* ``libtins`` (minimum version 4.1 plus our patches)
-    - ``boost``
-    - ``gcc``
-* ``tcpdump``
-* ``cairo``
-* ``libdnet`` (macOS only)
-
-#### Required Python Packages
-The python packages required to run ID2T can be found [here](resources/requirements.txt). By default the packages are installed into a python virtual environment by the build script.
-
-If you want run ID2T without using its build system, you can use your preferred package manager to install the packages manually. For example, you can use pip3 (pip for python 3). Install pip3 in ubuntu with ``apt install python3-pip`` and install the packages with ``sudo pip3 install <packagename>``.
-
-#### Notes on the Minimum Package Versions
-The minimum version stated in the previous requirements are the versions we used in the development of ID2T. Other (older) versions might also work; however, we can neither guarantee nor support them. Furthermore, some compilation scripts would need to be manually modified to accommodate these older versions.
-
 ### Compilation and Installation
 Clone the repository to get started with the installation:
 ``git clone https://git.tk.informatik.tu-darmstadt.de/SPIN/ID2T-toolkit``
 
 Install dependencies, initialize submodules, build the C++ modules and create the ID2T executables:
-``./build.sh``
-
-Or initialize its submodules manually:
-    git submodule init
-    git submodule update
+``./build.sh``\
+If you encounter any issues please refer to our [Dependencies wiki page](https://github.com/tklab-tud/ID2T/wiki/Dependencies).
 
 To skip dependency installation use the ``--non-interactive`` argument:
 ``./build.sh --non-interactive``
@@ -72,7 +38,6 @@ Run ID2T with the command ``./id2t``.
 Run unit tests with the command ``./run_tests``.
 
 Run efficiency tests with the command ``./test_efficiency``.
-
 
 ## Usage examples
 In this section, we provide examples on how ID2T is used.
