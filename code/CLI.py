@@ -175,6 +175,7 @@ class CLI(object):
             recalculate_intervals = None
             if self.args.recalculate_delete:
                 recalculate_intervals = True
+                self.args.recalculate = True
             elif self.args.recalculate_yes:
                 recalculate_intervals = True
                 self.args.recalculate = True
