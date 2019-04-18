@@ -416,7 +416,7 @@ void statistics_db::writeStatisticsFile(int packetCount, float captureDuration, 
                 "timestampLastPacket TEXT,"
                 "avgPacketRate REAL,"
                 "avgPacketSize REAL,"
-                "avgPacketsSentPerHost REAL,"
+                "avgPacketsSent REAL,"
                 "avgBandwidthIn REAL,"
                 "avgBandwidthOut REAL,"
                 "doExtraTests INTEGER);";

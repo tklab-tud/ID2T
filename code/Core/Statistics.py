@@ -225,7 +225,7 @@ class Statistics:
         """
         return [("Avg. packet rate", self.file_info['avgPacketRate'], "packets/sec"),
                 ("Avg. packet size", self.file_info['avgPacketSize'], "kbytes"),
-                ("Avg. packets sent", self.file_info['avgPacketsSentPerHost'], "packets"),
+                ("Avg. packets sent", self.file_info['avgPacketsSent'], "packets"),
                 ("Avg. bandwidth in", self.file_info['avgBandwidthIn'], "kbit/s"),
                 ("Avg. bandwidth out", self.file_info['avgBandwidthOut'], "kbit/s")]
 

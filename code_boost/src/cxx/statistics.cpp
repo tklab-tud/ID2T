@@ -919,18 +919,17 @@ void statistics::writeToDatabase(std::string database_path, std::vector<std::chr
     for (auto i = ip_statistics.begin(); i != ip_statistics.end(); i++) {
         sumPacketsSent += i->second.pkts_sent;
         // Consumed bandwith (bytes) for sending packets
-        sumBandwidthIn += (i->second.kbytes_received / duration);
-        sumBandwidthOut += (i->second.kbytes_sent / duration);
+        sumBandwidthIn += i->second.kbytes_received;
+        sumBandwidthOut += i->second.kbytes_sent;
         senderCountIP++;
     }
 
     float avgPacketRate = (packetCount / duration);
     float avgPacketSize = this->getAvgPacketSize();
+    float avgPacketsSentPerHost = (sumPacketsSent / duration);
+    float avgBandwidthInKBits = (sumBandwidthIn / duration) * 8;
+    float avgBandwidthOutInKBits = (sumBandwidthOut / duration) * 8;
     if(senderCountIP>0) {
-        float avgPacketsSentPerHost = (sumPacketsSent / senderCountIP);
-        float avgBandwidthInKBits = (sumBandwidthIn / senderCountIP) * 8;
-        float avgBandwidthOutInKBits = (sumBandwidthOut / senderCountIP) * 8;
-
         // Create database and write information
         statistics_db db(database_path, resourcePath);
         db.writeStatisticsFile(packetCount, getCaptureDurationSeconds(),

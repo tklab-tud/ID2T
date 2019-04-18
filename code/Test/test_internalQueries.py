@@ -45,12 +45,12 @@ class UnitTestInternalQueries(unittest.TestCase):
         file_stats = controller.statistics.get_general_file_statistics()
         self.assertEqual(file_stats[0], ('Avg. packet rate', 5.196976184844971, 'packets/sec'))
         self.assertEqual(file_stats[1], ('Avg. packet size', 0.33381330966949463, 'kbytes'))
-        self.assertEqual(file_stats[2], ('Avg. packets sent', 90.0, 'packets'))
+        self.assertEqual(file_stats[2], ('Avg. packets sent', 5.170965194702148, 'packets'))
         self.assertEqual(file_stats[3][0], 'Avg. bandwidth in')
-        self.assertAlmostEqual(file_stats[3][1], 0.6302894353866577, places=5)
+        self.assertAlmostEqual(file_stats[3][1], 13.866365432739258, places=5)
         self.assertEqual(file_stats[3][2], 'kbit/s')
         self.assertEqual(file_stats[4][0], 'Avg. bandwidth out')
-        self.assertAlmostEqual(file_stats[4][1], 0.6302894353866577, places=5)
+        self.assertAlmostEqual(file_stats[4][1], 13.866365432739258, places=5)
 
     # INTERNAL QUERY TESTS
     def test_get_ip_address_count(self):
