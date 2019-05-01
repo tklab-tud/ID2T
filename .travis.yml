@@ -15,4 +15,3 @@ install:
 
 script:
     - ./build.sh --non-interactive
-    - ./run_tests_makeshift
