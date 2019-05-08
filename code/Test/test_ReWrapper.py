@@ -1,4 +1,3 @@
-"""
 import unittest
 import TMLib.TMUnitTest as lib
 
@@ -16,9 +15,9 @@ class TMReWrapper(unittest.TestCase):
 
         rw = ReWrap.ReWrapper(statistics, globalRWdict, conversationRWdict, packetRWdict)
 
-        self.assertTrue( rw.data_dict.[TMdef.GLOBAL] is globalRWdict )
-        self.assertTrue( rw.data_dict.[TMdef.CONVERSATION] is conversationRWdict )
-        self.assertTrue( rw.data_dict.[TMdef.PACKET] is packetRWdict )
+        self.assertTrue( rw.data_dict[TMdef.GLOBAL] is globalRWdict )
+        self.assertTrue( rw.data_dict[TMdef.CONVERSATION] is conversationRWdict )
+        self.assertTrue( rw.data_dict[TMdef.PACKET] is packetRWdict )
 
         self.assertTrue( rw.statistics is statistics )
 
@@ -375,4 +374,4 @@ class TMReWrapper(unittest.TestCase):
             self.assertTrue( p_3.time == (i*10)+3 )
 
             j = (j+1)%len(values)
-"""
+
