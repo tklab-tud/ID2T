@@ -1,7 +1,44 @@
 import scapy.layers.inet as inet
+import scapy.layers.inet6 as inet6
+import scapy.layers.dns as dns
+import scapy.layers.l2 as l2
+import scapy.utils
+
+import ID2TLib.Utility as Util
+
+import TMLib.Utility as MUtil
+import TMLib.TMdict as TMdict
+import TMLib.PacketProcessing as TMpp
+import TMLib.TimestampGeneration as TMtg
 
 import TMLib.Definitions as TMdef
 
+import scapy_extend.http as http
+
+import TMLib.ReWrapper as ReWrap
+
+recognized_protocols = [
+## Ether
+inet.Ether
+## ARP
+, l2.ARP
+## IPv4
+, inet.IP
+## IPv6
+, inet6.IPv6
+## ICMP
+, inet.ICMP
+, inet.IPerror
+, inet.TCPerror
+, inet.UDPerror
+, inet.ICMPerror
+## TCP
+, inet.TCP
+## UDP
+, inet.UDP
+## DNS
+, dns.DNS
+]
 
 def build_mock_dict():
     data = dict()
@@ -75,3 +112,13 @@ def compare_mac_pkts(_f, _s):
         field = field.name
         result &= ( _f.getfieldval(field) == _s.getfieldval(field) )
     return result
+
+def build_mock_rewrapper():
+    statistics = {}
+    globalRWdict = {}
+    conversationRWdict = {} 
+    packetRWdict = {}
+
+    rw = ReWrapper(statistics, globalRWdict, conversationRWdict, packetRWdict)
+
+    return rw, statistics, globalRWdict, conversationRWdict, packetRWdict
