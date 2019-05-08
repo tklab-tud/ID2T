@@ -365,7 +365,7 @@ class TMReWrapper(unittest.TestCase):
             p_1 = Pkt(_value=values[j%len(value)])
             p_2 = Pkt(_value=values[(j+1)%len(value)], _payload=p_1)
             p_3 = Pkt(_time=i, _value=values[(j+2)%len(value)], _payload=p_2)
-            
+
             rw.digest(p_3)
 
             self.assertTrue( p_1.value ==  values[j%len(value)]+_tf )
