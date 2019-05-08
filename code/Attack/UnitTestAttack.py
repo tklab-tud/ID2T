@@ -1,12 +1,11 @@
 import Attack.AttackParameters as atkParam
 import Attack.BaseAttack as BaseAttack
 
-class UnitTestA_UnitTestB(BaseAttack.BaseAttack):
-
+class UnitTestAttack(BaseAttack.BaseAttack):
 
     def __init__(self):
 
-        super(Test, self).__init__("UnitTest Example", "Mixes given attack into the target pcap'",
+        super(Test, self).__init__("UnitTest Attack", "Used for Unit Testing of the toolkit.'",
                                   "Any")
 
         self.pkt_num = 0
