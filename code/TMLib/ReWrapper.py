@@ -60,14 +60,14 @@ class ReWrapper(object):
         if _statistics is None or _globalRWdict is None or _conversationRWdict is None or _packetRWdict is None:
             raise TypeError('NoneType passed on rewrapper init.')
 
-        if not isinstance(_globalRWdict, TMdict.GlobalRWdict):
-            raise TypeError('Wrong dictionary type passed on rewrapper init, TMdict.GlobalRWdict expected but got ' + type(_globalRWdict))
+        # if not isinstance(_globalRWdict, TMdict.GlobalRWdict):
+        #     raise TypeError('Wrong dictionary type passed on rewrapper init, TMdict.GlobalRWdict expected but got ' + str(type(_globalRWdict)))
 
-        if not isinstance(_conversationRWdict, TMdict.ConversationRWdict):
-            raise TypeError('Wrong dictionary type passed on rewrapper init, TMdict.ConversationRWdict expected but got ' + type(_conversationRWdict))
+        # if not isinstance(_conversationRWdict, TMdict.ConversationRWdict):
+        #     raise TypeError('Wrong dictionary type passed on rewrapper init, TMdict.ConversationRWdict expected but got ' + str(type(_conversationRWdict)))
 
-        if not isinstance(_packetRWdict, TMdict.PacketDataRWdict):
-            raise TypeError('Wrong dictionary type passed on rewrapper init, TMdict.PacketDataRWdict expected but got ' + type(_packetRWdict))
+        # if not isinstance(_packetRWdict, TMdict.PacketDataRWdict):
+        #     raise TypeError('Wrong dictionary type passed on rewrapper init, TMdict.PacketDataRWdict expected but got ' + str(type(_packetRWdict)))
         
         self.statistics = _statistics
 
@@ -218,7 +218,7 @@ class ReWrapper(object):
 
         :param timestamp_next_pkt: Timestamp for next packet. 
         """
-        if not timestamp_next_pkt:
+        if not timestamp_next_pkt and timestamp_next_pkt != 0:
             raise TypeError('NoneType passed as timestamp_next_pkt value.')
         self.data_dict[TMdef.CONVERSATION]['timestamp_next_pkt'] = timestamp_next_pkt
 
@@ -238,7 +238,7 @@ class ReWrapper(object):
 
         :param timestamp_shift: Timestamp shift.
         """
-        if not timestamp_shift:
+        if not timestamp_shift and timestamp_shift != 0:
             raise TypeError('NoneType passed as timestamp_shift value.')
         self.data_dict[TMdef.GLOBAL][TMdef.ATTACK]['timestamp_shift'] = timestamp_shift
 

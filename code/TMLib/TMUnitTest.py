@@ -115,10 +115,18 @@ def compare_mac_pkts(_f, _s):
 
 def build_mock_rewrapper():
     statistics = {}
-    globalRWdict = {}
+    globalRWdict = {
+    TMdef.ATTACK : {'timestamp_shift' : 0}
+    , TMdef.TARGET : {}
+    }
     conversationRWdict = {} 
     packetRWdict = {}
 
-    rw = ReWrapper(statistics, globalRWdict, conversationRWdict, packetRWdict)
+    rw = ReWrap.ReWrapper(statistics, globalRWdict, conversationRWdict, packetRWdict)
 
     return rw, statistics, globalRWdict, conversationRWdict, packetRWdict
+
+def mock_function(i):
+    def mock_labeled_function():
+        return i
+    return mock_labeled_function
