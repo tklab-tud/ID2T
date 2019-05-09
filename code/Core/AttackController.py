@@ -142,6 +142,9 @@ class AttackController:
         if isinstance(params, list) and params:
             # Convert attack param list into dictionary
             for entry in params:
+                if entry.count('=') != 1:
+                    print('ERROR: Incorrect attack parameter syntax (\'{}\'). Ignoring.'.format(entry))
+                    continue
                 params_dict.append(entry.split('='))
             params_dict = dict(params_dict)
             # Check if Parameter.INJECT_AT_TIMESTAMP and Parameter.INJECT_AFTER_PACKET are provided at the same time
