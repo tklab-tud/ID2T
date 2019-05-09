@@ -91,18 +91,11 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         # Determine source IP and MAC address
         num_attackers = self.get_param_value(atkParam.Parameter.NUMBER_ATTACKERS)
-        if (num_attackers is not None) and (num_attackers is not 0):
-            # user supplied atkParam.Parameter.NUMBER_ATTACKERS
-            # The most used IP class in background traffic
-            most_used_ip_class = Util.handle_most_used_outputs(self.statistics.get_most_used_ip_class())
-            # Create random attackers based on user input atkParam.Parameter.NUMBER_ATTACKERS
-            ip_source_list = self.generate_random_ipv4_address(most_used_ip_class, num_attackers)
-            mac_source_list = self.generate_random_mac_address(num_attackers)
-        else:  # user did not supply atkParam.Parameter.NUMBER_ATTACKS
-            # use default values for IP_SOURCE/MAC_SOURCE or overwritten values
-            # if user supplied any values for those params
-            ip_source_list = self.get_param_value(atkParam.Parameter.IP_SOURCE)
-            mac_source_list = self.get_param_value(atkParam.Parameter.MAC_SOURCE)
+
+        # use default values for IP_SOURCE/MAC_SOURCE or overwritten values
+        # if user supplied any values for those params
+        ip_source_list = self.get_param_value(atkParam.Parameter.IP_SOURCE)
+        mac_source_list = self.get_param_value(atkParam.Parameter.MAC_SOURCE)
 
         # Make sure IPs and MACs are lists
         if not isinstance(ip_source_list, list):
@@ -110,6 +103,18 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         if not isinstance(mac_source_list, list):
             mac_source_list = [mac_source_list]
+
+        if (num_attackers is not None) and (num_attackers is not 0):
+            # user supplied atkParam.Parameter.NUMBER_ATTACKERS
+            num_rnd_ips = num_attackers - len(ip_source_list)
+            num_rnd_macs = num_attackers - len(mac_source_list)
+            if num_rnd_ips:
+                # The most used IP class in background traffic
+                most_used_ip_class = Util.handle_most_used_outputs(self.statistics.get_most_used_ip_class())
+                # Create random attackers based on user input atkParam.Parameter.NUMBER_ATTACKERS
+                ip_source_list.extend(self.generate_random_ipv4_address(most_used_ip_class, num_rnd_ips))
+            if num_rnd_macs:
+                mac_source_list.extend(self.generate_random_mac_address(num_rnd_macs))
 
         # Generate MACs for each IP that has no corresponding MAC yet
         if (num_attackers is None) or (num_attackers is 0):
