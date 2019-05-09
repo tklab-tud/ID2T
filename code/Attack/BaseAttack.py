@@ -372,15 +372,15 @@ class BaseAttack(metaclass=abc.ABCMeta):
             # Get Enum key of given string identifier
             param_name = atkParam.Parameter(param)
         else:
-            print("ERROR: Parameter " + param + " is not supported by ID2T.")
-            sys.exit(-1)
+            print("WARNING: Invalid attack parameter ({}). Ignoring.".format(param))
+            return
 
         # Get parameter type of attack's required_params
         param_type = self.supported_params.get(param_name)
 
         # Verify validity of given value with respect to parameter type
         if param_type is None:
-            print('Parameter ' + str(param_name) + ' not available for chosen attack. Skipping parameter.')
+            print('WARNING: Parameter not available (\'{}\'). Ignoring'.format(str(param_name)))
 
         # If value is query -> get value from database
         elif param_name != atkParam.Parameter.INTERVAL_SELECT_STRATEGY and self.statistics.is_query(value):
@@ -388,7 +388,8 @@ class BaseAttack(metaclass=abc.ABCMeta):
             if value is not None and value is not "":
                 is_valid = True
             else:
-                print('Error in given parameter value: ' + str(value) + '. Data could not be retrieved.')
+                print('ERROR: Parameter value could not be retrieved (\'{}\').'.format(str(value)))
+                sys.exit(-1)
 
         # Validate parameter depending on parameter's type
         elif param_type == atkParam.ParameterTypes.TYPE_IP_ADDRESS:
@@ -418,9 +419,9 @@ class BaseAttack(metaclass=abc.ABCMeta):
             if param_name == atkParam.Parameter.PACKETS_PER_SECOND and is_valid and user_specified:
                 if value > 1000000:
                     value = 1000000
-                    print("PPS is too high. Dropping to 1,000,000 pps.")
+                    print("WARNING: PPS is too high. Dropping to 1,000,000 pps.")
                 elif value > 100000:
-                    print("Warning: PPS is too high. Generated traffic might look unrealistic.\n"
+                    print("WARNING: PPS is too high. Generated traffic might look unrealistic.\n"
                           "Recommended are values equal or lower 100000.")
                 #elif value == 0:
                 #    value = 12500
@@ -432,7 +433,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         elif param_type == atkParam.ParameterTypes.TYPE_PACKET_POSITION:
             # This function call is valid only if there is a statistics object available.
             if self.statistics is None:
-                print('Error: Statistics-dependent attack parameter added without setting a statistics object first.')
+                print('ERROR: Statistics-dependent attack parameter added without setting a statistics object first.')
                 exit(1)
 
             ts = pr.pcap_processor(self.statistics.pcap_filepath, "False", Util.RESOURCE_DIR, "").get_timestamp_mu_sec(int(value))
@@ -503,11 +504,10 @@ class BaseAttack(metaclass=abc.ABCMeta):
             # checks whether all params have assigned values, INJECT_AFTER_PACKET must not be considered because the
             # timestamp derived from it is set to Parameter.INJECT_AT_TIMESTAMP
             if param not in self.params.keys() and param not in non_obligatory_params:
-                print("\033[91mCRITICAL ERROR: Attack '" + self.attack_name + "' does not define the parameter '" +
+                print("\033[91mERROR: Attack '" + self.attack_name + "' does not define the parameter '" +
                       str(param) + "'.\n The attack must define default values for all parameters."
                       + "\n Cannot continue attack generation.\033[0m")
-                import sys
-                sys.exit(0)
+                sys.exit(-1)
 
     def write_attack_pcap(self, packets: list, append_flag: bool = False, destination_path: str = None):
         """
@@ -680,8 +680,8 @@ class BaseAttack(metaclass=abc.ABCMeta):
         :param ip_destination: destination IP address.
         """
         if BaseAttack.ip_src_dst_equal_check(ip_source, ip_destination):
-            print("\nERROR: Invalid IP addresses; source IP is the same as destination IP: " + ip_destination + ".")
-            sys.exit(1)
+            print("ERROR: Invalid IP addresses; source IP is the same as destination IP: " + ip_destination + ".")
+            sys.exit(-1)
 
     @staticmethod
     def ip_src_dst_equal_check(ip_source, ip_destination):
