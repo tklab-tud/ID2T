@@ -165,7 +165,7 @@ class AttackController:
             # Pass paramters to attack controller
             self.set_params(params_dict)
         else:
-            attack_note = "This attack used only (random) default parameters."
+            attack_note = "This attack used only default parameters."
 
         self.current_attack.init_objects()
 
