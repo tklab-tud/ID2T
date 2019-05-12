@@ -51,6 +51,8 @@ class TestMix(BaseAttack.BaseAttack):
 
         self.output_path = "../TMTestDir"
 
+        self.output_name = "generic_name"
+
         self.supported_params.update({
             atkParam.Parameter.INJECT_AT_TIMESTAMP: atkParam.ParameterTypes.TYPE_FLOAT
             , atkParam.Parameter.CUSTOM_PAYLOAD_FILE: atkParam.ParameterTypes.TYPE_FILEPATH
@@ -81,6 +83,14 @@ class TestMix(BaseAttack.BaseAttack):
         parsing_start = perf_counter() # <------- TIMER
 
         param_dict = Mix.parse_config(config_path)
+
+        value = param_dict.get('output.path')
+        if value:
+            self.output_path = value
+
+        value = param_dict.get('output.name')
+        if value:
+            self.output_name = value
 
         ###
         ### Filling dictionaries
@@ -143,11 +153,11 @@ class TestMix(BaseAttack.BaseAttack):
         if self.export_filetype == 'xlsx':
             Testing.exportSQLite3_toXLSX(Testing.connection_SQLite3_fromStatistics
                 , self.statistics
-                , 'target'
+                , 'background_traffic_e' + self.output_name
                 , self.output_path)
             Testing.exportSQLite3_toXLSX(Testing.connection_SQLite3_fromStatistics
                 , self.attack_statistics
-                , 'attack'
+                , 'annotated_unit_e' + self.output_name
                 , self.output_path)
 
         elif self.export_filetype == 'csv':
@@ -197,7 +207,7 @@ class TestMix(BaseAttack.BaseAttack):
         if self.export_filetype == 'xlsx':
             Testing.exportSQLite3_toXLSX(Testing.connection_SQLite3_fromStatistics
                 , generated_attack_statistics
-                , 'generated_attack'
+                , 'semi_labeled_e_' + self.output_name
                 , self.output_path)
         elif self.export_filetype == 'csv':
             output_path = os.path.join(self.output_path, 'CSV_generated_attack')

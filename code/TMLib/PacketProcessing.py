@@ -209,6 +209,10 @@ def ip_ttl_change(packet, data):
             packet.setfieldval('ttl', data[TMdef.GLOBAL][TMdef.TARGET]['ip_ttl_default'])
 
 
+def ip_auto_checksum(packet, data):
+    packet.setfieldval("chksum", None)
+
+
 ###########################################
 ############### IPv6
 ###########################################
@@ -457,10 +461,12 @@ def tcp_mss_change(packet, data):
                 options[i] = ('MSS', mss)
                 mss = None
                 break
-        if mss:
-            if isinstance(options, dict):
-                options = []
-            options.append(('MSS', mss))
+        ## Unused, casuses bug where options are extended into padding
+        ## If original packet doesn't specify MSS, new one shouldn't either
+        # if mss:
+        #     if isinstance(options, dict):
+        #         options = []
+        #     options.append(('MSS', mss))
         packet.setfieldval('options', options)
 
 
@@ -496,6 +502,10 @@ def tcp_dport_change(packet, data):
         port_new = port_map.get(port)
         if port_new:
             packet.setfieldval('dport', port_new)
+
+
+def tcp_auto_checksum(packet, data):
+    packet.setfieldval("chksum", None)
 
 
 ###############################################
@@ -546,6 +556,10 @@ def udp_dport_change(packet, data):
         port_new = port_map.get(port)
         if port_new:
             packet.setfieldval('dport', port_new)
+
+
+def udp_auto_checksum(packet, data):
+    packet.setfieldval("chksum", None)
 
 
 ###############################################

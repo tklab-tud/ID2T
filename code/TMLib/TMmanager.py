@@ -162,6 +162,15 @@ subsribed_functions = { # dictionary of known transformation functions
     ]
 }
 
+, 'ip_auto_checksum' : {
+    PROCESSING : [
+        {
+        PROTOCOL : inet.IP
+        , FUNCTION : TMpp.ip_auto_checksum
+        }
+    ]
+}
+
 #################
 #### IPv6
 #################
@@ -348,6 +357,15 @@ subsribed_functions = { # dictionary of known transformation functions
     ]
 }
 
+, 'tcp_auto_checksum' : {
+    PROCESSING : [
+        {
+        PROTOCOL : inet.TCP
+        , FUNCTION : TMpp.tcp_auto_checksum
+        }
+    ]
+}
+
 #################
 #### UDP
 #################
@@ -371,6 +389,15 @@ subsribed_functions = { # dictionary of known transformation functions
     , FILL : [
         Filler.make_ip_map
         , Filler.make_port_ip_map
+    ]
+}
+
+, 'udp_auto_checksum' : {
+    PROCESSING : [
+        {
+        PROTOCOL : inet.TCP
+        , FUNCTION : TMpp.udp_auto_checksum
+        }
     ]
 }
 

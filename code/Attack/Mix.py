@@ -204,14 +204,17 @@ def enqueue_functions(param_dict, rewrap):
     # IPv4 & IPv6
     , 'ip_change_default'
     , 'ipv6_change_default'
+    , 'ip_auto_checksum'
     # ICMP
     , 'icmp_ip_change_default'
     , 'icmp_tcp_change_default'
     , 'icmp_udp_change_default'
     # TCP
     , 'tcp_change_default'
+    , 'tcp_auto_checksum'
     # UDP
     , 'udp_change_default'
+    , 'udp_auto_checksum'
     # DNS
     , 'dns_change_ips'
     # HTTP
