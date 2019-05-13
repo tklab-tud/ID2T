@@ -191,11 +191,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         mss_dst = Util.handle_most_used_outputs(mss_dst)
 
-        # get user defined bandwidth
-        bandwidth_max = self.get_param_value(atkParam.Parameter.BANDWIDTH_MAX)
-        bandwidth_min_local = self.get_param_value(atkParam.Parameter.BANDWIDTH_MIN_LOCAL)
-        bandwidth_min_public = self.get_param_value(atkParam.Parameter.BANDWIDTH_MIN_PUBLIC)
-
         # check user defined latency
         latency_limit = None
         latency_max = self.get_param_value(atkParam.Parameter.LATENCY_MAX)
@@ -333,9 +328,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
             bytes = len(pkt)
 
-            remaining_bytes, current_interval = self.get_remaining_bandwidth(pkt.time, ip_source, ip_destination,
-                                                                             bandwidth_max, bandwidth_min_local,
-                                                                             bandwidth_min_public)
+            remaining_bytes, current_interval = \
+                self.bandwidth_controller.get_remaining_bandwidth(pkt.time, ip_source, ip_destination)
             if previous_interval != current_interval:
                 sent_bytes = 0
                 interval_count += 1
