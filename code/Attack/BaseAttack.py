@@ -55,10 +55,18 @@ class BaseAttack(metaclass=abc.ABCMeta):
         self.start_time = 0
         self.finish_time = 0
         self.packets = []
+        self.total_pkt_num = 0
         self.exceeding_packets = 0
         self.path_attack_pcap = ""
         self.timestamp_controller = None
         self.bandwidth_controller = None
+        self.last_packet = None
+        self.full_interval = None
+        self.previous_interval = 0
+        self.sent_bytes = 0
+        self.interval_count = 0
+        self.buffer_size = 1000
+        #self.packets = collections.deque(maxlen=self.buffer_size)
 
         # get_reply_delay
         self.all_min_latencies = None
@@ -584,6 +592,53 @@ class BaseAttack(metaclass=abc.ABCMeta):
         min_latency = int(min_latency) * 10 ** -6  # convert from micro to seconds
         max_latency = int(max_latency) * 10 ** -6
         return min_latency, max_latency
+
+    def add_packet(self, pkt, ip_source, ip_destination):
+        """
+
+        :param pkt: the packet, which should be added to the packets list
+        :param ip_source: the source IP
+        :param ip_destination: the destination IP
+        :return: 0 if request packet, 1 if reply packet, or 2 if packet was not added to packets
+        """
+        bytes = len(pkt)
+
+        remaining_bytes, current_interval = \
+            self.bandwidth_controller.get_remaining_bandwidth(pkt.time, ip_source, ip_destination)
+        if self.previous_interval != current_interval:
+            self.sent_bytes = 0
+            self.interval_count += 1
+
+        self.previous_interval = current_interval
+
+        if current_interval != self.full_interval:
+            remaining_bytes *= 1000
+            remaining_bytes -= self.sent_bytes
+
+            if remaining_bytes >= bytes:
+                self.sent_bytes += bytes
+                self.packets.append(pkt)
+                self.total_pkt_num += 1
+                if pkt['IP'].dst == ip_source:
+                    return 1
+                return 0
+            else:
+                print("Warning: generated attack packets exceeded bandwidth. Packets in interval {} "
+                      "were omitted.".format(self.interval_count))
+                self.full_interval = current_interval
+                return 2
+
+    def buffer_full(self):
+        return (self.total_pkt_num > 0) and (self.total_pkt_num % self.buffer_size == 0) and (len(self.packets) > 0)
+
+    def flush_packets(self):
+        self.last_packet = self.packets[-1]
+        self.packets = sorted(self.packets, key=lambda pkt: pkt.time)
+        self.path_attack_pcap = self.write_attack_pcap(self.packets, True, self.path_attack_pcap)
+        self.reset_packets()
+
+    def reset_packets(self):
+        self.packets = []
 
     @staticmethod
     def packets_to_convs(exploit_raw_packets):

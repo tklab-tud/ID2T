@@ -1,4 +1,3 @@
-import collections as col
 import logging
 import random as rnd
 
@@ -23,7 +22,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
         super(DDoSAttack, self).__init__("DDoS Attack", "Injects a DDoS attack'",
                                          "Resource Exhaustion")
 
-        self.last_packet = None
         self.total_pkt_num = 0
         self.default_port = 0
 
@@ -87,7 +85,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
         """
         Creates the attack packets.
         """
-        buffer_size = 1000
 
         # Determine source IP and MAC address
         num_attackers = self.get_param_value(atkParam.Parameter.NUMBER_ATTACKERS)
@@ -123,8 +120,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
             num_attackers = min(len(ip_source_list), len(mac_source_list))
 
         # Initialize parameters
-        self.packets = col.deque(maxlen=buffer_size)
-
         port_source_list = self.get_param_value(atkParam.Parameter.PORT_SOURCE)
         if not isinstance(port_source_list, list):
             port_source_list = [port_source_list]
@@ -204,7 +199,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
         # which still have to be acknowledged by the victim, as a "FIFO" for each attacker
         previous_attacker_port = []
         replies_count = 0
-        self.total_pkt_num = 0
         already_used_pkts = 0
         sum_diff = 0
 
@@ -264,12 +258,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
         timestamps_tuples.sort(key=lambda tmstmp: tmstmp[0])
         self.attack_start_utime = timestamps_tuples[0][0]
 
-        sent_bytes = 0
-        previous_interval = 0
-        interval_count = 0
-        full_interval = None
-        reply = None
-
         # For each triple, generate packet
         for timestamp in timestamps_tuples:
             # tuple layout: [timestamp, attacker_id]
@@ -326,38 +314,13 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
                     pkt = reply
 
-            bytes = len(pkt)
+            result = self.add_packet(pkt, ip_source, ip_destination)
 
-            remaining_bytes, current_interval = \
-                self.bandwidth_controller.get_remaining_bandwidth(pkt.time, ip_source, ip_destination)
-            if previous_interval != current_interval:
-                sent_bytes = 0
-                interval_count += 1
+            if result == 1:
+                replies_count += 1
 
-            previous_interval = current_interval
-
-            if current_interval != full_interval:
-                remaining_bytes *= 1000
-                remaining_bytes -= sent_bytes
-
-                if remaining_bytes >= bytes:
-                    sent_bytes += bytes
-                    self.packets.append(pkt)
-                    self.total_pkt_num += 1
-                    if pkt == reply:
-                        replies_count += 1
-                else:
-                    print("Warning: generated attack packets exceeded bandwidth. Packets in interval {} "
-                          "were omitted.".format(interval_count))
-                    full_interval = current_interval
-
-            # every 1000 packets write them to the pcap file (append)
-            if (self.total_pkt_num > 0) and (self.total_pkt_num % buffer_size == 0) and (len(self.packets) > 0):
-                self.last_packet = self.packets[-1]
-                self.attack_end_utime = self.last_packet.time
-                self.packets = sorted(self.packets, key=lambda pkt: pkt.time)
-                self.path_attack_pcap = self.write_attack_pcap(self.packets, True, self.path_attack_pcap)
-                self.packets = []
+            if self.buffer_full():
+                self.flush_packets()
 
     def generate_attack_pcap(self):
         """
