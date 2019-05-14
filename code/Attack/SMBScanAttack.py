@@ -158,7 +158,6 @@ class SMBScanAttack(BaseAttack.BaseAttack):
             SMBLib.invalid_smb_version(hosting_version)
         # Check source platform
         src_platform = self.get_param_value(atkParam.Parameter.SOURCE_PLATFORM).lower()
-        self.packets = []
 
         # randomize source ports according to platform, if specified
         if self.get_param_value(atkParam.Parameter.PORT_SOURCE_RANDOMIZE):
@@ -239,7 +238,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                 request.time = timestamp_next_pkt
 
                 # Append request
-                self.packets.append(request)
+                self.add_packet(request, ip_source, ip)
 
                 # Update timestamp for next package
                 timestamp_reply = self.timestamp_controller.next_timestamp(min_delay)
@@ -257,7 +256,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     victim_seq += 1
                     reply = (reply_ether / reply_ip / reply_tcp)
                     reply.time = timestamp_reply
-                    self.packets.append(reply)
+                    self.add_packet(reply, ip_source, ip)
 
                     # requester confirms, ACK
                     confirm_ether = request_ether
@@ -268,7 +267,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     self.timestamp_controller.set_timestamp(timestamp_reply)
                     timestamp_confirm = self.timestamp_controller.next_timestamp(min_delay)
                     confirm.time = timestamp_confirm
-                    self.packets.append(confirm)
+                    self.add_packet(confirm, ip_source, ip)
 
                     # 3) Build SMB Negotiation packets
                     smb_mid = rnd.randint(1, 65535)
@@ -308,7 +307,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     self.timestamp_controller.set_timestamp(timestamp_confirm)
                     timestamp_smb_req = self.timestamp_controller.next_timestamp(min_delay)
                     smb_req_combined.time = timestamp_smb_req
-                    self.packets.append(smb_req_combined)
+                    self.add_packet(smb_req_combined, ip_source, ip)
 
                     # destination confirms SMB request package
                     reply_tcp = inet.TCP(sport=SMBLib.smb_port, dport=sport, seq=victim_seq, ack=attacker_seq,
@@ -317,7 +316,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     self.timestamp_controller.set_timestamp(timestamp_smb_req)
                     timestamp_reply = self.timestamp_controller.next_timestamp(min_delay)
                     confirm_smb_req.time = timestamp_reply
-                    self.packets.append(confirm_smb_req)
+                    self.add_packet(confirm_smb_req, ip_source, ip)
 
                     # smb response package
                     first_timestamp = time.mktime(time.strptime(first_timestamp_smb, "%Y-%m-%d %H:%M:%S"))
@@ -362,7 +361,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                         smb_rsp_combined = (smb_rsp_combined / smb_rsp_negotiate_body)
 
                     smb_rsp_combined.time = timestamp_smb_rsp
-                    self.packets.append(smb_rsp_combined)
+                    self.add_packet(smb_rsp_combined, ip_source, ip)
 
                     # source confirms SMB response package
                     confirm_tcp = inet.TCP(sport=sport, dport=SMBLib.smb_port, seq=attacker_seq, ack=victim_seq,
@@ -371,7 +370,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     self.timestamp_controller.set_timestamp(timestamp_smb_rsp)
                     timestamp_confirm = self.timestamp_controller.next_timestamp(min_delay)
                     confirm_smb_res.time = timestamp_confirm
-                    self.packets.append(confirm_smb_res)
+                    self.add_packet(confirm_smb_res, ip_source, ip)
 
                     # attacker sends FIN ACK
                     confirm_tcp = inet.TCP(sport=sport, dport=SMBLib.smb_port, seq=attacker_seq, ack=victim_seq,
@@ -381,7 +380,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     timestamp_src_fin_ack = self.timestamp_controller.next_timestamp(min_delay)
                     source_fin_ack.time = timestamp_src_fin_ack
                     attacker_seq += 1
-                    self.packets.append(source_fin_ack)
+                    self.add_packet(source_fin_ack, ip_source, ip)
 
                     # victim sends FIN ACK
                     reply_tcp = inet.TCP(sport=SMBLib.smb_port, dport=sport, seq=victim_seq, ack=attacker_seq,
@@ -391,7 +390,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     timestamp_dest_fin_ack = self.timestamp_controller.next_timestamp(min_delay)
                     victim_seq += 1
                     destination_fin_ack.time = timestamp_dest_fin_ack
-                    self.packets.append(destination_fin_ack)
+                    self.add_packet(destination_fin_ack, ip_source, ip)
 
                     # source sends final ACK
                     confirm_tcp = inet.TCP(sport=sport, dport=SMBLib.smb_port, seq=attacker_seq, ack=victim_seq,
@@ -400,7 +399,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     self.timestamp_controller.set_timestamp(timestamp_dest_fin_ack)
                     timestamp_final_ack = self.timestamp_controller.next_timestamp(min_delay)
                     final_ack.time = timestamp_final_ack
-                    self.packets.append(final_ack)
+                    self.add_packet(final_ack, ip_source, ip)
 
                 else:
                     # Build RST package
@@ -410,7 +409,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                                          window=destination_win_value, options=[('MSS', destination_mss_value)])
                     reply = (reply_ether / reply_ip / reply_tcp)
                     reply.time = timestamp_reply
-                    self.packets.append(reply)
+                    self.add_packet(reply, ip_source, ip)
 
             self.timestamp_controller.set_timestamp(timestamp_next_pkt)
             timestamp_next_pkt = self.timestamp_controller.next_timestamp()

@@ -64,7 +64,6 @@ class SalityBotnet(BaseAttack.BaseAttack):
         timestamp_next_pkt = self.get_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP)
 
         # Initialize parameters
-        self.packets = []
         mac_source = self.get_param_value(atkParam.Parameter.MAC_SOURCE)
         ip_source = self.get_param_value(atkParam.Parameter.IP_SOURCE)
 
@@ -124,7 +123,7 @@ class SalityBotnet(BaseAttack.BaseAttack):
 
             timestamp_next_pkt = self.timestamp_controller.next_timestamp()
 
-            self.packets.append(new_pkt)
+            self.add_packet(new_pkt, ip_source, ip_dns_server)
 
         exploit_raw_packets.close()
 

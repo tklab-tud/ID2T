@@ -87,7 +87,6 @@ class SQLiAttack(BaseAttack.BaseAttack):
         timestamp_next_pkt = self.get_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP)
 
         # Initialize parameters
-        self.packets = []
         mac_source = self.get_param_value(atkParam.Parameter.MAC_SOURCE)
         ip_source = self.get_param_value(atkParam.Parameter.IP_SOURCE)
         if isinstance(ip_source, list):
@@ -234,7 +233,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
                 timestamp_next_pkt = self.timestamp_controller.next_timestamp() + float(time_steps.random())
                 new_pkt.time = timestamp_next_pkt
 
-            self.packets.append(new_pkt)
+            self.add_packet(new_pkt, ip_source, ip_destination)
 
         exploit_raw_packets.close()
 

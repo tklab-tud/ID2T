@@ -84,7 +84,7 @@ class MemcrashedSpooferAttack(BaseAttack.BaseAttack):
             request = (attacker_ether / attacker_ip / request_udp / request_memcd)
             request.time = timestamp_next_pkt
 
-            self.packets.append(request)
+            self.add_packet(request, ip_victim, ip_amplifier)
 
             timestamp_next_pkt = self.timestamp_controller.next_timestamp()
 

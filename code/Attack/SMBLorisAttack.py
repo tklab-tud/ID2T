@@ -85,7 +85,6 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
         self.attack_start_utime = first_timestamp
 
         # Initialize parameters
-        self.packets = []
         ip_destination = self.get_param_value(atkParam.Parameter.IP_DESTINATION)
         mac_destination = self.get_param_value(atkParam.Parameter.MAC_DESTINATION)
 
@@ -166,7 +165,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
                 syn = (attacker_ether / attacker_ip / syn_tcp)
                 syn.time = timestamp_next_pkt
                 timestamp_next_pkt = self.timestamp_controller.next_timestamp(min_delay)
-                self.packets.append(syn)
+                self.add_packet(syn, ip_source_list[attacker], ip_destination)
 
                 # response from victim (server)
                 synack_tcp = inet.TCP(sport=SMBLib.smb_port, dport=sport, seq=victim_seq, ack=attacker_seq, flags='SA',
@@ -176,7 +175,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
                 synack.time = timestamp_next_pkt
                 self.timestamp_controller.set_pps(pps)
                 timestamp_next_pkt = self.timestamp_controller.next_timestamp(min_delay)
-                self.packets.append(synack)
+                self.add_packet(synack, ip_source_list[attacker], ip_destination)
 
                 # acknowledgement from attacker (client)
                 ack_tcp = inet.TCP(sport=sport, dport=SMBLib.smb_port, seq=attacker_seq, ack=victim_seq, flags='A',
@@ -184,7 +183,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
                 ack = (attacker_ether / attacker_ip / ack_tcp)
                 ack.time = timestamp_next_pkt
                 timestamp_next_pkt = self.timestamp_controller.next_timestamp()
-                self.packets.append(ack)
+                self.add_packet(ack, ip_source_list[attacker], ip_destination)
 
                 # send NBT session header packet with maximum LENGTH-field
                 req_tcp = inet.TCP(sport=sport, dport=SMBLib.smb_port, seq=attacker_seq, ack=victim_seq, flags='AP',
@@ -196,7 +195,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
                 req.time = timestamp_next_pkt
                 self.timestamp_controller.set_pps(victim_pps)
                 timestamp_next_pkt = self.timestamp_controller.next_timestamp(min_delay)
-                self.packets.append(req)
+                self.add_packet(req, ip_source_list[attacker], ip_destination)
 
                 # final ack from victim (server)
                 last_ack_tcp = inet.TCP(sport=SMBLib.smb_port, dport=sport, seq=victim_seq, ack=attacker_seq, flags='A',
@@ -205,7 +204,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
                 last_ack.time = timestamp_next_pkt
                 self.timestamp_controller.set_pps(pps)
                 timestamp_next_pkt = self.timestamp_controller.next_timestamp(min_delay)
-                self.packets.append(last_ack)
+                self.add_packet(last_ack, ip_source_list[attacker], ip_destination)
 
                 sport += 1
 

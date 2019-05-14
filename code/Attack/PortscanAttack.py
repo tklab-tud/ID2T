@@ -101,7 +101,6 @@ class PortscanAttack(BaseAttack.BaseAttack):
         self.attack_start_utime = timestamp_next_pkt
 
         # Initialize parameters
-        self.packets = []
         ip_source = self.get_param_value(atkParam.Parameter.IP_SOURCE)
         if isinstance(ip_source, list):
             ip_source = ip_source[0]
@@ -196,7 +195,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
 
                 request.time = timestamp_next_pkt
                 # Append request
-                self.packets.append(request)
+                self.add_packet(request, ip_source, ip)
 
                 # 2) Build reply (for open ports) package
                 if dport in ports_open:  # destination port is OPEN
@@ -209,7 +208,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
                     timestamp_reply = self.timestamp_controller.next_timestamp(latency=min_delay)
 
                     reply.time = timestamp_reply
-                    self.packets.append(reply)
+                    self.add_packet(reply, ip_source, ip)
 
                     # requester confirms
                     confirm_ether = request_ether
@@ -219,7 +218,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
                     self.timestamp_controller.set_timestamp(timestamp_reply)
                     timestamp_confirm = self.timestamp_controller.next_timestamp(latency=min_delay)
                     confirm.time = timestamp_confirm
-                    self.packets.append(confirm)
+                    self.add_packet(confirm, ip_source, ip)
 
                     # else: destination port is NOT OPEN -> no reply is sent by target
 
