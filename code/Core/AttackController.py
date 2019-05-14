@@ -116,6 +116,7 @@ class AttackController:
         if seed is not None:
             self.current_attack.set_seed(seed=seed)
 
+        self.current_attack.init_mutual_params()
         self.current_attack.init_params()
 
         # Record the attack

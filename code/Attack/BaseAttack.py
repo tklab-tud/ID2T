@@ -49,7 +49,9 @@ class BaseAttack(metaclass=abc.ABCMeta):
         self.attack_description = description
         self.attack_type = attack_type
         self.params = {}
-        self.supported_params = {}
+        self.supported_params = {atkParam.Parameter.BANDWIDTH_MAX: atkParam.ParameterTypes.TYPE_FLOAT,
+                                 atkParam.Parameter.BANDWIDTH_MIN_LOCAL: atkParam.ParameterTypes.TYPE_FLOAT,
+                                 atkParam.Parameter.BANDWIDTH_MIN_PUBLIC: atkParam.ParameterTypes.TYPE_FLOAT}
         self.attack_start_utime = 0
         self.attack_end_utime = 0
         self.start_time = 0
@@ -91,6 +93,11 @@ class BaseAttack(metaclass=abc.ABCMeta):
         self.most_used_mss_value = self.statistics.get_most_used_mss_value()
         self.most_used_ttl_value = self.statistics.get_most_used_ttl_value()
         self.most_used_win_size = self.statistics.get_most_used_win_size()
+
+    def init_mutual_params(self):
+        self.add_param_value(atkParam.Parameter.BANDWIDTH_MAX, 0)
+        self.add_param_value(atkParam.Parameter.BANDWIDTH_MIN_LOCAL, 0)
+        self.add_param_value(atkParam.Parameter.BANDWIDTH_MIN_PUBLIC, 0)
 
     def init_objects(self):
         self.timestamp_controller = tc.TimestampController(self.get_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP),

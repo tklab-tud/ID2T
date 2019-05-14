@@ -39,9 +39,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
             atkParam.Parameter.NUMBER_ATTACKERS: atkParam.ParameterTypes.TYPE_INTEGER_POSITIVE,
             atkParam.Parameter.ATTACK_DURATION: atkParam.ParameterTypes.TYPE_INTEGER_POSITIVE,
             atkParam.Parameter.VICTIM_BUFFER: atkParam.ParameterTypes.TYPE_INTEGER_POSITIVE,
-            atkParam.Parameter.BANDWIDTH_MAX: atkParam.ParameterTypes.TYPE_FLOAT,
-            atkParam.Parameter.BANDWIDTH_MIN_LOCAL: atkParam.ParameterTypes.TYPE_FLOAT,
-            atkParam.Parameter.BANDWIDTH_MIN_PUBLIC: atkParam.ParameterTypes.TYPE_FLOAT,
             atkParam.Parameter.LATENCY_MAX: atkParam.ParameterTypes.TYPE_FLOAT
         })
 
@@ -76,9 +73,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
         self.add_param_value(atkParam.Parameter.MAC_DESTINATION, destination_mac)
         self.add_param_value(atkParam.Parameter.VICTIM_BUFFER, rnd.randint(1000, 10000))
 
-        self.add_param_value(atkParam.Parameter.BANDWIDTH_MAX, 0)
-        self.add_param_value(atkParam.Parameter.BANDWIDTH_MIN_LOCAL, 0)
-        self.add_param_value(atkParam.Parameter.BANDWIDTH_MIN_PUBLIC, 0)
         self.add_param_value(atkParam.Parameter.LATENCY_MAX, 0)
 
     def generate_attack_packets(self):
