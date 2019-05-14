@@ -275,6 +275,20 @@ def ipv6_hlim_change(packet, data):
         else:
             packet.setfieldval('hlim', data[TMdef.GLOBAL][TMdef.TARGET]['ip_ttl_default'])
 
+def ivp6_routing_header_change(packet, data):
+    """
+    Changes Routing headers ip addresses.
+
+    :param packet: Routing Header packet; expected scapy IPv6 Routing Header packet.
+    :param data: Dictionary containing field ip_ttl_map and ip_ttl_default.
+    """
+    vals = packet.getfieldval('addresses')
+    if vals:
+        for i in range(len(vals)):
+            ip_new = globalRWdict_findMatch(data, 'ip_address_map', vals[i])
+            if ip_new:
+                vals[i] = ip_new
+
 
 ###############################################
 ################## TTL
@@ -400,6 +414,7 @@ def icmpv6_addresses_change(packet, data):
             if ip_new:
                 ips[i] = ip_new
         packet.setfieldval('addresses', ips)
+
 
 
 ###############################################
