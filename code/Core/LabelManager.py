@@ -122,6 +122,9 @@ class LabelManager:
             """
             parameters_root = doc.createElement(self.TAG_PARAMETERS)
 
+            if not parameters:
+                return parameters_root
+
             for param_key, param_value in parameters.items():
                 param = doc.createElement(param_key.value)
                 param.appendChild(doc.createTextNode(str(param_value.value)))
