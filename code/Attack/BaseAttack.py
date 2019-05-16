@@ -180,6 +180,8 @@ class BaseAttack(metaclass=abc.ABCMeta):
                 if '-' in ip:
                     ip_range = ip.split('-')
                     ip_range = Util.get_ip_range(ip_range[0], ip_range[1])
+                    if not ip_range:
+                        is_valid = False
                     is_valid, ips = append_ips(ip_range)
                     ip_list.extend(ips)
                 else:

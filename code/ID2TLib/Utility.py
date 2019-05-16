@@ -134,8 +134,11 @@ def get_ip_range(start_ip: str, end_ip: str):
     :param end_ip:  the end_ip of the desired IP-range
     :return: a list of all IPs in the desired IP-range, including start-/end_ip
     """
-    start = ipaddress.ip_address(start_ip)
-    end = ipaddress.ip_address(end_ip)
+    try:
+        start = ipaddress.ip_address(start_ip)
+        end = ipaddress.ip_address(end_ip)
+    except ValueError:
+        return []
     ips = []
     if start < end:
         while start <= end:
