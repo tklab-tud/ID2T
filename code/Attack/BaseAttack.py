@@ -403,15 +403,6 @@ class BaseAttack(metaclass=abc.ABCMeta):
         if param_type is None:
             print('WARNING: Parameter not available (\'{}\'). Ignoring'.format(str(param_name)))
 
-        # If value is query -> get value from database
-        elif param_name != atkParam.Parameter.INTERVAL_SELECT_STRATEGY and self.statistics.is_query(value):
-            value = self.statistics.process_db_query(value, False)
-            if value is not None and value is not "":
-                is_valid = True
-            else:
-                print('ERROR: Parameter value could not be retrieved (\'{}\').'.format(str(value)))
-                sys.exit(-1)
-
         # Validate parameter depending on parameter's type
         elif param_type == atkParam.ParameterTypes.TYPE_IP_ADDRESS:
             is_valid, value = self._is_ip_address(value)
@@ -480,6 +471,15 @@ class BaseAttack(metaclass=abc.ABCMeta):
                 is_valid = 0 <= value <= 100
         elif param_type == atkParam.ParameterTypes.TYPE_INTERVAL_SELECT_STRAT:
             is_valid = value in {"random", "optimal", "custom"}
+
+        # If value is query -> get value from database
+        elif param_name != atkParam.Parameter.INTERVAL_SELECT_STRATEGY and self.statistics.is_query(value):
+            value = self.statistics.process_db_query(value, False)
+            if value is not None and value is not "":
+                is_valid = True
+            else:
+                print('ERROR: Parameter value could not be retrieved (\'{}\').'.format(str(value)))
+                sys.exit(-1)
 
         # add value iff validation was successful
         if is_valid:
