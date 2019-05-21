@@ -54,9 +54,6 @@ class TestBaseAttack(unittest.TestCase):
     def test_is_ip_address_list_invalid(self):
         self.assertFalse(BAtk.BaseAttack._is_ip_address(["192.1689.178.1", "192.168.178.10"])[0])
 
-    def test_is_ip_address_comma_list_valid(self):
-        self.assertTrue(BAtk.BaseAttack._is_ip_address("192.168.178.1,192.168.178.10")[0])
-
     def test_is_ip_address_comma_list_invalid(self):
         self.assertFalse(BAtk.BaseAttack._is_ip_address("192.168.178.1,192.1689.178.10")[0])
 

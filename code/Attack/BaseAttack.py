@@ -192,9 +192,8 @@ class BaseAttack(metaclass=abc.ABCMeta):
                         return False, ip_list
             return is_valid, ip_list
 
-        # a comma-separated list of IP addresses must be split first
-        if isinstance(ip_address, str):
-            ip_address = ip_address.split(',')
+        if not isinstance(ip_address, list):
+            ip_address = [ip_address]
 
         result, ip_address_output = append_ips(ip_address)
 
@@ -400,6 +399,13 @@ class BaseAttack(metaclass=abc.ABCMeta):
 
         # Get parameter type of attack's required_params
         param_type = self.supported_params.get(param_name)
+
+        # a comma-separated lists must be split first
+        if isinstance(value, str) and "," in value:
+            if "'" in value:
+                value = value.replace("'", "")
+            value = value.replace(" ", "")
+            value = value.split(",")
 
         # Verify validity of given value with respect to parameter type
         if param_type is None:

@@ -246,6 +246,9 @@ class LabelManager:
                     import distutils.util
                     param_name = param.tagName
                     param_value = param.childNodes[0].nodeValue
+                    if isinstance(param_value, str) and '[' in param_value or ']' in param_value:
+                        param_value = param_value[1:-1]
+                        param_value.replace("\'", "")
                     param_userspecified = bool(distutils.util.strtobool(param.getAttribute(self.ATTR_PARAM_USERSPECIFIED)))
                     attack.add_param_value(param_name, param_value, param_userspecified)
 
