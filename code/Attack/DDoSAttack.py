@@ -125,7 +125,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         if pps == 0:
             result = self.statistics.process_db_query(
                 "SELECT MAX(maxPktRate) FROM ip_statistics WHERE ipAddress='" + ip_destination + "';")
-            if result is not None and not 0:
+            if result is not None and result != 0:
                 pps = num_attackers * result
             else:
                 result = self.statistics.process_db_query(
