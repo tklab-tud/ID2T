@@ -168,6 +168,7 @@ class AttackController:
         else:
             attack_note = "This attack used only default parameters."
 
+        self.current_attack.validate_params()
         self.current_attack.init_objects()
 
         print("Generating attack packets...", end=" ")

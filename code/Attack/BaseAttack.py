@@ -99,6 +99,18 @@ class BaseAttack(metaclass=abc.ABCMeta):
         self.add_param_value(atkParam.Parameter.BANDWIDTH_MIN_LOCAL, 0)
         self.add_param_value(atkParam.Parameter.BANDWIDTH_MIN_PUBLIC, 0)
 
+    def validate_params(self):
+        if atkParam.Parameter.NUMBER_ATTACKERS in self.params:
+            num_attackers = self.get_param_value(atkParam.Parameter.NUMBER_ATTACKERS)
+            macs = self.get_param_value(atkParam.Parameter.MAC_SOURCE)
+            ips = self.get_param_value(atkParam.Parameter.IP_SOURCE)
+            if num_attackers < len(macs):
+                new_macs = macs[:num_attackers]
+                self.add_param_value(atkParam.Parameter.MAC_SOURCE, new_macs)
+            if num_attackers < len(ips):
+                new_ips = ips[:num_attackers]
+                self.add_param_value(atkParam.Parameter.IP_SOURCE, new_ips)
+
     def init_objects(self):
         self.timestamp_controller = tc.TimestampController(self.get_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP),
                                                            self.get_param_value(atkParam.Parameter.PACKETS_PER_SECOND))
