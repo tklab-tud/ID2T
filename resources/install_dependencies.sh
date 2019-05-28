@@ -183,21 +183,28 @@ elif [ "$KERNEL" = 'Linux' ]; then
     OS_LIKE=$(awk '/ID_LIKE=/' /etc/os-release | sed 's/ID_LIKE=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]' | cut -d ' ' -f 1)
     VERSION=$(awk '/VERSION_ID=/' /etc/os-release | sed '2q;d' | sed 's/VERSION_ID=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]')
 
+    echo "OS: "$OS
+    echo "OS_LIKE: "$OS_LIKE
+    echo "VERSION: "$VERSION
+
     if [ -z "$OS_LIKE" ]; then
         # This distribution is missing the os-release file, so try lsb_release
         OS_LIKE=$(lsb_release -si | tr '[:upper:]' '[:lower:]')
     fi
+    echo "OS_LIKE: "$OS_LIKE
 
     if [ "$OS_LIKE" = '' ]; then
         # This distribution is missing the ID_LIKE entry in the os-release file, so try the ID entry
         OS_LIKE=$(awk '/ID=/' /etc/*-release | sed 's/ID=//' | sed 's/"//g' | tr '[:upper:]' '[:lower:]' | head -n 1)
     fi
+    echo "OS_LIKE: "$OS_LIKE
 
     supported='debian ubuntu arch archlinux fedora suse opensuse'
     if ! [[ $supported =~ (^|[[:space:]])$OS_LIKE($|[[:space:]]) ]]; then
         OS_LIKE=${OS}
         DEB_PKGS='libffi-dev'
     fi
+    echo "OS_LIKE: "$OS_LIKE
 
     case ${OS_LIKE} in
         archlinux|arch)
