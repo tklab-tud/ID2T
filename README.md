@@ -24,7 +24,7 @@ ID2T was also presented in Blackhat Europe 2017 as part of the Arsenal session (
 
 ### Compilation and Installation
 Clone the repository to get started with the installation:
-``git clone https://git.tk.informatik.tu-darmstadt.de/SPIN/ID2T-toolkit``
+``git clone https://github.com/tklab-tud/ID2T``
 
 Install dependencies, initialize submodules, build the C++ modules and create the ID2T executables:
 ``./build.sh``\
