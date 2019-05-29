@@ -52,7 +52,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
         # (values are overwritten if user specifies them)
         self.add_param_value(atkParam.Parameter.INJECT_AFTER_PACKET, rnd.randint(0, self.statistics.get_packet_count()))
         # attacker configuration
-        num_attackers = rnd.randint(1, 16)
+        self.add_param_value(atkParam.Parameter.NUMBER_ATTACKERS, rnd.randint(1, 16))
+        num_attackers = self.get_param_value(atkParam.Parameter.NUMBER_ATTACKERS)
         # The most used IP class in background traffic
         most_used_ip_class = Util.handle_most_used_outputs(self.statistics.get_most_used_ip_class())
 
