@@ -409,6 +409,9 @@ class BaseAttack(metaclass=abc.ABCMeta):
             print("WARNING: Invalid attack parameter ({}). Ignoring.".format(param))
             return
 
+        if not user_specified and param_name in self.params.keys() and self.params[param_name][1]:
+            return
+
         # Get parameter type of attack's required_params
         param_type = self.supported_params.get(param_name)
 
