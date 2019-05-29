@@ -50,27 +50,29 @@ class DDoSAttack(BaseAttack.BaseAttack):
         """
         # PARAMETERS: initialize with default values
         # (values are overwritten if user specifies them)
-        self.add_param_value(atkParam.Parameter.INJECT_AFTER_PACKET, rnd.randint(0, self.statistics.get_packet_count()))
+        self.add_param_value(atkParam.Parameter.INJECT_AFTER_PACKET, rnd.randint,
+                             function_params=[0, self.statistics.get_packet_count])
         # attacker configuration
-        self.add_param_value(atkParam.Parameter.NUMBER_ATTACKERS, rnd.randint(1, 16))
+        self.add_param_value(atkParam.Parameter.NUMBER_ATTACKERS, rnd.randint, function_params=[1, 16])
         num_attackers = self.get_param_value(atkParam.Parameter.NUMBER_ATTACKERS)
         # The most used IP class in background traffic
-        most_used_ip_class = Util.handle_most_used_outputs(self.statistics.get_most_used_ip_class())
+        most_used_ip_class = Util.handle_most_used_outputs(self.statistics.get_most_used_ip_class)
 
-        self.add_param_value(atkParam.Parameter.IP_SOURCE,
-                             self.generate_random_ipv4_address(most_used_ip_class, num_attackers))
-        self.add_param_value(atkParam.Parameter.MAC_SOURCE, self.generate_random_mac_address(num_attackers))
+        self.add_param_value(atkParam.Parameter.IP_SOURCE, self.generate_random_ipv4_address,
+                             function_params=[most_used_ip_class, num_attackers])
+        self.add_param_value(atkParam.Parameter.MAC_SOURCE, self.generate_random_mac_address,
+                             function_params=[num_attackers])
         self.default_port = int(inet.RandShort())
         self.add_param_value(atkParam.Parameter.PORT_SOURCE, self.default_port)
         self.add_param_value(atkParam.Parameter.PACKETS_PER_SECOND, 0)
-        self.add_param_value(atkParam.Parameter.ATTACK_DURATION, rnd.randint(5, 30))
+        self.add_param_value(atkParam.Parameter.ATTACK_DURATION, rnd.randint, function_params=[5, 30])
 
         # victim configuration
-        self.add_param_value(atkParam.Parameter.IP_DESTINATION, self.statistics.get_random_ip_address())
+        self.add_param_value(atkParam.Parameter.IP_DESTINATION, self.statistics.get_random_ip_address)
         ip_dst = self.get_param_value(atkParam.Parameter.IP_DESTINATION)
 
-        self.add_param_value(atkParam.Parameter.MAC_DESTINATION, self.get_mac_address(ip_dst))
-        self.add_param_value(atkParam.Parameter.VICTIM_BUFFER, rnd.randint(1000, 10000))
+        self.add_param_value(atkParam.Parameter.MAC_DESTINATION, self.get_mac_address, function_params=[ip_dst])
+        self.add_param_value(atkParam.Parameter.VICTIM_BUFFER, rnd.randint, function_params=[1000, 10000])
 
         self.add_param_value(atkParam.Parameter.LATENCY_MAX, 0)
 
