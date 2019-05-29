@@ -116,9 +116,6 @@ class AttackController:
         if seed is not None:
             self.current_attack.set_seed(seed=seed)
 
-        self.current_attack.init_mutual_params()
-        self.current_attack.init_params()
-
         # Record the attack
         self.added_attacks.append(self.current_attack)
 
@@ -167,6 +164,9 @@ class AttackController:
             self.set_params(params_dict)
         else:
             attack_note = "This attack used only default parameters."
+
+        self.current_attack.init_mutual_params()
+        self.current_attack.init_params()
 
         self.current_attack.validate_params()
         self.current_attack.init_objects()
