@@ -66,12 +66,10 @@ class DDoSAttack(BaseAttack.BaseAttack):
         self.add_param_value(atkParam.Parameter.ATTACK_DURATION, rnd.randint(5, 30))
 
         # victim configuration
-        random_ip_address = self.statistics.get_random_ip_address()
-        self.add_param_value(atkParam.Parameter.IP_DESTINATION, random_ip_address)
-        destination_mac = self.statistics.get_mac_address(random_ip_address)
-        if isinstance(destination_mac, list) and len(destination_mac) == 0:
-            destination_mac = self.generate_random_mac_address()
-        self.add_param_value(atkParam.Parameter.MAC_DESTINATION, destination_mac)
+        self.add_param_value(atkParam.Parameter.IP_DESTINATION, self.statistics.get_random_ip_address())
+        ip_dst = self.get_param_value(atkParam.Parameter.IP_DESTINATION)
+
+        self.add_param_value(atkParam.Parameter.MAC_DESTINATION, self.get_mac_address(ip_dst))
         self.add_param_value(atkParam.Parameter.VICTIM_BUFFER, rnd.randint(1000, 10000))
 
         self.add_param_value(atkParam.Parameter.LATENCY_MAX, 0)
