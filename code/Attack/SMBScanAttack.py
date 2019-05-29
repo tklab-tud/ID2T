@@ -119,11 +119,9 @@ class SMBScanAttack(BaseAttack.BaseAttack):
         ip_destinations = ip_destinations + rnd_ips
 
         # Make sure the source IP is not part of targets
-        if ip_source in ip_destinations and isinstance(ip_destinations, list):
+        if isinstance(ip_destinations, list) and ip_source in ip_destinations:
             ip_destinations.remove(ip_source)
         self.add_param_value(atkParam.Parameter.IP_DESTINATION, ip_destinations)
-
-        ip_destinations = self.get_param_value(atkParam.Parameter.IP_DESTINATION)
 
         # Calculate the amount of IP addresses which are hosting SMB
         host_percentage = self.get_param_value(atkParam.Parameter.HOSTING_PERCENTAGE)
