@@ -954,6 +954,18 @@ class BaseAttack(metaclass=abc.ABCMeta):
         else:
             return ip_addresses
 
+    def get_mac_address(self, ip_address: str):
+        """
+        Get mac address to ip address, otherwise generate a random one.
+
+        :param ip_address: the ip address for which the mac address is required
+        :return: a mac address corresponding to the ip or a randomly generated one
+        """
+        mac = self.statistics.get_mac_address(ip_address)
+        if not mac:
+            mac = self.generate_random_mac_address()
+        return mac
+
     @staticmethod
     def generate_random_mac_address(n: int = 1):
         """
