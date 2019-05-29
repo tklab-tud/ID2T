@@ -382,14 +382,15 @@ class BaseAttack(metaclass=abc.ABCMeta):
         """
         return self.finish_time - self.start_time
 
-    def add_param_value(self, param, value, user_specified: bool = False) -> None:
+    def add_param_value(self, param, value, user_specified: bool = False, function_params = None) -> None:
         """
         Adds the pair param : value to the dictionary of attack parameters. Prints and error message and skips the
         parameter if the validation fails.
 
         :param param: Name of the parameter that we wish to modify.
-        :param value: The value we wish to assign to the specified parameter.
+        :param value: The value (or callable) we wish to assign to the specified parameter.
         :param user_specified: Whether the value was specified by the user (or left default)
+        :param function_params: the parameters for the "value"-callable (can be dict or list)
         :return: None.
         """
 
@@ -414,6 +415,23 @@ class BaseAttack(metaclass=abc.ABCMeta):
 
         # Get parameter type of attack's required_params
         param_type = self.supported_params.get(param_name)
+
+        # Get callable results
+        if callable(value):
+            if not function_params:
+                value = value()
+            else:
+                # check if function parameters are callable themselves
+                if isinstance(function_params, dict):
+                    for i in function_params.keys():
+                        if callable(function_params[i]):
+                            function_params[i] = function_params[i]()
+                    value = value(**function_params)
+                elif isinstance(function_params, list):
+                    for i, func_param in enumerate(function_params):
+                        if callable(function_params[i]):
+                            function_params[i] = function_params[i]()
+                    value = value(*function_params)
 
         # a comma-separated lists must be split first
         if isinstance(value, str) and "," in value:
