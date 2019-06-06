@@ -524,18 +524,33 @@ class BaseAttack(metaclass=abc.ABCMeta):
         else:
             return None
 
-    def get_param_user_specified(self, param: atkParam.Parameter) -> bool:
+    def param_exists(self, param_name: atkParam.Parameter) -> bool:
         """
-        Returns whether the parameter value was specified by the user for a given parameter.
+        Returns whether the parameter value is specified.
 
-        :param param: The parameter whose user-specified flag is wanted.
+        :param param_name: The parameter to look for.
+        :return: True if the parameter is already specified, False if not.
+        """
+        return param_name in self.params.keys() and self.params[param_name][0]
+
+    def param_user_defined(self, param_name: atkParam.Parameter) -> bool:
+        """
+        Returns whether the parameter value was specified by the user or a given parameter.
+
+        :param param_name: The parameter whose user-specified flag is wanted.
         :return: The parameter's user-specified flag.
         """
-        parameter = self.params.get(param)
-        if parameter is not None:
-            return parameter.user_specified
-        else:
-            return False
+        return param_name in self.params.keys() and self.params[param_name][1]
+
+    def param_equals(self, param_name: atkParam.Parameter, value) -> bool:
+        """
+        Returns whether the parameter value equals the given value.
+
+        :param param_name: The parameter to compare.
+        :param value: The value to compare to.
+        :return: True if the parameter is equal to the value, False if not.
+        """
+        return param_name in self.params.keys() and value == self.params[param_name][0]
 
     def check_parameters(self):
         """
