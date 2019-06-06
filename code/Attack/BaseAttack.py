@@ -428,6 +428,13 @@ class BaseAttack(metaclass=abc.ABCMeta):
 
         # Validate parameter depending on parameter's type
         elif param_type == atkParam.ParameterTypes.TYPE_IP_ADDRESS:
+            if (param_name == atkParam.Parameter.IP_SOURCE
+                and self.param_equals(atkParam.Parameter.IP_DESTINATION, value))\
+                    or (param_name == atkParam.Parameter.IP_DESTINATION
+                        and self.param_equals(atkParam.Parameter.IP_SOURCE, value)):
+                print("ERROR: Parameter " + str(param) + " or parameter value " + str(value) +
+                      " already used by another IP parameter. Generating random IP.")
+                value = self.statistics.get_random_ip_address()
             is_valid, value = self._is_ip_address(value)
         elif param_type == atkParam.ParameterTypes.TYPE_PORT:
             is_valid, value = self._is_port(value)
@@ -510,6 +517,8 @@ class BaseAttack(metaclass=abc.ABCMeta):
         else:
             print("ERROR: Parameter " + str(param) + " or parameter value " + str(value) +
                   " not valid. Skipping parameter.")
+
+        return is_valid
 
     def get_param_value(self, param: atkParam.Parameter):
         """
