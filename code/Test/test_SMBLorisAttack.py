@@ -17,7 +17,3 @@ class UnitTestSMBLoris(Test.ID2TAttackTest):
         ip_src = 'ip.src=' + Lib.test_pcap_ips[0]
         ip_dst = 'ip.dst=' + Lib.test_pcap_ips[1]
         self.order_test([['SMBLorisAttack', ip_src, ip_dst]])
-
-    def test_smbloris_same_ip(self):
-        with self.assertRaises(SystemExit):
-            self.order_test([['SMBLorisAttack', 'ip.src=192.168.1.240', 'ip.dst=192.168.1.240']])
