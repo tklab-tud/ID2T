@@ -793,6 +793,12 @@ class Statistics:
         capture_duration = float(self.get_capture_duration())
         return int(float(packets_received) / capture_duration)
 
+    def get_most_used_pps(self):
+        """
+        :return: the pps of the most used ip address
+        """
+        return self.get_pps_received(self.get_most_used_ip_address())
+
     def get_packet_count(self):
         """
         :return: The number of packets in the loaded PCAP file
@@ -859,9 +865,10 @@ class Statistics:
         """
         return self.process_db_query("SELECT ipAddress FROM ip_statistics")
 
-    def get_random_ip_address(self, count: int = 1):
+    def get_random_ip_address(self, count: int = 1, ips: list = None):
         """
         :param count: The number of IP addresses to return
+        :param ips: The ips the result should not include
         :return: A randomly chosen IP address from the dataset or iff param count is greater than one, a list of
         randomly chosen IP addresses
         """
@@ -872,6 +879,9 @@ class Statistics:
             result_list = []
             for i in range(0, count):
                 random_ip = random.choice(ip_address_list)
+                if ips:
+                    while random_ip in ips:
+                        random_ip = random.choice(ip_address_list)
                 result_list.append(random_ip)
                 ip_address_list.remove(random_ip)
             return result_list
