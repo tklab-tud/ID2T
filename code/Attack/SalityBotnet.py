@@ -44,16 +44,15 @@ class SalityBotnet(BaseAttack.BaseAttack):
         """
         # PARAMETERS: initialize with default utilsvalues
         # (values are overwritten if user specifies them)
-        most_used_ip_address = self.statistics.get_most_used_ip_address()
-
-        self.add_param_value(atkParam.Parameter.IP_SOURCE, most_used_ip_address)
-        self.add_param_value(atkParam.Parameter.MAC_SOURCE, self.statistics.get_mac_address(most_used_ip_address))
+        self.add_param_value(atkParam.Parameter.IP_SOURCE, self.statistics.get_most_used_ip_address)
+        ip_src = self.get_param_value(atkParam.Parameter.IP_SOURCE)
+        self.add_param_value(atkParam.Parameter.MAC_SOURCE, self.statistics.get_mac_address,
+                             function_params=[ip_src])
 
         # Attack configuration
-        self.add_param_value(atkParam.Parameter.INJECT_AFTER_PACKET, rnd.randint(0, self.statistics.get_packet_count()))
-        self.add_param_value(atkParam.Parameter.PACKETS_PER_SECOND,
-                             (self.statistics.get_pps_sent(most_used_ip_address) +
-                              self.statistics.get_pps_received(most_used_ip_address)) / 2)
+        self.add_param_value(atkParam.Parameter.INJECT_AFTER_PACKET, rnd.randint,
+                             function_params=[0, self.statistics.get_packet_count()])
+        self.add_param_value(atkParam.Parameter.PACKETS_PER_SECOND, self.statistics.get_pps_most_used)
 
     def generate_attack_packets(self):
         """
