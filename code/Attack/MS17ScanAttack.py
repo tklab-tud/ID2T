@@ -55,27 +55,22 @@ class MS17ScanAttack(BaseAttack.BaseAttack):
         # PARAMETERS: initialize with default utilsvalues
         # (values are overwritten if user specifies them)
         # Attacker configuration
-        most_used_ip_address = self.statistics.get_most_used_ip_address()
-        random_ip_address = self.statistics.get_random_ip_address()
-        while random_ip_address == most_used_ip_address:
-            random_ip_address = self.statistics.get_random_ip_address()
-        self.add_param_value(atkParam.Parameter.IP_SOURCE, random_ip_address)
-        self.add_param_value(atkParam.Parameter.MAC_SOURCE, self.statistics.get_mac_address(random_ip_address))
+        self.add_param_value(atkParam.Parameter.IP_SOURCE, self.statistics.get_random_ip_address)
+        ip_src = self.get_param_value(atkParam.Parameter.IP_SOURCE)
+        self.add_param_value(atkParam.Parameter.MAC_SOURCE, self.get_mac_address(ip_src))
         self.add_param_value(atkParam.Parameter.PORT_SOURCE, rnd.randint(self.minDefaultPort, self.maxDefaultPort))
 
         # Victim configuration
-        self.add_param_value(atkParam.Parameter.IP_DESTINATION, most_used_ip_address)
-        destination_mac = self.statistics.get_mac_address(most_used_ip_address)
-        if isinstance(destination_mac, list) and len(destination_mac) == 0:
-            destination_mac = self.generate_random_mac_address()
-        self.add_param_value(atkParam.Parameter.MAC_DESTINATION, destination_mac)
+        self.add_param_value(atkParam.Parameter.IP_DESTINATION, self.statistics.get_most_used_ip_address)
+        ip_dst = self.get_param_value(atkParam.Parameter.IP_DESTINATION)
+        self.add_param_value(atkParam.Parameter.MAC_DESTINATION, self.get_mac_address,
+                             function_params=[ip_dst])
         self.add_param_value(atkParam.Parameter.PORT_DESTINATION, SMBLib.smb_port)
 
         # Attack configuration
-        self.add_param_value(atkParam.Parameter.PACKETS_PER_SECOND,
-                             (self.statistics.get_pps_sent(most_used_ip_address) +
-                              self.statistics.get_pps_received(most_used_ip_address)) / 2)
-        self.add_param_value(atkParam.Parameter.INJECT_AFTER_PACKET, rnd.randint(0, self.statistics.get_packet_count()))
+        self.add_param_value(atkParam.Parameter.PACKETS_PER_SECOND, self.statistics.get_pps_most_used)
+        self.add_param_value(atkParam.Parameter.INJECT_AFTER_PACKET, rnd.randint,
+                             function_params=[0, self.statistics.get_packet_count])
 
     def generate_attack_packets(self):
         """
