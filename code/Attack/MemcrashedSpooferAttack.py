@@ -42,21 +42,22 @@ class MemcrashedSpooferAttack(BaseAttack.BaseAttack):
         supplied queries.
         """
         # By default, the most used IP is the attacker
-        most_used_ip = self.statistics.get_most_used_ip_address()
-        self.add_param_value(atkParam.Parameter.IP_SOURCE, most_used_ip)
-        self.add_param_value(atkParam.Parameter.MAC_SOURCE, self.statistics.get_mac_address(most_used_ip))
+        self.add_param_value(atkParam.Parameter.IP_SOURCE, self.statistics.get_most_used_ip_address)
+        ip_src = self.get_param_value(atkParam.Parameter.IP_SOURCE)
+        self.add_param_value(atkParam.Parameter.MAC_SOURCE, self.get_mac_address, function_params=[ip_src])
 
         # Target (i.e. amplifier) is a random public IP
-        self.add_param_value(atkParam.Parameter.IP_DESTINATION, self.generate_random_ipv4_address('A'))
-        self.add_param_value(atkParam.Parameter.MAC_DESTINATION, self.generate_random_mac_address())
+        self.add_param_value(atkParam.Parameter.IP_DESTINATION, self.generate_random_ipv4_address,
+                             function_params=['A'])
+        self.add_param_value(atkParam.Parameter.MAC_DESTINATION, self.generate_random_mac_address)
 
         # IP of the victim which is supposed to get hit by the amplified attack
-        self.add_param_value(atkParam.Parameter.IP_VICTIM, self.generate_random_ipv4_address('A'))
+        self.add_param_value(atkParam.Parameter.IP_VICTIM, self.generate_random_ipv4_address, function_params=['A'])
 
-        self.add_param_value(atkParam.Parameter.PACKETS_PER_SECOND, (self.statistics.get_pps_sent(most_used_ip) +
-                             self.statistics.get_pps_received(most_used_ip)) / 2)
-        self.add_param_value(atkParam.Parameter.ATTACK_DURATION, rnd.randint(5, 30))
-        self.add_param_value(atkParam.Parameter.INJECT_AFTER_PACKET, rnd.randint(0, self.statistics.get_packet_count()))
+        self.add_param_value(atkParam.Parameter.PACKETS_PER_SECOND, self.statistics.get_pps_most_used)
+        self.add_param_value(atkParam.Parameter.ATTACK_DURATION, rnd.randint, function_params=[5, 30])
+        self.add_param_value(atkParam.Parameter.INJECT_AFTER_PACKET, rnd.randint,
+                             function_params=[0, self.statistics.get_packet_count])
 
     def generate_attack_packets(self) -> None:
         ip_attacker = self.get_param_value(atkParam.Parameter.IP_SOURCE)
