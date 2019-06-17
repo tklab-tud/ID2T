@@ -47,30 +47,21 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
 
         # PARAMETERS: initialize with default values
         # (values are overwritten if user specifies them)
-        most_used_ip_address = self.statistics.get_most_used_ip_address()
-
+        self.add_param_value(atkParam.Parameter.NUMBER_ATTACKERS, rnd.randint, function_params=[1, 16])
+        num_attackers = self.get_param_value(atkParam.Parameter.NUMBER_ATTACKERS)
         # The most used IP class in background traffic
         most_used_ip_class = Util.handle_most_used_outputs(self.statistics.get_most_used_ip_class())
-        num_attackers = rnd.randint(1, 16)
-        source_ip = self.generate_random_ipv4_address(most_used_ip_class, num_attackers)
-
-        self.add_param_value(atkParam.Parameter.IP_SOURCE, source_ip)
+        self.add_param_value(atkParam.Parameter.IP_SOURCE, self.generate_random_ipv4_address,
+                             function_params=[most_used_ip_class, num_attackers])
         self.add_param_value(atkParam.Parameter.MAC_SOURCE, self.generate_random_mac_address(num_attackers))
 
-        random_ip_address = self.statistics.get_random_ip_address()
-        # ip-dst should be valid and not equal to ip.src
-        while not self.is_valid_ip_address(random_ip_address) or random_ip_address == source_ip:
-            random_ip_address = self.statistics.get_random_ip_address()
-
-        self.add_param_value(atkParam.Parameter.IP_DESTINATION, random_ip_address)
-        destination_mac = self.statistics.get_mac_address(random_ip_address)
-        if isinstance(destination_mac, list) and len(destination_mac) == 0:
-            destination_mac = self.generate_random_mac_address()
-        self.add_param_value(atkParam.Parameter.MAC_DESTINATION, destination_mac)
-        self.add_param_value(atkParam.Parameter.PACKETS_PER_SECOND,
-                             (self.statistics.get_pps_sent(most_used_ip_address) +
-                              self.statistics.get_pps_received(most_used_ip_address)) / 2)
-        self.add_param_value(atkParam.Parameter.INJECT_AFTER_PACKET, rnd.randint(0, self.statistics.get_packet_count()))
+        self.add_param_value(atkParam.Parameter.IP_DESTINATION, self.statistics.get_random_ip_address)
+        ip_dst = self.get_param_value(atkParam.Parameter.IP_DESTINATION)
+        self.add_param_value(atkParam.Parameter.MAC_DESTINATION, self.get_mac_address,
+                             function_params=[ip_dst])
+        self.add_param_value(atkParam.Parameter.PACKETS_PER_SECOND, self.statistics.get_pps_most_used)
+        self.add_param_value(atkParam.Parameter.INJECT_AFTER_PACKET, rnd.randint,
+                             function_params=[0, self.statistics.get_packet_count])
         self.add_param_value(atkParam.Parameter.ATTACK_DURATION, 30)
 
     def generate_attack_packets(self):
