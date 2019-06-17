@@ -57,30 +57,27 @@ class SMBScanAttack(BaseAttack.BaseAttack):
 
         # PARAMETERS: initialize with default values
         # (values are overwritten if user specifies them)
-        most_used_ip_address = self.statistics.get_most_used_ip_address()
-
-        self.add_param_value(atkParam.Parameter.IP_SOURCE, most_used_ip_address)
+        self.add_param_value(atkParam.Parameter.IP_SOURCE, self.statistics.get_most_used_ip_address)
+        ip_src = self.get_param_value(atkParam.Parameter.IP_SOURCE)
         self.add_param_value(atkParam.Parameter.IP_SOURCE_RANDOMIZE, 'False')
-        self.add_param_value(atkParam.Parameter.MAC_SOURCE, self.statistics.get_mac_address(most_used_ip_address))
+        self.add_param_value(atkParam.Parameter.MAC_SOURCE, self.get_mac_address, function_params=[ip_src])
 
         self.add_param_value(atkParam.Parameter.TARGET_COUNT, 200)
         self.add_param_value(atkParam.Parameter.IP_DESTINATION, "1.1.1.1")
 
-        self.add_param_value(atkParam.Parameter.PORT_SOURCE, rnd.randint(1024, 65535))
+        self.add_param_value(atkParam.Parameter.PORT_SOURCE, rnd.randint, function_params=[1024, 65535])
         self.add_param_value(atkParam.Parameter.PORT_SOURCE_RANDOMIZE, 'True')
-        self.add_param_value(atkParam.Parameter.PACKETS_PER_SECOND,
-                             (self.statistics.get_pps_sent(most_used_ip_address) +
-                              self.statistics.get_pps_received(most_used_ip_address)) / 2)
+        self.add_param_value(atkParam.Parameter.PACKETS_PER_SECOND, self.statistics.get_pps_most_used)
 
-        self.add_param_value(atkParam.Parameter.INJECT_AFTER_PACKET, rnd.randint(0, self.statistics.get_packet_count()))
-        start = Util.get_timestamp_from_datetime_str(self.statistics.get_pcap_timestamp_start())
-        end = Util.get_timestamp_from_datetime_str(self.statistics.get_pcap_timestamp_end())
-        self.add_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP, (start + end) / 2)
+        self.add_param_value(atkParam.Parameter.INJECT_AFTER_PACKET, rnd.randint,
+                             function_params=[0, self.statistics.get_packet_count])
+        self.add_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP, self.get_intermediate_timestamp)
 
         self.add_param_value(atkParam.Parameter.HOSTING_PERCENTAGE, 0.5)
         self.add_param_value(atkParam.Parameter.HOSTING_IP, "1.1.1.1")
-        self.add_param_value(atkParam.Parameter.HOSTING_VERSION, SMBLib.get_smb_version(platform=self.host_os))
-        self.add_param_value(atkParam.Parameter.SOURCE_PLATFORM, Util.get_rnd_os())
+        self.add_param_value(atkParam.Parameter.HOSTING_VERSION, SMBLib.get_smb_version,
+                             function_params={'platform': self.host_os})
+        self.add_param_value(atkParam.Parameter.SOURCE_PLATFORM, Util.get_rnd_os)
         self.add_param_value(atkParam.Parameter.PROTOCOL_VERSION, "1")
 
     def generate_attack_packets(self):
