@@ -805,6 +805,16 @@ class Statistics:
         """
         return self.file_info['packetCount']
 
+    def get_rnd_packet_index(self, divisor: int=1):
+        """
+        Calculates a random packet index. Either over all packets or the first part of the packets.
+        For the latter you need to divide the total packet count. Use the divisor parameter for this.
+
+        :param divisor: The divisor for total packet count.
+        :return: The randomized packet index.
+        """
+        return random.randint(1, self.get_packet_count() // divisor)
+
     def get_most_used_ip_address(self):
         """
         :return: The IP address/addresses with the highest sum of packets sent and received
