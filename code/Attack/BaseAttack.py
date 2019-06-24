@@ -446,6 +446,11 @@ class BaseAttack(metaclass=abc.ABCMeta):
             elif isinstance(value, str) and value.isdigit() and int(value) >= 0:
                 is_valid = True
                 value = int(value)
+            elif isinstance(value, str) and int(float(value)) >= 0:
+                print("WARNING: " + str(param_name) + " requires a positive integer value.\n"
+                      "         Float value " + value + " will be converted to an integer.")
+                is_valid = True
+                value = int(float(value))
         elif param_type == atkParam.ParameterTypes.TYPE_STRING:
             if isinstance(value, str):
                 is_valid = True
