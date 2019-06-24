@@ -94,13 +94,12 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
 
         # PARAMETERS: initialize with default values
         # (values are overwritten if user specifies them)
-        self.add_param_value(Param.INJECT_AFTER_PACKET, 1 + randint(0, self.statistics.get_packet_count() // 5))
+        self.add_param_value(Param.INJECT_AFTER_PACKET, self.statistics.get_rnd_packet_index, function_params=[5])
 
         self.add_param_value(Param.FILE_XML, self.DEFAULT_XML_PATH)
 
         # Alternatively new attack parameter?
-        duration = int(float(self.statistics.get_capture_duration()))
-        self.add_param_value(Param.ATTACK_DURATION, duration)
+        self.add_param_value(Param.ATTACK_DURATION, self.statistics.get_capture_duration)
         self.add_param_value(Param.NUMBER_INITIATOR_BOTS, 1)
         # NAT on by default
         self.add_param_value(Param.NAT_PRESENT, True)
