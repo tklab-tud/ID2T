@@ -267,9 +267,9 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
             macgen = Generator.MacAddressGenerator()
 
             # assign existing IPs and the corresponding MAC addresses in the PCAP to the IDs
-            for ip in existing_ips:
+            existing_macs = self.statistics.get_mac_addresses(existing_ips)
+            for ip, mac in existing_macs.items():
                 random_id = rnd.choice(ids)
-                mac = self.statistics.process_db_query("macAddress(IPAddress=%s)" % ip)
                 bot_configs[random_id] = {"Type": idtype, "IP": ip, "MAC": mac}
                 ids.remove(random_id)
 
