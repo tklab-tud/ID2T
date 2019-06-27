@@ -83,8 +83,6 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         for msg_type in Bmsg.MessageType:
             self.msg_types[msg_type.value] = msg_type
 
-        self.DEFAULT_XML_PATH = None
-
     def init_param(self, param: Param) -> bool:
         """
         Initialize a parameter with its default values specified in this attack.
@@ -93,13 +91,10 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         :return: True if initialization was successful, False if not
         """
         value = None
-        # set class constants
-        self.DEFAULT_XML_PATH = Util.RESOURCE_DIR + "Botnet/MembersMgmtComm_example.xml"
-
         if param == Param.INJECT_AFTER_PACKET:
             value = self.statistics.get_rnd_packet_index(divisor=5)
         elif param == Param.FILE_XML:
-            value = self.DEFAULT_XML_PATH
+            value = Util.RESOURCE_DIR + "Botnet/MembersMgmtComm_example.xml"
         # Alternatively new attack parameter?
         elif param == Param.ATTACK_DURATION:
             value = int(float(self.statistics.get_capture_duration()))
@@ -455,7 +450,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         # only use CSV input if the XML path is the default one
         # --> prefer XML input over CSV input (in case both are given)
         print_updates = False
-        if filepath_csv and filepath_xml == self.DEFAULT_XML_PATH:
+        if filepath_csv and not filepath_xml:
             filename = os.path.splitext(os.path.basename(filepath_csv))[0]
             filesize = os.path.getsize(filepath_csv) / 2**20  # get filesize in MB
             if filesize > 10:
