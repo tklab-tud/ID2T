@@ -290,22 +290,23 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
             :param bot_configs: List that contains all bots that should be assigned with realistic ttls.
             """
             ids = sorted(bot_configs.keys())
+            most_used_ttl = self.statistics.process_db_query("most_used(ttlValue)")
+            if isinstance(most_used_ttl, list):
+                most_used_ttl = rnd.choice(most_used_ttl)
+
             for pos, bot in enumerate(ids):
                 bot_type = bot_configs[bot]["Type"]
                 if bot_type == "local":  # Set fix TTL for local Bots
                     bot_configs[bot]["TTL"] = 128
                     # Set TTL based on TTL distribution of IP address
                 else:  # Set varying TTl for external Bots
+                    # FIXME: very expensive statsDB query calls
                     bot_ttl_dist = self.statistics.get_ttl_distribution(bot_configs[bot]["IP"])
                     if len(bot_ttl_dist) > 0:
                         source_ttl_prob_dict = lea.Lea.fromValFreqsDict(bot_ttl_dist)
                         bot_configs[bot]["TTL"] = source_ttl_prob_dict.random()
                     else:
-                        most_used_ttl = self.statistics.process_db_query("most_used(ttlValue)")
-                        if isinstance(most_used_ttl, list):
-                            bot_configs[bot]["TTL"] = rnd.choice(self.statistics.process_db_query("most_used(ttlValue)"))
-                        else:
-                            bot_configs[bot]["TTL"] = self.statistics.process_db_query("most_used(ttlValue)")
+                        bot_configs[bot]["TTL"] = most_used_ttl
 
         def assign_realistic_timestamps(messages: list, external_ids: set, local_ids: set, avg_delay_local: list,
                                         avg_delay_external: list, zero_reference: float):
