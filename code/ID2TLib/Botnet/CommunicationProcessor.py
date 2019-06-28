@@ -35,8 +35,7 @@ class CommunicationProcessor:
         self.packets = packets
         self.local_init_ids = set(mapped_ids)
 
-    @staticmethod
-    def get_comm_interval(cpp_comm_proc, strategy: str, number_ids: int, max_int_time: int, start_idx: int,
+    def get_comm_interval(self, cpp_comm_proc, strategy: str, number_ids: int, max_int_time: int, start_idx: int,
                           end_idx: int):
         """
         Finds a communication interval with respect to the given strategy. The interval is maximum of the given seconds 
