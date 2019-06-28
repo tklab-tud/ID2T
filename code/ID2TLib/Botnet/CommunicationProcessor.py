@@ -98,6 +98,10 @@ class CommunicationProcessor:
 
         if not self.interval or not self.interval["IDs"]:
             self.interval = {}
+
+        if not self.interval:
+            print("Error: An interval that satisfies the input cannot be found.")
+
         return self.interval
 
     def det_id_roles_and_msgs(self):

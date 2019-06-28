@@ -503,7 +503,6 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         comm_interval = comm_proc.get_comm_interval()
 
         if not comm_interval:
-            print("Error: An interval that satisfies the input cannot be found.")
             return []
         if print_updates:
             print("done.")  # print corresponding message to interval finding message
