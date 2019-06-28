@@ -478,7 +478,6 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
 
         # find a good communication mapping in the input file that matches the users parameters
         nat = self.get_param_value(Param.NAT_PRESENT)
-        comm_proc = CommunicationProcessor(self.msg_types, nat)
         duration = self.get_param_value(Param.ATTACK_DURATION)
         number_init_bots = self.get_param_value(Param.NUMBER_INITIATOR_BOTS)
         strategy = self.get_param_value(Param.INTERVAL_SELECT_STRATEGY)
@@ -499,8 +498,9 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                 sys.stdout.flush()
             print_updates = True
 
-        comm_interval = comm_proc.get_comm_interval(cpp_comm_proc, strategy, number_init_bots, duration, start_idx,
-                                                    end_idx)
+        comm_proc = CommunicationProcessor(self.msg_types, nat, cpp_comm_proc, strategy, number_init_bots, duration,
+                                           start_idx, end_idx)
+        comm_interval = comm_proc.get_comm_interval()
 
         if not comm_interval:
             print("Error: An interval that satisfies the input cannot be found.")

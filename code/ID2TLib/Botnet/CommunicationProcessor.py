@@ -9,15 +9,29 @@ class CommunicationProcessor:
     Class to process parsed input CSV/XML data and retrieve a mapping or other information.
     """
 
-    def __init__(self, mtypes: dict, nat: bool):
+    def __init__(self, mtypes: dict, nat: bool, cpp_comm_proc, strategy: str, number_ids: int, max_int_time: int, start_idx: int,
+                 end_idx: int):
         """
         Creates an instance of CommunicationProcessor.
         :param mtypes: a dict containing an int to EnumType mapping of MessageTypes
         :param nat: whether NAT is present in this network
+        :param cpp_comm_proc: An instance of the C++ communication processor that stores all the input messages and
+                              is responsible for retrieving the interval(s)
+        :param strategy: The selection strategy (i.e. random, optimal, custom)
+        :param number_ids: The number of initiator IDs that have to exist in the interval(s)
+        :param max_int_time: The maximum time period of the interval
+        :param start_idx: The message index the interval should start at (None if not specified)
+        :param end_idx: The message index the interval should stop at (inclusive) (None if not specified)
         """
         self.packets = []
         self.mtypes = mtypes
         self.nat = nat
+        self.cpp_comm_proc = cpp_comm_proc
+        self.strategy = strategy
+        self.number_ids = number_ids
+        self.max_int_time = max_int_time
+        self.start_idx = start_idx
+        self.end_idx = end_idx
         self.messages = []
         self.respnd_ids = set()
         self.external_init_ids = set()
@@ -35,34 +49,26 @@ class CommunicationProcessor:
         self.packets = packets
         self.local_init_ids = set(mapped_ids)
 
-    def get_comm_interval(self, cpp_comm_proc, strategy: str, number_ids: int, max_int_time: int, start_idx: int,
-                          end_idx: int):
+    def get_comm_interval(self):
         """
         Finds a communication interval with respect to the given strategy. The interval is maximum of the given seconds 
         and has at least number_ids communicating initiators in it.
-        
-        :param cpp_comm_proc: An instance of the C++ communication processor that stores all the input messages and 
-                              is responsible for retrieving the interval(s)
-        :param strategy: The selection strategy (i.e. random, optimal, custom)
-        :param number_ids: The number of initiator IDs that have to exist in the interval(s)
-        :param max_int_time: The maximum time period of the interval
-        :param start_idx: The message index the interval should start at (None if not specified)
-        :param end_idx: The message index the interval should stop at (inclusive) (None if not specified)
+
         :return: A dict representing the communication interval. It contains the initiator IDs, 
                  the start index and end index of the respective interval. The respective keys 
                  are {IDs, Start, End}. If no interval is found, an empty dict is returned.
         """
 
-        if strategy == "random":
+        if self.strategy == "random":
             # try finding not-empty interval 5 times
             for i in range(5):
-                start_idx = randrange(0, cpp_comm_proc.get_message_count())
-                interval = cpp_comm_proc.find_interval_from_startidx(start_idx, number_ids, max_int_time)
+                start_idx = randrange(0, self.cpp_comm_proc.get_message_count())
+                interval = self.cpp_comm_proc.find_interval_from_startidx(start_idx, self.number_ids, self.max_int_time)
                 if interval and interval["IDs"]:
                     return interval
             return {}
-        elif strategy == "optimal":
-            intervals = cpp_comm_proc.find_optimal_interval(number_ids, max_int_time)
+        elif self.strategy == "optimal":
+            intervals = self.cpp_comm_proc.find_optimal_interval(self.number_ids, self.max_int_time)
             if not intervals:
                 return {}
             else:
@@ -72,25 +78,27 @@ class CommunicationProcessor:
                         return interval
 
                 return {}
-        elif strategy == "custom":
-            if (not start_idx) and (not end_idx):
+        elif self.strategy == "custom":
+            if (not self.start_idx) and (not self.end_idx):
                 print("Custom strategy was selected, but no (valid) start or end index was specified.")
                 print("Because of this, a random interval is selected.")
-                start_idx = randrange(0, cpp_comm_proc.get_message_count())
-                interval = cpp_comm_proc.find_interval_from_startidx(start_idx, number_ids, max_int_time)
-            elif (not start_idx) and end_idx:
-                end_idx -= 1  # because message indices start with 1 (for the user)
-                interval = cpp_comm_proc.find_interval_from_endidx(end_idx, number_ids, max_int_time)
-            elif start_idx and (not end_idx):
-                start_idx -= 1  # because message indices start with 1 (for the user)
-                interval = cpp_comm_proc.find_interval_from_startidx(start_idx, number_ids, max_int_time)
-            elif start_idx and end_idx:
-                start_idx -= 1
-                end_idx -= 1
-                ids = cpp_comm_proc.get_interval_init_ids(start_idx, end_idx)
+                start_idx = randrange(0, self.cpp_comm_proc.get_message_count())
+                interval = self.cpp_comm_proc.find_interval_from_startidx(start_idx, self.number_ids, self.max_int_time)
+            elif (not self.start_idx) and self.end_idx:
+                self.end_idx -= 1  # because message indices start with 1 (for the user)
+                interval = self.cpp_comm_proc.find_interval_from_endidx(self.end_idx, self.number_ids,
+                                                                        self.max_int_time)
+            elif self.start_idx and (not self.end_idx):
+                self.start_idx -= 1  # because message indices start with 1 (for the user)
+                interval = self.cpp_comm_proc.find_interval_from_startidx(self.start_idx, self.number_ids,
+                                                                          self.max_int_time)
+            elif self.start_idx and self.end_idx:
+                self.start_idx -= 1
+                self.end_idx -= 1
+                ids = self.cpp_comm_proc.get_interval_init_ids(self.start_idx, self.end_idx)
                 if not ids:
                     return {}
-                return {"IDs": ids, "Start": start_idx, "End": end_idx}
+                return {"IDs": ids, "Start": self.start_idx, "End": self.end_idx}
 
             if not interval or not interval["IDs"]:
                 return {}
