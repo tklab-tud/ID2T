@@ -201,6 +201,28 @@ class CommunicationProcessor:
         # return the selected messages
         return self.messages
 
+    def get_messages(self):
+        """
+        Get ID mapping of the abstract packets and retrieve messages for them.
+        Using cpp_comm_proc.get_messages() and det_id_roles_and_msgs().
+
+        :return: messages selected by det_id_roles_and_msgs()
+        """
+
+        # retrieve the mapping information
+        mapped_ids = self.interval["IDs"]
+        packet_start_idx = self.interval["Start"]
+        packet_end_idx = self.interval["End"]
+        while len(mapped_ids) > self.number_ids:
+            rm_idx = randrange(0, len(mapped_ids))
+            del mapped_ids[rm_idx]
+
+        # get the messages contained in the chosen interval
+        abstract_packets = self.cpp_comm_proc.get_messages(packet_start_idx, packet_end_idx)
+        self.set_mapping(abstract_packets, mapped_ids)
+        # determine ID roles and select the messages that are to be mapped into the PCAP
+        return self.det_id_roles_and_msgs()
+
     def det_ext_and_local_ids(self, prob_rspnd_local: int=0):
         """
         Map the given IDs to a locality (i.e. local or external} considering the given probabilities.

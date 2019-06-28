@@ -500,29 +500,18 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
 
         comm_proc = CommunicationProcessor(self.msg_types, nat, cpp_comm_proc, strategy, number_init_bots, duration,
                                            start_idx, end_idx)
-        comm_interval = comm_proc.get_comm_interval()
 
-        if not comm_interval:
+        if not comm_proc.get_comm_interval():
             return []
         if print_updates:
             print("done.")  # print corresponding message to interval finding message
 
-        # retrieve the mapping information
-        mapped_ids = comm_interval["IDs"]
-        packet_start_idx = comm_interval["Start"]
-        packet_end_idx = comm_interval["End"]
-        while len(mapped_ids) > number_init_bots:
-            rm_idx = rnd.randrange(0, len(mapped_ids))
-            del mapped_ids[rm_idx]
-
         if print_updates:
-            print("Generating attack packets...", end=" ")
-        sys.stdout.flush()
-        # get the messages contained in the chosen interval
-        abstract_packets = cpp_comm_proc.get_messages(packet_start_idx, packet_end_idx)
-        comm_proc.set_mapping(abstract_packets, mapped_ids)
-        # determine ID roles and select the messages that are to be mapped into the PCAP
-        messages = comm_proc.det_id_roles_and_msgs()
+            print("Generating attack packets...", end=" ", flush=True)
+
+        # get the messages that are to be mapped into the PCAP
+        messages = comm_proc.get_messages()
+
         # use the previously detetermined roles to assign the locality of all IDs
         local_ids, external_ids = comm_proc.det_ext_and_local_ids()
 
