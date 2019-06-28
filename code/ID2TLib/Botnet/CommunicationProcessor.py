@@ -32,6 +32,7 @@ class CommunicationProcessor:
         self.max_int_time = max_int_time
         self.start_idx = start_idx
         self.end_idx = end_idx
+        self.interval = None
         self.messages = []
         self.respnd_ids = set()
         self.external_init_ids = set()
@@ -63,46 +64,41 @@ class CommunicationProcessor:
             # try finding not-empty interval 5 times
             for i in range(5):
                 start_idx = randrange(0, self.cpp_comm_proc.get_message_count())
-                interval = self.cpp_comm_proc.find_interval_from_startidx(start_idx, self.number_ids, self.max_int_time)
-                if interval and interval["IDs"]:
-                    return interval
-            return {}
+                self.interval = self.cpp_comm_proc.find_interval_from_startidx(start_idx, self.number_ids, self.max_int_time)
+                if self.interval and self.interval["IDs"]:
+                    break
         elif self.strategy == "optimal":
             intervals = self.cpp_comm_proc.find_optimal_interval(self.number_ids, self.max_int_time)
-            if not intervals:
-                return {}
-            else:
+            if intervals:
                 for i in range(5):
-                    interval = intervals[randrange(0, len(intervals))]
-                    if interval and interval["IDs"]:
-                        return interval
-
-                return {}
+                    self.interval = intervals[randrange(0, len(intervals))]
+                    if self.interval and self.interval["IDs"]:
+                        break
         elif self.strategy == "custom":
             if (not self.start_idx) and (not self.end_idx):
                 print("Custom strategy was selected, but no (valid) start or end index was specified.")
                 print("Because of this, a random interval is selected.")
                 start_idx = randrange(0, self.cpp_comm_proc.get_message_count())
-                interval = self.cpp_comm_proc.find_interval_from_startidx(start_idx, self.number_ids, self.max_int_time)
+                self.interval = self.cpp_comm_proc.find_interval_from_startidx(start_idx, self.number_ids,
+                                                                               self.max_int_time)
             elif (not self.start_idx) and self.end_idx:
                 self.end_idx -= 1  # because message indices start with 1 (for the user)
-                interval = self.cpp_comm_proc.find_interval_from_endidx(self.end_idx, self.number_ids,
-                                                                        self.max_int_time)
+                self.interval = self.cpp_comm_proc.find_interval_from_endidx(self.end_idx, self.number_ids,
+                                                                             self.max_int_time)
             elif self.start_idx and (not self.end_idx):
                 self.start_idx -= 1  # because message indices start with 1 (for the user)
-                interval = self.cpp_comm_proc.find_interval_from_startidx(self.start_idx, self.number_ids,
-                                                                          self.max_int_time)
+                self.interval = self.cpp_comm_proc.find_interval_from_startidx(self.start_idx, self.number_ids,
+                                                                               self.max_int_time)
             elif self.start_idx and self.end_idx:
                 self.start_idx -= 1
                 self.end_idx -= 1
                 ids = self.cpp_comm_proc.get_interval_init_ids(self.start_idx, self.end_idx)
-                if not ids:
-                    return {}
-                return {"IDs": ids, "Start": self.start_idx, "End": self.end_idx}
+                if ids:
+                    self.interval = {"IDs": ids, "Start": self.start_idx, "End": self.end_idx}
 
-            if not interval or not interval["IDs"]:
-                return {}
-            return interval
+        if not self.interval or not self.interval["IDs"]:
+            self.interval = {}
+        return self.interval
 
     def det_id_roles_and_msgs(self):
         """
