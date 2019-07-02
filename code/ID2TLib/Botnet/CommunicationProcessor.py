@@ -1,22 +1,24 @@
+import os
+
+import ID2TLib.Botnet.libbotnetcomm as lb
+import ID2TLib.Utility as Util
+
 from lea import Lea
 from random import randrange
 from ID2TLib.Botnet.Message import Message
 from ID2TLib.Botnet.Message import MessageType
-
 
 class CommunicationProcessor:
     """
     Class to process parsed input CSV/XML data and retrieve a mapping or other information.
     """
 
-    def __init__(self, mtypes: dict, nat: bool, cpp_comm_proc, strategy: str, number_ids: int, max_int_time: int, start_idx: int,
+    def __init__(self, mtypes: dict, nat: bool, strategy: str, number_ids: int, max_int_time: int, start_idx: int,
                  end_idx: int):
         """
         Creates an instance of CommunicationProcessor.
         :param mtypes: a dict containing an int to EnumType mapping of MessageTypes
         :param nat: whether NAT is present in this network
-        :param cpp_comm_proc: An instance of the C++ communication processor that stores all the input messages and
-                              is responsible for retrieving the interval(s)
         :param strategy: The selection strategy (i.e. random, optimal, custom)
         :param number_ids: The number of initiator IDs that have to exist in the interval(s)
         :param max_int_time: The maximum time period of the interval
@@ -26,7 +28,6 @@ class CommunicationProcessor:
         self.packets = []
         self.mtypes = mtypes
         self.nat = nat
-        self.cpp_comm_proc = cpp_comm_proc
         self.strategy = strategy
         self.number_ids = number_ids
         self.max_int_time = max_int_time
@@ -39,6 +40,47 @@ class CommunicationProcessor:
         self.local_init_ids = dict()
         self.local_ids = dict()
         self.external_ids = set()
+        self.print_updates = False
+        # use C++ communication processor for faster interval finding
+        self.cpp_comm_proc = lb.botnet_comm_processor()
+
+    def init_cpp_comm_processsor(self, filepath_xml, filepath_csv, packet_count):
+
+        # only use CSV input if the XML path is the default one
+        # --> prefer XML input over CSV input (in case both are given)
+        if filepath_csv and not filepath_xml:
+            filename = os.path.splitext(os.path.basename(filepath_csv))[0]
+            filesize = os.path.getsize(filepath_csv) / 2**20  # get filesize in MB
+            if filesize > 10:
+                print("\nParsing input CSV file...", end=" ", flush=True)
+                self.print_updates = True
+            self.cpp_comm_proc.parse_csv(filepath_csv)
+            if self.print_updates:
+                print("done.")
+                print("Writing corresponding XML file...", end=" ", flush=True)
+            filepath_xml = self.cpp_comm_proc.write_xml(Util.OUT_DIR, filename)
+            if self.print_updates:
+                print("done.")
+        else:
+            filesize = os.path.getsize(filepath_xml) / 2**20  # get filesize in MB
+            if filesize > 10:
+                print("Parsing input XML file...", end=" ", flush=True)
+                self.print_updates = True
+            self.cpp_comm_proc.parse_xml(filepath_xml)
+            if self.print_updates:
+                print("done.")
+
+        potential_long_find_time = (
+                    self.strategy == "optimal" and (filesize > 4 and packet_count > 1000))
+        if self.print_updates or potential_long_find_time:
+            if not self.print_updates:
+                print()
+            print("Selecting communication interval from input CSV/XML file...", end=" ", flush=True)
+            if potential_long_find_time:
+                print("\nWarning: Because of the large input files and the (chosen) interval selection strategy")
+                print("'optimal', this may take a while. Consider using selection strategy 'random' or 'custom'...",
+                      end=" ", flush=True)
+            self.print_updates = True
 
     def set_mapping(self, packets: list, mapped_ids: dict):
         """
@@ -101,6 +143,9 @@ class CommunicationProcessor:
 
         if not self.interval:
             print("Error: An interval that satisfies the input cannot be found.")
+        if self.print_updates:
+            print("done.")  # print corresponding message to interval finding message
+            print("Generating attack packets...", end=" ", flush=True)
 
         return self.interval
 

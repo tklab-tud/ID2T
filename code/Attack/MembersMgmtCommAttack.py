@@ -1,14 +1,11 @@
 import collections
 import datetime as dt
-import os
 import random as rnd
-import sys
 
 import lea
 import scapy.layers.inet as inet
 
 import Attack.BaseAttack as BaseAttack
-import ID2TLib.Botnet.libbotnetcomm as lb
 import ID2TLib.Botnet.Message as Bmsg
 import ID2TLib.Generator as Generator
 import ID2TLib.Utility as Util
@@ -445,37 +442,6 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         filepath_xml = self.get_param_value(Param.FILE_XML)
         filepath_csv = self.get_param_value(Param.FILE_CSV)
 
-        # use C++ communication processor for faster interval finding
-        cpp_comm_proc = lb.botnet_comm_processor()
-
-        # only use CSV input if the XML path is the default one
-        # --> prefer XML input over CSV input (in case both are given)
-        print_updates = False
-        if filepath_csv and not filepath_xml:
-            filename = os.path.splitext(os.path.basename(filepath_csv))[0]
-            filesize = os.path.getsize(filepath_csv) / 2**20  # get filesize in MB
-            if filesize > 10:
-                print("\nParsing input CSV file...", end=" ")
-                sys.stdout.flush()
-                print_updates = True
-            cpp_comm_proc.parse_csv(filepath_csv)
-            if print_updates:
-                print("done.")
-                print("Writing corresponding XML file...", end=" ")
-                sys.stdout.flush()
-            filepath_xml = cpp_comm_proc.write_xml(Util.OUT_DIR, filename)
-            if print_updates:
-                print("done.")
-        else:
-            filesize = os.path.getsize(filepath_xml) / 2**20  # get filesize in MB
-            if filesize > 10:
-                print("Parsing input XML file...", end=" ")
-                sys.stdout.flush()
-                print_updates = True
-            cpp_comm_proc.parse_xml(filepath_xml)
-            if print_updates:
-                print("done.")
-
         # find a good communication mapping in the input file that matches the users parameters
         nat = self.get_param_value(Param.NAT_PRESENT)
         duration = self.get_param_value(Param.ATTACK_DURATION)
@@ -484,30 +450,13 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         start_idx = self.get_param_value(Param.INTERVAL_SELECT_START)
         end_idx = self.get_param_value(Param.INTERVAL_SELECT_END)
 
-        potential_long_find_time = (
-                    strategy == "optimal" and (filesize > 4 and self.statistics.get_packet_count() > 1000))
-        if print_updates or potential_long_find_time:
-            if not print_updates:
-                print()
-            print("Selecting communication interval from input CSV/XML file...", end=" ")
-            sys.stdout.flush()
-            if potential_long_find_time:
-                print("\nWarning: Because of the large input files and the (chosen) interval selection strategy")
-                print("'optimal', this may take a while. Consider using selection strategy 'random' or 'custom'...",
-                      end=" ")
-                sys.stdout.flush()
-            print_updates = True
+        comm_proc = CommunicationProcessor(self.msg_types, nat, strategy, number_init_bots, duration, start_idx,
+                                           end_idx)
 
-        comm_proc = CommunicationProcessor(self.msg_types, nat, cpp_comm_proc, strategy, number_init_bots, duration,
-                                           start_idx, end_idx)
+        comm_proc.init_cpp_comm_processsor(filepath_xml, filepath_csv, self.statistics.get_packet_count())
 
         if not comm_proc.get_comm_interval():
             return []
-        if print_updates:
-            print("done.")  # print corresponding message to interval finding message
-
-        if print_updates:
-            print("Generating attack packets...", end=" ", flush=True)
 
         # get the messages that are to be mapped into the PCAP
         messages = comm_proc.get_messages()
