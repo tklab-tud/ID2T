@@ -7,12 +7,22 @@ Fork of the official **[ID2T repository](https://github.com/tklab-tud/ID2T)** ex
 
 ### Table of Contents
 
+* [Description](#description)
 * [Requirements](#requirements)
 * [Installation](#installation)
 * [Usage](#usage)
   + [Basic Commands](#basic-commands)
   + [Inject Configuration](#inject-configuration)
 * [Contribution](#contribution)
+
+
+## Description
+
+ID2T is an awesome tool with lots of interesting functionality for the creation of network traffic datasets. You can use it for injection of **simulated attack** into the existing network traffic data or get **detailed statistics** about existing data. Check out the [Usage examples](https://github.com/tklab-tud/ID2T#usage-examples) section of the official repository to get more information about ID2T capabilities.
+
+This repository present extended ID2T functionality with a focus on **modification and insertion of existing packet traces**. The goal of this functionality is to modify shared annotated units of network traffic instead of their artificial generation.
+
+
 
 ## Requirements
 
@@ -29,10 +39,7 @@ Installation steps are similar to the official repository (see section [Compilat
 
 ## Usage
 
-ID2T is an awesome tool with lots of interesting functionality for the creation of network traffic datasets. You can use it for injection of **simulated attack** into the existing network traffic data or get **detailed statistics** about existing data. Check out the [Usage examples](https://github.com/tklab-tud/ID2T#usage-examples) section of the official repository to get more information about ID2T capabilities.
-
-The following sections present extended ID2T functionality with a focus on **modification and insertion of existing packet traces**. The goal of this functionality is to modify shared annotated units of network traffic instead of their artificial generation.
-
+Usage of the extended ID2T is the same as the original toolkit. The only difference is that the *Mix* functionality is used as an attack and the configuration is passed as *custom.payload.file* option.
 
 ### Basic Commands
 
