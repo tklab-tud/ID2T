@@ -35,28 +35,39 @@ class MemcrashedSpooferAttack(BaseAttack.BaseAttack):
             atkParam.Parameter.ATTACK_DURATION: atkParam.ParameterTypes.TYPE_INTEGER_POSITIVE
         })
 
-    def init_params(self) -> None:
+    def init_param(self, param: atkParam.Parameter) -> bool:
         """
-        Initialize the parameters of this attack using the user supplied command line parameters.
-        Use the provided statistics to calculate default parameters and to process user
-        supplied queries.
+        Initialize a parameter with its default values specified in this attack.
+
+        :param param: parameter, which should be initialized
+        :return: True if initialization was successful, False if not
         """
+        value = None
         # By default, the most used IP is the attacker
-        most_used_ip = self.statistics.get_most_used_ip_address()
-        self.add_param_value(atkParam.Parameter.IP_SOURCE, most_used_ip)
-        self.add_param_value(atkParam.Parameter.MAC_SOURCE, self.statistics.get_mac_address(most_used_ip))
-
+        if param == atkParam.Parameter.IP_SOURCE:
+            value = self.statistics.get_most_used_ip_address()
+        elif param == atkParam.Parameter.MAC_SOURCE:
+            ip_src = self.get_param_value(atkParam.Parameter.IP_SOURCE)
+            if ip_src is None:
+                return False
+            value = self.get_mac_address(ip_src)
         # Target (i.e. amplifier) is a random public IP
-        self.add_param_value(atkParam.Parameter.IP_DESTINATION, self.generate_random_ipv4_address('A'))
-        self.add_param_value(atkParam.Parameter.MAC_DESTINATION, self.generate_random_mac_address())
-
+        elif param == atkParam.Parameter.IP_DESTINATION:
+            value = self.generate_random_ipv4_address('A')
+        elif param == atkParam.Parameter.MAC_DESTINATION:
+            value = self.generate_random_mac_address()
         # IP of the victim which is supposed to get hit by the amplified attack
-        self.add_param_value(atkParam.Parameter.IP_VICTIM, self.generate_random_ipv4_address('A'))
-
-        self.add_param_value(atkParam.Parameter.PACKETS_PER_SECOND, (self.statistics.get_pps_sent(most_used_ip) +
-                             self.statistics.get_pps_received(most_used_ip)) / 2)
-        self.add_param_value(atkParam.Parameter.ATTACK_DURATION, rnd.randint(5, 30))
-        self.add_param_value(atkParam.Parameter.INJECT_AFTER_PACKET, rnd.randint(0, self.statistics.get_packet_count()))
+        elif param == atkParam.Parameter.IP_VICTIM:
+            value = self.generate_random_ipv4_address('A')
+        elif param == atkParam.Parameter.PACKETS_PER_SECOND:
+            value = self.statistics.get_most_used_pps()
+        elif param == atkParam.Parameter.ATTACK_DURATION:
+            value = rnd.randint(5, 30)
+        elif param == atkParam.Parameter.INJECT_AFTER_PACKET:
+            value = rnd.randint(0, self.statistics.get_packet_count())
+        if value is None:
+            return False
+        return self.add_param_value(param, value)
 
     def generate_attack_packets(self) -> None:
         ip_attacker = self.get_param_value(atkParam.Parameter.IP_SOURCE)

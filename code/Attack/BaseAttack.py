@@ -119,12 +119,36 @@ class BaseAttack(metaclass=abc.ABCMeta):
                                                            self.get_param_value(atkParam.Parameter.BANDWIDTH_MIN_PUBLIC),
                                                            self.statistics)
 
-    @abc.abstractmethod
     def init_params(self):
         """
         Initialize all required parameters taking into account user supplied values. If no value is supplied,
         or if a user defined query is supplied, use a statistics object to do the calculations.
         A call to this function requires a call to 'set_statistics' first.
+        """
+        params_to_init = []
+        for param in self.supported_params:
+            if not self.param_exists(param):
+                params_to_init.append(param)
+        skipped = {}
+        while len(params_to_init) != 0:
+            param = params_to_init.pop(0)
+            result = self.init_param(param)
+            if result is False:
+                params_to_init.append(param)
+                val = 0
+                if param in skipped.keys():
+                    val = skipped[param]
+                    if val > 1:
+                        break
+                skipped.update({param: val+1})
+
+    @abc.abstractmethod
+    def init_param(self, param: atkParam.Parameter) -> bool:
+        """
+        Initialize a parameter with a default value specified in the specific attack.
+
+        :param param: parameter, which should be initialized
+        :return: True if initialization was successful, False if not
         """
         pass
 
@@ -545,7 +569,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         :param param_name: The parameter to look for.
         :return: True if the parameter is already specified, False if not.
         """
-        return param_name in self.params.keys() and self.params[param_name][0]
+        return param_name in self.params.keys() and self.params[param_name][0] != None
 
     def param_user_defined(self, param_name: atkParam.Parameter) -> bool:
         """

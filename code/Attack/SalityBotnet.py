@@ -36,24 +36,29 @@ class SalityBotnet(BaseAttack.BaseAttack):
             atkParam.Parameter.PACKETS_PER_SECOND: atkParam.ParameterTypes.TYPE_FLOAT
         })
 
-    def init_params(self):
+    def init_param(self, param: atkParam.Parameter) -> bool:
         """
-        Initialize the parameters of this attack using the user supplied command line parameters.
-        Use the provided statistics to calculate default parameters and to process user
-        supplied queries.
+        Initialize a parameter with its default values specified in this attack.
+
+        :param param: parameter, which should be initialized
+        :return: True if initialization was successful, False if not
         """
-        # PARAMETERS: initialize with default utilsvalues
-        # (values are overwritten if user specifies them)
-        most_used_ip_address = self.statistics.get_most_used_ip_address()
-
-        self.add_param_value(atkParam.Parameter.IP_SOURCE, most_used_ip_address)
-        self.add_param_value(atkParam.Parameter.MAC_SOURCE, self.statistics.get_mac_address(most_used_ip_address))
-
+        value = None
+        if param == atkParam.Parameter.IP_SOURCE:
+            value = self.statistics.get_most_used_ip_address()
+        elif param == atkParam.Parameter.MAC_SOURCE:
+            ip_src = self.get_param_value(atkParam.Parameter.IP_SOURCE)
+            if ip_src is None:
+                return False
+            value = self.get_mac_address(ip_src)
         # Attack configuration
-        self.add_param_value(atkParam.Parameter.INJECT_AFTER_PACKET, rnd.randint(0, self.statistics.get_packet_count()))
-        self.add_param_value(atkParam.Parameter.PACKETS_PER_SECOND,
-                             (self.statistics.get_pps_sent(most_used_ip_address) +
-                              self.statistics.get_pps_received(most_used_ip_address)) / 2)
+        elif param == atkParam.Parameter.INJECT_AFTER_PACKET:
+            self.add_param_value(atkParam.Parameter.INJECT_AFTER_PACKET, rnd.randint(0, self.statistics.get_packet_count()))
+        elif param == atkParam.Parameter.PACKETS_PER_SECOND:
+            value = self.statistics.get_most_used_pps()
+        if value is None:
+            return False
+        return self.add_param_value(param, value)
 
     def generate_attack_packets(self):
         """

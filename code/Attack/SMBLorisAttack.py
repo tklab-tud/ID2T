@@ -38,40 +38,44 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
             atkParam.Parameter.NUMBER_ATTACKERS: atkParam.ParameterTypes.TYPE_INTEGER_POSITIVE
         })
 
-    def init_params(self):
+    def init_param(self, param: atkParam.Parameter) -> bool:
         """
-        Initialize the parameters of this attack using the user supplied command line parameters.
-        Use the provided statistics to calculate default parameters and to process user
-        supplied queries.
+        Initialize a parameter with its default values specified in this attack.
+
+        :param param: parameter, which should be initialized
+        :return: True if initialization was successful, False if not
         """
-
-        # PARAMETERS: initialize with default values
-        # (values are overwritten if user specifies them)
-        most_used_ip_address = self.statistics.get_most_used_ip_address()
-
+        value = None
         # The most used IP class in background traffic
-        most_used_ip_class = Util.handle_most_used_outputs(self.statistics.get_most_used_ip_class())
-        num_attackers = rnd.randint(1, 16)
-        source_ip = self.generate_random_ipv4_address(most_used_ip_class, num_attackers)
-
-        self.add_param_value(atkParam.Parameter.IP_SOURCE, source_ip)
-        self.add_param_value(atkParam.Parameter.MAC_SOURCE, self.generate_random_mac_address(num_attackers))
-
-        random_ip_address = self.statistics.get_random_ip_address()
-        # ip-dst should be valid and not equal to ip.src
-        while not self.is_valid_ip_address(random_ip_address) or random_ip_address == source_ip:
-            random_ip_address = self.statistics.get_random_ip_address()
-
-        self.add_param_value(atkParam.Parameter.IP_DESTINATION, random_ip_address)
-        destination_mac = self.statistics.get_mac_address(random_ip_address)
-        if isinstance(destination_mac, list) and len(destination_mac) == 0:
-            destination_mac = self.generate_random_mac_address()
-        self.add_param_value(atkParam.Parameter.MAC_DESTINATION, destination_mac)
-        self.add_param_value(atkParam.Parameter.PACKETS_PER_SECOND,
-                             (self.statistics.get_pps_sent(most_used_ip_address) +
-                              self.statistics.get_pps_received(most_used_ip_address)) / 2)
-        self.add_param_value(atkParam.Parameter.INJECT_AFTER_PACKET, rnd.randint(0, self.statistics.get_packet_count()))
-        self.add_param_value(atkParam.Parameter.ATTACK_DURATION, 30)
+        if param == atkParam.Parameter.NUMBER_ATTACKERS:
+            value = rnd.randint(1, 16)
+        if param == atkParam.Parameter.IP_SOURCE:
+            most_used_ip_class = Util.handle_most_used_outputs(self.statistics.get_most_used_ip_class())
+            num_attackers = self.get_param_value(atkParam.Parameter.NUMBER_ATTACKERS)
+            if num_attackers is None:
+                return False
+            value = self.generate_random_ipv4_address(most_used_ip_class, num_attackers)
+        elif param == atkParam.Parameter.MAC_SOURCE:
+            num_attackers = self.get_param_value(atkParam.Parameter.NUMBER_ATTACKERS)
+            if num_attackers is None:
+                return False
+            value = self.generate_random_mac_address(num_attackers)
+        elif param == atkParam.Parameter.IP_DESTINATION:
+            value = self.statistics.get_random_ip_address()
+        elif param == atkParam.Parameter.MAC_DESTINATION:
+            ip_dst = self.get_param_value(atkParam.Parameter.IP_DESTINATION)
+            if ip_dst is None:
+                return False
+            value = self.get_mac_address(ip_dst)
+        elif param == atkParam.Parameter.PACKETS_PER_SECOND:
+            value = self.statistics.get_most_used_pps()
+        elif param == atkParam.Parameter.INJECT_AFTER_PACKET:
+            value = rnd.randint(0, self.statistics.get_packet_count())
+        elif param == atkParam.Parameter.ATTACK_DURATION:
+            value = 30
+        if value is None:
+            return False
+        return self.add_param_value(param, value)
 
     def generate_attack_packets(self):
         """

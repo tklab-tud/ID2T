@@ -41,40 +41,54 @@ class PortscanAttack(BaseAttack.BaseAttack):
             atkParam.Parameter.PORT_SOURCE_RANDOMIZE: atkParam.ParameterTypes.TYPE_BOOLEAN
         })
 
-    def init_params(self):
+    def init_param(self, param: atkParam.Parameter) -> bool:
         """
-        Initialize the parameters of this attack using the user supplied command line parameters.
-        Use the provided statistics to calculate default parameters and to process user
-        supplied queries.
+        Initialize a parameter with a default value specified in the specific attack.
+
+        :param param: parameter, which should be initialized
+        :return: True if initialization was successful, False if not
         """
-        # PARAMETERS: initialize with default values
-        # (values are overwritten if user specifies them)
-        most_used_ip_address = self.statistics.get_most_used_ip_address()
-
-        self.add_param_value(atkParam.Parameter.IP_SOURCE, most_used_ip_address)
-        self.add_param_value(atkParam.Parameter.IP_SOURCE_RANDOMIZE, 'False')
-        self.add_param_value(atkParam.Parameter.MAC_SOURCE, self.statistics.get_mac_address(most_used_ip_address))
-
-        random_ip_address = self.statistics.get_random_ip_address()
-        # ip.dst should be valid and not equal to ip.src
-        while not self.is_valid_ip_address(random_ip_address) or random_ip_address == most_used_ip_address:
-            random_ip_address = self.statistics.get_random_ip_address()
-
-        self.add_param_value(atkParam.Parameter.IP_DESTINATION, random_ip_address)
-        destination_mac = self.statistics.get_mac_address(random_ip_address)
-        if isinstance(destination_mac, list) and len(destination_mac) == 0:
-            destination_mac = self.generate_random_mac_address()
-        self.add_param_value(atkParam.Parameter.MAC_DESTINATION, destination_mac)
-        self.add_param_value(atkParam.Parameter.PORT_DESTINATION, self.get_ports_from_nmap_service_dst(1000))
-        self.add_param_value(atkParam.Parameter.PORT_OPEN, '1')
-        self.add_param_value(atkParam.Parameter.PORT_DEST_SHUFFLE, 'False')
-        self.add_param_value(atkParam.Parameter.PORT_DEST_ORDER_DESC, 'False')
-        self.add_param_value(atkParam.Parameter.PORT_SOURCE, rnd.randint(1024, 65535))
-        self.add_param_value(atkParam.Parameter.PORT_SOURCE_RANDOMIZE, 'False')
-        self.add_param_value(atkParam.Parameter.PACKETS_PER_SECOND,
-                             (self.statistics.get_pps_sent(most_used_ip_address) +
-                              self.statistics.get_pps_received(most_used_ip_address)) / 2)
-        self.add_param_value(atkParam.Parameter.INJECT_AFTER_PACKET, rnd.randint(0, self.statistics.get_packet_count()))
+        value = None
+        if param == atkParam.Parameter.IP_SOURCE:
+            value = self.statistics.get_most_used_ip_address()
+        elif param == atkParam.Parameter.IP_SOURCE_RANDOMIZE:
+            value = 'False'
+        elif param == atkParam.Parameter.MAC_SOURCE:
+            ip_src = self.get_param_value(atkParam.Parameter.IP_SOURCE)
+            if ip_src is None:
+                return False
+            value = self.get_mac_address(ip_src)
+        elif param == atkParam.Parameter.IP_SOURCE_RANDOMIZE:
+            value = 'False'
+        elif param == atkParam.Parameter.IP_DESTINATION:
+            ip_src = self.get_param_value(atkParam.Parameter.IP_SOURCE)
+            if ip_src is None:
+                return False
+            value = self.statistics.get_random_ip_address(ips=[ip_src])
+        elif param == atkParam.Parameter.MAC_DESTINATION:
+            ip_dst = self.get_param_value(atkParam.Parameter.IP_DESTINATION)
+            if ip_dst is None:
+                return False
+            value = self.get_mac_address(ip_dst)
+        elif param == atkParam.Parameter.PORT_DESTINATION:
+            value = self.get_ports_from_nmap_service_dst(1000)
+        elif param == atkParam.Parameter.PORT_OPEN:
+            value = '1'
+        elif param == atkParam.Parameter.PORT_DEST_SHUFFLE:
+            value = 'False'
+        elif param == atkParam.Parameter.PORT_DEST_ORDER_DESC:
+            value = 'False'
+        elif param == atkParam.Parameter.PORT_SOURCE:
+            value = rnd.randint(1024, 65535)
+        elif param == atkParam.Parameter.PORT_SOURCE_RANDOMIZE:
+            value = 'False'
+        elif param == atkParam.Parameter.PACKETS_PER_SECOND:
+            value = self.statistics.get_most_used_pps()
+        elif param == atkParam.Parameter.INJECT_AFTER_PACKET:
+            value = rnd.randint(0, self.statistics.get_packet_count())
+        if value is None:
+            return False
+        return self.add_param_value(param, value)
 
     def generate_attack_packets(self):
         """

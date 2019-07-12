@@ -42,37 +42,54 @@ class DDoSAttack(BaseAttack.BaseAttack):
             atkParam.Parameter.LATENCY_MAX: atkParam.ParameterTypes.TYPE_FLOAT
         })
 
-    def init_params(self):
+    def init_param(self, param: atkParam.Parameter) -> bool:
         """
-        Initialize the parameters of this attack using the user supplied command line parameters.
-        Use the provided statistics to calculate default parameters and to process user
-        supplied queries.
+        Initialize a parameter with its default values specified in this attack.
+
+        :param param: parameter, which should be initialized
+        :return: True if initialization was successful, False if not
         """
-        # PARAMETERS: initialize with default values
-        # (values are overwritten if user specifies them)
-        self.add_param_value(atkParam.Parameter.INJECT_AFTER_PACKET, rnd.randint(0, self.statistics.get_packet_count()))
+        value = None
+        if param == atkParam.Parameter.INJECT_AFTER_PACKET:
+            value = rnd.randint(0, self.statistics.get_packet_count())
         # attacker configuration
-        self.add_param_value(atkParam.Parameter.NUMBER_ATTACKERS, rnd.randint(1, 16))
-        num_attackers = self.get_param_value(atkParam.Parameter.NUMBER_ATTACKERS)
-        # The most used IP class in background traffic
-        most_used_ip_class = Util.handle_most_used_outputs(self.statistics.get_most_used_ip_class())
-
-        self.add_param_value(atkParam.Parameter.IP_SOURCE,
-                             self.generate_random_ipv4_address(most_used_ip_class, num_attackers))
-        self.add_param_value(atkParam.Parameter.MAC_SOURCE, self.generate_random_mac_address(num_attackers))
-        self.default_port = int(inet.RandShort())
-        self.add_param_value(atkParam.Parameter.PORT_SOURCE, self.default_port)
-        self.add_param_value(atkParam.Parameter.PACKETS_PER_SECOND, 0)
-        self.add_param_value(atkParam.Parameter.ATTACK_DURATION, rnd.randint(5, 30))
-
+        elif param == atkParam.Parameter.NUMBER_ATTACKERS:
+            # FIXME
+            value = rnd.randint(1, 16)
+        elif param == atkParam.Parameter.IP_SOURCE:
+            num_attackers = self.get_param_value(atkParam.Parameter.NUMBER_ATTACKERS)
+            if not num_attackers:
+                return False
+            # The most used IP class in background traffic
+            most_used_ip_class = Util.handle_most_used_outputs(self.statistics.get_most_used_ip_class())
+            value = self.generate_random_ipv4_address(most_used_ip_class, num_attackers)
+        elif param == atkParam.Parameter.MAC_SOURCE:
+            num_attackers = self.get_param_value(atkParam.Parameter.NUMBER_ATTACKERS)
+            if not num_attackers:
+                return False
+            value = self.generate_random_mac_address(num_attackers)
+        elif param == atkParam.Parameter.PORT_SOURCE:
+            self.default_port = int(inet.RandShort())
+            value = self.default_port
+        elif param == atkParam.Parameter.PACKETS_PER_SECOND:
+            value = 0.0
+        elif param == atkParam.Parameter.ATTACK_DURATION:
+            value = rnd.randint(5, 30)
         # victim configuration
-        self.add_param_value(atkParam.Parameter.IP_DESTINATION, self.statistics.get_random_ip_address())
-        ip_dst = self.get_param_value(atkParam.Parameter.IP_DESTINATION)
-
-        self.add_param_value(atkParam.Parameter.MAC_DESTINATION, self.get_mac_address(ip_dst))
-        self.add_param_value(atkParam.Parameter.VICTIM_BUFFER, rnd.randint(1000, 10000))
-
-        self.add_param_value(atkParam.Parameter.LATENCY_MAX, 0)
+        elif param == atkParam.Parameter.IP_DESTINATION:
+            value = self.statistics.get_random_ip_address()
+        elif param == atkParam.Parameter.MAC_DESTINATION:
+            ip_dst = self.get_param_value(atkParam.Parameter.IP_DESTINATION)
+            if not ip_dst:
+                return False
+            value = self.get_mac_address(ip_dst)
+        elif param == atkParam.Parameter.VICTIM_BUFFER:
+            value = rnd.randint(1000, 10000)
+        elif param == atkParam.Parameter.LATENCY_MAX:
+            value = 0
+        if value is None:
+            return False
+        return self.add_param_value(param, value)
 
     def generate_attack_packets(self):
         """

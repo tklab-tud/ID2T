@@ -48,40 +48,57 @@ class SMBScanAttack(BaseAttack.BaseAttack):
             atkParam.Parameter.PROTOCOL_VERSION: atkParam.ParameterTypes.TYPE_STRING
         })
 
-    def init_params(self):
+    def init_param(self, param: atkParam.Parameter) -> bool:
         """
-        Initialize the parameters of this attack using the user supplied command line parameters.
-        Use the provided statistics to calculate default parameters and to process user
-        supplied queries.
+        Initialize a parameter with its default values specified in this attack.
+
+        :param param: parameter, which should be initialized
+        :return: True if initialization was successful, False if not
         """
-
-        # PARAMETERS: initialize with default values
-        # (values are overwritten if user specifies them)
-        most_used_ip_address = self.statistics.get_most_used_ip_address()
-
-        self.add_param_value(atkParam.Parameter.IP_SOURCE, most_used_ip_address)
-        self.add_param_value(atkParam.Parameter.IP_SOURCE_RANDOMIZE, 'False')
-        self.add_param_value(atkParam.Parameter.MAC_SOURCE, self.statistics.get_mac_address(most_used_ip_address))
-
-        self.add_param_value(atkParam.Parameter.TARGET_COUNT, 200)
-        self.add_param_value(atkParam.Parameter.IP_DESTINATION, "1.1.1.1")
-
-        self.add_param_value(atkParam.Parameter.PORT_SOURCE, rnd.randint(1024, 65535))
-        self.add_param_value(atkParam.Parameter.PORT_SOURCE_RANDOMIZE, 'True')
-        self.add_param_value(atkParam.Parameter.PACKETS_PER_SECOND,
-                             (self.statistics.get_pps_sent(most_used_ip_address) +
-                              self.statistics.get_pps_received(most_used_ip_address)) / 2)
-
-        self.add_param_value(atkParam.Parameter.INJECT_AFTER_PACKET, rnd.randint(0, self.statistics.get_packet_count()))
-        start = Util.get_timestamp_from_datetime_str(self.statistics.get_pcap_timestamp_start())
-        end = Util.get_timestamp_from_datetime_str(self.statistics.get_pcap_timestamp_end())
-        self.add_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP, (start + end) / 2)
-
-        self.add_param_value(atkParam.Parameter.HOSTING_PERCENTAGE, 0.5)
-        self.add_param_value(atkParam.Parameter.HOSTING_IP, "1.1.1.1")
-        self.add_param_value(atkParam.Parameter.HOSTING_VERSION, SMBLib.get_smb_version(platform=self.host_os))
-        self.add_param_value(atkParam.Parameter.SOURCE_PLATFORM, Util.get_rnd_os())
-        self.add_param_value(atkParam.Parameter.PROTOCOL_VERSION, "1")
+        value = None
+        if param == atkParam.Parameter.IP_SOURCE:
+            value = self.statistics.get_most_used_ip_address()
+        elif param == atkParam.Parameter.IP_SOURCE_RANDOMIZE:
+            value = 'False'
+        elif param == atkParam.Parameter.MAC_SOURCE:
+            ip_src = self.get_param_value(atkParam.Parameter.IP_SOURCE)
+            if ip_src is None:
+                return False
+            value = self.get_mac_address(ip_src)
+        elif param == atkParam.Parameter.TARGET_COUNT:
+            value = 200
+        elif param == atkParam.Parameter.IP_DESTINATION:
+            value = "1.1.1.1"
+        elif param == atkParam.Parameter.MAC_DESTINATION:
+            ip_dst = self.get_param_value(atkParam.Parameter.IP_DESTINATION)
+            if ip_dst is None:
+                return False
+            value = self.get_mac_address(ip_dst)
+        elif param == atkParam.Parameter.PORT_SOURCE:
+            value = rnd.randint(1024, 65535)
+        elif param == atkParam.Parameter.PORT_SOURCE_RANDOMIZE:
+            value = 'True'
+        elif param == atkParam.Parameter.PACKETS_PER_SECOND:
+            value = self.statistics.get_most_used_pps()
+        elif param == atkParam.Parameter.INJECT_AFTER_PACKET:
+            value = rnd.randint(0, self.statistics.get_packet_count())
+        elif param == atkParam.Parameter.INJECT_AT_TIMESTAMP:
+            start = Util.get_timestamp_from_datetime_str(self.statistics.get_pcap_timestamp_start())
+            end = Util.get_timestamp_from_datetime_str(self.statistics.get_pcap_timestamp_end())
+            value = (start + end) / 2
+        elif param == atkParam.Parameter.HOSTING_PERCENTAGE:
+            value = 0.5
+        elif param == atkParam.Parameter.HOSTING_IP:
+            value = "1.1.1.1"
+        elif param == atkParam.Parameter.HOSTING_VERSION:
+            value = SMBLib.get_smb_version(platform=self.host_os)
+        elif param == atkParam.Parameter.SOURCE_PLATFORM:
+            value = Util.get_rnd_os()
+        elif param == atkParam.Parameter.PROTOCOL_VERSION:
+            value = "1"
+        if value is None:
+            return False
+        return self.add_param_value(param, value)
 
     def generate_attack_packets(self):
         """

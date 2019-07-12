@@ -83,46 +83,53 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
 
         self.DEFAULT_XML_PATH = None
 
-    def init_params(self):
+    def init_param(self, param: Param) -> bool:
         """
-        Initialize some parameters of this communication-attack using the user supplied command line parameters.
-        The remaining parameters are implicitly set in the provided data file. Note: the timestamps in the file
-        have to be sorted in ascending order
+        Initialize a parameter with its default values specified in this attack.
+
+        :param param: parameter, which should be initialized
+        :return: True if initialization was successful, False if not
         """
+        value = None
         # set class constants
         self.DEFAULT_XML_PATH = Util.RESOURCE_DIR + "Botnet/MembersMgmtComm_example.xml"
 
-        # PARAMETERS: initialize with default values
-        # (values are overwritten if user specifies them)
-        self.add_param_value(Param.INJECT_AFTER_PACKET, 1 + randint(0, self.statistics.get_packet_count() // 5))
-
-        self.add_param_value(Param.FILE_XML, self.DEFAULT_XML_PATH)
-
+        if param == Param.INJECT_AFTER_PACKET:
+            value = 1 + randint(0, self.statistics.get_packet_count() // 5)
+        elif param == Param.FILE_XML:
+            value = self.DEFAULT_XML_PATH
         # Alternatively new attack parameter?
-        duration = int(float(self.statistics.get_capture_duration()))
-        self.add_param_value(Param.ATTACK_DURATION, duration)
-        self.add_param_value(Param.NUMBER_INITIATOR_BOTS, 1)
+        elif param == Param.ATTACK_DURATION:
+            value = int(float(self.statistics.get_capture_duration()))
+        elif param == Param.NUMBER_INITIATOR_BOTS:
+            value = 1
         # NAT on by default
-        self.add_param_value(Param.NAT_PRESENT, True)
-
-        # TODO: change 1 to something better
-        self.add_param_value(Param.IP_REUSE_TOTAL, 1)
-        self.add_param_value(Param.IP_REUSE_LOCAL, 0.5)
-        self.add_param_value(Param.IP_REUSE_EXTERNAL, 0.5)
-
+        elif param == Param.NAT_PRESENT:
+            value = True
+        elif param == Param.IP_REUSE_TOTAL:
+            # TODO: change 1 to something better
+            value = 1
+        elif param == Param.IP_REUSE_EXTERNAL:
+            value = 0.5
+        elif param == Param.IP_REUSE_LOCAL:
+            value = 0.5
         # add default additional padding
-        self.add_param_value(Param.PACKET_PADDING, 20)
-
+        elif param == Param.PACKET_PADDING:
+            value = 20
         # choose the input PCAP as default base for the TTL distribution
-        self.add_param_value(Param.TTL_FROM_CAIDA, False)
-
+        elif param == Param.TTL_FROM_CAIDA:
+            value = False
         # do not use multiple ports for requests and responses
-        self.add_param_value(Param.MULTIPORT, False)
-
+        elif param == Param.MULTIPORT:
+            value = False
         # interval selection strategy
-        self.add_param_value(Param.INTERVAL_SELECT_STRATEGY, "optimal")
-
-        self.add_param_value(Param.HIDDEN_MARK, False)
+        elif param == Param.INTERVAL_SELECT_STRATEGY:
+            value = "optimal"
+        elif param == Param.HIDDEN_MARK:
+            value = False
+        if value is None:
+            return False
+        return self.add_param_value(param, value)
 
     def generate_attack_pcap(self):
         """
