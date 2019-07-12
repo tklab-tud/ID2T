@@ -20,10 +20,12 @@ import numpy as np
 import scapy.layers.inet as inet
 import scapy.utils
 
-import Attack.AttackParameters as atkParam
 import ID2TLib.Utility as Util
 import Core.TimestampController as tc
 import Core.BandwidthController as bc
+
+from Attack.AttackParameters import Parameter as Param
+from Attack.AttackParameters import ParameterTypes as ParamTypes
 
 
 class BaseAttack(metaclass=abc.ABCMeta):
@@ -49,9 +51,9 @@ class BaseAttack(metaclass=abc.ABCMeta):
         self.attack_description = description
         self.attack_type = attack_type
         self.params = {}
-        self.supported_params = {atkParam.Parameter.BANDWIDTH_MAX: atkParam.ParameterTypes.TYPE_FLOAT,
-                                 atkParam.Parameter.BANDWIDTH_MIN_LOCAL: atkParam.ParameterTypes.TYPE_FLOAT,
-                                 atkParam.Parameter.BANDWIDTH_MIN_PUBLIC: atkParam.ParameterTypes.TYPE_FLOAT}
+        self.supported_params = {Param.BANDWIDTH_MAX: ParamTypes.TYPE_FLOAT,
+                                 Param.BANDWIDTH_MIN_LOCAL: ParamTypes.TYPE_FLOAT,
+                                 Param.BANDWIDTH_MIN_PUBLIC: ParamTypes.TYPE_FLOAT}
         self.attack_start_utime = 0
         self.attack_end_utime = 0
         self.start_time = 0
@@ -95,28 +97,28 @@ class BaseAttack(metaclass=abc.ABCMeta):
         self.most_used_win_size = self.statistics.get_most_used_win_size()
 
     def init_mutual_params(self):
-        self.add_param_value(atkParam.Parameter.BANDWIDTH_MAX, 0)
-        self.add_param_value(atkParam.Parameter.BANDWIDTH_MIN_LOCAL, 0)
-        self.add_param_value(atkParam.Parameter.BANDWIDTH_MIN_PUBLIC, 0)
+        self.add_param_value(Param.BANDWIDTH_MAX, 0)
+        self.add_param_value(Param.BANDWIDTH_MIN_LOCAL, 0)
+        self.add_param_value(Param.BANDWIDTH_MIN_PUBLIC, 0)
 
     def validate_params(self):
-        if atkParam.Parameter.NUMBER_ATTACKERS in self.params:
-            num_attackers = self.get_param_value(atkParam.Parameter.NUMBER_ATTACKERS)
-            macs = self.get_param_value(atkParam.Parameter.MAC_SOURCE)
-            ips = self.get_param_value(atkParam.Parameter.IP_SOURCE)
+        if Param.NUMBER_ATTACKERS in self.params:
+            num_attackers = self.get_param_value(Param.NUMBER_ATTACKERS)
+            macs = self.get_param_value(Param.MAC_SOURCE)
+            ips = self.get_param_value(Param.IP_SOURCE)
             if num_attackers < len(macs):
                 new_macs = macs[:num_attackers]
-                self.add_param_value(atkParam.Parameter.MAC_SOURCE, new_macs)
+                self.add_param_value(Param.MAC_SOURCE, new_macs)
             if num_attackers < len(ips):
                 new_ips = ips[:num_attackers]
-                self.add_param_value(atkParam.Parameter.IP_SOURCE, new_ips)
+                self.add_param_value(Param.IP_SOURCE, new_ips)
 
     def init_objects(self):
-        self.timestamp_controller = tc.TimestampController(self.get_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP),
-                                                           self.get_param_value(atkParam.Parameter.PACKETS_PER_SECOND))
-        self.bandwidth_controller = bc.BandwidthController(self.get_param_value(atkParam.Parameter.BANDWIDTH_MAX),
-                                                           self.get_param_value(atkParam.Parameter.BANDWIDTH_MIN_LOCAL),
-                                                           self.get_param_value(atkParam.Parameter.BANDWIDTH_MIN_PUBLIC),
+        self.timestamp_controller = tc.TimestampController(self.get_param_value(Param.INJECT_AT_TIMESTAMP),
+                                                           self.get_param_value(Param.PACKETS_PER_SECOND))
+        self.bandwidth_controller = bc.BandwidthController(self.get_param_value(Param.BANDWIDTH_MAX),
+                                                           self.get_param_value(Param.BANDWIDTH_MIN_LOCAL),
+                                                           self.get_param_value(Param.BANDWIDTH_MIN_PUBLIC),
                                                            self.statistics)
 
     def init_params(self):
@@ -143,7 +145,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
                 skipped.update({param: val+1})
 
     @abc.abstractmethod
-    def init_param(self, param: atkParam.Parameter) -> bool:
+    def init_param(self, param: Param) -> bool:
         """
         Initialize a parameter with a default value specified in the specific attack.
 
@@ -423,12 +425,12 @@ class BaseAttack(metaclass=abc.ABCMeta):
 
         # get AttackParameters instance associated with param
         # for default values assigned in attack classes, like Parameter.PORT_OPEN
-        if isinstance(param, atkParam.Parameter):
+        if isinstance(param, Param):
             param_name = param
         # for values given by user input, like port.open
-        elif any(param == item.value for item in atkParam.Parameter):
+        elif any(param == item.value for item in Param):
             # Get Enum key of given string identifier
-            param_name = atkParam.Parameter(param)
+            param_name = Param(param)
         else:
             print("WARNING: Invalid attack parameter ({}). Ignoring.".format(param))
             return False
@@ -451,20 +453,20 @@ class BaseAttack(metaclass=abc.ABCMeta):
             print('WARNING: Parameter not available (\'{}\'). Ignoring'.format(str(param_name)))
 
         # Validate parameter depending on parameter's type
-        elif param_type == atkParam.ParameterTypes.TYPE_IP_ADDRESS:
-            if (param_name == atkParam.Parameter.IP_SOURCE
-                and self.param_equals(atkParam.Parameter.IP_DESTINATION, value))\
-                    or (param_name == atkParam.Parameter.IP_DESTINATION
-                        and self.param_equals(atkParam.Parameter.IP_SOURCE, value)):
+        elif param_type == ParamTypes.TYPE_IP_ADDRESS:
+            if (param_name == Param.IP_SOURCE
+                and self.param_equals(Param.IP_DESTINATION, value))\
+                    or (param_name == Param.IP_DESTINATION
+                        and self.param_equals(Param.IP_SOURCE, value)):
                 print("ERROR: Parameter " + str(param) + " or parameter value " + str(value) +
                       " already used by another IP parameter. Generating random IP.")
                 value = self.statistics.get_random_ip_address()
             is_valid, value = self._is_ip_address(value)
-        elif param_type == atkParam.ParameterTypes.TYPE_PORT:
+        elif param_type == ParamTypes.TYPE_PORT:
             is_valid, value = self._is_port(value)
-        elif param_type == atkParam.ParameterTypes.TYPE_MAC_ADDRESS:
+        elif param_type == ParamTypes.TYPE_MAC_ADDRESS:
             is_valid = self._is_mac_address(value)
-        elif param_type == atkParam.ParameterTypes.TYPE_INTEGER_POSITIVE:
+        elif param_type == ParamTypes.TYPE_INTEGER_POSITIVE:
             if isinstance(value, int) and int(value) >= 0:
                 is_valid = True
             elif isinstance(value, str) and value.isdigit() and int(value) >= 0:
@@ -475,19 +477,19 @@ class BaseAttack(metaclass=abc.ABCMeta):
                       "         Float value " + value + " will be converted to an integer.")
                 is_valid = True
                 value = int(float(value))
-        elif param_type == atkParam.ParameterTypes.TYPE_STRING:
+        elif param_type == ParamTypes.TYPE_STRING:
             if isinstance(value, str):
                 is_valid = True
-        elif param_type == atkParam.ParameterTypes.TYPE_FLOAT:
+        elif param_type == ParamTypes.TYPE_FLOAT:
             is_valid, value = self._is_float(value)
             # this is required to avoid that the timestamp's microseconds of the first attack packet is '000000'
             # but microseconds are only chosen randomly if the given parameter does not already specify it
             # e.g. inject.at-timestamp=123456.987654 -> is not changed
             # e.g. inject.at-timestamp=123456 -> is changed to: 123456.[random digits]
-            if param_name == atkParam.Parameter.INJECT_AT_TIMESTAMP and is_valid and ((value - int(value)) == 0):
+            if param_name == Param.INJECT_AT_TIMESTAMP and is_valid and ((value - int(value)) == 0):
                 value = value + random.uniform(0, 0.999999)
             # Check user specified pps against limits
-            if param_name == atkParam.Parameter.PACKETS_PER_SECOND and is_valid and user_specified:
+            if param_name == Param.PACKETS_PER_SECOND and is_valid and user_specified:
                 if value > 1000000:
                     value = 1000000
                     print("WARNING: PPS is too high. Dropping to 1,000,000 pps.")
@@ -497,11 +499,11 @@ class BaseAttack(metaclass=abc.ABCMeta):
                 #elif value == 0:
                 #    value = 12500
                 #    print("No PPS was specified. Default value ({}) was used.".format(value))
-        elif param_type == atkParam.ParameterTypes.TYPE_TIMESTAMP:
+        elif param_type == ParamTypes.TYPE_TIMESTAMP:
             is_valid = self._is_timestamp(value)
-        elif param_type == atkParam.ParameterTypes.TYPE_BOOLEAN:
+        elif param_type == ParamTypes.TYPE_BOOLEAN:
             is_valid, value = self._is_boolean(value)
-        elif param_type == atkParam.ParameterTypes.TYPE_PACKET_POSITION:
+        elif param_type == ParamTypes.TYPE_PACKET_POSITION:
             # This function call is valid only if there is a statistics object available.
             if self.statistics is None:
                 print('ERROR: Statistics-dependent attack parameter added without setting a statistics object first.')
@@ -510,29 +512,29 @@ class BaseAttack(metaclass=abc.ABCMeta):
             ts = pr.pcap_processor(self.statistics.pcap_filepath, "False", Util.RESOURCE_DIR, "").get_timestamp_mu_sec(int(value))
             if 0 <= int(value) <= self.statistics.get_packet_count() and ts >= 0:
                 is_valid = True
-                param_name = atkParam.Parameter.INJECT_AT_TIMESTAMP
+                param_name = Param.INJECT_AT_TIMESTAMP
                 value = (ts / 1000000)  # convert microseconds from getTimestampMuSec into seconds
-        elif param_type == atkParam.ParameterTypes.TYPE_DOMAIN:
+        elif param_type == ParamTypes.TYPE_DOMAIN:
             is_valid = self._is_domain(value)
-        elif param_type == atkParam.ParameterTypes.TYPE_FILEPATH:
+        elif param_type == ParamTypes.TYPE_FILEPATH:
             is_valid = os.path.isfile(value)
-        elif param_type == atkParam.ParameterTypes.TYPE_PERCENTAGE:
+        elif param_type == ParamTypes.TYPE_PERCENTAGE:
             is_valid_float, value = self._is_float(value)
             if is_valid_float:
                 is_valid = 0 <= value <= 1
             else:
                 is_valid = False
-        elif param_type == atkParam.ParameterTypes.TYPE_PADDING:
+        elif param_type == ParamTypes.TYPE_PADDING:
             if isinstance(value, int):
                 is_valid = 0 <= value <= 100
             elif isinstance(value, str) and value.isdigit():
                 value = int(value)
                 is_valid = 0 <= value <= 100
-        elif param_type == atkParam.ParameterTypes.TYPE_INTERVAL_SELECT_STRAT:
+        elif param_type == ParamTypes.TYPE_INTERVAL_SELECT_STRAT:
             is_valid = value in {"random", "optimal", "custom"}
 
         # If value is query -> get value from database
-        elif param_name != atkParam.Parameter.INTERVAL_SELECT_STRATEGY and self.statistics.is_query(value):
+        elif param_name != Param.INTERVAL_SELECT_STRATEGY and self.statistics.is_query(value):
             value = self.statistics.process_db_query(value, False)
             if value is not None and value is not "":
                 is_valid = True
@@ -549,7 +551,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
 
         return is_valid
 
-    def get_param_value(self, param: atkParam.Parameter):
+    def get_param_value(self, param: Param):
         """
         Returns the parameter value for a given parameter.
 
@@ -562,7 +564,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         else:
             return None
 
-    def param_exists(self, param_name: atkParam.Parameter) -> bool:
+    def param_exists(self, param_name: Param) -> bool:
         """
         Returns whether the parameter value is specified.
 
@@ -571,7 +573,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         """
         return param_name in self.params.keys() and self.params[param_name][0] != None
 
-    def param_user_defined(self, param_name: atkParam.Parameter) -> bool:
+    def param_user_defined(self, param_name: Param) -> bool:
         """
         Returns whether the parameter value was specified by the user or a given parameter.
 
@@ -580,7 +582,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         """
         return param_name in self.params.keys() and self.params[param_name][1]
 
-    def param_equals(self, param_name: atkParam.Parameter, value) -> bool:
+    def param_equals(self, param_name: Param, value) -> bool:
         """
         Returns whether the parameter value equals the given value.
 
@@ -596,7 +598,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         However, this should not happen as all attack should define default parameter values.
         """
         # parameters which do not require default values
-        non_obligatory_params = [atkParam.Parameter.INJECT_AFTER_PACKET, atkParam.Parameter.NUMBER_ATTACKERS]
+        non_obligatory_params = [Param.INJECT_AFTER_PACKET, Param.NUMBER_ATTACKERS]
         for param, param_type in self.supported_params.items():
             # checks whether all params have assigned values, INJECT_AFTER_PACKET must not be considered because the
             # timestamp derived from it is set to Parameter.INJECT_AT_TIMESTAMP

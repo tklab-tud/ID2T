@@ -12,7 +12,7 @@ import ID2TLib.Botnet.Message as Bmsg
 import ID2TLib.Utility as Util
 from Attack import BaseAttack
 from Attack.AttackParameters import Parameter as Param
-from Attack.AttackParameters import ParameterTypes
+from Attack.AttackParameters import ParameterTypes as ParamTypes
 from ID2TLib import Generator
 from ID2TLib.Botnet.CommunicationProcessor import CommunicationProcessor
 from ID2TLib.Botnet.MessageMapping import MessageMapping
@@ -34,46 +34,46 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         # Define allowed parameters and their type
         self.supported_params = {
             # parameters regarding attack
-            Param.INJECT_AT_TIMESTAMP: ParameterTypes.TYPE_FLOAT,
-            Param.INJECT_AFTER_PACKET: ParameterTypes.TYPE_PACKET_POSITION,
-            Param.PACKETS_LIMIT: ParameterTypes.TYPE_INTEGER_POSITIVE,
-            Param.ATTACK_DURATION: ParameterTypes.TYPE_INTEGER_POSITIVE,
+            Param.INJECT_AT_TIMESTAMP: ParamTypes.TYPE_FLOAT,
+            Param.INJECT_AFTER_PACKET: ParamTypes.TYPE_PACKET_POSITION,
+            Param.PACKETS_LIMIT: ParamTypes.TYPE_INTEGER_POSITIVE,
+            Param.ATTACK_DURATION: ParamTypes.TYPE_INTEGER_POSITIVE,
 
             # use num_attackers to specify number of communicating devices?
-            Param.NUMBER_INITIATOR_BOTS: ParameterTypes.TYPE_INTEGER_POSITIVE,
+            Param.NUMBER_INITIATOR_BOTS: ParamTypes.TYPE_INTEGER_POSITIVE,
 
             # input file containing botnet communication
-            Param.FILE_CSV: ParameterTypes.TYPE_FILEPATH,
-            Param.FILE_XML: ParameterTypes.TYPE_FILEPATH,
+            Param.FILE_CSV: ParamTypes.TYPE_FILEPATH,
+            Param.FILE_XML: ParamTypes.TYPE_FILEPATH,
 
             # the percentage of IP reuse (if total and other is specified, percentages are multiplied)
-            Param.IP_REUSE_TOTAL: ParameterTypes.TYPE_PERCENTAGE,
-            Param.IP_REUSE_LOCAL: ParameterTypes.TYPE_PERCENTAGE,
-            Param.IP_REUSE_EXTERNAL: ParameterTypes.TYPE_PERCENTAGE,
-            Param.INJECT_INTO_IPS: ParameterTypes.TYPE_IP_ADDRESS,
+            Param.IP_REUSE_TOTAL: ParamTypes.TYPE_PERCENTAGE,
+            Param.IP_REUSE_LOCAL: ParamTypes.TYPE_PERCENTAGE,
+            Param.IP_REUSE_EXTERNAL: ParamTypes.TYPE_PERCENTAGE,
+            Param.INJECT_INTO_IPS: ParamTypes.TYPE_IP_ADDRESS,
 
             # the user-selected padding to add to every packet
-            Param.PACKET_PADDING: ParameterTypes.TYPE_PADDING,
+            Param.PACKET_PADDING: ParamTypes.TYPE_PADDING,
 
             # presence of NAT at the gateway of the network
-            Param.NAT_PRESENT: ParameterTypes.TYPE_BOOLEAN,
+            Param.NAT_PRESENT: ParamTypes.TYPE_BOOLEAN,
 
             # whether the TTL distribution should be based on the input PCAP
             # or the CAIDA dataset
-            Param.TTL_FROM_CAIDA: ParameterTypes.TYPE_BOOLEAN,
+            Param.TTL_FROM_CAIDA: ParamTypes.TYPE_BOOLEAN,
 
             # whether the destination port of a response should be the ephemeral port 
             # its request came from or a static (server)port based on a hostname
-            Param.MULTIPORT: ParameterTypes.TYPE_BOOLEAN,
+            Param.MULTIPORT: ParamTypes.TYPE_BOOLEAN,
 
             # information about the interval selection strategy
-            Param.INTERVAL_SELECT_STRATEGY: ParameterTypes.TYPE_INTERVAL_SELECT_STRAT,
-            Param.INTERVAL_SELECT_START: ParameterTypes.TYPE_INTEGER_POSITIVE,
-            Param.INTERVAL_SELECT_END: ParameterTypes.TYPE_INTEGER_POSITIVE,
+            Param.INTERVAL_SELECT_STRATEGY: ParamTypes.TYPE_INTERVAL_SELECT_STRAT,
+            Param.INTERVAL_SELECT_START: ParamTypes.TYPE_INTEGER_POSITIVE,
+            Param.INTERVAL_SELECT_END: ParamTypes.TYPE_INTEGER_POSITIVE,
 
             # determines whether injected packets are marked with an unused IP option
             # to easily filter them in e.g. wireshark
-            Param.HIDDEN_MARK: ParameterTypes.TYPE_BOOLEAN
+            Param.HIDDEN_MARK: ParamTypes.TYPE_BOOLEAN
         }
 
         # create dict with MessageType values for fast name lookup

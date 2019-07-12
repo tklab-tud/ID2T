@@ -4,9 +4,11 @@ import random as rnd
 import lea
 import scapy.layers.inet as inet
 
-import Attack.AttackParameters as atkParam
 import Attack.BaseAttack as BaseAttack
 import ID2TLib.Utility as Util
+
+from Attack.AttackParameters import Parameter as Param
+from Attack.AttackParameters import ParameterTypes as ParamTypes
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
@@ -25,23 +27,23 @@ class PortscanAttack(BaseAttack.BaseAttack):
 
         # Define allowed parameters and their type
         self.supported_params.update({
-            atkParam.Parameter.IP_SOURCE: atkParam.ParameterTypes.TYPE_IP_ADDRESS,
-            atkParam.Parameter.IP_DESTINATION: atkParam.ParameterTypes.TYPE_IP_ADDRESS,
-            atkParam.Parameter.PORT_SOURCE: atkParam.ParameterTypes.TYPE_PORT,
-            atkParam.Parameter.PORT_DESTINATION: atkParam.ParameterTypes.TYPE_PORT,
-            atkParam.Parameter.PORT_OPEN: atkParam.ParameterTypes.TYPE_PORT,
-            atkParam.Parameter.MAC_SOURCE: atkParam.ParameterTypes.TYPE_MAC_ADDRESS,
-            atkParam.Parameter.MAC_DESTINATION: atkParam.ParameterTypes.TYPE_MAC_ADDRESS,
-            atkParam.Parameter.INJECT_AT_TIMESTAMP: atkParam.ParameterTypes.TYPE_FLOAT,
-            atkParam.Parameter.INJECT_AFTER_PACKET: atkParam.ParameterTypes.TYPE_PACKET_POSITION,
-            atkParam.Parameter.PORT_DEST_SHUFFLE: atkParam.ParameterTypes.TYPE_BOOLEAN,
-            atkParam.Parameter.PORT_DEST_ORDER_DESC: atkParam.ParameterTypes.TYPE_BOOLEAN,
-            atkParam.Parameter.IP_SOURCE_RANDOMIZE: atkParam.ParameterTypes.TYPE_BOOLEAN,
-            atkParam.Parameter.PACKETS_PER_SECOND: atkParam.ParameterTypes.TYPE_FLOAT,
-            atkParam.Parameter.PORT_SOURCE_RANDOMIZE: atkParam.ParameterTypes.TYPE_BOOLEAN
+            Param.IP_SOURCE: ParamTypes.TYPE_IP_ADDRESS,
+            Param.IP_DESTINATION: ParamTypes.TYPE_IP_ADDRESS,
+            Param.PORT_SOURCE: ParamTypes.TYPE_PORT,
+            Param.PORT_DESTINATION: ParamTypes.TYPE_PORT,
+            Param.PORT_OPEN: ParamTypes.TYPE_PORT,
+            Param.MAC_SOURCE: ParamTypes.TYPE_MAC_ADDRESS,
+            Param.MAC_DESTINATION: ParamTypes.TYPE_MAC_ADDRESS,
+            Param.INJECT_AT_TIMESTAMP: ParamTypes.TYPE_FLOAT,
+            Param.INJECT_AFTER_PACKET: ParamTypes.TYPE_PACKET_POSITION,
+            Param.PORT_DEST_SHUFFLE: ParamTypes.TYPE_BOOLEAN,
+            Param.PORT_DEST_ORDER_DESC: ParamTypes.TYPE_BOOLEAN,
+            Param.IP_SOURCE_RANDOMIZE: ParamTypes.TYPE_BOOLEAN,
+            Param.PACKETS_PER_SECOND: ParamTypes.TYPE_FLOAT,
+            Param.PORT_SOURCE_RANDOMIZE: ParamTypes.TYPE_BOOLEAN
         })
 
-    def init_param(self, param: atkParam.Parameter) -> bool:
+    def init_param(self, param: Param) -> bool:
         """
         Initialize a parameter with a default value specified in the specific attack.
 
@@ -49,42 +51,42 @@ class PortscanAttack(BaseAttack.BaseAttack):
         :return: True if initialization was successful, False if not
         """
         value = None
-        if param == atkParam.Parameter.IP_SOURCE:
+        if param == Param.IP_SOURCE:
             value = self.statistics.get_most_used_ip_address()
-        elif param == atkParam.Parameter.IP_SOURCE_RANDOMIZE:
+        elif param == Param.IP_SOURCE_RANDOMIZE:
             value = 'False'
-        elif param == atkParam.Parameter.MAC_SOURCE:
-            ip_src = self.get_param_value(atkParam.Parameter.IP_SOURCE)
+        elif param == Param.MAC_SOURCE:
+            ip_src = self.get_param_value(Param.IP_SOURCE)
             if ip_src is None:
                 return False
             value = self.get_mac_address(ip_src)
-        elif param == atkParam.Parameter.IP_SOURCE_RANDOMIZE:
+        elif param == Param.IP_SOURCE_RANDOMIZE:
             value = 'False'
-        elif param == atkParam.Parameter.IP_DESTINATION:
-            ip_src = self.get_param_value(atkParam.Parameter.IP_SOURCE)
+        elif param == Param.IP_DESTINATION:
+            ip_src = self.get_param_value(Param.IP_SOURCE)
             if ip_src is None:
                 return False
             value = self.statistics.get_random_ip_address(ips=[ip_src])
-        elif param == atkParam.Parameter.MAC_DESTINATION:
-            ip_dst = self.get_param_value(atkParam.Parameter.IP_DESTINATION)
+        elif param == Param.MAC_DESTINATION:
+            ip_dst = self.get_param_value(Param.IP_DESTINATION)
             if ip_dst is None:
                 return False
             value = self.get_mac_address(ip_dst)
-        elif param == atkParam.Parameter.PORT_DESTINATION:
+        elif param == Param.PORT_DESTINATION:
             value = self.get_ports_from_nmap_service_dst(1000)
-        elif param == atkParam.Parameter.PORT_OPEN:
+        elif param == Param.PORT_OPEN:
             value = '1'
-        elif param == atkParam.Parameter.PORT_DEST_SHUFFLE:
+        elif param == Param.PORT_DEST_SHUFFLE:
             value = 'False'
-        elif param == atkParam.Parameter.PORT_DEST_ORDER_DESC:
+        elif param == Param.PORT_DEST_ORDER_DESC:
             value = 'False'
-        elif param == atkParam.Parameter.PORT_SOURCE:
+        elif param == Param.PORT_SOURCE:
             value = rnd.randint(1024, 65535)
-        elif param == atkParam.Parameter.PORT_SOURCE_RANDOMIZE:
+        elif param == Param.PORT_SOURCE_RANDOMIZE:
             value = 'False'
-        elif param == atkParam.Parameter.PACKETS_PER_SECOND:
+        elif param == Param.PACKETS_PER_SECOND:
             value = self.statistics.get_most_used_pps()
-        elif param == atkParam.Parameter.INJECT_AFTER_PACKET:
+        elif param == Param.INJECT_AFTER_PACKET:
             value = rnd.randint(0, self.statistics.get_packet_count())
         if value is None:
             return False
@@ -94,31 +96,31 @@ class PortscanAttack(BaseAttack.BaseAttack):
         """
         Creates the attack packets.
         """
-        mac_source = self.get_param_value(atkParam.Parameter.MAC_SOURCE)
-        mac_destination = self.get_param_value(atkParam.Parameter.MAC_DESTINATION)
+        mac_source = self.get_param_value(Param.MAC_SOURCE)
+        mac_destination = self.get_param_value(Param.MAC_DESTINATION)
 
         # Determine ports
-        dest_ports = self.get_param_value(atkParam.Parameter.PORT_DESTINATION)
-        if self.get_param_value(atkParam.Parameter.PORT_DEST_ORDER_DESC):
+        dest_ports = self.get_param_value(Param.PORT_DESTINATION)
+        if self.get_param_value(Param.PORT_DEST_ORDER_DESC):
             dest_ports.reverse()
-        elif self.get_param_value(atkParam.Parameter.PORT_DEST_SHUFFLE):
+        elif self.get_param_value(Param.PORT_DEST_SHUFFLE):
             rnd.shuffle(dest_ports)
-        if self.get_param_value(atkParam.Parameter.PORT_SOURCE_RANDOMIZE):
+        if self.get_param_value(Param.PORT_SOURCE_RANDOMIZE):
             # FIXME: why is sport never used?
             sport = rnd.randint(1, 65535)
         else:
-            sport = self.get_param_value(atkParam.Parameter.PORT_SOURCE)
+            sport = self.get_param_value(Param.PORT_SOURCE)
 
         # Timestamp
-        timestamp_next_pkt = self.get_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP)
+        timestamp_next_pkt = self.get_param_value(Param.INJECT_AT_TIMESTAMP)
         # store start time of attack
         self.attack_start_utime = timestamp_next_pkt
 
         # Initialize parameters
-        ip_source = self.get_param_value(atkParam.Parameter.IP_SOURCE)
+        ip_source = self.get_param_value(Param.IP_SOURCE)
         if isinstance(ip_source, list):
             ip_source = ip_source[0]
-        ip_destination = self.get_param_value(atkParam.Parameter.IP_DESTINATION)
+        ip_destination = self.get_param_value(Param.IP_DESTINATION)
         if not isinstance(ip_destination, list):
             ip_destination = [ip_destination]
 
@@ -127,7 +129,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
 
         for ip in ip_destination:
             # Select open ports
-            ports_open = self.get_param_value(atkParam.Parameter.PORT_OPEN)
+            ports_open = self.get_param_value(Param.PORT_OPEN)
             if ports_open == 1:  # user did not specify open ports
                 # the ports that were already used by ip.dst (direction in) in the background traffic are open ports
                 ports_used_by_ip_dst = self.statistics.process_db_query(
@@ -192,7 +194,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
 
             for dport in dest_ports:
                 # Parameters changing each iteration
-                if self.get_param_value(atkParam.Parameter.IP_SOURCE_RANDOMIZE) and isinstance(ip_source, list):
+                if self.get_param_value(Param.IP_SOURCE_RANDOMIZE) and isinstance(ip_source, list):
                     ip_source = rnd.choice(ip_source)
 
                 # 1) Build request package

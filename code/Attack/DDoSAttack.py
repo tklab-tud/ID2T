@@ -4,9 +4,11 @@ import random as rnd
 import lea
 import scapy.layers.inet as inet
 
-import Attack.AttackParameters as atkParam
 import Attack.BaseAttack as BaseAttack
 import ID2TLib.Utility as Util
+
+from Attack.AttackParameters import Parameter as Param
+from Attack.AttackParameters import ParameterTypes as ParamTypes
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
@@ -27,22 +29,22 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         # Define allowed parameters and their type
         self.supported_params.update({
-            atkParam.Parameter.IP_SOURCE: atkParam.ParameterTypes.TYPE_IP_ADDRESS,
-            atkParam.Parameter.MAC_SOURCE: atkParam.ParameterTypes.TYPE_MAC_ADDRESS,
-            atkParam.Parameter.PORT_SOURCE: atkParam.ParameterTypes.TYPE_PORT,
-            atkParam.Parameter.IP_DESTINATION: atkParam.ParameterTypes.TYPE_IP_ADDRESS,
-            atkParam.Parameter.MAC_DESTINATION: atkParam.ParameterTypes.TYPE_MAC_ADDRESS,
-            atkParam.Parameter.PORT_DESTINATION: atkParam.ParameterTypes.TYPE_PORT,
-            atkParam.Parameter.INJECT_AT_TIMESTAMP: atkParam.ParameterTypes.TYPE_FLOAT,
-            atkParam.Parameter.INJECT_AFTER_PACKET: atkParam.ParameterTypes.TYPE_PACKET_POSITION,
-            atkParam.Parameter.PACKETS_PER_SECOND: atkParam.ParameterTypes.TYPE_FLOAT,
-            atkParam.Parameter.NUMBER_ATTACKERS: atkParam.ParameterTypes.TYPE_INTEGER_POSITIVE,
-            atkParam.Parameter.ATTACK_DURATION: atkParam.ParameterTypes.TYPE_INTEGER_POSITIVE,
-            atkParam.Parameter.VICTIM_BUFFER: atkParam.ParameterTypes.TYPE_INTEGER_POSITIVE,
-            atkParam.Parameter.LATENCY_MAX: atkParam.ParameterTypes.TYPE_FLOAT
+            Param.IP_SOURCE: ParamTypes.TYPE_IP_ADDRESS,
+            Param.MAC_SOURCE: ParamTypes.TYPE_MAC_ADDRESS,
+            Param.PORT_SOURCE: ParamTypes.TYPE_PORT,
+            Param.IP_DESTINATION: ParamTypes.TYPE_IP_ADDRESS,
+            Param.MAC_DESTINATION: ParamTypes.TYPE_MAC_ADDRESS,
+            Param.PORT_DESTINATION: ParamTypes.TYPE_PORT,
+            Param.INJECT_AT_TIMESTAMP: ParamTypes.TYPE_FLOAT,
+            Param.INJECT_AFTER_PACKET: ParamTypes.TYPE_PACKET_POSITION,
+            Param.PACKETS_PER_SECOND: ParamTypes.TYPE_FLOAT,
+            Param.NUMBER_ATTACKERS: ParamTypes.TYPE_INTEGER_POSITIVE,
+            Param.ATTACK_DURATION: ParamTypes.TYPE_INTEGER_POSITIVE,
+            Param.VICTIM_BUFFER: ParamTypes.TYPE_INTEGER_POSITIVE,
+            Param.LATENCY_MAX: ParamTypes.TYPE_FLOAT
         })
 
-    def init_param(self, param: atkParam.Parameter) -> bool:
+    def init_param(self, param: Param) -> bool:
         """
         Initialize a parameter with its default values specified in this attack.
 
@@ -50,42 +52,42 @@ class DDoSAttack(BaseAttack.BaseAttack):
         :return: True if initialization was successful, False if not
         """
         value = None
-        if param == atkParam.Parameter.INJECT_AFTER_PACKET:
+        if param == Param.INJECT_AFTER_PACKET:
             value = rnd.randint(0, self.statistics.get_packet_count())
         # attacker configuration
-        elif param == atkParam.Parameter.NUMBER_ATTACKERS:
+        elif param == Param.NUMBER_ATTACKERS:
             # FIXME
             value = rnd.randint(1, 16)
-        elif param == atkParam.Parameter.IP_SOURCE:
-            num_attackers = self.get_param_value(atkParam.Parameter.NUMBER_ATTACKERS)
+        elif param == Param.IP_SOURCE:
+            num_attackers = self.get_param_value(Param.NUMBER_ATTACKERS)
             if not num_attackers:
                 return False
             # The most used IP class in background traffic
             most_used_ip_class = Util.handle_most_used_outputs(self.statistics.get_most_used_ip_class())
             value = self.generate_random_ipv4_address(most_used_ip_class, num_attackers)
-        elif param == atkParam.Parameter.MAC_SOURCE:
-            num_attackers = self.get_param_value(atkParam.Parameter.NUMBER_ATTACKERS)
+        elif param == Param.MAC_SOURCE:
+            num_attackers = self.get_param_value(Param.NUMBER_ATTACKERS)
             if not num_attackers:
                 return False
             value = self.generate_random_mac_address(num_attackers)
-        elif param == atkParam.Parameter.PORT_SOURCE:
+        elif param == Param.PORT_SOURCE:
             self.default_port = int(inet.RandShort())
             value = self.default_port
-        elif param == atkParam.Parameter.PACKETS_PER_SECOND:
+        elif param == Param.PACKETS_PER_SECOND:
             value = 0.0
-        elif param == atkParam.Parameter.ATTACK_DURATION:
+        elif param == Param.ATTACK_DURATION:
             value = rnd.randint(5, 30)
         # victim configuration
-        elif param == atkParam.Parameter.IP_DESTINATION:
+        elif param == Param.IP_DESTINATION:
             value = self.statistics.get_random_ip_address()
-        elif param == atkParam.Parameter.MAC_DESTINATION:
-            ip_dst = self.get_param_value(atkParam.Parameter.IP_DESTINATION)
+        elif param == Param.MAC_DESTINATION:
+            ip_dst = self.get_param_value(Param.IP_DESTINATION)
             if not ip_dst:
                 return False
             value = self.get_mac_address(ip_dst)
-        elif param == atkParam.Parameter.VICTIM_BUFFER:
+        elif param == Param.VICTIM_BUFFER:
             value = rnd.randint(1000, 10000)
-        elif param == atkParam.Parameter.LATENCY_MAX:
+        elif param == Param.LATENCY_MAX:
             value = 0
         if value is None:
             return False
@@ -97,12 +99,12 @@ class DDoSAttack(BaseAttack.BaseAttack):
         """
 
         # Determine source IP and MAC address
-        num_attackers = self.get_param_value(atkParam.Parameter.NUMBER_ATTACKERS)
+        num_attackers = self.get_param_value(Param.NUMBER_ATTACKERS)
 
         # use default values for IP_SOURCE/MAC_SOURCE or overwritten values
         # if user supplied any values for those params
-        ip_source_list = self.get_param_value(atkParam.Parameter.IP_SOURCE)
-        mac_source_list = self.get_param_value(atkParam.Parameter.MAC_SOURCE)
+        ip_source_list = self.get_param_value(Param.IP_SOURCE)
+        mac_source_list = self.get_param_value(Param.MAC_SOURCE)
 
         # Make sure IPs and MACs are lists
         if not isinstance(ip_source_list, list):
@@ -112,13 +114,13 @@ class DDoSAttack(BaseAttack.BaseAttack):
             mac_source_list = [mac_source_list]
 
         if (num_attackers is not None) and (num_attackers is not 0):
-            # user supplied atkParam.Parameter.NUMBER_ATTACKERS
+            # user supplied Param.NUMBER_ATTACKERS
             num_rnd_ips = num_attackers - len(ip_source_list)
             num_rnd_macs = num_attackers - len(mac_source_list)
             if num_rnd_ips:
                 # The most used IP class in background traffic
                 most_used_ip_class = Util.handle_most_used_outputs(self.statistics.get_most_used_ip_class())
-                # Create random attackers based on user input atkParam.Parameter.NUMBER_ATTACKERS
+                # Create random attackers based on user input Param.NUMBER_ATTACKERS
                 ip_source_list.extend(self.generate_random_ipv4_address(most_used_ip_class, num_rnd_ips))
             if num_rnd_macs:
                 mac_source_list.extend(self.generate_random_mac_address(num_rnd_macs))
@@ -130,14 +132,14 @@ class DDoSAttack(BaseAttack.BaseAttack):
             num_attackers = min(len(ip_source_list), len(mac_source_list))
 
         # Initialize parameters
-        port_source_list = self.get_param_value(atkParam.Parameter.PORT_SOURCE)
+        port_source_list = self.get_param_value(Param.PORT_SOURCE)
         if not isinstance(port_source_list, list):
             port_source_list = [port_source_list]
-        mac_destination = self.get_param_value(atkParam.Parameter.MAC_DESTINATION)
-        ip_destination = self.get_param_value(atkParam.Parameter.IP_DESTINATION)
+        mac_destination = self.get_param_value(Param.MAC_DESTINATION)
+        ip_destination = self.get_param_value(Param.IP_DESTINATION)
 
         most_used_ip_address = self.statistics.get_most_used_ip_address()
-        pps = self.get_param_value(atkParam.Parameter.PACKETS_PER_SECOND)
+        pps = self.get_param_value(Param.PACKETS_PER_SECOND)
         if pps == 0:
             result = self.statistics.process_db_query(
                 "SELECT MAX(maxPktRate) FROM ip_statistics WHERE ipAddress='" + ip_destination + "';")
@@ -155,7 +157,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         # Check ip.src == ip.dst
         self.ip_src_dst_catch_equal(ip_source_list, ip_destination)
 
-        port_destination = self.get_param_value(atkParam.Parameter.PORT_DESTINATION)
+        port_destination = self.get_param_value(Param.PORT_DESTINATION)
         if not port_destination:  # user did not define port_dest
             port_destination = self.statistics.process_db_query(
                 "SELECT portNumber FROM ip_ports WHERE portDirection='in' AND ipAddress='" + ip_destination +
@@ -173,9 +175,9 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         self.path_attack_pcap = None
 
-        victim_buffer = self.get_param_value(atkParam.Parameter.VICTIM_BUFFER)
+        victim_buffer = self.get_param_value(Param.VICTIM_BUFFER)
 
-        attack_duration = self.get_param_value(atkParam.Parameter.ATTACK_DURATION)
+        attack_duration = self.get_param_value(Param.ATTACK_DURATION)
         pkts_num = int(pps * attack_duration)
 
         source_win_sizes = self.statistics.get_rnd_win_size(pkts_num)
@@ -198,7 +200,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         # check user defined latency
         latency_limit = None
-        latency_max = self.get_param_value(atkParam.Parameter.LATENCY_MAX)
+        latency_max = self.get_param_value(Param.LATENCY_MAX)
         if latency_max != 0:
             latency_limit = latency_max
 
@@ -212,7 +214,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         already_used_pkts = 0
         sum_diff = 0
 
-        self.attack_start_utime = self.get_param_value(atkParam.Parameter.INJECT_AT_TIMESTAMP)
+        self.attack_start_utime = self.get_param_value(Param.INJECT_AT_TIMESTAMP)
         self.timestamp_controller.set_pps(attacker_pps)
         attack_ends_time = self.timestamp_controller.get_timestamp() + attack_duration
 
