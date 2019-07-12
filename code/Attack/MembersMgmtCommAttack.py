@@ -1,19 +1,21 @@
+import collections
+import datetime as dt
 import os
+import random as rnd
 import sys
-from collections import deque
-from datetime import datetime
-from random import randint, randrange, choice, uniform
 
+import lea
+import scapy.layers.inet as inet
+
+import Attack.BaseAttack as BaseAttack
 import ID2TLib.Botnet.libbotnetcomm as lb
-from lea import Lea
-from scapy.layers.inet import IP, IPOption_Security
-
 import ID2TLib.Botnet.Message as Bmsg
+import ID2TLib.Generator as Generator
 import ID2TLib.Utility as Util
-from Attack import BaseAttack
+
 from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes as ParamTypes
-from ID2TLib import Generator
+
 from ID2TLib.Botnet.CommunicationProcessor import CommunicationProcessor
 from ID2TLib.Botnet.MessageMapping import MessageMapping
 from ID2TLib.PcapAddressOperations import PcapAddressOperations
@@ -62,7 +64,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
             # or the CAIDA dataset
             Param.TTL_FROM_CAIDA: ParamTypes.TYPE_BOOLEAN,
 
-            # whether the destination port of a response should be the ephemeral port 
+            # whether the destination port of a response should be the ephemeral port
             # its request came from or a static (server)port based on a hostname
             Param.MULTIPORT: ParamTypes.TYPE_BOOLEAN,
 
@@ -95,7 +97,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         self.DEFAULT_XML_PATH = Util.RESOURCE_DIR + "Botnet/MembersMgmtComm_example.xml"
 
         if param == Param.INJECT_AFTER_PACKET:
-            value = 1 + randint(0, self.statistics.get_packet_count() // 5)
+            value = 1 + rnd.randint(0, self.statistics.get_packet_count() // 5)
         elif param == Param.FILE_XML:
             value = self.DEFAULT_XML_PATH
         # Alternatively new attack parameter?
@@ -148,7 +150,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         buffer_size = 1000
         pkt_gen = Generator.PacketGenerator()
         padding = self.get_param_value(Param.PACKET_PADDING)
-        packets = deque(maxlen=buffer_size)
+        packets = collections.deque(maxlen=buffer_size)
         total_pkts = 0
         limit_packetcount = self.get_param_value(Param.PACKETS_LIMIT)
         limit_duration = self.get_param_value(Param.ATTACK_DURATION)
@@ -180,7 +182,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
             # if the type of the message is a NL reply, determine the number of entries
             nl_size = 0
             if msg.type == Bmsg.MessageType.SALITY_NL_REPLY:
-                nl_size = randint(1, 25)    # what is max NL entries?
+                nl_size = rnd.randint(1, 25)    # what is max NL entries?
 
             # create suitable IP/UDP packet and add to packets list
             packet = pkt_gen.generate_mmcom_packet(ip_src=ip_src, ip_dst=ip_dst, ttl=ttl, mac_src=mac_src,
@@ -191,9 +193,9 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
 
             packet.time = msg.time
 
-            if mark_packets and isinstance(packet.payload, IP):  # do this only for ip-packets
+            if mark_packets and isinstance(packet.payload, inet.IP):  # do this only for ip-packets
                 ip_data = packet.payload
-                hidden_opt = IPOption_Security()
+                hidden_opt = inet.IPOption_Security()
                 hidden_opt.option = 2  # "normal" security opt
                 hidden_opt.security = 16  # magic value indicating NSA
 
@@ -212,7 +214,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                     Generator.equal_length(packets, length=max_len, padding=padding, force_len=True)
                     last_packet = packets[-1]
                     path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
-                    packets = deque(maxlen=buffer_size)
+                    packets = collections.deque(maxlen=buffer_size)
                 else:
                     packets = list(packets)
                     Generator.equal_length(packets, padding=padding)
@@ -220,7 +222,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                     max_len = len(last_packet)
                     over_thousand = True
                     path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
-                    packets = deque(maxlen=buffer_size)
+                    packets = collections.deque(maxlen=buffer_size)
 
         # if there are unwritten packets remaining, write them to the PCAP file
         if len(packets) > 0:
@@ -236,7 +238,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                 last_packet = packets[-1]
 
         # write the mapping to a file
-        current_ts = datetime.now().strftime("%Y%m%d-%H%M%S")
+        current_ts = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
         mapping_filename = "mapping_" + current_ts + ".xml"
         msg_packet_mapping.write_to_file(mapping_filename)
 
@@ -275,14 +277,14 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
 
             # assign existing IPs and the corresponding MAC addresses in the PCAP to the IDs
             for ip in existing_ips:
-                random_id = choice(ids)
+                random_id = rnd.choice(ids)
                 mac = self.statistics.process_db_query("macAddress(IPAddress=%s)" % ip)
                 bot_configs[random_id] = {"Type": idtype, "IP": ip, "MAC": mac}
                 ids.remove(random_id)
 
             # assign new IPs and for local IPs new MACs or for external IPs the router MAC to the IDs
             for ip in new_ips:
-                random_id = choice(ids)
+                random_id = rnd.choice(ids)
                 if idtype == "local":
                     mac = macgen.random_mac()
                 elif idtype == "external":
@@ -305,12 +307,12 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                 else:  # Set varying TTl for external Bots
                     bot_ttl_dist = self.statistics.get_ttl_distribution(bot_configs[bot]["IP"])
                     if len(bot_ttl_dist) > 0:
-                        source_ttl_prob_dict = Lea.fromValFreqsDict(bot_ttl_dist)
+                        source_ttl_prob_dict = lea.Lea.fromValFreqsDict(bot_ttl_dist)
                         bot_configs[bot]["TTL"] = source_ttl_prob_dict.random()
                     else:
                         most_used_ttl = self.statistics.process_db_query("most_used(ttlValue)")
                         if isinstance(most_used_ttl, list):
-                            bot_configs[bot]["TTL"] = choice(self.statistics.process_db_query("most_used(ttlValue)"))
+                            bot_configs[bot]["TTL"] = rnd.choice(self.statistics.process_db_query("most_used(ttlValue)"))
                         else:
                             bot_configs[bot]["TTL"] = self.statistics.process_db_query("most_used(ttlValue)")
 
@@ -351,11 +353,11 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                 if last_response[(req_msg.src, req_msg.dst)] == -1 or last_response[(req_msg.src, req_msg.dst)] < (
                         zero_reference + req_msg.time - 0.05):
                     # update req_msg timestamp with a variation of up to 50ms
-                    req_msg.time = zero_reference + req_msg.time + uniform(-0.05, 0.05)
+                    req_msg.time = zero_reference + req_msg.time + rnd.uniform(-0.05, 0.05)
                     updated_msgs.append(req_msg)
 
                 else:
-                    req_msg.time = last_response[(req_msg.src, req_msg.dst)] + 0.06 + uniform(-0.05, 0.05)
+                    req_msg.time = last_response[(req_msg.src, req_msg.dst)] + 0.06 + rnd.uniform(-0.05, 0.05)
 
                 # update response if necessary
                 if req_msg.refer_msg_id != -1:
@@ -365,12 +367,12 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                     # avg delay
                     if req_msg.src in external_ids or req_msg.dst in external_ids and avg_delay_external:
                         # external communication
-                        dist = Lea.fromSeq(avg_delay_external)
+                        dist = lea.Lea.fromSeq(avg_delay_external)
                     else:
                         # local communication
-                        dist = Lea.fromSeq(avg_delay_local)
+                        dist = lea.Lea.fromSeq(avg_delay_local)
                     delay = 0
-                    
+
                     while delay < 50 or (float(delay)*0.000001 > 5):
                         delay = dist.random()
                     respns_msg.time = req_msg.time + float(delay) * 0.000001
@@ -426,7 +428,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
             # get the TTL distribution for every IP that is available in "resources/CaidaTTL_perIP.csv"
             ip_ttl_distrib = get_ip_ttl_distrib()
             # build a probability dict for the total TTL distribution
-            total_ttl_prob_dict = Lea.fromValFreqsDict(get_total_ttl_distrib())
+            total_ttl_prob_dict = lea.Lea.fromValFreqsDict(get_total_ttl_distrib())
 
             # loop over every bot id and assign a TTL to the respective bot
             for bot_id in sorted(bot_configs):
@@ -440,7 +442,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                 elif bot_ip in ip_ttl_distrib:
                     ip_ttl_freqs = ip_ttl_distrib[bot_ip]
                     # build a probability dict from this IP's TTL distribution
-                    source_ttl_prob_dict = Lea.fromValFreqsDict(ip_ttl_freqs)
+                    source_ttl_prob_dict = lea.Lea.fromValFreqsDict(ip_ttl_freqs)
                     bot_configs[bot_id]["TTL"] = source_ttl_prob_dict.random()
 
                 # otherwise assign a random TTL based on the total TTL distribution
@@ -519,7 +521,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         packet_start_idx = comm_interval["Start"]
         packet_end_idx = comm_interval["End"]
         while len(mapped_ids) > number_init_bots:
-            rm_idx = randrange(0, len(mapped_ids))
+            rm_idx = rnd.randrange(0, len(mapped_ids))
             del mapped_ids[rm_idx]
 
         if print_updates:
