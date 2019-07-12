@@ -406,7 +406,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         """
         return self.finish_time - self.start_time
 
-    def add_param_value(self, param, value, user_specified: bool = False) -> None:
+    def add_param_value(self, param, value, user_specified: bool = False) -> bool:
         """
         Adds the pair param : value to the dictionary of attack parameters. Prints and error message and skips the
         parameter if the validation fails.
@@ -431,10 +431,10 @@ class BaseAttack(metaclass=abc.ABCMeta):
             param_name = atkParam.Parameter(param)
         else:
             print("WARNING: Invalid attack parameter ({}). Ignoring.".format(param))
-            return
+            return False
 
         if not user_specified and self.param_user_defined(param_name):
-            return
+            return False
 
         # Get parameter type of attack's required_params
         param_type = self.supported_params.get(param_name)
