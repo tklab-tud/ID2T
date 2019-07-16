@@ -678,17 +678,21 @@ class BaseAttack(metaclass=abc.ABCMeta):
         max_latency = int(max_latency) * 10 ** -6
         return min_latency, max_latency
 
-    def get_intermediate_timestamp(self, divisor: int=2) -> int:
+    def get_intermediate_timestamp(self, divisor: int=2, factor: int=1) -> int:
         """
         Calculates a timestamp, which lays within the input pcap.
         By default a timestamp in the middle of the pcap.
 
-        :param divisor: The number by which the pcap length should be divided.
+        :param divisor: The number of intervals in which the pcap length should be divided.
+        :param factor: The number of the interval from which to get the timestamp.
         :return: The calculated timestamp.
         """
         start = Util.get_timestamp_from_datetime_str(self.statistics.get_pcap_timestamp_start())
         end = Util.get_timestamp_from_datetime_str(self.statistics.get_pcap_timestamp_end())
-        return start + ((end - start) / divisor)
+        if factor > divisor:
+            print("Error: timestamp out of range (factor > divisor)")
+            return start
+        return start + ((end - start) / divisor) * factor
 
     def add_packet(self, pkt, ip_source, ip_destination):
         """
