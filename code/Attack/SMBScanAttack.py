@@ -85,9 +85,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
         elif param == Param.INJECT_AFTER_PACKET:
             value = rnd.randint(0, self.statistics.get_packet_count())
         elif param == Param.INJECT_AT_TIMESTAMP:
-            start = Util.get_timestamp_from_datetime_str(self.statistics.get_pcap_timestamp_start())
-            end = Util.get_timestamp_from_datetime_str(self.statistics.get_pcap_timestamp_end())
-            value = (start + end) / 2
+            value = self.get_intermediate_timestamp()
         elif param == Param.HOSTING_PERCENTAGE:
             value = 0.5
         elif param == Param.HOSTING_IP:
