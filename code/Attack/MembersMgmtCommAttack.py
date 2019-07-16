@@ -97,7 +97,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         self.DEFAULT_XML_PATH = Util.RESOURCE_DIR + "Botnet/MembersMgmtComm_example.xml"
 
         if param == Param.INJECT_AFTER_PACKET:
-            value = 1 + rnd.randint(0, self.statistics.get_packet_count() // 5)
+            value = self.statistics.get_rnd_packet_index(divisor=5)
         elif param == Param.FILE_XML:
             value = self.DEFAULT_XML_PATH
         # Alternatively new attack parameter?
