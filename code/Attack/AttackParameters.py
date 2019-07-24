@@ -9,7 +9,7 @@ class Parameter(enum.Enum):
     # recommended type: IP address -------------------------------
     IP_SOURCE = 'ip.src'  # source IP address(es)
     IP_DESTINATION = 'ip.dst'  # destination IP address(es)
-    TARGET_COUNT = "target.count"  # count of target IP addresses
+    TARGET_COUNT = 'target.count'  # count of target IP addresses
     IP_DNS = 'ip.dns'  # IP address of DNS server
     HOSTING_IP = 'hosting.ip'  # IP address(es) hosting the vulnerable service
     HOSTING_PERCENTAGE = 'hosting.percentage'  # percentage of target IPs hosting the vulnerable service
@@ -49,8 +49,8 @@ class Parameter(enum.Enum):
     PORT_SOURCE_RANDOMIZE = 'port.src.shuffle'  # randomizes the source port if a list of sources ports is given
     NAT_PRESENT = 'nat.present'  # if NAT is active, external computers cannot initiate a communication in MembersMgmtCommAttack
     TTL_FROM_CAIDA = 'ttl.from.caida'  # if True, TTLs are assigned based on the TTL distributions from the CAIDA dataset
-    MULTIPORT = "multiport"  # select destination port as an ephemeral port if True, calculate the destination port based on the hostname, otherwise
-    HIDDEN_MARK = "hidden_mark"  # indicating if the attack will mark generated packets
+    MULTIPORT = 'multiport'  # select destination port as an ephemeral port if True, calculate the destination port based on the hostname, otherwise
+    HIDDEN_MARK = 'hidden_mark'  # indicating if the attack will mark generated packets
     # recommended type: Filepath ------------------------------------
     FILE_CSV = 'file.csv'  # filepath to CSV containing a communication pattern
     FILE_XML = 'file.xml'  # filepath to XML containing a communication pattern
