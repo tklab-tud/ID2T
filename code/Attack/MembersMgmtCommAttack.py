@@ -13,7 +13,6 @@ import ID2TLib.Botnet.Message as Bmsg
 import ID2TLib.Generator as Generator
 import ID2TLib.Utility as Util
 
-from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes as ParamTypes
 
 from ID2TLib.Botnet.CommunicationProcessor import CommunicationProcessor
@@ -23,6 +22,26 @@ from ID2TLib.Ports import PortSelectors
 
 
 class MembersMgmtCommAttack(BaseAttack.BaseAttack):
+    INJECT_AT_TIMESTAMP = 'inject.at-timestamp'
+    INJECT_AFTER_PACKET = 'inject.after-pkt'
+    PACKETS_LIMIT = 'packets.limit'
+    ATTACK_DURATION = 'attack.duration'
+    NUMBER_INITIATOR_BOTS = 'bots.count'
+    FILE_CSV = 'file.csv'
+    FILE_XML = 'file.xml'
+    IP_REUSE_TOTAL = 'ip.reuse.total'
+    IP_REUSE_LOCAL = 'ip.reuse.local'
+    IP_REUSE_EXTERNAL = 'ip.reuse.external'
+    INJECT_INTO_IPS = 'inject.ip'
+    PACKET_PADDING = 'packet.padding'
+    NAT_PRESENT = 'nat.present'
+    TTL_FROM_CAIDA = 'ttl.from.caida'
+    MULTIPORT = 'multiport'
+    INTERVAL_SELECT_STRATEGY = 'interval.selection.strategy'
+    INTERVAL_SELECT_START = 'interval.selection.start'
+    INTERVAL_SELECT_END = 'interval.selection.end'
+    HIDDEN_MARK = 'hidden_mark'
+
     def __init__(self):
         """
         Creates a new instance of the Membership Management Communication.
@@ -34,49 +53,49 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
             "Injects Membership Management Communication", "Botnet communication")
 
         # Define allowed parameters and their type
-        self.supported_params = {
+        self.supported_params.update({
             # parameters regarding attack
-            Param.INJECT_AT_TIMESTAMP: ParamTypes.TYPE_FLOAT,
-            Param.INJECT_AFTER_PACKET: ParamTypes.TYPE_PACKET_POSITION,
-            Param.PACKETS_LIMIT: ParamTypes.TYPE_INTEGER_POSITIVE,
-            Param.ATTACK_DURATION: ParamTypes.TYPE_INTEGER_POSITIVE,
+            self.INJECT_AT_TIMESTAMP: ParamTypes.TYPE_FLOAT,
+            self.INJECT_AFTER_PACKET: ParamTypes.TYPE_PACKET_POSITION,
+            self.PACKETS_LIMIT: ParamTypes.TYPE_INTEGER_POSITIVE,
+            self.ATTACK_DURATION: ParamTypes.TYPE_INTEGER_POSITIVE,
 
             # use num_attackers to specify number of communicating devices?
-            Param.NUMBER_INITIATOR_BOTS: ParamTypes.TYPE_INTEGER_POSITIVE,
+            self.NUMBER_INITIATOR_BOTS: ParamTypes.TYPE_INTEGER_POSITIVE,
 
             # input file containing botnet communication
-            Param.FILE_CSV: ParamTypes.TYPE_FILEPATH,
-            Param.FILE_XML: ParamTypes.TYPE_FILEPATH,
+            self.FILE_CSV: ParamTypes.TYPE_FILEPATH,
+            self.FILE_XML: ParamTypes.TYPE_FILEPATH,
 
             # the percentage of IP reuse (if total and other is specified, percentages are multiplied)
-            Param.IP_REUSE_TOTAL: ParamTypes.TYPE_PERCENTAGE,
-            Param.IP_REUSE_LOCAL: ParamTypes.TYPE_PERCENTAGE,
-            Param.IP_REUSE_EXTERNAL: ParamTypes.TYPE_PERCENTAGE,
-            Param.INJECT_INTO_IPS: ParamTypes.TYPE_IP_ADDRESS,
+            self.IP_REUSE_TOTAL: ParamTypes.TYPE_PERCENTAGE,
+            self.IP_REUSE_LOCAL: ParamTypes.TYPE_PERCENTAGE,
+            self.IP_REUSE_EXTERNAL: ParamTypes.TYPE_PERCENTAGE,
+            self.INJECT_INTO_IPS: ParamTypes.TYPE_IP_ADDRESS,
 
             # the user-selected padding to add to every packet
-            Param.PACKET_PADDING: ParamTypes.TYPE_PADDING,
+            self.PACKET_PADDING: ParamTypes.TYPE_PADDING,
 
             # presence of NAT at the gateway of the network
-            Param.NAT_PRESENT: ParamTypes.TYPE_BOOLEAN,
+            self.NAT_PRESENT: ParamTypes.TYPE_BOOLEAN,
 
             # whether the TTL distribution should be based on the input PCAP
             # or the CAIDA dataset
-            Param.TTL_FROM_CAIDA: ParamTypes.TYPE_BOOLEAN,
+            self.TTL_FROM_CAIDA: ParamTypes.TYPE_BOOLEAN,
 
             # whether the destination port of a response should be the ephemeral port
             # its request came from or a static (server)port based on a hostname
-            Param.MULTIPORT: ParamTypes.TYPE_BOOLEAN,
+            self.MULTIPORT: ParamTypes.TYPE_BOOLEAN,
 
             # information about the interval selection strategy
-            Param.INTERVAL_SELECT_STRATEGY: ParamTypes.TYPE_INTERVAL_SELECT_STRAT,
-            Param.INTERVAL_SELECT_START: ParamTypes.TYPE_INTEGER_POSITIVE,
-            Param.INTERVAL_SELECT_END: ParamTypes.TYPE_INTEGER_POSITIVE,
+            self.INTERVAL_SELECT_STRATEGY: ParamTypes.TYPE_INTERVAL_SELECT_STRAT,
+            self.INTERVAL_SELECT_START: ParamTypes.TYPE_INTEGER_POSITIVE,
+            self.INTERVAL_SELECT_END: ParamTypes.TYPE_INTEGER_POSITIVE,
 
             # determines whether injected packets are marked with an unused IP option
             # to easily filter them in e.g. wireshark
-            Param.HIDDEN_MARK: ParamTypes.TYPE_BOOLEAN
-        }
+            self.HIDDEN_MARK: ParamTypes.TYPE_BOOLEAN
+        })
 
         # create dict with MessageType values for fast name lookup
         self.msg_types = {}
@@ -85,7 +104,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
 
         self.DEFAULT_XML_PATH = None
 
-    def init_param(self, param: Param) -> bool:
+    def init_param(self, param: str) -> bool:
         """
         Initialize a parameter with its default values specified in this attack.
 
@@ -96,38 +115,38 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         # set class constants
         self.DEFAULT_XML_PATH = Util.RESOURCE_DIR + "Botnet/MembersMgmtComm_example.xml"
 
-        if param == Param.INJECT_AFTER_PACKET:
+        if param == self.INJECT_AFTER_PACKET:
             value = self.statistics.get_rnd_packet_index(divisor=5)
-        elif param == Param.FILE_XML:
+        elif param == self.FILE_XML:
             value = self.DEFAULT_XML_PATH
         # Alternatively new attack parameter?
-        elif param == Param.ATTACK_DURATION:
+        elif param == self.ATTACK_DURATION:
             value = int(float(self.statistics.get_capture_duration()))
-        elif param == Param.NUMBER_INITIATOR_BOTS:
+        elif param == self.NUMBER_INITIATOR_BOTS:
             value = 1
         # NAT on by default
-        elif param == Param.NAT_PRESENT:
+        elif param == self.NAT_PRESENT:
             value = True
-        elif param == Param.IP_REUSE_TOTAL:
+        elif param == self.IP_REUSE_TOTAL:
             # TODO: change 1 to something better
             value = 1
-        elif param == Param.IP_REUSE_EXTERNAL:
+        elif param == self.IP_REUSE_EXTERNAL:
             value = 0.5
-        elif param == Param.IP_REUSE_LOCAL:
+        elif param == self.IP_REUSE_LOCAL:
             value = 0.5
         # add default additional padding
-        elif param == Param.PACKET_PADDING:
+        elif param == self.PACKET_PADDING:
             value = 20
         # choose the input PCAP as default base for the TTL distribution
-        elif param == Param.TTL_FROM_CAIDA:
+        elif param == self.TTL_FROM_CAIDA:
             value = False
         # do not use multiple ports for requests and responses
-        elif param == Param.MULTIPORT:
+        elif param == self.MULTIPORT:
             value = False
         # interval selection strategy
-        elif param == Param.INTERVAL_SELECT_STRATEGY:
+        elif param == self.INTERVAL_SELECT_STRATEGY:
             value = "optimal"
-        elif param == Param.HIDDEN_MARK:
+        elif param == self.HIDDEN_MARK:
             value = False
         if value is None:
             return False
@@ -149,16 +168,16 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         # Setup (initial) parameters for packet creation loop
         buffer_size = 1000
         pkt_gen = Generator.PacketGenerator()
-        padding = self.get_param_value(Param.PACKET_PADDING)
+        padding = self.get_param_value(self.PACKET_PADDING)
         packets = collections.deque(maxlen=buffer_size)
         total_pkts = 0
-        limit_packetcount = self.get_param_value(Param.PACKETS_LIMIT)
-        limit_duration = self.get_param_value(Param.ATTACK_DURATION)
+        limit_packetcount = self.get_param_value(self.PACKETS_LIMIT)
+        limit_duration = self.get_param_value(self.ATTACK_DURATION)
         path_attack_pcap = None
         over_thousand = False
 
         msg_packet_mapping = MessageMapping(messages, self.statistics.get_pcap_timestamp_start())
-        mark_packets = self.get_param_value(Param.HIDDEN_MARK)
+        mark_packets = self.get_param_value(self.HIDDEN_MARK)
 
         # create packets to write to PCAP file
         for msg in messages:
@@ -450,8 +469,8 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                     bot_configs[bot_id]["TTL"] = total_ttl_prob_dict.random()
 
         # parse input CSV or XML
-        filepath_xml = self.get_param_value(Param.FILE_XML)
-        filepath_csv = self.get_param_value(Param.FILE_CSV)
+        filepath_xml = self.get_param_value(self.FILE_XML)
+        filepath_csv = self.get_param_value(self.FILE_CSV)
 
         # use C++ communication processor for faster interval finding
         cpp_comm_proc = lb.botnet_comm_processor()
@@ -485,13 +504,13 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                 print("done.")
 
         # find a good communication mapping in the input file that matches the users parameters
-        nat = self.get_param_value(Param.NAT_PRESENT)
+        nat = self.get_param_value(self.NAT_PRESENT)
         comm_proc = CommunicationProcessor(self.msg_types, nat)
-        duration = self.get_param_value(Param.ATTACK_DURATION)
-        number_init_bots = self.get_param_value(Param.NUMBER_INITIATOR_BOTS)
-        strategy = self.get_param_value(Param.INTERVAL_SELECT_STRATEGY)
-        start_idx = self.get_param_value(Param.INTERVAL_SELECT_START)
-        end_idx = self.get_param_value(Param.INTERVAL_SELECT_END)
+        duration = self.get_param_value(self.ATTACK_DURATION)
+        number_init_bots = self.get_param_value(self.NUMBER_INITIATOR_BOTS)
+        strategy = self.get_param_value(self.INTERVAL_SELECT_STRATEGY)
+        start_idx = self.get_param_value(self.INTERVAL_SELECT_START)
+        end_idx = self.get_param_value(self.INTERVAL_SELECT_END)
 
         potential_long_find_time = (
                     strategy == "optimal" and (filesize > 4 and self.statistics.get_packet_count() > 1000))
@@ -536,9 +555,9 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         local_ids, external_ids = comm_proc.det_ext_and_local_ids()
 
         # determine number of reused local and external IPs
-        reuse_percent_total = self.get_param_value(Param.IP_REUSE_TOTAL)
-        reuse_percent_external = self.get_param_value(Param.IP_REUSE_EXTERNAL)
-        reuse_percent_local = self.get_param_value(Param.IP_REUSE_LOCAL)
+        reuse_percent_total = self.get_param_value(self.IP_REUSE_TOTAL)
+        reuse_percent_external = self.get_param_value(self.IP_REUSE_EXTERNAL)
+        reuse_percent_local = self.get_param_value(self.IP_REUSE_LOCAL)
 
         # create IP and MAC configurations for the IDs/Bots
         ipgen = Generator.IPGenerator()
@@ -554,7 +573,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
             reuse_count_local = int(reuse_percent_total * reuse_percent_local * number_local_ids)
             existing_local_ips = []
             new_local_ips = []
-            inject_into_ips = self.get_param_value(Param.INJECT_INTO_IPS)
+            inject_into_ips = self.get_param_value(self.INJECT_INTO_IPS)
             if inject_into_ips:
                 if not isinstance(inject_into_ips, list):
                     inject_into_ips = [inject_into_ips]
@@ -593,7 +612,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         # this is the timestamp at which the first packet should be injected, the packets have to be shifted to
         # the beginning of the pcap file (INJECT_AT_TIMESTAMP) and then the offset of the packets have to be
         # compensated to start at the given point in time
-        zero_reference = self.get_param_value(Param.INJECT_AT_TIMESTAMP) - messages[0].time
+        zero_reference = self.get_param_value(self.INJECT_AT_TIMESTAMP) - messages[0].time
 
         # calculate the average delay values for local and external responses
         avg_delay_local, avg_delay_external = self.statistics.get_avg_delay_distributions(False)
@@ -612,7 +631,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
             return port
 
         # create port configurations for the bots
-        use_multiple_ports = self.get_param_value(Param.MULTIPORT)
+        use_multiple_ports = self.get_param_value(self.MULTIPORT)
         for bot in sorted(bot_configs):
             bot_configs[bot]["SrcPort"] = filter_reserved(port_selector.select_port_udp)
             if not use_multiple_ports:
@@ -621,7 +640,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
                 bot_configs[bot]["DstPort"] = filter_reserved(port_selector.select_port_udp)
 
         # assign realistic TTL for every bot
-        if self.get_param_value(Param.TTL_FROM_CAIDA):
+        if self.get_param_value(self.TTL_FROM_CAIDA):
             assign_ttls_from_caida(bot_configs)
         else:
             assign_realistic_ttls(bot_configs)

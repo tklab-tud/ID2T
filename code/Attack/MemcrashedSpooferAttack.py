@@ -8,13 +8,22 @@ import Attack.BaseAttack as BaseAttack
 import ID2TLib.Utility as Util
 import ID2TLib.Memcached as Memcd
 
-from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes as ParamTypes
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 
 class MemcrashedSpooferAttack(BaseAttack.BaseAttack):
+    IP_SOURCE = 'ip.src'
+    MAC_SOURCE = 'mac.src'
+    IP_DESTINATION = 'ip.dst'
+    MAC_DESTINATION = 'mac.dst'
+    IP_VICTIM = 'ip.victim'
+    INJECT_AT_TIMESTAMP = 'inject.at-timestamp'
+    INJECT_AFTER_PACKET = 'inject.after-pkt'
+    PACKETS_PER_SECOND = 'packets.per-second'
+    ATTACK_DURATION = 'attack.duration'
+
     def __init__(self):
         """
         Creates a new instance of the "Memcrashed" Memcached amplification attack.
@@ -26,18 +35,18 @@ class MemcrashedSpooferAttack(BaseAttack.BaseAttack):
 
         # Define allowed parameters and their type
         self.supported_params.update({
-            Param.IP_SOURCE: ParamTypes.TYPE_IP_ADDRESS,
-            Param.MAC_SOURCE: ParamTypes.TYPE_MAC_ADDRESS,
-            Param.IP_DESTINATION: ParamTypes.TYPE_IP_ADDRESS,
-            Param.MAC_DESTINATION: ParamTypes.TYPE_MAC_ADDRESS,
-            Param.IP_VICTIM: ParamTypes.TYPE_IP_ADDRESS,
-            Param.INJECT_AT_TIMESTAMP: ParamTypes.TYPE_FLOAT,
-            Param.INJECT_AFTER_PACKET: ParamTypes.TYPE_PACKET_POSITION,
-            Param.PACKETS_PER_SECOND: ParamTypes.TYPE_FLOAT,
-            Param.ATTACK_DURATION: ParamTypes.TYPE_INTEGER_POSITIVE
+            self.IP_SOURCE: ParamTypes.TYPE_IP_ADDRESS,
+            self.MAC_SOURCE: ParamTypes.TYPE_MAC_ADDRESS,
+            self.IP_DESTINATION: ParamTypes.TYPE_IP_ADDRESS,
+            self.MAC_DESTINATION: ParamTypes.TYPE_MAC_ADDRESS,
+            self.IP_VICTIM: ParamTypes.TYPE_IP_ADDRESS,
+            self.INJECT_AT_TIMESTAMP: ParamTypes.TYPE_FLOAT,
+            self.INJECT_AFTER_PACKET: ParamTypes.TYPE_PACKET_POSITION,
+            self.PACKETS_PER_SECOND: ParamTypes.TYPE_FLOAT,
+            self.ATTACK_DURATION: ParamTypes.TYPE_INTEGER_POSITIVE
         })
 
-    def init_param(self, param: Param) -> bool:
+    def init_param(self, param: str) -> bool:
         """
         Initialize a parameter with its default values specified in this attack.
 
@@ -46,42 +55,42 @@ class MemcrashedSpooferAttack(BaseAttack.BaseAttack):
         """
         value = None
         # By default, the most used IP is the attacker
-        if param == Param.IP_SOURCE:
+        if param == self.IP_SOURCE:
             value = self.statistics.get_most_used_ip_address()
-        elif param == Param.MAC_SOURCE:
-            ip_src = self.get_param_value(Param.IP_SOURCE)
+        elif param == self.MAC_SOURCE:
+            ip_src = self.get_param_value(self.IP_SOURCE)
             if ip_src is None:
                 return False
             value = self.get_mac_address(ip_src)
         # Target (i.e. amplifier) is a random public IP
-        elif param == Param.IP_DESTINATION:
+        elif param == self.IP_DESTINATION:
             value = self.generate_random_ipv4_address('A')
-        elif param == Param.MAC_DESTINATION:
+        elif param == self.MAC_DESTINATION:
             value = self.generate_random_mac_address()
         # IP of the victim which is supposed to get hit by the amplified attack
-        elif param == Param.IP_VICTIM:
+        elif param == self.IP_VICTIM:
             value = self.generate_random_ipv4_address('A')
-        elif param == Param.PACKETS_PER_SECOND:
+        elif param == self.PACKETS_PER_SECOND:
             value = self.statistics.get_most_used_pps()
-        elif param == Param.ATTACK_DURATION:
+        elif param == self.ATTACK_DURATION:
             value = rnd.randint(5, 30)
-        elif param == Param.INJECT_AFTER_PACKET:
+        elif param == self.INJECT_AFTER_PACKET:
             value = rnd.randint(0, self.statistics.get_packet_count())
         if value is None:
             return False
         return self.add_param_value(param, value)
 
     def generate_attack_packets(self) -> None:
-        ip_attacker = self.get_param_value(Param.IP_SOURCE)
-        mac_attacker = self.get_param_value(Param.MAC_SOURCE)
-        ip_amplifier = self.get_param_value(Param.IP_DESTINATION)
-        mac_amplifier = self.get_param_value(Param.MAC_DESTINATION)
-        ip_victim = self.get_param_value(Param.IP_VICTIM)
+        ip_attacker = self.get_param_value(self.IP_SOURCE)
+        mac_attacker = self.get_param_value(self.MAC_SOURCE)
+        ip_amplifier = self.get_param_value(self.IP_DESTINATION)
+        mac_amplifier = self.get_param_value(self.MAC_DESTINATION)
+        ip_victim = self.get_param_value(self.IP_VICTIM)
 
-        timestamp_next_pkt = self.get_param_value(Param.INJECT_AT_TIMESTAMP)
+        timestamp_next_pkt = self.get_param_value(self.INJECT_AT_TIMESTAMP)
         self.attack_start_utime = timestamp_next_pkt
 
-        attack_duration = self.get_param_value(Param.ATTACK_DURATION)
+        attack_duration = self.get_param_value(self.ATTACK_DURATION)
         attack_ends_time = timestamp_next_pkt + attack_duration
 
         _, src_ttl, _ = self.get_ip_data(ip_attacker)

@@ -24,7 +24,6 @@ import ID2TLib.Utility as Util
 import Core.TimestampController as tc
 import Core.BandwidthController as bc
 
-from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes as ParamTypes
 
 
@@ -32,6 +31,18 @@ class BaseAttack(metaclass=abc.ABCMeta):
     """
     Abstract base class for all attack classes. Provides basic functionalities, like parameter validation.
     """
+
+    IP_SOURCE = 'ip.src'
+    IP_DESTINATION = 'ip.dst'
+    INTERVAL_SELECT_STRATEGY = 'interval.selection.strategy'
+    ATTACK_DURATION = 'attack.duration'
+
+    PACKETS_PER_SECOND = 'packets.per-second'
+    INJECT_AT_TIMESTAMP = 'inject.at-timestamp'
+
+    BANDWIDTH_MAX = 'bandwidth.max'
+    BANDWIDTH_MIN_LOCAL = 'bandwidth.min.local'
+    BANDWIDTH_MIN_PUBLIC = 'bandwidth.min.public'
 
     ValuePair = collections.namedtuple('ValuePair', ['value', 'user_specified'])
 
@@ -51,9 +62,9 @@ class BaseAttack(metaclass=abc.ABCMeta):
         self.attack_description = description
         self.attack_type = attack_type
         self.params = {}
-        self.supported_params = {Param.BANDWIDTH_MAX: ParamTypes.TYPE_FLOAT,
-                                 Param.BANDWIDTH_MIN_LOCAL: ParamTypes.TYPE_FLOAT,
-                                 Param.BANDWIDTH_MIN_PUBLIC: ParamTypes.TYPE_FLOAT}
+        self.supported_params = {self.BANDWIDTH_MAX: ParamTypes.TYPE_FLOAT,
+                                 self.BANDWIDTH_MIN_LOCAL: ParamTypes.TYPE_FLOAT,
+                                 self.BANDWIDTH_MIN_PUBLIC: ParamTypes.TYPE_FLOAT}
         self.attack_start_utime = 0
         self.attack_end_utime = 0
         self.start_time = 0
@@ -97,28 +108,16 @@ class BaseAttack(metaclass=abc.ABCMeta):
         self.most_used_win_size = self.statistics.get_most_used_win_size()
 
     def init_mutual_params(self):
-        self.add_param_value(Param.BANDWIDTH_MAX, 0)
-        self.add_param_value(Param.BANDWIDTH_MIN_LOCAL, 0)
-        self.add_param_value(Param.BANDWIDTH_MIN_PUBLIC, 0)
-
-    def validate_params(self):
-        if Param.NUMBER_ATTACKERS in self.params:
-            num_attackers = self.get_param_value(Param.NUMBER_ATTACKERS)
-            macs = self.get_param_value(Param.MAC_SOURCE)
-            ips = self.get_param_value(Param.IP_SOURCE)
-            if num_attackers < len(macs):
-                new_macs = macs[:num_attackers]
-                self.add_param_value(Param.MAC_SOURCE, new_macs)
-            if num_attackers < len(ips):
-                new_ips = ips[:num_attackers]
-                self.add_param_value(Param.IP_SOURCE, new_ips)
+        self.add_param_value(self.BANDWIDTH_MAX, 0)
+        self.add_param_value(self.BANDWIDTH_MIN_LOCAL, 0)
+        self.add_param_value(self.BANDWIDTH_MIN_PUBLIC, 0)
 
     def init_objects(self):
-        self.timestamp_controller = tc.TimestampController(self.get_param_value(Param.INJECT_AT_TIMESTAMP),
-                                                           self.get_param_value(Param.PACKETS_PER_SECOND))
-        self.bandwidth_controller = bc.BandwidthController(self.get_param_value(Param.BANDWIDTH_MAX),
-                                                           self.get_param_value(Param.BANDWIDTH_MIN_LOCAL),
-                                                           self.get_param_value(Param.BANDWIDTH_MIN_PUBLIC),
+        self.timestamp_controller = tc.TimestampController(self.get_param_value(self.INJECT_AT_TIMESTAMP),
+                                                           self.get_param_value(self.PACKETS_PER_SECOND))
+        self.bandwidth_controller = bc.BandwidthController(self.get_param_value(self.BANDWIDTH_MAX),
+                                                           self.get_param_value(self.BANDWIDTH_MIN_LOCAL),
+                                                           self.get_param_value(self.BANDWIDTH_MIN_PUBLIC),
                                                            self.statistics)
 
     def init_params(self):
@@ -145,7 +144,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
                 skipped.update({param: val+1})
 
     @abc.abstractmethod
-    def init_param(self, param: Param) -> bool:
+    def init_param(self, param: str) -> bool:
         """
         Initialize a parameter with a default value specified in the specific attack.
 
@@ -425,12 +424,8 @@ class BaseAttack(metaclass=abc.ABCMeta):
 
         # get AttackParameters instance associated with param
         # for default values assigned in attack classes, like Parameter.PORT_OPEN
-        if isinstance(param, Param):
+        if isinstance(param, str):
             param_name = param
-        # for values given by user input, like port.open
-        elif any(param == item.value for item in Param):
-            # Get Enum key of given string identifier
-            param_name = Param(param)
         else:
             print("WARNING: Invalid attack parameter ({}). Ignoring.".format(param))
             return False
@@ -439,7 +434,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
             return False
 
         # Get parameter type of attack's required_params
-        param_type = self.supported_params.get(param_name)
+        param_type = self.supported_params[param_name]
 
         # a comma-separated lists must be split first
         if isinstance(value, str) and "," in value:
@@ -454,10 +449,10 @@ class BaseAttack(metaclass=abc.ABCMeta):
 
         # Validate parameter depending on parameter's type
         elif param_type == ParamTypes.TYPE_IP_ADDRESS:
-            if (param_name == Param.IP_SOURCE
-                and self.param_equals(Param.IP_DESTINATION, value))\
-                    or (param_name == Param.IP_DESTINATION
-                        and self.param_equals(Param.IP_SOURCE, value)):
+            if (param_name == self.IP_SOURCE
+                and self.param_equals(self.IP_DESTINATION, value))\
+                    or (param_name == self.IP_DESTINATION
+                        and self.param_equals(self.IP_SOURCE, value)):
                 print("ERROR: Parameter " + str(param) + " or parameter value " + str(value) +
                       " already used by another IP parameter. Generating random IP.")
                 count=1
@@ -489,10 +484,10 @@ class BaseAttack(metaclass=abc.ABCMeta):
             # but microseconds are only chosen randomly if the given parameter does not already specify it
             # e.g. inject.at-timestamp=123456.987654 -> is not changed
             # e.g. inject.at-timestamp=123456 -> is changed to: 123456.[random digits]
-            if param_name == Param.INJECT_AT_TIMESTAMP and is_valid and ((value - int(value)) == 0):
+            if param_name == self.INJECT_AT_TIMESTAMP and is_valid and ((value - int(value)) == 0):
                 value = value + random.uniform(0, 0.999999)
             # Check user specified pps against limits
-            if param_name == Param.PACKETS_PER_SECOND and is_valid and user_specified:
+            if param_name == self.PACKETS_PER_SECOND and is_valid and user_specified:
                 if value > 1000000:
                     value = 1000000
                     print("WARNING: PPS is too high. Dropping to 1,000,000 pps.")
@@ -515,7 +510,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
             ts = pr.pcap_processor(self.statistics.pcap_filepath, "False", Util.RESOURCE_DIR, "").get_timestamp_mu_sec(int(value))
             if 0 <= int(value) <= self.statistics.get_packet_count() and ts >= 0:
                 is_valid = True
-                param_name = Param.INJECT_AT_TIMESTAMP
+                param_name = self.INJECT_AT_TIMESTAMP
                 value = (ts / 1000000)  # convert microseconds from getTimestampMuSec into seconds
         elif param_type == ParamTypes.TYPE_DOMAIN:
             is_valid = self._is_domain(value)
@@ -537,7 +532,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
             is_valid = value in {"random", "optimal", "custom"}
 
         # If value is query -> get value from database
-        elif param_name != Param.INTERVAL_SELECT_STRATEGY and self.statistics.is_query(value):
+        elif param_name != self.INTERVAL_SELECT_STRATEGY and self.statistics.is_query(value):
             value = self.statistics.process_db_query(value, False)
             if value is not None and value is not "":
                 is_valid = True
@@ -554,7 +549,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
 
         return is_valid
 
-    def get_param_value(self, param: Param):
+    def get_param_value(self, param: str):
         """
         Returns the parameter value for a given parameter.
 
@@ -567,16 +562,16 @@ class BaseAttack(metaclass=abc.ABCMeta):
         else:
             return None
 
-    def param_exists(self, param_name: Param) -> bool:
+    def param_exists(self, param_name: str) -> bool:
         """
         Returns whether the parameter value is specified.
 
         :param param_name: The parameter to look for.
         :return: True if the parameter is already specified, False if not.
         """
-        return param_name in self.params.keys() and self.params[param_name][0] != None
+        return param_name in self.params.keys() and self.params[param_name][0] is not None
 
-    def param_user_defined(self, param_name: Param) -> bool:
+    def param_user_defined(self, param_name: str) -> bool:
         """
         Returns whether the parameter value was specified by the user or a given parameter.
 
@@ -585,7 +580,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         """
         return param_name in self.params.keys() and self.params[param_name][1]
 
-    def param_equals(self, param_name: Param, value) -> bool:
+    def param_equals(self, param_name: str, value) -> bool:
         """
         Returns whether the parameter value equals the given value.
 
@@ -601,7 +596,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         However, this should not happen as all attack should define default parameter values.
         """
         # parameters which do not require default values
-        non_obligatory_params = [Param.INJECT_AFTER_PACKET, Param.NUMBER_ATTACKERS]
+        non_obligatory_params = ['inject.after-pkt', 'number.attackers']
         for param, param_type in self.supported_params.items():
             # checks whether all params have assigned values, INJECT_AFTER_PACKET must not be considered because the
             # timestamp derived from it is set to Parameter.INJECT_AT_TIMESTAMP

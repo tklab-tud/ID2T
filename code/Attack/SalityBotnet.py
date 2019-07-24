@@ -7,7 +7,6 @@ import scapy.utils
 import Attack.BaseAttack as BaseAttack
 import ID2TLib.Utility as Util
 
-from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes as ParamTypes
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
@@ -16,6 +15,12 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 
 class SalityBotnet(BaseAttack.BaseAttack):
+    MAC_SOURCE = 'mac.src'
+    IP_SOURCE = 'ip.src'
+    INJECT_AT_TIMESTAMP = 'inject.at-timestamp'
+    INJECT_AFTER_PACKET = 'inject.after-pkt'
+    PACKETS_PER_SECOND = 'packets.per-second'
+
     template_attack_pcap_path = Util.RESOURCE_DIR + "/../resources/sality_botnet.pcap"
 
     def __init__(self):
@@ -31,14 +36,14 @@ class SalityBotnet(BaseAttack.BaseAttack):
 
         # Define allowed parameters and their type
         self.supported_params.update({
-            Param.MAC_SOURCE: ParamTypes.TYPE_MAC_ADDRESS,
-            Param.IP_SOURCE: ParamTypes.TYPE_IP_ADDRESS,
-            Param.INJECT_AT_TIMESTAMP: ParamTypes.TYPE_FLOAT,
-            Param.INJECT_AFTER_PACKET: ParamTypes.TYPE_PACKET_POSITION,
-            Param.PACKETS_PER_SECOND: ParamTypes.TYPE_FLOAT
+            self.MAC_SOURCE: ParamTypes.TYPE_MAC_ADDRESS,
+            self.IP_SOURCE: ParamTypes.TYPE_IP_ADDRESS,
+            self.INJECT_AT_TIMESTAMP: ParamTypes.TYPE_FLOAT,
+            self.INJECT_AFTER_PACKET: ParamTypes.TYPE_PACKET_POSITION,
+            self.PACKETS_PER_SECOND: ParamTypes.TYPE_FLOAT
         })
 
-    def init_param(self, param: Param) -> bool:
+    def init_param(self, param: str) -> bool:
         """
         Initialize a parameter with its default values specified in this attack.
 
@@ -46,17 +51,17 @@ class SalityBotnet(BaseAttack.BaseAttack):
         :return: True if initialization was successful, False if not
         """
         value = None
-        if param == Param.IP_SOURCE:
+        if param == self.IP_SOURCE:
             value = self.statistics.get_most_used_ip_address()
-        elif param == Param.MAC_SOURCE:
-            ip_src = self.get_param_value(Param.IP_SOURCE)
+        elif param == self.MAC_SOURCE:
+            ip_src = self.get_param_value(self.IP_SOURCE)
             if ip_src is None:
                 return False
             value = self.get_mac_address(ip_src)
         # Attack configuration
-        elif param == Param.INJECT_AFTER_PACKET:
-            self.add_param_value(Param.INJECT_AFTER_PACKET, rnd.randint(0, self.statistics.get_packet_count()))
-        elif param == Param.PACKETS_PER_SECOND:
+        elif param == self.INJECT_AFTER_PACKET:
+            self.add_param_value(self.INJECT_AFTER_PACKET, rnd.randint(0, self.statistics.get_packet_count()))
+        elif param == self.PACKETS_PER_SECOND:
             value = self.statistics.get_most_used_pps()
         if value is None:
             return False
@@ -68,11 +73,11 @@ class SalityBotnet(BaseAttack.BaseAttack):
         """
 
         # Timestamp
-        timestamp_next_pkt = self.get_param_value(Param.INJECT_AT_TIMESTAMP)
+        timestamp_next_pkt = self.get_param_value(self.INJECT_AT_TIMESTAMP)
 
         # Initialize parameters
-        mac_source = self.get_param_value(Param.MAC_SOURCE)
-        ip_source = self.get_param_value(Param.IP_SOURCE)
+        mac_source = self.get_param_value(self.MAC_SOURCE)
+        ip_source = self.get_param_value(self.IP_SOURCE)
 
         # Pick a DNS server from the background traffic
         ip_dns_server = self.statistics.process_db_query(

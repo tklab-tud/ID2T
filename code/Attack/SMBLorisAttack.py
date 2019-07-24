@@ -8,7 +8,6 @@ import Attack.BaseAttack as BaseAttack
 import ID2TLib.SMBLib as SMBLib
 import ID2TLib.Utility as Util
 
-from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes as ParamTypes
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
@@ -17,6 +16,16 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 
 class SMBLorisAttack(BaseAttack.BaseAttack):
+    IP_SOURCE = 'ip.src'
+    IP_DESTINATION = 'ip.dst'
+    MAC_SOURCE = 'mac.src'
+    MAC_DESTINATION = 'mac.dst'
+    INJECT_AT_TIMESTAMP = 'inject.at-timestamp'
+    INJECT_AFTER_PACKET = 'inject.after-pkt'
+    PACKETS_PER_SECOND = 'packets.per-second'
+    ATTACK_DURATION = 'attack.duration'
+    NUMBER_ATTACKERS = 'attackers.count'
+
     def __init__(self):
         """
         Creates a new instance of the SMBLorisAttack.
@@ -29,18 +38,18 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
 
         # Define allowed parameters and their type
         self.supported_params.update({
-            Param.IP_SOURCE: ParamTypes.TYPE_IP_ADDRESS,
-            Param.IP_DESTINATION: ParamTypes.TYPE_IP_ADDRESS,
-            Param.MAC_SOURCE: ParamTypes.TYPE_MAC_ADDRESS,
-            Param.MAC_DESTINATION: ParamTypes.TYPE_MAC_ADDRESS,
-            Param.INJECT_AT_TIMESTAMP: ParamTypes.TYPE_FLOAT,
-            Param.INJECT_AFTER_PACKET: ParamTypes.TYPE_PACKET_POSITION,
-            Param.PACKETS_PER_SECOND: ParamTypes.TYPE_FLOAT,
-            Param.ATTACK_DURATION: ParamTypes.TYPE_INTEGER_POSITIVE,
-            Param.NUMBER_ATTACKERS: ParamTypes.TYPE_INTEGER_POSITIVE
+            self.IP_SOURCE: ParamTypes.TYPE_IP_ADDRESS,
+            self.IP_DESTINATION: ParamTypes.TYPE_IP_ADDRESS,
+            self.MAC_SOURCE: ParamTypes.TYPE_MAC_ADDRESS,
+            self.MAC_DESTINATION: ParamTypes.TYPE_MAC_ADDRESS,
+            self.INJECT_AT_TIMESTAMP: ParamTypes.TYPE_FLOAT,
+            self.INJECT_AFTER_PACKET: ParamTypes.TYPE_PACKET_POSITION,
+            self.PACKETS_PER_SECOND: ParamTypes.TYPE_FLOAT,
+            self.ATTACK_DURATION: ParamTypes.TYPE_INTEGER_POSITIVE,
+            self.NUMBER_ATTACKERS: ParamTypes.TYPE_INTEGER_POSITIVE
         })
 
-    def init_param(self, param: Param) -> bool:
+    def init_param(self, param: str) -> bool:
         """
         Initialize a parameter with its default values specified in this attack.
 
@@ -49,31 +58,31 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
         """
         value = None
         # The most used IP class in background traffic
-        if param == Param.NUMBER_ATTACKERS:
+        if param == self.NUMBER_ATTACKERS:
             value = rnd.randint(1, 16)
-        if param == Param.IP_SOURCE:
+        if param == self.IP_SOURCE:
             most_used_ip_class = Util.handle_most_used_outputs(self.statistics.get_most_used_ip_class())
-            num_attackers = self.get_param_value(Param.NUMBER_ATTACKERS)
+            num_attackers = self.get_param_value(self.NUMBER_ATTACKERS)
             if num_attackers is None:
                 return False
             value = self.generate_random_ipv4_address(most_used_ip_class, num_attackers)
-        elif param == Param.MAC_SOURCE:
-            num_attackers = self.get_param_value(Param.NUMBER_ATTACKERS)
+        elif param == self.MAC_SOURCE:
+            num_attackers = self.get_param_value(self.NUMBER_ATTACKERS)
             if num_attackers is None:
                 return False
             value = self.generate_random_mac_address(num_attackers)
-        elif param == Param.IP_DESTINATION:
+        elif param == self.IP_DESTINATION:
             value = self.statistics.get_random_ip_address()
-        elif param == Param.MAC_DESTINATION:
-            ip_dst = self.get_param_value(Param.IP_DESTINATION)
+        elif param == self.MAC_DESTINATION:
+            ip_dst = self.get_param_value(self.IP_DESTINATION)
             if ip_dst is None:
                 return False
             value = self.get_mac_address(ip_dst)
-        elif param == Param.PACKETS_PER_SECOND:
+        elif param == self.PACKETS_PER_SECOND:
             value = self.statistics.get_most_used_pps()
-        elif param == Param.INJECT_AFTER_PACKET:
+        elif param == self.INJECT_AFTER_PACKET:
             value = rnd.randint(0, self.statistics.get_packet_count())
-        elif param == Param.ATTACK_DURATION:
+        elif param == self.ATTACK_DURATION:
             value = 30
         if value is None:
             return False
@@ -83,31 +92,31 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
         """
         Creates the attack packets.
         """
-        pps = self.get_param_value(Param.PACKETS_PER_SECOND)
+        pps = self.get_param_value(self.PACKETS_PER_SECOND)
 
         # Timestamp
-        first_timestamp = self.get_param_value(Param.INJECT_AT_TIMESTAMP)
+        first_timestamp = self.get_param_value(self.INJECT_AT_TIMESTAMP)
         # store start time of attack
         self.attack_start_utime = first_timestamp
 
         # Initialize parameters
-        ip_destination = self.get_param_value(Param.IP_DESTINATION)
-        mac_destination = self.get_param_value(Param.MAC_DESTINATION)
+        ip_destination = self.get_param_value(self.IP_DESTINATION)
+        mac_destination = self.get_param_value(self.MAC_DESTINATION)
 
         # Determine source IP and MAC address
-        num_attackers = self.get_param_value(Param.NUMBER_ATTACKERS)
-        # user supplied Param.NUMBER_ATTACKERS
+        num_attackers = self.get_param_value(self.NUMBER_ATTACKERS)
+        # user supplied self.NUMBER_ATTACKERS
         if (num_attackers is not None) and (num_attackers is not 0):
             # The most used IP class in background traffic
             most_used_ip_class = Util.handle_most_used_outputs(self.statistics.get_most_used_ip_class())
-            # Create random attackers based on user input Param.NUMBER_ATTACKERS
+            # Create random attackers based on user input self.NUMBER_ATTACKERS
             ip_source = self.generate_random_ipv4_address(most_used_ip_class, num_attackers)
             mac_source = self.generate_random_mac_address(num_attackers)
-        else:  # user did not supply Param.NUMBER_ATTACKS
+        else:  # user did not supply self.NUMBER_ATTACKS
             # use default values for IP_SOURCE/MAC_SOURCE or overwritten values
             # if user supplied any values for those params
-            ip_source = self.get_param_value(Param.IP_SOURCE)
-            mac_source = self.get_param_value(Param.MAC_SOURCE)
+            ip_source = self.get_param_value(self.IP_SOURCE)
+            mac_source = self.get_param_value(self.MAC_SOURCE)
 
         ip_source_list = []
         mac_source_list = []
@@ -131,7 +140,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
         # Get MSS, TTL and Window size value for destination IP
         destination_mss_value, destination_ttl_value, destination_win_value = self.get_ip_data(ip_destination)
 
-        attack_duration = self.get_param_value(Param.ATTACK_DURATION)
+        attack_duration = self.get_param_value(self.ATTACK_DURATION)
         attack_ends_time = first_timestamp + attack_duration
 
         victim_pps = pps * num_attackers

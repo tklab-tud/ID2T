@@ -126,7 +126,7 @@ class LabelManager:
                 return parameters_root
 
             for param_key, param_value in parameters.items():
-                param = doc.createElement(param_key.value)
+                param = doc.createElement(param_key)
                 param.appendChild(doc.createTextNode(str(param_value.value)))
                 param.setAttribute(self.ATTR_PARAM_USERSPECIFIED, str(param_value.user_specified))
                 parameters_root.appendChild(param)
