@@ -10,7 +10,6 @@ import ID2TLib.SMB2 as SMB2
 import ID2TLib.SMBLib as SMBLib
 import ID2TLib.Utility as Util
 
-from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes as ParamTypes
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
@@ -19,6 +18,23 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 
 class SMBScanAttack(BaseAttack.BaseAttack):
+    IP_SOURCE = 'ip.src'
+    IP_DESTINATION = 'ip.dst'
+    MAC_DESTINATION = 'mac.dst'
+    TARGET_COUNT = 'target.count'
+    HOSTING_PERCENTAGE = 'hosting.percentage'
+    PORT_SOURCE = 'port.src'
+    MAC_SOURCE = 'mac.src'
+    INJECT_AT_TIMESTAMP = 'inject.at-timestamp'
+    INJECT_AFTER_PACKET = 'inject.after-pkt'
+    IP_SOURCE_RANDOMIZE = 'ip.src.shuffle'
+    PACKETS_PER_SECOND = 'packets.per-second'
+    PORT_SOURCE_RANDOMIZE = 'port.src.shuffle'
+    HOSTING_IP = 'hosting.ip'
+    HOSTING_VERSION = 'hosting.version'
+    SOURCE_PLATFORM = 'src.platform'
+    PROTOCOL_VERSION = 'protocol.version'
+
     def __init__(self):
         """
         Creates a new instance of the SMBScanAttack.
@@ -34,24 +50,25 @@ class SMBScanAttack(BaseAttack.BaseAttack):
 
         # Define allowed parameters and their type
         self.supported_params.update({
-            Param.IP_SOURCE: ParamTypes.TYPE_IP_ADDRESS,
-            Param.IP_DESTINATION: ParamTypes.TYPE_IP_ADDRESS,
-            Param.TARGET_COUNT: ParamTypes.TYPE_INTEGER_POSITIVE,
-            Param.HOSTING_PERCENTAGE: ParamTypes.TYPE_PERCENTAGE,
-            Param.PORT_SOURCE: ParamTypes.TYPE_PORT,
-            Param.MAC_SOURCE: ParamTypes.TYPE_MAC_ADDRESS,
-            Param.INJECT_AT_TIMESTAMP: ParamTypes.TYPE_FLOAT,
-            Param.INJECT_AFTER_PACKET: ParamTypes.TYPE_PACKET_POSITION,
-            Param.IP_SOURCE_RANDOMIZE: ParamTypes.TYPE_BOOLEAN,
-            Param.PACKETS_PER_SECOND: ParamTypes.TYPE_FLOAT,
-            Param.PORT_SOURCE_RANDOMIZE: ParamTypes.TYPE_BOOLEAN,
-            Param.HOSTING_IP: ParamTypes.TYPE_IP_ADDRESS,
-            Param.HOSTING_VERSION: ParamTypes.TYPE_STRING,
-            Param.SOURCE_PLATFORM: ParamTypes.TYPE_STRING,
-            Param.PROTOCOL_VERSION: ParamTypes.TYPE_STRING
+            self.IP_SOURCE: ParamTypes.TYPE_IP_ADDRESS,
+            self.IP_DESTINATION: ParamTypes.TYPE_IP_ADDRESS,
+            self.MAC_DESTINATION: ParamTypes.TYPE_MAC_ADDRESS,
+            self.TARGET_COUNT: ParamTypes.TYPE_INTEGER_POSITIVE,
+            self.HOSTING_PERCENTAGE: ParamTypes.TYPE_PERCENTAGE,
+            self.PORT_SOURCE: ParamTypes.TYPE_PORT,
+            self.MAC_SOURCE: ParamTypes.TYPE_MAC_ADDRESS,
+            self.INJECT_AT_TIMESTAMP: ParamTypes.TYPE_FLOAT,
+            self.INJECT_AFTER_PACKET: ParamTypes.TYPE_PACKET_POSITION,
+            self.IP_SOURCE_RANDOMIZE: ParamTypes.TYPE_BOOLEAN,
+            self.PACKETS_PER_SECOND: ParamTypes.TYPE_FLOAT,
+            self.PORT_SOURCE_RANDOMIZE: ParamTypes.TYPE_BOOLEAN,
+            self.HOSTING_IP: ParamTypes.TYPE_IP_ADDRESS,
+            self.HOSTING_VERSION: ParamTypes.TYPE_STRING,
+            self.SOURCE_PLATFORM: ParamTypes.TYPE_STRING,
+            self.PROTOCOL_VERSION: ParamTypes.TYPE_STRING
         })
 
-    def init_param(self, param: Param) -> bool:
+    def init_param(self, param: str) -> bool:
         """
         Initialize a parameter with its default values specified in this attack.
 
@@ -59,43 +76,43 @@ class SMBScanAttack(BaseAttack.BaseAttack):
         :return: True if initialization was successful, False if not
         """
         value = None
-        if param == Param.IP_SOURCE:
+        if param == self.IP_SOURCE:
             value = self.statistics.get_most_used_ip_address()
-        elif param == Param.IP_SOURCE_RANDOMIZE:
+        elif param == self.IP_SOURCE_RANDOMIZE:
             value = 'False'
-        elif param == Param.MAC_SOURCE:
-            ip_src = self.get_param_value(Param.IP_SOURCE)
+        elif param == self.MAC_SOURCE:
+            ip_src = self.get_param_value(self.IP_SOURCE)
             if ip_src is None:
                 return False
             value = self.get_mac_address(ip_src)
-        elif param == Param.TARGET_COUNT:
+        elif param == self.TARGET_COUNT:
             value = 200
-        elif param == Param.IP_DESTINATION:
+        elif param == self.IP_DESTINATION:
             value = "1.1.1.1"
-        elif param == Param.MAC_DESTINATION:
-            ip_dst = self.get_param_value(Param.IP_DESTINATION)
+        elif param == self.MAC_DESTINATION:
+            ip_dst = self.get_param_value(self.IP_DESTINATION)
             if ip_dst is None:
                 return False
             value = self.get_mac_address(ip_dst)
-        elif param == Param.PORT_SOURCE:
+        elif param == self.PORT_SOURCE:
             value = rnd.randint(1024, 65535)
-        elif param == Param.PORT_SOURCE_RANDOMIZE:
+        elif param == self.PORT_SOURCE_RANDOMIZE:
             value = 'True'
-        elif param == Param.PACKETS_PER_SECOND:
+        elif param == self.PACKETS_PER_SECOND:
             value = self.statistics.get_most_used_pps()
-        elif param == Param.INJECT_AFTER_PACKET:
+        elif param == self.INJECT_AFTER_PACKET:
             value = rnd.randint(0, self.statistics.get_packet_count())
-        elif param == Param.INJECT_AT_TIMESTAMP:
+        elif param == self.INJECT_AT_TIMESTAMP:
             value = self.get_intermediate_timestamp()
-        elif param == Param.HOSTING_PERCENTAGE:
+        elif param == self.HOSTING_PERCENTAGE:
             value = 0.5
-        elif param == Param.HOSTING_IP:
+        elif param == self.HOSTING_IP:
             value = "1.1.1.1"
-        elif param == Param.HOSTING_VERSION:
+        elif param == self.HOSTING_VERSION:
             value = SMBLib.get_smb_version(platform=self.host_os)
-        elif param == Param.SOURCE_PLATFORM:
+        elif param == self.SOURCE_PLATFORM:
             value = Util.get_rnd_os()
-        elif param == Param.PROTOCOL_VERSION:
+        elif param == self.PROTOCOL_VERSION:
             value = "1"
         if value is None:
             return False
@@ -107,21 +124,21 @@ class SMBScanAttack(BaseAttack.BaseAttack):
         """
 
         # Timestamp
-        timestamp_next_pkt = self.get_param_value(Param.INJECT_AT_TIMESTAMP)
+        timestamp_next_pkt = self.get_param_value(self.INJECT_AT_TIMESTAMP)
         # store start time of attack
         self.attack_start_utime = timestamp_next_pkt
         timestamp_prv_reply, timestamp_confirm = 0, 0
 
         # Initialize parameters
-        ip_source = self.get_param_value(Param.IP_SOURCE)
+        ip_source = self.get_param_value(self.IP_SOURCE)
 
-        dest_ip_count = self.get_param_value(Param.TARGET_COUNT)
+        dest_ip_count = self.get_param_value(self.TARGET_COUNT)
         ip_addr_count = self.statistics.get_ip_address_count()
         if ip_addr_count < dest_ip_count + 1:
             dest_ip_count = ip_addr_count
 
         # Check for user defined target IP addresses
-        ip_destinations = self.get_param_value(Param.IP_DESTINATION)
+        ip_destinations = self.get_param_value(self.IP_DESTINATION)
         if isinstance(ip_destinations, list):
             dest_ip_count = dest_ip_count - len(ip_destinations)
         elif ip_destinations is not "1.1.1.1":
@@ -139,14 +156,14 @@ class SMBScanAttack(BaseAttack.BaseAttack):
         # Make sure the source IP is not part of targets
         if isinstance(ip_destinations, list) and ip_source in ip_destinations:
             ip_destinations.remove(ip_source)
-        self.add_param_value(Param.IP_DESTINATION, ip_destinations)
+        self.add_param_value(self.IP_DESTINATION, ip_destinations)
 
         # Calculate the amount of IP addresses which are hosting SMB
-        host_percentage = self.get_param_value(Param.HOSTING_PERCENTAGE)
+        host_percentage = self.get_param_value(self.HOSTING_PERCENTAGE)
         rnd_ip_count = len(ip_destinations) * host_percentage
 
         # Check for user defined IP addresses which are hosting SMB
-        hosting_ip = self.get_param_value(Param.HOSTING_IP)
+        hosting_ip = self.get_param_value(self.HOSTING_IP)
         if isinstance(hosting_ip, list):
             rnd_ip_count = rnd_ip_count - len(hosting_ip)
         elif hosting_ip is not "1.1.1.1":
@@ -156,30 +173,30 @@ class SMBScanAttack(BaseAttack.BaseAttack):
             hosting_ip = []
 
         hosting_ip = hosting_ip + ip_destinations[:int(rnd_ip_count)]
-        self.add_param_value(Param.HOSTING_IP, hosting_ip)
+        self.add_param_value(self.HOSTING_IP, hosting_ip)
 
         # Shuffle targets
         rnd.shuffle(ip_destinations)
 
         # FIXME: Handle mac addresses correctly
-        mac_source = self.get_param_value(Param.MAC_SOURCE)
-        mac_dest = self.get_param_value(Param.MAC_DESTINATION)
+        mac_source = self.get_param_value(self.MAC_SOURCE)
+        mac_dest = self.get_param_value(self.MAC_DESTINATION)
 
         # Check smb version
-        smb_version = self.get_param_value(Param.PROTOCOL_VERSION)
+        smb_version = self.get_param_value(self.PROTOCOL_VERSION)
         if smb_version not in SMBLib.smb_versions:
             SMBLib.invalid_smb_version(smb_version)
-        hosting_version = self.get_param_value(Param.HOSTING_VERSION)
+        hosting_version = self.get_param_value(self.HOSTING_VERSION)
         if hosting_version not in SMBLib.smb_versions:
             SMBLib.invalid_smb_version(hosting_version)
         # Check source platform
-        src_platform = self.get_param_value(Param.SOURCE_PLATFORM).lower()
+        src_platform = self.get_param_value(self.SOURCE_PLATFORM).lower()
 
         # randomize source ports according to platform, if specified
-        if self.get_param_value(Param.PORT_SOURCE_RANDOMIZE):
+        if self.get_param_value(self.PORT_SOURCE_RANDOMIZE):
             sport = Util.generate_source_port_from_platform(src_platform)
         else:
-            sport = self.get_param_value(Param.PORT_SOURCE)
+            sport = self.get_param_value(self.PORT_SOURCE)
 
         # No destination IP was specified, but a destination MAC was specified, generate IP that fits MAC
         if isinstance(ip_destinations, list) and isinstance(mac_dest, str):
@@ -199,7 +216,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
             rnd.shuffle(ip_dests)
 
         # Randomize source IP, if specified
-        if self.get_param_value(Param.IP_SOURCE_RANDOMIZE):
+        if self.get_param_value(self.IP_SOURCE_RANDOMIZE):
             ip_source = self.generate_random_ipv4_address("Unknown", 1)
             while ip_source in ip_dests:
                 ip_source = self.generate_random_ipv4_address("Unknown", 1)
@@ -241,7 +258,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                 victim_seq = rnd.randint(1000, 50000)
 
                 # Randomize source port for each connection if specified
-                if self.get_param_value(Param.PORT_SOURCE_RANDOMIZE):
+                if self.get_param_value(self.PORT_SOURCE_RANDOMIZE):
                     sport = Util.generate_source_port_from_platform(src_platform, sport)
 
                 # 1) Build request package

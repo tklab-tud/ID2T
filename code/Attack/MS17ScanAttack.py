@@ -9,7 +9,6 @@ import Attack.BaseAttack as BaseAttack
 import ID2TLib.SMBLib as SMBLib
 import ID2TLib.Utility as Util
 
-from Attack.AttackParameters import Parameter as Param
 from Attack.AttackParameters import ParameterTypes as ParamTypes
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
@@ -18,6 +17,16 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 
 class MS17ScanAttack(BaseAttack.BaseAttack):
+    MAC_SOURCE = 'mac.src'
+    IP_SOURCE = 'ip.src'
+    PORT_SOURCE = 'port.src'
+    MAC_DESTINATION = 'mac.dst'
+    IP_DESTINATION = 'ip.dst'
+    PORT_DESTINATION = 'port.dst'
+    INJECT_AT_TIMESTAMP = 'inject.at-timestamp'
+    INJECT_AFTER_PACKET = 'inject.after-pkt'
+    PACKETS_PER_SECOND = 'packets.per-second'
+
     template_scan_pcap_path = Util.RESOURCE_DIR + "Win7_eternalblue_scan.pcap"
     # Empirical values from Metasploit experiments
     minDefaultPort = 30000
@@ -37,18 +46,18 @@ class MS17ScanAttack(BaseAttack.BaseAttack):
 
         # Define allowed parameters and their type
         self.supported_params.update({
-            Param.MAC_SOURCE: ParamTypes.TYPE_MAC_ADDRESS,
-            Param.IP_SOURCE: ParamTypes.TYPE_IP_ADDRESS,
-            Param.PORT_SOURCE: ParamTypes.TYPE_PORT,
-            Param.MAC_DESTINATION: ParamTypes.TYPE_MAC_ADDRESS,
-            Param.IP_DESTINATION: ParamTypes.TYPE_IP_ADDRESS,
-            Param.PORT_DESTINATION: ParamTypes.TYPE_PORT,
-            Param.INJECT_AT_TIMESTAMP: ParamTypes.TYPE_FLOAT,
-            Param.INJECT_AFTER_PACKET: ParamTypes.TYPE_PACKET_POSITION,
-            Param.PACKETS_PER_SECOND: ParamTypes.TYPE_FLOAT
+            self.MAC_SOURCE: ParamTypes.TYPE_MAC_ADDRESS,
+            self.IP_SOURCE: ParamTypes.TYPE_IP_ADDRESS,
+            self.PORT_SOURCE: ParamTypes.TYPE_PORT,
+            self.MAC_DESTINATION: ParamTypes.TYPE_MAC_ADDRESS,
+            self.IP_DESTINATION: ParamTypes.TYPE_IP_ADDRESS,
+            self.PORT_DESTINATION: ParamTypes.TYPE_PORT,
+            self.INJECT_AT_TIMESTAMP: ParamTypes.TYPE_FLOAT,
+            self.INJECT_AFTER_PACKET: ParamTypes.TYPE_PACKET_POSITION,
+            self.PACKETS_PER_SECOND: ParamTypes.TYPE_FLOAT
         })
 
-    def init_param(self, param: Param) -> bool:
+    def init_param(self, param: str) -> bool:
         """
         Initialize a parameter with its default values specified in this attack.
 
@@ -57,32 +66,32 @@ class MS17ScanAttack(BaseAttack.BaseAttack):
         """
         value = None
         # Victim configuration
-        if param == Param.IP_DESTINATION:
+        if param == self.IP_DESTINATION:
             value = self.statistics.get_most_used_ip_address()
-        elif param == Param.MAC_DESTINATION:
-            ip_dst = self.get_param_value(Param.IP_DESTINATION)
+        elif param == self.MAC_DESTINATION:
+            ip_dst = self.get_param_value(self.IP_DESTINATION)
             if ip_dst is None:
                 return False
             value = self.get_mac_address(ip_dst)
-        elif param == Param.PORT_DESTINATION:
+        elif param == self.PORT_DESTINATION:
             value = SMBLib.smb_port
         # Attacker configuration
-        elif param == Param.IP_SOURCE:
-            ip_dst = self.get_param_value(Param.IP_DESTINATION)
+        elif param == self.IP_SOURCE:
+            ip_dst = self.get_param_value(self.IP_DESTINATION)
             if ip_dst is None:
                 return False
             value = self.statistics.get_random_ip_address(ips=[ip_dst])
-        elif param == Param.MAC_SOURCE:
-            ip_src = self.get_param_value(Param.IP_SOURCE)
+        elif param == self.MAC_SOURCE:
+            ip_src = self.get_param_value(self.IP_SOURCE)
             if ip_src is None:
                 return False
             value = self.get_mac_address(ip_src)
-        elif param == Param.PORT_SOURCE:
+        elif param == self.PORT_SOURCE:
             value = rnd.randint(self.minDefaultPort, self.maxDefaultPort)
         # Attack configuration
-        elif param == Param.PACKETS_PER_SECOND:
+        elif param == self.PACKETS_PER_SECOND:
             value = self.statistics.get_most_used_pps()
-        elif param == Param.INJECT_AFTER_PACKET:
+        elif param == self.INJECT_AFTER_PACKET:
             value = rnd.randint(0, self.statistics.get_packet_count())
         if value is None:
             return False
@@ -93,15 +102,15 @@ class MS17ScanAttack(BaseAttack.BaseAttack):
         Creates the attack packets.
         """
         # Timestamp
-        timestamp_next_pkt = self.get_param_value(Param.INJECT_AT_TIMESTAMP)
+        timestamp_next_pkt = self.get_param_value(self.INJECT_AT_TIMESTAMP)
 
         # Initialize parameters
-        mac_source = self.get_param_value(Param.MAC_SOURCE)
-        ip_source = self.get_param_value(Param.IP_SOURCE)
-        port_source = self.get_param_value(Param.PORT_SOURCE)
-        mac_destination = self.get_param_value(Param.MAC_DESTINATION)
-        ip_destination = self.get_param_value(Param.IP_DESTINATION)
-        port_destination = self.get_param_value(Param.PORT_DESTINATION)
+        mac_source = self.get_param_value(self.MAC_SOURCE)
+        ip_source = self.get_param_value(self.IP_SOURCE)
+        port_source = self.get_param_value(self.PORT_SOURCE)
+        mac_destination = self.get_param_value(self.MAC_DESTINATION)
+        ip_destination = self.get_param_value(self.IP_DESTINATION)
+        port_destination = self.get_param_value(self.PORT_DESTINATION)
 
         # Check ip.src == ip.dst
         self.ip_src_dst_catch_equal(ip_source, ip_destination)

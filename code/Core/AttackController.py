@@ -4,7 +4,6 @@ import difflib
 import pkgutil
 import typing
 
-import Attack.AttackParameters as atkParam
 import Core.LabelManager as LabelManager
 import Core.Statistics as Statistics
 import ID2TLib.Label as Label
@@ -147,13 +146,13 @@ class AttackController:
             params_dict = dict(params_dict)
             # Check if Parameter.INJECT_AT_TIMESTAMP and Parameter.INJECT_AFTER_PACKET are provided at the same time
             # if TRUE: delete Parameter.INJECT_AT_TIMESTAMP (lower priority) and use Parameter.INJECT_AFTER_PACKET
-            if (atkParam.Parameter.INJECT_AFTER_PACKET.value in params_dict) and (
-                        atkParam.Parameter.INJECT_AT_TIMESTAMP.value in params_dict):
-                print("CONFLICT: Parameters", atkParam.Parameter.INJECT_AT_TIMESTAMP.value, "and",
-                      atkParam.Parameter.INJECT_AFTER_PACKET.value,
-                      "given at the same time. Ignoring", atkParam.Parameter.INJECT_AT_TIMESTAMP.value, "and using",
-                      atkParam.Parameter.INJECT_AFTER_PACKET.value, "instead to derive the timestamp.")
-                del params_dict[atkParam.Parameter.INJECT_AT_TIMESTAMP.value]
+            if (self.current_attack.INJECT_AFTER_PACKET in params_dict) and (
+                        self.current_attack.INJECT_AT_TIMESTAMP in params_dict):
+                print("CONFLICT: Parameters", attack.INJECT_AT_TIMESTAMP, "and",
+                      self.current_attack.INJECT_AFTER_PACKET,
+                      "given at the same time. Ignoring", self.current_attack.INJECT_AT_TIMESTAMP, "and using",
+                      self.current_attack.INJECT_AFTER_PACKET, "instead to derive the timestamp.")
+                del params_dict[self.current_attack.INJECT_AT_TIMESTAMP]
 
             # Extract attack_note parameter, if not provided returns an empty string
             key_attack_note = "attack.note"
@@ -168,7 +167,6 @@ class AttackController:
         self.current_attack.init_mutual_params()
         self.current_attack.init_params()
 
-        self.current_attack.validate_params()
         self.current_attack.init_objects()
 
         print("Generating attack packets...", end=" ")
@@ -194,9 +192,9 @@ class AttackController:
         print(".)")
 
         # Warning if attack duration gets exceeded by more than 1 second
-        if atkParam.Parameter.ATTACK_DURATION in self.current_attack.supported_params and \
-                        self.current_attack.get_param_value(atkParam.Parameter.ATTACK_DURATION) != 0:
-            attack_duration = self.current_attack.get_param_value(atkParam.Parameter.ATTACK_DURATION)
+        if self.current_attack.ATTACK_DURATION in self.current_attack.supported_params and \
+                self.current_attack.get_param_value(self.current_attack.ATTACK_DURATION) != 0:
+            attack_duration = self.current_attack.get_param_value(self.current_attack.ATTACK_DURATION)
             packet_duration = abs(self.current_attack.attack_end_utime - self.current_attack.attack_start_utime)
             time_diff = abs(attack_duration - packet_duration)
             if self.current_attack.exceeding_packets > 0 and time_diff > 1:
