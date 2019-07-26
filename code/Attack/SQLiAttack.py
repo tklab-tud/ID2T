@@ -8,7 +8,7 @@ import scapy.utils
 import Attack.BaseAttack as BaseAttack
 import ID2TLib.Utility as Util
 
-from Attack.AttackParameters import ParameterTypes as ParamTypes
+from Attack.Parameter.Types import ParameterTypes as ParamTypes
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 

@@ -2,7 +2,6 @@ import abc
 import csv
 import hashlib
 import ipaddress
-import math
 import os
 import random
 import random as rnd
@@ -24,7 +23,7 @@ import ID2TLib.Utility as Util
 import Core.TimestampController as tc
 import Core.BandwidthController as bc
 
-from Attack.AttackParameters import ParameterTypes as ParamTypes
+from Attack.Parameter.Types import ParameterTypes as ParamTypes
 
 
 class BaseAttack(metaclass=abc.ABCMeta):
