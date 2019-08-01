@@ -1,5 +1,6 @@
 import logging
 import random as rnd
+import time
 
 import scapy.layers.inet as inet
 from scapy.layers.smb import *

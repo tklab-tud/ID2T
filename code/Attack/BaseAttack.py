@@ -847,7 +847,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         inter_arrival_times = []
         prvs_pkt_time = 0
         for index, pkt in enumerate(packets):
-            timestamp = pkt[2][0] + pkt[2][1] / 10 ** 6
+            timestamp = pkt[1].sec + pkt[1].usec / 10 ** 6
 
             if index == 0:
                 prvs_pkt_time = timestamp

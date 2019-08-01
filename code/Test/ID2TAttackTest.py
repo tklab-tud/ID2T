@@ -127,8 +127,8 @@ class ID2TAttackTest(unittest.TestCase):
 
             while packet_b is not None:
 
-                time_a = packet_a[2][0:2]
-                time_b = packet_b[2][0:2]
+                time_a = [packet_a[1].sec, packet_a[1].usec]
+                time_b = [packet_b[1].sec, packet_b[1].usec]
 
                 if time_a[0] > time_b[0]:
                     file.close()
