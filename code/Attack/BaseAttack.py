@@ -460,7 +460,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
                         and self.param_equals(Param.IP_SOURCE, value)):
                 print("ERROR: Parameter " + str(param) + " or parameter value " + str(value) +
                       " already used by another IP parameter. Generating random IP.")
-                value = self.statistics.get_random_ip_address()
+                value = self.statistics.get_random_ip_address(count=len(value), ips=value)
             is_valid, value = self._is_ip_address(value)
         elif param_type == ParamTypes.TYPE_PORT:
             is_valid, value = self._is_port(value)
@@ -806,7 +806,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         :param ip_destination: destination IP address.
         """
         if BaseAttack.ip_src_dst_equal_check(ip_source, ip_destination):
-            print("ERROR: Invalid IP addresses; source IP is the same as destination IP: " + ip_destination + ".")
+            print("ERROR: Invalid IP addresses; source IP is the same as destination IP: ", ip_destination, ".")
             sys.exit(-1)
 
     @staticmethod
@@ -1028,14 +1028,17 @@ class BaseAttack(metaclass=abc.ABCMeta):
         else:
             return ip_addresses
 
-    def get_mac_address(self, ip_address: str):
+    def get_mac_address(self, ip_address):
         """
         Get mac address to ip address, otherwise generate a random one.
 
         :param ip_address: the ip address for which the mac address is required
         :return: a mac address corresponding to the ip or a randomly generated one
         """
-        mac = self.statistics.get_mac_address(ip_address)
+        if isinstance(ip_address, list):
+            mac = list(self.statistics.get_mac_addresses(ip_address).values())
+        else:
+            mac = self.statistics.get_mac_address(ip_address)
         if not mac:
             mac = self.generate_random_mac_address()
         return mac
