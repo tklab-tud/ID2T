@@ -325,6 +325,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
                     reply.time = timestamp[0]
 
                     pkt = reply
+                else:
+                    continue
 
             result = self.add_packet(pkt, ip_source, ip_destination)
 
