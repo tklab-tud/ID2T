@@ -121,7 +121,10 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 # The most used IP class in background traffic
                 most_used_ip_class = Util.handle_most_used_outputs(self.statistics.get_most_used_ip_class())
                 # Create random attackers based on user input Param.NUMBER_ATTACKERS
-                ip_source_list.extend(self.generate_random_ipv4_address(most_used_ip_class, num_rnd_ips))
+                rnd_ips = self.generate_random_ipv4_address(most_used_ip_class, num_rnd_ips)
+                if not isinstance(rnd_ips, list):
+                    rnd_ips = [rnd_ips]
+                ip_source_list.extend(rnd_ips)
             if num_rnd_macs:
                 mac_source_list.extend(self.generate_random_mac_address(num_rnd_macs))
 
@@ -308,25 +311,23 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 pkt = request
 
             # If current triple is the victim
-            else:
-
+            elif replies_count <= victim_buffer:
                 # Build reply package
-                if replies_count <= victim_buffer:
-                    attacker_id = timestamp[2]-1
-                    ip_source = ip_source_list[attacker_id]
+                attacker_id = timestamp[2]-1
+                ip_source = ip_source_list[attacker_id]
 
-                    reply_ether = inet.Ether(src=mac_destination, dst=mac_source_list[attacker_id])
-                    reply_ip = inet.IP(src=ip_destination, dst=ip_source, flags='DF')
-                    # Pop port from attacker's port "FIFO" into destination port
-                    reply_tcp = inet.TCP(sport=port_destination, dport=previous_attacker_port[attacker_id].pop(), seq=0,
-                                         ack=1, flags='SA', window=destination_win_value, options=[('MSS', mss_dst)])
-                    reply = (reply_ether / reply_ip / reply_tcp)
+                reply_ether = inet.Ether(src=mac_destination, dst=mac_source_list[attacker_id])
+                reply_ip = inet.IP(src=ip_destination, dst=ip_source, flags='DF')
+                # Pop port from attacker's port "FIFO" into destination port
+                reply_tcp = inet.TCP(sport=port_destination, dport=previous_attacker_port[attacker_id].pop(), seq=0,
+                                     ack=1, flags='SA', window=destination_win_value, options=[('MSS', mss_dst)])
+                reply = (reply_ether / reply_ip / reply_tcp)
 
-                    reply.time = timestamp[0]
+                reply.time = timestamp[0]
 
-                    pkt = reply
-                else:
-                    continue
+                pkt = reply
+            else:
+                continue
 
             result = self.add_packet(pkt, ip_source, ip_destination)
 
