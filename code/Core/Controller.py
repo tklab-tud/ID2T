@@ -127,7 +127,10 @@ class Controller:
                 sys.stdout.flush()  # force python to print text immediately
 
                 timestamp = '_' + time.strftime("%Y%m%d") + '-' + time.strftime("%X").replace(':', '')
-                self.pcap_dest_path = self.pcap_src_path.replace(".pcap", timestamp + '.pcap')
+                if '.pcap' in self.pcap_src_path:
+                    self.pcap_dest_path = self.pcap_src_path.replace(".pcap", timestamp + '.pcap')
+                else:
+                    self.pcap_dest_path = self.pcap_src_path + timestamp + '.pcap'
                 shutil.copy(attacks_pcap_path, self.pcap_dest_path)
             else:
                 # merge single attack pcap with all attacks into base pcap
