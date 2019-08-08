@@ -25,6 +25,12 @@ matrix:
                 distribution=archlinux/base
                 version=latest
                 prerequisite="pacman -Sy --noconfirm awk sudo git wget tar pkg-config"
+        # Debian 10
+        - env: >-
+                DOCKER=1
+                distribution=debian
+                version=latest
+                prerequisite="apt-get update -qq && apt-get install -y git sudo"
         # Debian 9
         - env: >-
                 DOCKER=1
