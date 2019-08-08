@@ -49,18 +49,34 @@ matrix:
                 distribution=opensuse/tumbleweed
                 version=latest
                 prerequisite="zypper install -y git sudo"
-        # Ubuntu 18.10
+        # Ubuntu 19.10
+        - env: >-
+                DOCKER=1
+                distribution=ubuntu
+                version=devel
+                prerequisite="apt-get update -qq && apt-get install -y git sudo"
+        # Ubuntu 19.04
         - env: >-
                 DOCKER=1
                 distribution=ubuntu
                 version=rolling
                 prerequisite="apt-get update -qq && apt-get install -y git sudo"
-        # Ubuntu 18.04
+        # Ubuntu 18.10
+        - env: >-
+                DOCKER=1
+                distribution=ubuntu
+                version=cosmic
+                prerequisite="apt-get update -qq && apt-get install -y git sudo"
+        # Ubuntu 18.04 docker
         - env: >-
                 DOCKER=1
                 distribution=ubuntu
                 version=latest
                 prerequisite="apt-get update -qq && apt-get install -y git sudo"
+        # Ubuntu 18.04
+        - os: linux
+          dist: bionic
+          env: DOCKER=0
         # Ubuntu 16.04
         - os: linux
           dist: xenial
