@@ -41,13 +41,25 @@ matrix:
         - env: >-
                 DOCKER=1
                 distribution=fedora
+                version=29
+                prerequisite="dnf install -y git sudo"
+        # Fedora 30
+        - env: >-
+                DOCKER=1
+                distribution=fedora
                 version=latest
                 prerequisite="dnf install -y git sudo"
+        # Fedora 31
+        - env: >-
+            DOCKER=1
+            distribution=fedora
+            version=31
+            prerequisite="dnf install -y git sudo"
         # OpenSUSE Leap (stable)
         - env: >-
                 DOCKER=1
                 distribution=opensuse/leap
-                version=15
+                version=latest
                 prerequisite="zypper install -y git sudo"
         # OpenSUSE Tumbleweed (rolling)
         - env: >-
