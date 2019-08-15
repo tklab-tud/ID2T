@@ -140,14 +140,14 @@ def get_ip_range(start_ip: str, end_ip: str):
     except ValueError:
         return []
     ips = []
+    if start > end:
+        tmp = end
+        end = start
+        start = tmp
     if start < end:
         while start <= end:
             ips.append(start.exploded)
             start = start + 1
-    elif start > end:
-        while start >= end:
-            ips.append(start.exploded)
-            start = start - 1
     else:
         ips.append(start_ip)
     return ips

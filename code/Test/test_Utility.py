@@ -51,16 +51,10 @@ class TestUtility(unittest.TestCase):
         with self.assertRaises(ValueError):
             Utility.check_platform("abc")
 
-    def test_get_ip_range_forwards(self):
+    def test_get_ip_range(self):
         start = "192.168.178.254"
         end = "192.168.179.1"
         result = ["192.168.178.254", "192.168.178.255", "192.168.179.0", "192.168.179.1"]
-        self.assertEqual(Utility.get_ip_range(start, end), result)
-
-    def test_get_ip_range_backwards(self):
-        end = "192.168.178.254"
-        start = "192.168.179.1"
-        result = ["192.168.179.1", "192.168.179.0", "192.168.178.255", "192.168.178.254"]
         self.assertEqual(Utility.get_ip_range(start, end), result)
 
     def test_get_ip_range_equal(self):
