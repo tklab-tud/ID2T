@@ -27,24 +27,8 @@ class AttackController:
 
         self.current_attack = None
         self.added_attacks = []
-        self.seed = None
         self.total_packets = 0
         self.additional_files = []
-
-    def set_seed(self, seed: int) -> None:
-        """
-        Sets rng seed.
-
-        :param seed: rng seed
-        """
-        self.seed = seed
-
-    def get_seed(self) -> typing.Union[int, None]:
-        """
-        Gets rng seed.
-        :return: The current rng seed
-        """
-        return self.seed
 
     @staticmethod
     def choose_attack(input_name):
@@ -114,7 +98,7 @@ class AttackController:
         # Initialize the parameters of the attack with defaults or user supplied values.
         self.current_attack.set_statistics(self.statistics)
         if seed is not None:
-            self.current_attack.set_seed(seed=seed)
+            self.current_attack.seed = seed
 
         # Record the attack
         self.added_attacks.append(self.current_attack)
@@ -219,7 +203,6 @@ class AttackController:
         self.label_mgr.add_labels(label)
 
         return temp_attack_pcap_path, duration
-
 
     def get_attack_start_utime(self):
         """

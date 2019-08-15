@@ -50,6 +50,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         self.attack_name = name
         self.attack_description = description
         self.attack_type = attack_type
+        self._seed = None
         self.params = {}
         self.supported_params = {Param.BANDWIDTH_MAX: ParamTypes.TYPE_FLOAT,
                                  Param.BANDWIDTH_MIN_LOCAL: ParamTypes.TYPE_FLOAT,
@@ -368,27 +369,40 @@ class BaseAttack(metaclass=abc.ABCMeta):
         return domain is not None
 
     #########################################
-    # HELPER METHODS
+    # Property
     #########################################
 
-    @staticmethod
-    def set_seed(seed):
+    @property
+    def seed(self):
         """
-        :param seed: The random seed to be set.
+        Gets rng seed.
+        :return: The current rng seed
         """
-        seed_final = None
-        if isinstance(seed, int):
-            seed_final = seed
-        elif isinstance(seed, str):
-            if seed.isdigit():
-                seed_final = int(seed)
-            else:
-                hashed_seed = hashlib.sha1(seed.encode()).digest()
-                seed_final = int.from_bytes(hashed_seed, byteorder="little")
+        return self._seed
 
-        if seed_final:
-            random.seed(seed_final)
-            np.random.seed(seed_final & 0xFFFFFFFF)
+    @seed.setter
+    def seed(self, value: int):
+        """
+        Sets rng seed.
+
+        :param seed: rng seed
+        """
+        if isinstance(value, int):
+            self._seed = value
+        elif isinstance(value, str):
+            if value.isdigit():
+                self._seed = int(value)
+            else:
+                hashed_seed = hashlib.sha1(value.encode()).digest()
+                self._seed = int.from_bytes(hashed_seed, byteorder="little")
+
+        if self._seed:
+            random.seed(self._seed)
+            np.random.seed(self._seed & 0xFFFFFFFF)
+
+    #########################################
+    # HELPER METHODS
+    #########################################
 
     def set_start_time(self) -> None:
         """

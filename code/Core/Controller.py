@@ -99,7 +99,7 @@ class Controller:
                     rng_seed = seeds
             else:
                 rng_seed = int.from_bytes(os.urandom(16), sys.byteorder)
-            self.attack_controller.set_seed(seed=rng_seed)
+            self.attack_controller.seed = rng_seed
             temp_attack_pcap, duration = self.attack_controller.process_attack(attack[0], attack[1:], measure_time)
             self.durations.append(duration)
             self.added_packets += self.attack_controller.total_packets
