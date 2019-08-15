@@ -92,8 +92,11 @@ class Controller:
         # load attacks sequentially
         i = 0
         for attack in attacks_config:
-            if seeds is not None and len(seeds) > i:
-                rng_seed = seeds[i][0]
+            if seeds is not None and seeds != []:
+                if isinstance(seeds, list) and len(seeds) > i:
+                    rng_seed = seeds[i]
+                else:
+                    rng_seed = seeds
             else:
                 rng_seed = int.from_bytes(os.urandom(16), sys.byteorder)
             self.attack_controller.set_seed(seed=rng_seed)
