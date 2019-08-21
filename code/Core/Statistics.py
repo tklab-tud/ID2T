@@ -13,16 +13,25 @@ from ID2TLib.IPv4 import IPAddress
 import matplotlib.pyplot as plt
 
 
-class Statistics:
+class Statistics(object):
+    _instance = None
+    _initialized = False
+
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = object.__new__(cls)
+        return cls._instance
+
     def __init__(self, pcap_file: PcapFile.PcapFile):
         """
         Creates a new Statistics object.
 
         :param pcap_file: A reference to the PcapFile object
         """
+        if self._initialized:
+            return
         # Fields
         self.pcap_filepath = pcap_file.pcap_file_path
-        self.pcap_proc = None
         self.do_extra_tests = False
         self.file_info = None
         self.kbyte_rate = {"local": None, "public": None}
@@ -31,12 +40,17 @@ class Statistics:
 
         # Create folder for statistics database if required
         self.path_db = pcap_file.get_db_path()
-        path_dir = os.path.dirname(self.path_db)
-        if not os.path.isdir(path_dir):
-            os.makedirs(path_dir)
 
         # Class instances
-        self.stats_db = statsDB.StatsDatabase(self.path_db)
+        self.stats_db = self.create_stats_db(self.path_db)
+        self._initialized = True
+
+    @staticmethod
+    def create_stats_db(path_db):
+        path_dir = os.path.dirname(path_db)
+        if not os.path.isdir(path_dir):
+            os.makedirs(path_dir)
+        return statsDB.StatsDatabase(path_db)
 
     def list_previous_interval_statistic_tables(self, output: bool=True):
         """
@@ -77,8 +91,18 @@ class Statistics:
                 i = i + 1
         return previous_intervals
 
+    def create_new_db(self, pcap: PcapFile.PcapFile, extra_tests: bool, flag_write_file: bool,
+                      flag_recalculate_stats: bool, intervals, delete: bool = False,
+                      recalculate_intervals: bool = None):
+        pcap_db_path = pcap.get_db_path()
+        stats_db = self.create_stats_db(pcap_db_path)
+        self.load_pcap_statistics(flag_write_file, flag_recalculate_stats, True, True, intervals, delete,
+                                  recalculate_intervals, extra_tests, pcap.pcap_file_path, pcap_db_path, stats_db)
+
     def load_pcap_statistics(self, flag_write_file: bool, flag_recalculate_stats: bool, flag_print_statistics: bool,
-                             flag_non_verbose: bool, intervals, delete: bool=False, recalculate_intervals: bool=None):
+                             flag_non_verbose: bool, intervals, delete: bool = False,
+                             recalculate_intervals: bool = None, extra_tests: bool = None, pcap_filepath: str = None,
+                             path_db: str = None, stats_db: statsDB.StatsDatabase = None):
         """
         Loads the PCAP statistics for the file specified by pcap_filepath. If the database is not existing yet, the
         statistics are calculated by the PCAP file processor and saved into the newly created database. Otherwise the
@@ -92,9 +116,22 @@ class Statistics:
         :param intervals: user specified interval in seconds
         :param delete: Delete old interval statistics.
         :param recalculate_intervals: Recalculate old interval statistics or not. Prompt user if None.
+        :param extra_tests:
+        :param pcap_filepath:
+        :param path_db:
+        :param stats_db:
         """
         # Load pcap and get loading time
         time_start = time.clock()
+
+        if extra_tests is None:
+            extra_tests = self.do_extra_tests
+        if pcap_filepath is None:
+            pcap_filepath = self.pcap_filepath
+        if path_db is None:
+            path_db = self.path_db
+        if stats_db is None:
+            stats_db = self.stats_db
 
         # Make sure user specified intervals are a list
         if intervals is None or intervals == []:
@@ -112,12 +149,11 @@ class Statistics:
 
         # Recalculate statistics if database does not exist OR param -r/--recalculate is provided
         # FIXME: probably wanna add a "calculate only extra tests" case in the future
-        if (not self.stats_db.get_db_exists()) or flag_recalculate_stats or self.stats_db.get_db_outdated():
+        if (not stats_db.get_db_exists()) or flag_recalculate_stats or stats_db.get_db_outdated():
             # Get interval statistics tables which already exist
             previous_intervals = self.list_previous_interval_statistic_tables()
 
-            self.pcap_proc = pr.pcap_processor(self.pcap_filepath, str(self.do_extra_tests), Util.RESOURCE_DIR,
-                                               self.path_db)
+            pcap_proc = pr.pcap_processor(pcap_filepath, str(extra_tests), Util.RESOURCE_DIR, path_db)
 
             recalc_intervals = None
             if previous_intervals:
@@ -149,22 +185,21 @@ class Statistics:
                 print("User specified intervals will be used to calculate interval statistics: " +
                       str(current_intervals)[1:-1])
 
-            self.pcap_proc.collect_statistics(intervals)
-            self.pcap_proc.write_to_database(self.path_db, intervals, delete)
+            pcap_proc.collect_statistics(intervals)
+            pcap_proc.write_to_database(path_db, intervals, delete)
             outstring_datasource = "by PCAP file processor."
 
             # only print summary of new db if -s flag not set
             if not flag_print_statistics and not flag_non_verbose:
                 self.stats_summary_new_db()
-        elif (intervals is not None and intervals != []) or self.do_extra_tests:
-            self.pcap_proc = pr.pcap_processor(self.pcap_filepath, str(self.do_extra_tests), Util.RESOURCE_DIR,
-                                               self.path_db)
+        elif (intervals is not None and intervals != []) or extra_tests:
+            pcap_proc = pr.pcap_processor(pcap_filepath, str(extra_tests), Util.RESOURCE_DIR, path_db)
 
             # Get interval statistics tables which already exist
             previous_intervals = self.list_previous_interval_statistic_tables(output=False)
 
             final_intervals = []
-            if not self.do_extra_tests:
+            if not extra_tests:
                 for interval in intervals:
                     if interval not in previous_intervals:
                         final_intervals.append(interval)
@@ -172,13 +207,14 @@ class Statistics:
                 final_intervals = intervals
 
             if final_intervals != [0.0]:
-                self.pcap_proc.collect_statistics(final_intervals)
-                self.pcap_proc.write_new_interval_statistics(self.path_db, final_intervals)
+                pcap_proc.collect_statistics(final_intervals)
+                pcap_proc.write_new_interval_statistics(path_db, final_intervals)
 
-        self.stats_db.set_current_interval_statistics_tables(current_intervals)
+        stats_db.set_current_interval_statistics_tables(current_intervals)
 
         # Load statistics from database
-        self.file_info = self.stats_db.get_file_info()
+        if stats_db is self.stats_db:
+            self.file_info = stats_db.get_file_info()
 
         time_end = time.clock()
         print("Loaded file statistics in " + str(time_end - time_start)[:4] + " sec " + outstring_datasource)
@@ -988,7 +1024,7 @@ class Statistics:
         else:
             return None
 
-    def get_avg_delay_distributions(self, input_pcap: bool=True):
+    def get_avg_delay_distributions(self, input_pcap: bool = True):
         """
         :return: tuple consisting of avg delay distributions for local and external communication
         """
