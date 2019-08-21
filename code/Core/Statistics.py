@@ -13,13 +13,25 @@ from ID2TLib.IPv4 import IPAddress
 import matplotlib.pyplot as plt
 
 
-class Statistics:
+class Statistics(object):
+    _instance = None
+    _initialized = False
+
+    def __new__(cls, *args, **kwargs):
+        print('current: ', cls._instance)
+        if cls._instance is None:
+            cls._instance = object.__new__(cls)
+            print('create: ', cls._instance)
+        return cls._instance
+
     def __init__(self, pcap_file: PcapFile.PcapFile):
         """
         Creates a new Statistics object.
 
         :param pcap_file: A reference to the PcapFile object
         """
+        if self._initialized:
+            return
         # Fields
         self.pcap_filepath = pcap_file.pcap_file_path
         self.pcap_proc = None
@@ -37,6 +49,7 @@ class Statistics:
 
         # Class instances
         self.stats_db = statsDB.StatsDatabase(self.path_db)
+        self._initialized = True
 
     def list_previous_interval_statistic_tables(self, output: bool=True):
         """
