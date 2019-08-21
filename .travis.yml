@@ -1,3 +1,7 @@
+branches:
+  except:
+    - /^.*(?i:no)_(?i:CI).*$/
+
 matrix:
     include:
         # Run macOS and Kali first to decrease travis CI runtime
