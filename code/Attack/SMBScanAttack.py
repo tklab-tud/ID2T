@@ -10,7 +10,7 @@ import ID2TLib.SMB2 as SMB2
 import ID2TLib.SMBLib as SMBLib
 import ID2TLib.Utility as Util
 
-from Attack.Parameter.Types import ParameterTypes as ParamTypes
+from Attack.ParameterTypes.Types import ParameterTypes as ParamTypes
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 

@@ -5,9 +5,10 @@ import lea
 import scapy.layers.inet as inet
 
 import Attack.BaseAttack as BaseAttack
+import Attack.ParameterTypes as Types
 import ID2TLib.Utility as Util
 
-from Attack.Parameter.Types import ParameterTypes as ParamTypes
+from Attack.Parameter import Parameter
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
@@ -41,21 +42,21 @@ class DDoSAttack(BaseAttack.BaseAttack):
         self.default_port = 0
 
         # Define allowed parameters and their type
-        self.supported_params.update({
-            self.IP_SOURCE: ParamTypes.TYPE_IP_ADDRESS,
-            self.MAC_SOURCE: ParamTypes.TYPE_MAC_ADDRESS,
-            self.PORT_SOURCE: ParamTypes.TYPE_PORT,
-            self.IP_DESTINATION: ParamTypes.TYPE_IP_ADDRESS,
-            self.MAC_DESTINATION: ParamTypes.TYPE_MAC_ADDRESS,
-            self.PORT_DESTINATION: ParamTypes.TYPE_PORT,
-            self.INJECT_AT_TIMESTAMP: ParamTypes.TYPE_FLOAT,
-            self.INJECT_AFTER_PACKET: ParamTypes.TYPE_PACKET_POSITION,
-            self.PACKETS_PER_SECOND: ParamTypes.TYPE_FLOAT,
-            self.NUMBER_ATTACKERS: ParamTypes.TYPE_INTEGER_POSITIVE,
-            self.ATTACK_DURATION: ParamTypes.TYPE_INTEGER_POSITIVE,
-            self.VICTIM_BUFFER: ParamTypes.TYPE_INTEGER_POSITIVE,
-            self.LATENCY_MAX: ParamTypes.TYPE_FLOAT
-        })
+        self.params.extend([
+            Parameter(self.IP_SOURCE, Types.IPAddress()),
+            Parameter(self.MAC_SOURCE, Types.MACAddress()),
+            Parameter(self.PORT_SOURCE, Types.Port()),
+            Parameter(self.IP_DESTINATION, Types.IPAddress()),
+            Parameter(self.MAC_DESTINATION, Types.MACAddress()),
+            Parameter(self.PORT_DESTINATION, Types.Port()),
+            Parameter(self.INJECT_AT_TIMESTAMP, Types.Float()),
+            Parameter(self.INJECT_AFTER_PACKET, Types.PacketPosition()),
+            Parameter(self.PACKETS_PER_SECOND, Types.Float()),
+            Parameter(self.NUMBER_ATTACKERS, Types.IntegerPositive()),
+            Parameter(self.ATTACK_DURATION, Types.IntegerPositive()),
+            Parameter(self.VICTIM_BUFFER, Types.IntegerPositive()),
+            Parameter(self.LATENCY_MAX, Types.Float())
+        ])
 
     def init_param(self, param: str) -> bool:
         """
@@ -162,6 +163,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 result = self.statistics.process_db_query(
                     "SELECT MAX(maxPktRate) FROM ip_statistics WHERE ipAddress='" + most_used_ip_address + "';")
                 pps = num_attackers * result
+
+        print([(x.name, x.value) for x in self.params])
 
         # Calculate complement packet rates of the background traffic for each interval
         attacker_pps = pps / num_attackers

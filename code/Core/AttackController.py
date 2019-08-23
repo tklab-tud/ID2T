@@ -111,7 +111,7 @@ class AttackController:
         # Instantiate the desired attack
         self.current_attack = attack_class()
         # Initialize the parameters of the attack with defaults or user supplied values.
-        self.current_attack.set_statistics(self.statistics)
+        #self.current_attack.set_statistics(self.statistics)
         if seed is not None:
             self.current_attack.set_seed(seed=seed)
 
