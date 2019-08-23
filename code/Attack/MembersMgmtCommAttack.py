@@ -13,7 +13,7 @@ import ID2TLib.Botnet.Message as Bmsg
 import ID2TLib.Generator as Generator
 import ID2TLib.Utility as Util
 
-from Attack.Parameter.Types import ParameterTypes as ParamTypes
+from Attack.ParameterTypes.Types import ParameterTypes as ParamTypes
 
 from ID2TLib.Botnet.CommunicationProcessor import CommunicationProcessor
 from ID2TLib.Botnet.MessageMapping import MessageMapping
