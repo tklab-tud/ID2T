@@ -20,10 +20,11 @@ import scapy.layers.inet as inet
 import scapy.utils
 
 import ID2TLib.Utility as Util
+import Core.Statistics as Statistics
 import Core.TimestampController as tc
 import Core.BandwidthController as bc
 
-from Attack.Parameter.Types import ParameterTypes as ParamTypes
+from Attack.Parameter import Parameter, Float, IntegerLimited
 
 
 class BaseAttack(metaclass=abc.ABCMeta):
@@ -31,14 +32,22 @@ class BaseAttack(metaclass=abc.ABCMeta):
     Abstract base class for all attack classes. Provides basic functionalities, like parameter validation.
     """
 
-    IP_SOURCE = 'ip.src'
-    IP_DESTINATION = 'ip.dst'
-    INTERVAL_SELECT_STRATEGY = 'interval.selection.strategy'
+    #For AttackController
+    # TODO: get rid of this
     ATTACK_DURATION = 'attack.duration'
 
+    # General SRC and DST parameters
+    IP_SOURCE = 'ip.src'
+    IP_DESTINATION = 'ip.dst'
+    MAC_SOURCE = 'mac.src'
+    MAC_DESTINATION = 'mac.dst'
+
+    # For TimestampController
     PACKETS_PER_SECOND = 'packets.per-second'
     INJECT_AT_TIMESTAMP = 'inject.at-timestamp'
+    INJECT_AFTER_PACKET = 'inject.after-pkt'
 
+    # For BandwidthController
     BANDWIDTH_MAX = 'bandwidth.max'
     BANDWIDTH_MIN_LOCAL = 'bandwidth.min.local'
     BANDWIDTH_MIN_PUBLIC = 'bandwidth.min.public'
@@ -54,16 +63,25 @@ class BaseAttack(metaclass=abc.ABCMeta):
         :param attack_type: The type the attack belongs to, like probing/scanning, malware.
         """
         # Reference to statistics class
-        self.statistics = None
+        self.statistics = Statistics.Statistics(None)
+
+        # get_reply_delay
+        self.all_min_latencies = self.statistics.process_db_query("SELECT minDelay FROM conv_statistics LIMIT 500;")
+        self.all_max_latencies = self.statistics.process_db_query("SELECT maxDelay FROM conv_statistics LIMIT 500;")
+        self.most_used_mss_value = self.statistics.get_most_used_mss_value()
+        self.most_used_ttl_value = self.statistics.get_most_used_ttl_value()
+        self.most_used_win_size = self.statistics.get_most_used_win_size()
 
         # Class fields
         self.attack_name = name
         self.attack_description = description
         self.attack_type = attack_type
-        self.params = {}
-        self.supported_params = {self.BANDWIDTH_MAX: ParamTypes.TYPE_FLOAT,
-                                 self.BANDWIDTH_MIN_LOCAL: ParamTypes.TYPE_FLOAT,
-                                 self.BANDWIDTH_MIN_PUBLIC: ParamTypes.TYPE_FLOAT}
+        self.params = [Parameter(self.INJECT_AT_TIMESTAMP, Float()),
+                       Parameter(self.INJECT_AFTER_PACKET, IntegerLimited([0,
+                                                                           self.statistics.get_packet_count()])),
+                       Parameter(self.BANDWIDTH_MAX, Float()),
+                       Parameter(self.BANDWIDTH_MIN_LOCAL, Float()),
+                       Parameter(self.BANDWIDTH_MIN_PUBLIC, Float())]
         self.attack_start_utime = 0
         self.attack_end_utime = 0
         self.start_time = 0
@@ -82,29 +100,17 @@ class BaseAttack(metaclass=abc.ABCMeta):
         self.buffer_size = 1000
         #self.packets = collections.deque(maxlen=self.buffer_size)
 
-        # get_reply_delay
-        self.all_min_latencies = None
-        self.all_max_latencies = None
-        self.most_used_mss_value = None
-        self.most_used_ttl_value = None
-        self.most_used_win_size = None
-
-    def set_statistics(self, statistics):
-        """
-        Specify the statistics object that will be used to calculate the parameters of this attack.
-        The statistics are used to calculate default parameters and to process user supplied
-        queries.
-
-        :param statistics: Reference to a statistics object.
-        """
-        self.statistics = statistics
-
-        # get_reply_delay
-        self.all_min_latencies = self.statistics.process_db_query("SELECT minDelay FROM conv_statistics LIMIT 500;")
-        self.all_max_latencies = self.statistics.process_db_query("SELECT maxDelay FROM conv_statistics LIMIT 500;")
-        self.most_used_mss_value = self.statistics.get_most_used_mss_value()
-        self.most_used_ttl_value = self.statistics.get_most_used_ttl_value()
-        self.most_used_win_size = self.statistics.get_most_used_win_size()
+    def update_params(self, params):
+        for new_param in params:
+            index = None
+            for old_param in self.params:
+                if new_param.name == old_param.name:
+                    index = self.params.index(old_param)
+                    break
+            if index is not None:
+                self.params[index] = new_param
+            else:
+                self.params.append(new_param)
 
     def init_mutual_params(self):
         self.add_param_value(self.BANDWIDTH_MAX, 0)
@@ -112,6 +118,14 @@ class BaseAttack(metaclass=abc.ABCMeta):
         self.add_param_value(self.BANDWIDTH_MIN_PUBLIC, 0)
 
     def init_objects(self):
+        timestamp = self.get_param_value(self.INJECT_AT_TIMESTAMP)
+        packet = self.get_param_value(self.INJECT_AFTER_PACKET)
+
+        if timestamp is None:
+            ts = pr.pcap_processor(self.statistics.pcap_filepath, "False", Util.RESOURCE_DIR, "").get_timestamp_mu_sec(int(packet))
+            timestamp = (ts / 1000000)
+            self.add_param_value(self.INJECT_AT_TIMESTAMP, timestamp)
+
         self.timestamp_controller = tc.TimestampController(self.get_param_value(self.INJECT_AT_TIMESTAMP),
                                                            self.get_param_value(self.PACKETS_PER_SECOND))
         self.bandwidth_controller = bc.BandwidthController(self.get_param_value(self.BANDWIDTH_MAX),
@@ -126,9 +140,9 @@ class BaseAttack(metaclass=abc.ABCMeta):
         A call to this function requires a call to 'set_statistics' first.
         """
         params_to_init = []
-        for param in self.supported_params:
-            if not self.param_exists(param):
-                params_to_init.append(param)
+        for param in self.params:
+            if not self.param_exists(param.name):
+                params_to_init.append(param.name)
         skipped = {}
         while len(params_to_init) != 0:
             param = params_to_init.pop(0)
@@ -167,203 +181,6 @@ class BaseAttack(metaclass=abc.ABCMeta):
         :return: The location of the generated pcap file.
         """
         pass
-
-    ################################################
-    # HELPER VALIDATION METHODS
-    # Used to validate the given parameter values
-    ################################################
-
-    @staticmethod
-    def _is_mac_address(mac_address: t.Union[str, t.List[str]]) -> bool:
-        """
-        Verifies if the given string is a valid MAC address.
-        Accepts the formats 00:80:41:ae:fd:7e and 00-80-41-ae-fd-7e.
-
-        :param mac_address: The MAC address as string.
-        :return: True if the MAC address is valid, otherwise False.
-        """
-        pattern = re.compile('^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$', re.MULTILINE)
-        if isinstance(mac_address, list):
-            for mac in mac_address:
-                if re.match(pattern, mac) is None:
-                    return False
-        else:
-            if re.match(pattern, mac_address) is None:
-                return False
-
-        return True
-
-    @staticmethod
-    def _is_ip_address(ip_address: t.Union[str, t.List[str]]) -> t.Tuple[bool, t.Union[str, t.List[str]]]:
-        """
-        Verifies that the given string or list of IP addresses (strings) is a valid IPv4/IPv6 address.
-        Accepts comma-separated lists of IP addresses, like "192.169.178.1, 192.168.178.2"
-
-        :param ip_address: The IP address(es) as list of strings, comma-separated or dash-separated string.
-        :return: True if all IP addresses are valid, otherwise False. And a list of IP addresses as string.
-        """
-
-        def append_ips(ip_address_input: t.List[str]) -> t.Tuple[bool, t.List[str]]:
-            """
-            Recursive appending function to handle lists and ranges of IP addresses.
-
-            :param ip_address_input: The IP address(es) as list of strings, comma-separated or dash-separated string.
-            :return: List of all given IP addresses.
-            """
-            ip_list = []
-            is_valid = True
-            for ip in ip_address_input:
-                if '-' in ip:
-                    ip_range = ip.split('-')
-                    ip_range = Util.get_ip_range(ip_range[0], ip_range[1])
-                    if not ip_range:
-                        is_valid = False
-                    is_valid, ips = append_ips(ip_range)
-                    ip_list.extend(ips)
-                else:
-                    try:
-                        ipaddress.ip_address(ip)
-                        ip_list.append(ip)
-                    except ValueError:
-                        return False, ip_list
-            return is_valid, ip_list
-
-        if not isinstance(ip_address, list):
-            ip_address = [ip_address]
-
-        result, ip_address_output = append_ips(ip_address)
-
-        if len(ip_address_output) == 1:
-            return result, ip_address_output[0]
-        else:
-            return result, ip_address_output
-
-    @staticmethod
-    def _is_port(ports_input: t.Union[t.List[str], t.List[int], str, int])\
-            -> t.Union[bool, t.Tuple[bool, t.List[t.Union[int, str]]]]:
-        """
-        Verifies if the given value is a valid port. Accepts port ranges, like 80-90, 80..99, 80...99.
-
-        :param ports_input: The port number as int or string.
-        :return: True if the port number is valid, otherwise False. If a single port or a comma-separated list of ports
-        was given, a list of int is returned. If a port range was given, the range is resolved
-        and a list of int is returned.
-        """
-
-        def _is_invalid_port(num: int) -> bool:
-            """
-            Checks whether the port number is invalid.
-
-            :param num: The port number as int.
-            :return: True if the port number is invalid, otherwise False.
-            """
-            return num < 1 or num > 65535
-
-        if ports_input is None or ports_input is "":
-            return False
-
-        if isinstance(ports_input, str):
-            ports_input = ports_input.replace(' ', '').split(',')
-        elif isinstance(ports_input, int):
-            ports_input = [ports_input]
-        elif len(ports_input) is 0:
-            return False
-
-        ports_output = []
-
-        for port_entry in ports_input:
-            if isinstance(port_entry, int):
-                if _is_invalid_port(port_entry):
-                    return False
-                ports_output.append(port_entry)
-            # TODO: validate last condition
-            elif isinstance(port_entry, str) and port_entry.isdigit():
-                # port_entry describes a single port
-                port_entry = int(port_entry)
-                if _is_invalid_port(port_entry):
-                    return False
-                ports_output.append(port_entry)
-            elif '-' in port_entry or '..' in port_entry:
-                # port_entry describes a port range
-                # allowed format: '1-49151', '1..49151', '1...49151'
-                match = re.match(r'^([0-9]{1,5})(?:-|\.{2,3})([0-9]{1,5})$', str(port_entry))
-                # check validity of port range
-                # and create list of ports derived from given start and end port
-                (port_start, port_end) = int(match.group(1)), int(match.group(2))
-                if _is_invalid_port(port_start) or _is_invalid_port(port_end):
-                    return False
-                else:
-                    ports_list = [i for i in range(port_start, port_end + 1)]
-                # append ports at ports_output list
-                ports_output += ports_list
-
-        if len(ports_output) == 1:
-            return True, ports_output[0]
-        else:
-            return True, ports_output
-
-    @staticmethod
-    def _is_timestamp(timestamp: str) -> bool:
-        """
-        Checks whether the given value is in a valid timestamp format. The accepted format is:
-        YYYY-MM-DD h:m:s, whereas h, m, s may be one or two digits.
-
-        :param timestamp: The timestamp to be checked.
-        :return: True if the timestamp is valid, otherwise False.
-        """
-        is_valid = re.match(r'[0-9]{4}(?:-[0-9]{1,2}){2} (?:[0-9]{1,2}:){2}[0-9]{1,2}', timestamp)
-        return is_valid is not None
-
-    @staticmethod
-    def _is_boolean(value):
-        """
-        Checks whether the given value (string or bool) is a boolean. Strings are valid booleans if they are in:
-        {y, yes, t, true, on, 1, n, no, f, false, off, 0}.
-
-        :param value: The value to be checked.
-        :return: True if the value is a boolean, otherwise false. And the casted boolean.
-        """
-        # If value is already a boolean
-        if isinstance(value, bool):
-            return True, value
-
-        # If value is a string
-        # True values are y, yes, t, true, on and 1;
-        # False values are n, no, f, false, off and 0.
-        # Raises ValueError if value is anything else.
-        try:
-            import distutils.core
-            import distutils.util
-            value = bool(distutils.util.strtobool(value.lower()))
-            is_bool = True
-        except ValueError:
-            is_bool = False
-        return is_bool, value
-
-    @staticmethod
-    def _is_float(value):
-        """
-        Checks whether the given value is a float.
-
-        :param value: The value to be checked.
-        :return: True if the value is a float, otherwise False. And the casted float.
-        """
-        try:
-            value = float(value)
-            return True, value
-        except ValueError:
-            return False, value
-
-    @staticmethod
-    def _is_domain(val: str) -> bool:
-        """
-        Verifies that the given string is a valid URI.
-
-        :param val: The URI as string.
-        :return: True if URI is valid, otherwise False.
-        """
-        domain = re.match(r'^(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+$', val)
-        return domain is not None
 
     #########################################
     # HELPER METHODS
@@ -419,7 +236,6 @@ class BaseAttack(metaclass=abc.ABCMeta):
 
         # by default no param is valid
         is_valid = False
-        param_name = None
 
         # get AttackParameters instance associated with param
         # for default values assigned in attack classes, like Parameter.PORT_OPEN
@@ -432,8 +248,10 @@ class BaseAttack(metaclass=abc.ABCMeta):
         if not user_specified and self.param_user_defined(param_name):
             return False
 
-        # Get parameter type of attack's required_params
-        param_type = self.supported_params[param_name]
+        # Verify validity of given value with respect to parameter type
+        index = self.get_param_index(param_name)
+        if index is None:
+            print('WARNING: Parameter not available (\'{}\'). Ignoring'.format(str(param_name)))
 
         # a comma-separated lists must be split first
         if isinstance(value, str) and "," in value:
@@ -442,109 +260,21 @@ class BaseAttack(metaclass=abc.ABCMeta):
             value = value.replace(" ", "")
             value = value.split(",")
 
-        # Verify validity of given value with respect to parameter type
-        if param_type is None:
-            print('WARNING: Parameter not available (\'{}\'). Ignoring'.format(str(param_name)))
+        # catch source IP = destination IP
+        if (param_name == self.IP_SOURCE
+            and self.param_equals(self.IP_DESTINATION, value)) \
+                or (param_name == self.IP_DESTINATION
+                    and self.param_equals(self.IP_SOURCE, value)):
+            print("ERROR: Value " + str(value) + " of Parameter " + str(param_name) +
+                  " can not be used for both source and destination. Generating random IP.")
+            value = self.statistics.get_random_ip_address(ips=[value])
 
-        # Validate parameter depending on parameter's type
-        elif param_type == ParamTypes.TYPE_IP_ADDRESS:
-            if (param_name == self.IP_SOURCE
-                and self.param_equals(self.IP_DESTINATION, value))\
-                    or (param_name == self.IP_DESTINATION
-                        and self.param_equals(self.IP_SOURCE, value)):
-                print("ERROR: Parameter " + str(param) + " or parameter value " + str(value) +
-                      " already used by another IP parameter. Generating random IP.")
-                count=1
-                if isinstance(value, list):
-                    count=len(value)
-                value = self.statistics.get_random_ip_address(count=count, ips=value)
-            is_valid, value = self._is_ip_address(value)
-        elif param_type == ParamTypes.TYPE_PORT:
-            is_valid, value = self._is_port(value)
-        elif param_type == ParamTypes.TYPE_MAC_ADDRESS:
-            is_valid = self._is_mac_address(value)
-        elif param_type == ParamTypes.TYPE_INTEGER_POSITIVE:
-            if isinstance(value, int) and int(value) >= 0:
-                is_valid = True
-            elif isinstance(value, str) and value.isdigit() and int(value) >= 0:
-                is_valid = True
-                value = int(value)
-            elif isinstance(value, str) and int(float(value)) >= 0:
-                print("WARNING: " + str(param_name) + " requires a positive integer value.\n"
-                      "         Float value " + value + " will be converted to an integer.")
-                is_valid = True
-                value = int(float(value))
-        elif param_type == ParamTypes.TYPE_STRING:
-            if isinstance(value, str):
-                is_valid = True
-        elif param_type == ParamTypes.TYPE_FLOAT:
-            is_valid, value = self._is_float(value)
-            # this is required to avoid that the timestamp's microseconds of the first attack packet is '000000'
-            # but microseconds are only chosen randomly if the given parameter does not already specify it
-            # e.g. inject.at-timestamp=123456.987654 -> is not changed
-            # e.g. inject.at-timestamp=123456 -> is changed to: 123456.[random digits]
-            if param_name == self.INJECT_AT_TIMESTAMP and is_valid and ((value - int(value)) == 0):
-                value = value + random.uniform(0, 0.999999)
-            # Check user specified pps against limits
-            if param_name == self.PACKETS_PER_SECOND and is_valid and user_specified:
-                if value > 1000000:
-                    value = 1000000
-                    print("WARNING: PPS is too high. Dropping to 1,000,000 pps.")
-                elif value > 100000:
-                    print("WARNING: PPS is too high. Generated traffic might look unrealistic.\n"
-                          "Recommended are values equal or lower 100000.")
-                #elif value == 0:
-                #    value = 12500
-                #    print("No PPS was specified. Default value ({}) was used.".format(value))
-        elif param_type == ParamTypes.TYPE_TIMESTAMP:
-            is_valid = self._is_timestamp(value)
-        elif param_type == ParamTypes.TYPE_BOOLEAN:
-            is_valid, value = self._is_boolean(value)
-        elif param_type == ParamTypes.TYPE_PACKET_POSITION:
-            # This function call is valid only if there is a statistics object available.
-            if self.statistics is None:
-                print('ERROR: Statistics-dependent attack parameter added without setting a statistics object first.')
-                exit(1)
+        # add value if validation was successful
+        self.params[index].user_specified = user_specified
+        self.params[index].value = value
 
-            ts = pr.pcap_processor(self.statistics.pcap_filepath, "False", Util.RESOURCE_DIR, "").get_timestamp_mu_sec(int(value))
-            if 0 <= int(value) <= self.statistics.get_packet_count() and ts >= 0:
-                is_valid = True
-                param_name = self.INJECT_AT_TIMESTAMP
-                value = (ts / 1000000)  # convert microseconds from getTimestampMuSec into seconds
-        elif param_type == ParamTypes.TYPE_DOMAIN:
-            is_valid = self._is_domain(value)
-        elif param_type == ParamTypes.TYPE_FILEPATH:
-            is_valid = os.path.isfile(value)
-        elif param_type == ParamTypes.TYPE_PERCENTAGE:
-            is_valid_float, value = self._is_float(value)
-            if is_valid_float:
-                is_valid = 0 <= value <= 1
-            else:
-                is_valid = False
-        elif param_type == ParamTypes.TYPE_PADDING:
-            if isinstance(value, int):
-                is_valid = 0 <= value <= 100
-            elif isinstance(value, str) and value.isdigit():
-                value = int(value)
-                is_valid = 0 <= value <= 100
-        elif param_type == ParamTypes.TYPE_INTERVAL_SELECT_STRAT:
-            is_valid = value in {"random", "optimal", "custom"}
-
-        # If value is query -> get value from database
-        elif param_name != self.INTERVAL_SELECT_STRATEGY and self.statistics.is_query(value):
-            value = self.statistics.process_db_query(value, False)
-            if value is not None and value is not "":
-                is_valid = True
-            else:
-                print('ERROR: Parameter value could not be retrieved (\'{}\').'.format(str(value)))
-                sys.exit(-1)
-
-        # add value iff validation was successful
-        if is_valid:
-            self.params[param_name] = self.ValuePair(value, user_specified)
-        else:
-            print("ERROR: Parameter " + str(param) + " or parameter value " + str(value) +
-                  " not valid. Skipping parameter.")
+        if self.params[index].value == value:
+            is_valid = True
 
         return is_valid
 
@@ -555,11 +285,25 @@ class BaseAttack(metaclass=abc.ABCMeta):
         :param param: The parameter whose value is wanted.
         :return: The parameter's value.
         """
-        parameter = self.params.get(param)
-        if parameter is not None:
-            return parameter.value
-        else:
-            return None
+        parameter = None
+        for elem in self.params:
+            if elem.name == param:
+                return elem.value
+        return None
+
+    def get_param_index(self, param: str):
+        """
+        Returns index of parameter or None if not in list.
+
+        :param param: name of the parameter
+        :return: index of the parameter or None if not in list
+        """
+        i = None
+        for elem in self.params:
+            if elem.name == param:
+                i = self.params.index(elem)
+                break
+        return i
 
     def param_exists(self, param_name: str) -> bool:
         """
@@ -568,7 +312,8 @@ class BaseAttack(metaclass=abc.ABCMeta):
         :param param_name: The parameter to look for.
         :return: True if the parameter is already specified, False if not.
         """
-        return param_name in self.params.keys() and self.params[param_name][0] is not None
+        index = self.get_param_index(param_name)
+        return index is not None and self.params[index].value is not None
 
     def param_user_defined(self, param_name: str) -> bool:
         """
@@ -577,7 +322,8 @@ class BaseAttack(metaclass=abc.ABCMeta):
         :param param_name: The parameter whose user-specified flag is wanted.
         :return: The parameter's user-specified flag.
         """
-        return param_name in self.params.keys() and self.params[param_name][1]
+        index = self.get_param_index(param_name)
+        return index is not None and self.params[index].user_specified
 
     def param_equals(self, param_name: str, value) -> bool:
         """
@@ -587,7 +333,8 @@ class BaseAttack(metaclass=abc.ABCMeta):
         :param value: The value to compare to.
         :return: True if the parameter is equal to the value, False if not.
         """
-        return param_name in self.params.keys() and value == self.params[param_name][0]
+        param_value = self.get_param_value(param_name)
+        return param_value is not None and param_value == value
 
     def check_parameters(self):
         """
@@ -596,12 +343,12 @@ class BaseAttack(metaclass=abc.ABCMeta):
         """
         # parameters which do not require default values
         non_obligatory_params = ['inject.after-pkt', 'number.attackers']
-        for param, param_type in self.supported_params.items():
+        for param in self.params:
             # checks whether all params have assigned values, INJECT_AFTER_PACKET must not be considered because the
             # timestamp derived from it is set to Parameter.INJECT_AT_TIMESTAMP
-            if param not in self.params.keys() and param not in non_obligatory_params:
+            if param.value is None and param.name not in non_obligatory_params:
                 print("\033[91mERROR: Attack '" + self.attack_name + "' does not define the parameter '" +
-                      str(param) + "'.\n The attack must define default values for all parameters."
+                      str(param.name) + "'.\n The attack must define default values for all parameters."
                       + "\n Cannot continue attack generation.\033[0m")
                 sys.exit(-1)
 
@@ -803,7 +550,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         :param ip_destination: destination IP address.
         """
         if BaseAttack.ip_src_dst_equal_check(ip_source, ip_destination):
-            print("ERROR: Invalid IP addresses; source IP is the same as destination IP: ", ip_destination, ".")
+            print("ERROR: Invalid IP addresses; source IP is the same as destination IP: " + str(ip_destination) + ".")
             sys.exit(-1)
 
     @staticmethod

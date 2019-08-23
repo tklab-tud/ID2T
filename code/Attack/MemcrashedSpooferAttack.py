@@ -8,20 +8,13 @@ import Attack.BaseAttack as BaseAttack
 import ID2TLib.Utility as Util
 import ID2TLib.Memcached as Memcd
 
-from Attack.Parameter.Types import ParameterTypes as ParamTypes
+from Attack.Parameter import Parameter, Float, IntegerPositive, IPAddress, MACAddress
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 
 class MemcrashedSpooferAttack(BaseAttack.BaseAttack):
-    IP_SOURCE = 'ip.src'
-    MAC_SOURCE = 'mac.src'
-    IP_DESTINATION = 'ip.dst'
-    MAC_DESTINATION = 'mac.dst'
     IP_VICTIM = 'ip.victim'
-    INJECT_AT_TIMESTAMP = 'inject.at-timestamp'
-    INJECT_AFTER_PACKET = 'inject.after-pkt'
-    PACKETS_PER_SECOND = 'packets.per-second'
     ATTACK_DURATION = 'attack.duration'
 
     def __init__(self):
@@ -30,21 +23,20 @@ class MemcrashedSpooferAttack(BaseAttack.BaseAttack):
         """
         # Initialize attack
         super(MemcrashedSpooferAttack, self).__init__("Memcrashed Attack (Spoofer side)",
-                                               "Injects the spoofer-side of a Memcached amplification attack",
-                                               "Resource Exhaustion")
+                                                      "Injects the spoofer-side of a Memcached amplification attack",
+                                                      "Resource Exhaustion")
 
         # Define allowed parameters and their type
-        self.supported_params.update({
-            self.IP_SOURCE: ParamTypes.TYPE_IP_ADDRESS,
-            self.MAC_SOURCE: ParamTypes.TYPE_MAC_ADDRESS,
-            self.IP_DESTINATION: ParamTypes.TYPE_IP_ADDRESS,
-            self.MAC_DESTINATION: ParamTypes.TYPE_MAC_ADDRESS,
-            self.IP_VICTIM: ParamTypes.TYPE_IP_ADDRESS,
-            self.INJECT_AT_TIMESTAMP: ParamTypes.TYPE_FLOAT,
-            self.INJECT_AFTER_PACKET: ParamTypes.TYPE_PACKET_POSITION,
-            self.PACKETS_PER_SECOND: ParamTypes.TYPE_FLOAT,
-            self.ATTACK_DURATION: ParamTypes.TYPE_INTEGER_POSITIVE
-        })
+        self.update_params([
+            Parameter(self.IP_SOURCE, IPAddress()),
+            Parameter(self.MAC_SOURCE, MACAddress()),
+            Parameter(self.IP_DESTINATION, IPAddress()),
+            Parameter(self.MAC_DESTINATION, MACAddress()),
+            Parameter(self.PACKETS_PER_SECOND, Float()),
+            Parameter(self.ATTACK_DURATION, IntegerPositive()),
+            Parameter(self.IP_VICTIM, IPAddress()),
+            Parameter(self.ATTACK_DURATION, IntegerPositive())
+        ])
 
     def init_param(self, param: str) -> bool:
         """

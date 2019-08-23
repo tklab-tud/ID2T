@@ -7,7 +7,7 @@ import scapy.utils
 import Attack.BaseAttack as BaseAttack
 import ID2TLib.Utility as Util
 
-from Attack.Parameter.Types import ParameterTypes as ParamTypes
+from Attack.Parameter import Parameter, Float, IPAddress, MACAddress
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
@@ -15,11 +15,6 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 
 class SalityBotnet(BaseAttack.BaseAttack):
-    MAC_SOURCE = 'mac.src'
-    IP_SOURCE = 'ip.src'
-    INJECT_AT_TIMESTAMP = 'inject.at-timestamp'
-    INJECT_AFTER_PACKET = 'inject.after-pkt'
-    PACKETS_PER_SECOND = 'packets.per-second'
 
     template_attack_pcap_path = Util.RESOURCE_DIR + "/../resources/sality_botnet.pcap"
 
@@ -35,13 +30,11 @@ class SalityBotnet(BaseAttack.BaseAttack):
         self.path_attack_pcap = None
 
         # Define allowed parameters and their type
-        self.supported_params.update({
-            self.MAC_SOURCE: ParamTypes.TYPE_MAC_ADDRESS,
-            self.IP_SOURCE: ParamTypes.TYPE_IP_ADDRESS,
-            self.INJECT_AT_TIMESTAMP: ParamTypes.TYPE_FLOAT,
-            self.INJECT_AFTER_PACKET: ParamTypes.TYPE_PACKET_POSITION,
-            self.PACKETS_PER_SECOND: ParamTypes.TYPE_FLOAT
-        })
+        self.update_params([
+            Parameter(self.MAC_SOURCE, MACAddress()),
+            Parameter(self.IP_SOURCE, IPAddress()),
+            Parameter(self.PACKETS_PER_SECOND, Float())
+        ])
 
     def init_param(self, param: str) -> bool:
         """

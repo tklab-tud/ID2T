@@ -8,7 +8,7 @@ import Attack.BaseAttack as BaseAttack
 import ID2TLib.SMBLib as SMBLib
 import ID2TLib.Utility as Util
 
-from Attack.Parameter.Types import ParameterTypes as ParamTypes
+from Attack.Parameter import Parameter, Float, IntegerPositive, IPAddress, MACAddress
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
@@ -16,13 +16,6 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 
 class SMBLorisAttack(BaseAttack.BaseAttack):
-    IP_SOURCE = 'ip.src'
-    IP_DESTINATION = 'ip.dst'
-    MAC_SOURCE = 'mac.src'
-    MAC_DESTINATION = 'mac.dst'
-    INJECT_AT_TIMESTAMP = 'inject.at-timestamp'
-    INJECT_AFTER_PACKET = 'inject.after-pkt'
-    PACKETS_PER_SECOND = 'packets.per-second'
     ATTACK_DURATION = 'attack.duration'
     NUMBER_ATTACKERS = 'attackers.count'
 
@@ -37,17 +30,15 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
                                              "Resource Exhaustion")
 
         # Define allowed parameters and their type
-        self.supported_params.update({
-            self.IP_SOURCE: ParamTypes.TYPE_IP_ADDRESS,
-            self.IP_DESTINATION: ParamTypes.TYPE_IP_ADDRESS,
-            self.MAC_SOURCE: ParamTypes.TYPE_MAC_ADDRESS,
-            self.MAC_DESTINATION: ParamTypes.TYPE_MAC_ADDRESS,
-            self.INJECT_AT_TIMESTAMP: ParamTypes.TYPE_FLOAT,
-            self.INJECT_AFTER_PACKET: ParamTypes.TYPE_PACKET_POSITION,
-            self.PACKETS_PER_SECOND: ParamTypes.TYPE_FLOAT,
-            self.ATTACK_DURATION: ParamTypes.TYPE_INTEGER_POSITIVE,
-            self.NUMBER_ATTACKERS: ParamTypes.TYPE_INTEGER_POSITIVE
-        })
+        self.update_params([
+            Parameter(self.IP_SOURCE, IPAddress()),
+            Parameter(self.IP_DESTINATION, IPAddress()),
+            Parameter(self.MAC_SOURCE, MACAddress()),
+            Parameter(self.MAC_DESTINATION, MACAddress()),
+            Parameter(self.PACKETS_PER_SECOND, Float()),
+            Parameter(self.ATTACK_DURATION, IntegerPositive()),
+            Parameter(self.NUMBER_ATTACKERS, IntegerPositive()),
+        ])
 
     def init_param(self, param: str) -> bool:
         """

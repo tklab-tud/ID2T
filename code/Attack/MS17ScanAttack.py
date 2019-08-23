@@ -9,7 +9,7 @@ import Attack.BaseAttack as BaseAttack
 import ID2TLib.SMBLib as SMBLib
 import ID2TLib.Utility as Util
 
-from Attack.Parameter.Types import ParameterTypes as ParamTypes
+from Attack.Parameter import Parameter, Float, IPAddress, MACAddress, Port
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
@@ -17,15 +17,8 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 
 class MS17ScanAttack(BaseAttack.BaseAttack):
-    MAC_SOURCE = 'mac.src'
-    IP_SOURCE = 'ip.src'
     PORT_SOURCE = 'port.src'
-    MAC_DESTINATION = 'mac.dst'
-    IP_DESTINATION = 'ip.dst'
     PORT_DESTINATION = 'port.dst'
-    INJECT_AT_TIMESTAMP = 'inject.at-timestamp'
-    INJECT_AFTER_PACKET = 'inject.after-pkt'
-    PACKETS_PER_SECOND = 'packets.per-second'
 
     template_scan_pcap_path = Util.RESOURCE_DIR + "Win7_eternalblue_scan.pcap"
     # Empirical values from Metasploit experiments
@@ -45,17 +38,15 @@ class MS17ScanAttack(BaseAttack.BaseAttack):
         self.path_attack_pcap = None
 
         # Define allowed parameters and their type
-        self.supported_params.update({
-            self.MAC_SOURCE: ParamTypes.TYPE_MAC_ADDRESS,
-            self.IP_SOURCE: ParamTypes.TYPE_IP_ADDRESS,
-            self.PORT_SOURCE: ParamTypes.TYPE_PORT,
-            self.MAC_DESTINATION: ParamTypes.TYPE_MAC_ADDRESS,
-            self.IP_DESTINATION: ParamTypes.TYPE_IP_ADDRESS,
-            self.PORT_DESTINATION: ParamTypes.TYPE_PORT,
-            self.INJECT_AT_TIMESTAMP: ParamTypes.TYPE_FLOAT,
-            self.INJECT_AFTER_PACKET: ParamTypes.TYPE_PACKET_POSITION,
-            self.PACKETS_PER_SECOND: ParamTypes.TYPE_FLOAT
-        })
+        self.update_params([
+            Parameter(self.MAC_SOURCE, MACAddress()),
+            Parameter(self.IP_SOURCE, IPAddress()),
+            Parameter(self.PORT_SOURCE, Port()),
+            Parameter(self.MAC_DESTINATION, MACAddress()),
+            Parameter(self.IP_DESTINATION, IPAddress()),
+            Parameter(self.PORT_DESTINATION, Port()),
+            Parameter(self.PACKETS_PER_SECOND, Float())
+        ])
 
     def init_param(self, param: str) -> bool:
         """
