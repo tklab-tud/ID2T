@@ -18,10 +18,8 @@ class Statistics(object):
     _initialized = False
 
     def __new__(cls, *args, **kwargs):
-        print('current: ', cls._instance)
         if cls._instance is None:
             cls._instance = object.__new__(cls)
-            print('create: ', cls._instance)
         return cls._instance
 
     def __init__(self, pcap_file: PcapFile.PcapFile):
