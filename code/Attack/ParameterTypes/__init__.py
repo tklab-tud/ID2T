@@ -3,6 +3,7 @@ from Attack.ParameterTypes.Domain import Domain
 from Attack.ParameterTypes.FilePath import FilePath
 from Attack.ParameterTypes.Float import Float
 from Attack.ParameterTypes.IntegerPositive import IntegerPositive
+from Attack.ParameterTypes.IntegerLimited import IntegerLimited
 from Attack.ParameterTypes.IPAddress import IPAddress
 from Attack.ParameterTypes.MACAddress import MACAddress
 from Attack.ParameterTypes.PacketPosition import PacketPosition

@@ -22,9 +22,7 @@ class IPAddress(String):
         #          " already used by another IP parameter. Generating random IP.")
         #    value = self.statistics.get_random_ip_address()
 
-        is_valid, value = String.validate(self, value)
-        if is_valid:
-            is_valid, value = IPAddress._is_ip_address(value)
+        is_valid, value = IPAddress._is_ip_address(value)
         return is_valid, value
 
     @staticmethod

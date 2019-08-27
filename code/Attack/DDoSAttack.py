@@ -22,8 +22,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
     IP_DESTINATION = 'ip.dst'
     MAC_DESTINATION = 'mac.dst'
     PORT_DESTINATION = 'port.dst'
-    INJECT_AT_TIMESTAMP = 'inject.at-timestamp'
-    INJECT_AFTER_PACKET = 'inject.after-pkt'
     PACKETS_PER_SECOND = 'packets.per-second'
     NUMBER_ATTACKERS = 'attackers.count'
     ATTACK_DURATION = 'attack.duration'
@@ -42,15 +40,13 @@ class DDoSAttack(BaseAttack.BaseAttack):
         self.default_port = 0
 
         # Define allowed parameters and their type
-        self.params.extend([
+        self.update_params([
             Parameter(self.IP_SOURCE, Types.IPAddress()),
             Parameter(self.MAC_SOURCE, Types.MACAddress()),
             Parameter(self.PORT_SOURCE, Types.Port()),
             Parameter(self.IP_DESTINATION, Types.IPAddress()),
             Parameter(self.MAC_DESTINATION, Types.MACAddress()),
             Parameter(self.PORT_DESTINATION, Types.Port()),
-            Parameter(self.INJECT_AT_TIMESTAMP, Types.Float()),
-            Parameter(self.INJECT_AFTER_PACKET, Types.PacketPosition()),
             Parameter(self.PACKETS_PER_SECOND, Types.Float()),
             Parameter(self.NUMBER_ATTACKERS, Types.IntegerPositive()),
             Parameter(self.ATTACK_DURATION, Types.IntegerPositive()),
