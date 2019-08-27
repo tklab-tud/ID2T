@@ -1,17 +1,16 @@
 import re
 import typing as t
 
-import Attack.ParameterTypes.BaseType as BaseType
+from Attack.ParameterTypes.BaseType import ParameterType
 
 
-class MACAddress(BaseType.ParameterType):
+class MACAddress(ParameterType):
 
     def __init__(self):
-        BaseType.ParameterType.__init__(self)
+        super(MACAddress, self).__init__()
         self.name = "MACAddress"
 
-    @staticmethod
-    def validate(value: str) -> (bool, str):
+    def validate(self, value: str) -> (bool, str):
         return MACAddress._is_mac_address(value), value
 
     @staticmethod

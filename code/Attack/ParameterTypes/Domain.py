@@ -1,16 +1,15 @@
 import re
 
-import Attack.ParameterTypes.BaseType as BaseType
+from Attack.ParameterTypes.BaseType import ParameterType
 
 
-class Domain(BaseType.ParameterType):
+class Domain(ParameterType):
 
     def __init__(self):
-        BaseType.ParameterType.__init__(self)
+        super(Domain, self).__init__()
         self.name = "Domain"
 
-    @staticmethod
-    def validate(value) -> (bool, str):
+    def validate(self, value) -> (bool, str):
         return Domain._is_domain(value), value
 
     @staticmethod

@@ -1,16 +1,15 @@
 import re
 
-import Attack.ParameterTypes.BaseType as BaseType
+from Attack.ParameterTypes.BaseType import ParameterType
 
 
-class Timestamp(BaseType.ParameterType):
+class Timestamp(ParameterType):
 
     def __init__(self):
-        BaseType.ParameterType.__init__(self)
+        super(Timestamp, self).__init__()
         self.name = "Timestamp"
 
-    @staticmethod
-    def validate(value) -> (bool, int):
+    def validate(self, value) -> (bool, int):
         return Timestamp._is_timestamp(value), value
 
     @staticmethod
