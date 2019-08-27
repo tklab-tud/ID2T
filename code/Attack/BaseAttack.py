@@ -56,7 +56,14 @@ class BaseAttack(metaclass=abc.ABCMeta):
         :param attack_type: The type the attack belongs to, like probing/scanning, malware.
         """
         # Reference to statistics class
-        self.statistics = None
+        self.statistics = Statistics.Statistics(None)
+
+        # get_reply_delay
+        self.all_min_latencies = self.statistics.process_db_query("SELECT minDelay FROM conv_statistics LIMIT 500;")
+        self.all_max_latencies = self.statistics.process_db_query("SELECT maxDelay FROM conv_statistics LIMIT 500;")
+        self.most_used_mss_value = self.statistics.get_most_used_mss_value()
+        self.most_used_ttl_value = self.statistics.get_most_used_ttl_value()
+        self.most_used_win_size = self.statistics.get_most_used_win_size()
 
         # Class fields
         self.attack_name = name
@@ -89,22 +96,6 @@ class BaseAttack(metaclass=abc.ABCMeta):
         self.most_used_mss_value = None
         self.most_used_ttl_value = None
         self.most_used_win_size = None
-
-        """
-        Specify the statistics object that will be used to calculate the parameters of this attack.
-        The statistics are used to calculate default parameters and to process user supplied
-        queries.
-
-        :param statistics: Reference to a statistics object.
-        """
-        self.statistics = Statistics.Statistics(None)
-
-        # get_reply_delay
-        self.all_min_latencies = self.statistics.process_db_query("SELECT minDelay FROM conv_statistics LIMIT 500;")
-        self.all_max_latencies = self.statistics.process_db_query("SELECT maxDelay FROM conv_statistics LIMIT 500;")
-        self.most_used_mss_value = self.statistics.get_most_used_mss_value()
-        self.most_used_ttl_value = self.statistics.get_most_used_ttl_value()
-        self.most_used_win_size = self.statistics.get_most_used_win_size()
 
     def init_mutual_params(self):
         self.add_param_value(self.BANDWIDTH_MAX, 0)
