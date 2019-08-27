@@ -1,14 +1,13 @@
-import Attack.ParameterTypes.BaseType as BaseType
+from Attack.ParameterTypes.BaseType import ParameterType
 
 
-class Percentage(BaseType.ParameterType):
+class Percentage(ParameterType):
 
     def __init__(self):
-        BaseType.ParameterType.__init__(self)
+        super(Percentage, self).__init__()
         self.name = "Percentage"
 
-    @staticmethod
-    def validate(value) -> (bool, int):
+    def validate(self, value) -> (bool, int):
         return Percentage._is_float(value)[0] and 0 <= value <= 1, value
 
     @staticmethod

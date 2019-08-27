@@ -6,7 +6,6 @@ from Attack.ParameterTypes.IntegerPositive import IntegerPositive
 from Attack.ParameterTypes.IntegerLimited import IntegerLimited
 from Attack.ParameterTypes.IPAddress import IPAddress
 from Attack.ParameterTypes.MACAddress import MACAddress
-from Attack.ParameterTypes.PacketPosition import PacketPosition
 from Attack.ParameterTypes.Percentage import Percentage
 from Attack.ParameterTypes.Port import Port
 from Attack.ParameterTypes.String import String

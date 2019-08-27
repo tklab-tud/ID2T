@@ -1,14 +1,13 @@
 import os
 
-import Attack.ParameterTypes.BaseType as BaseType
+from Attack.ParameterTypes.BaseType import ParameterType
 
 
-class FilePath(BaseType.ParameterType):
+class FilePath(ParameterType):
 
     def __init__(self):
-        BaseType.ParameterType.__init__(self)
+        super(FilePath, self).__init__()
         self.name = "FilePath"
 
-    @staticmethod
-    def validate(value) -> (bool, str):
+    def validate(self, value) -> (bool, str):
         return os.path.isfile(value), value

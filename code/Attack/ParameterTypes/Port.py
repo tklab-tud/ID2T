@@ -1,3 +1,4 @@
+import re
 import typing as t
 
 import Attack.ParameterTypes.BaseType as BaseType
@@ -6,11 +7,10 @@ import Attack.ParameterTypes.BaseType as BaseType
 class Port(BaseType.ParameterType):
 
     def __init__(self):
-        BaseType.ParameterType.__init__(self)
+        super(Port, self).__init__()
         self.name = "Port"
 
-    @staticmethod
-    def validate(value: int) -> (bool, int):
+    def validate(self, value: int) -> (bool, int):
         return Port._is_port(value), value
 
     @staticmethod

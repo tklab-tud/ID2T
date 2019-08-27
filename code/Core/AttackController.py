@@ -192,7 +192,7 @@ class AttackController:
         print(".)")
 
         # Warning if attack duration gets exceeded by more than 1 second
-        if self.current_attack.ATTACK_DURATION in self.current_attack.supported_params and \
+        if self.current_attack.ATTACK_DURATION in [x.name for x in self.current_attack.params] and \
                 self.current_attack.get_param_value(self.current_attack.ATTACK_DURATION) != 0:
             attack_duration = self.current_attack.get_param_value(self.current_attack.ATTACK_DURATION)
             packet_duration = abs(self.current_attack.attack_end_utime - self.current_attack.attack_start_utime)

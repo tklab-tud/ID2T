@@ -1,17 +1,16 @@
-import Attack.ParameterTypes.BaseType as BaseType
+from Attack.ParameterTypes.BaseType import ParameterType
 
 
-class Float(BaseType.ParameterType):
+class Float(ParameterType):
 
     PACKETS_PER_SECOND = 'packets.per-second'
     INJECT_AT_TIMESTAMP = 'inject.at-timestamp'
 
     def __init__(self):
-        BaseType.ParameterType.__init__(self)
+        super(Float, self).__init__()
         self.name = "Float"
 
-    @staticmethod
-    def validate(value) -> (bool, float):
+    def validate(self, value) -> (bool, float):
         is_valid, value = Float._is_float(value)
         return is_valid, value
 

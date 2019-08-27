@@ -1,15 +1,14 @@
-import Attack.ParameterTypes.BaseType as BaseType
+from Attack.ParameterTypes.BaseType import ParameterType
 
 
-class Boolean(BaseType.ParameterType):
+class Boolean(ParameterType):
 
     def __init__(self):
-        BaseType.ParameterType.__init__(self)
+        super(Boolean, self).__init__()
         self.name = "Boolean"
 
-    @staticmethod
-    def validate(value) -> (bool, int):
-        return Boolean._is_boolean(value), value
+    def validate(self, value) -> (bool, int):
+        return Boolean._is_boolean(value)
 
     @staticmethod
     def _is_boolean(value):
