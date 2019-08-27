@@ -40,6 +40,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
 
     PACKETS_PER_SECOND = 'packets.per-second'
     INJECT_AT_TIMESTAMP = 'inject.at-timestamp'
+    INJECT_AFTER_PACKET = 'inject.after-pkt'
 
     BANDWIDTH_MAX = 'bandwidth.max'
     BANDWIDTH_MIN_LOCAL = 'bandwidth.min.local'
@@ -69,9 +70,12 @@ class BaseAttack(metaclass=abc.ABCMeta):
         self.attack_name = name
         self.attack_description = description
         self.attack_type = attack_type
-        self.params = [Parameter(self.BANDWIDTH_MAX, Types.Float),
-                       Parameter(self.BANDWIDTH_MIN_LOCAL, Types.Float),
-                       Parameter(self.BANDWIDTH_MIN_PUBLIC, Types.Float)]
+        self.params = [Parameter(self.INJECT_AT_TIMESTAMP, Types.Float()),
+                       Parameter(self.INJECT_AFTER_PACKET, Types.IntegerLimited([0,
+                                                                                 self.statistics.get_packet_count()])),
+                       Parameter(self.BANDWIDTH_MAX, Types.Float()),
+                       Parameter(self.BANDWIDTH_MIN_LOCAL, Types.Float()),
+                       Parameter(self.BANDWIDTH_MIN_PUBLIC, Types.Float())]
         self.attack_start_utime = 0
         self.attack_end_utime = 0
         self.start_time = 0
@@ -90,12 +94,30 @@ class BaseAttack(metaclass=abc.ABCMeta):
         self.buffer_size = 1000
         #self.packets = collections.deque(maxlen=self.buffer_size)
 
+    def update_params(self, params):
+        for new_param in params:
+            index = None
+            for old_param in self.params:
+                if new_param.name == old_param.name:
+                    index = self.params.index(old_param)
+                    break
+            if index is not None:
+                self.params[index] = new_param
+            else:
+                self.params.append(new_param)
+
     def init_mutual_params(self):
         self.add_param_value(self.BANDWIDTH_MAX, 0)
         self.add_param_value(self.BANDWIDTH_MIN_LOCAL, 0)
         self.add_param_value(self.BANDWIDTH_MIN_PUBLIC, 0)
 
     def init_objects(self):
+        timestamp = self.get_param_value(self.INJECT_AT_TIMESTAMP)
+        packet = self.get_param_value(self.INJECT_AFTER_PACKET)
+        if timestamp is None:
+            ts = pr.pcap_processor(self.statistics.pcap_filepath, "False", Util.RESOURCE_DIR, "").get_timestamp_mu_sec(int(packet))
+            timestamp = (ts / 1000000)
+            self.add_param_value(self.INJECT_AT_TIMESTAMP, timestamp)
         self.timestamp_controller = tc.TimestampController(self.get_param_value(self.INJECT_AT_TIMESTAMP),
                                                            self.get_param_value(self.PACKETS_PER_SECOND))
         self.bandwidth_controller = bc.BandwidthController(self.get_param_value(self.BANDWIDTH_MAX),
