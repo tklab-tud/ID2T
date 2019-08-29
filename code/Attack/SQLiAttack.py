@@ -6,9 +6,10 @@ import scapy.layers.inet as inet
 import scapy.utils
 
 import Attack.BaseAttack as BaseAttack
+import Attack.ParameterTypes as Types
 import ID2TLib.Utility as Util
 
-from Attack.ParameterTypes.Types import ParameterTypes as ParamTypes
+from Attack.Parameter import Parameter
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
@@ -45,18 +46,15 @@ class SQLiAttack(BaseAttack.BaseAttack):
         self.path_attack_pcap = None
 
         # Define allowed parameters and their type
-        self.supported_params.update({
-            self.MAC_SOURCE: ParamTypes.TYPE_MAC_ADDRESS,
-            self.IP_SOURCE: ParamTypes.TYPE_IP_ADDRESS,
-            self.MAC_DESTINATION: ParamTypes.TYPE_MAC_ADDRESS,
-            self.IP_DESTINATION: ParamTypes.TYPE_IP_ADDRESS,
-            self.PORT_DESTINATION: ParamTypes.TYPE_PORT,
-            self.TARGET_HOST: ParamTypes.TYPE_DOMAIN,
-            # self.TARGET_URI: ParamTypes.TYPE_URI,
-            self.INJECT_AT_TIMESTAMP: ParamTypes.TYPE_FLOAT,
-            self.INJECT_AFTER_PACKET: ParamTypes.TYPE_PACKET_POSITION,
-            self.PACKETS_PER_SECOND: ParamTypes.TYPE_FLOAT
-        })
+        self.update_params([
+            Parameter(self.MAC_SOURCE, Types.MACAddress()),
+            Parameter(self.IP_SOURCE, Types.IPAddress()),
+            Parameter(self.MAC_DESTINATION, Types.MACAddress()),
+            Parameter(self.IP_DESTINATION, Types.IPAddress()),
+            Parameter(self.PORT_DESTINATION, Types.Port()),
+            Parameter(self.TARGET_HOST, Types.Domain()),
+            Parameter(self.PACKETS_PER_SECOND, Types.Float())
+        ])
 
     def init_param(self, param: str) -> bool:
         """
