@@ -5,9 +5,10 @@ import lea
 import scapy.layers.inet as inet
 
 import Attack.BaseAttack as BaseAttack
+import Attack.ParameterTypes as Types
 import ID2TLib.Utility as Util
 
-from Attack.ParameterTypes.Types import ParameterTypes as ParamTypes
+from Attack.Parameter import Parameter
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
@@ -40,22 +41,20 @@ class PortscanAttack(BaseAttack.BaseAttack):
                                              "Scanning/Probing")
 
         # Define allowed parameters and their type
-        self.supported_params.update({
-            self.IP_SOURCE: ParamTypes.TYPE_IP_ADDRESS,
-            self.IP_DESTINATION: ParamTypes.TYPE_IP_ADDRESS,
-            self.PORT_SOURCE: ParamTypes.TYPE_PORT,
-            self.PORT_DESTINATION: ParamTypes.TYPE_PORT,
-            self.PORT_OPEN: ParamTypes.TYPE_PORT,
-            self.MAC_SOURCE: ParamTypes.TYPE_MAC_ADDRESS,
-            self.MAC_DESTINATION: ParamTypes.TYPE_MAC_ADDRESS,
-            self.INJECT_AT_TIMESTAMP: ParamTypes.TYPE_FLOAT,
-            self.INJECT_AFTER_PACKET: ParamTypes.TYPE_PACKET_POSITION,
-            self.PORT_DEST_SHUFFLE: ParamTypes.TYPE_BOOLEAN,
-            self.PORT_DEST_ORDER_DESC: ParamTypes.TYPE_BOOLEAN,
-            self.IP_SOURCE_RANDOMIZE: ParamTypes.TYPE_BOOLEAN,
-            self.PACKETS_PER_SECOND: ParamTypes.TYPE_FLOAT,
-            self.PORT_SOURCE_RANDOMIZE: ParamTypes.TYPE_BOOLEAN
-        })
+        self.update_params([
+            Parameter(self.IP_SOURCE, Types.IPAddress()),
+            Parameter(self.IP_DESTINATION, Types.IPAddress()),
+            Parameter(self.PORT_SOURCE, Types.Port()),
+            Parameter(self.PORT_DESTINATION, Types.Port()),
+            Parameter(self.PORT_OPEN, Types.Port()),
+            Parameter(self.MAC_SOURCE, Types.MACAddress()),
+            Parameter(self.MAC_DESTINATION, Types.MACAddress()),
+            Parameter(self.PORT_DEST_SHUFFLE, Types.Boolean()),
+            Parameter(self.PORT_DEST_ORDER_DESC, Types.Boolean()),
+            Parameter(self.IP_SOURCE_RANDOMIZE, Types.Boolean()),
+            Parameter(self.PACKETS_PER_SECOND, Types.Float()),
+            Parameter(self.PORT_SOURCE_RANDOMIZE, Types.Boolean())
+        ])
 
     def init_param(self, param: str) -> bool:
         """
