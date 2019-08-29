@@ -11,7 +11,7 @@ class Port(BaseType.ParameterType):
         self.name = "Port"
 
     def validate(self, value: int) -> (bool, int):
-        return Port._is_port(value), value
+        return Port._is_port(value)
 
     @staticmethod
     def _is_port(ports_input: t.Union[t.List[str], t.List[int], str, int])\
@@ -72,7 +72,7 @@ class Port(BaseType.ParameterType):
                 # append ports at ports_output list
                 ports_output += ports_list
 
-        if len(ports_output) == 1:
+        if isinstance(ports_output, list) and len(ports_output) == 1:
             return True, ports_output[0]
         else:
             return True, ports_output
