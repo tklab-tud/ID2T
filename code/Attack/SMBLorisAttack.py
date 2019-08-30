@@ -5,10 +5,11 @@ import scapy.layers.inet as inet
 from scapy.layers.netbios import NBTSession
 
 import Attack.BaseAttack as BaseAttack
+import Attack.ParameterTypes as Types
 import ID2TLib.SMBLib as SMBLib
 import ID2TLib.Utility as Util
 
-from Attack.ParameterTypes.Types import ParameterTypes as ParamTypes
+from Attack.Parameter import Parameter
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
@@ -37,17 +38,15 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
                                              "Resource Exhaustion")
 
         # Define allowed parameters and their type
-        self.supported_params.update({
-            self.IP_SOURCE: ParamTypes.TYPE_IP_ADDRESS,
-            self.IP_DESTINATION: ParamTypes.TYPE_IP_ADDRESS,
-            self.MAC_SOURCE: ParamTypes.TYPE_MAC_ADDRESS,
-            self.MAC_DESTINATION: ParamTypes.TYPE_MAC_ADDRESS,
-            self.INJECT_AT_TIMESTAMP: ParamTypes.TYPE_FLOAT,
-            self.INJECT_AFTER_PACKET: ParamTypes.TYPE_PACKET_POSITION,
-            self.PACKETS_PER_SECOND: ParamTypes.TYPE_FLOAT,
-            self.ATTACK_DURATION: ParamTypes.TYPE_INTEGER_POSITIVE,
-            self.NUMBER_ATTACKERS: ParamTypes.TYPE_INTEGER_POSITIVE
-        })
+        self.update_params([
+            Parameter(self.IP_SOURCE, Types.IPAddress()),
+            Parameter(self.IP_DESTINATION, Types.IPAddress()),
+            Parameter(self.MAC_SOURCE, Types.MACAddress()),
+            Parameter(self.MAC_DESTINATION, Types.MACAddress()),
+            Parameter(self.PACKETS_PER_SECOND, Types.Float()),
+            Parameter(self.ATTACK_DURATION, Types.IntegerPositive()),
+            Parameter(self.NUMBER_ATTACKERS, Types.IntegerPositive()),
+        ])
 
     def init_param(self, param: str) -> bool:
         """
