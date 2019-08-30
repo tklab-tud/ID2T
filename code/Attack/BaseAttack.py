@@ -533,7 +533,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         :param ip_destination: destination IP address.
         """
         if BaseAttack.ip_src_dst_equal_check(ip_source, ip_destination):
-            print("ERROR: Invalid IP addresses; source IP is the same as destination IP: ", ip_destination, ".")
+            print("ERROR: Invalid IP addresses; source IP is the same as destination IP: " + str(ip_destination) + ".")
             sys.exit(-1)
 
     @staticmethod
