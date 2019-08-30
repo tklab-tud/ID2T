@@ -228,7 +228,6 @@ class BaseAttack(metaclass=abc.ABCMeta):
 
         # by default no param is valid
         is_valid = False
-        param_name = None
 
         # get AttackParameters instance associated with param
         # for default values assigned in attack classes, like Parameter.PORT_OPEN
