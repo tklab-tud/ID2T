@@ -17,15 +17,8 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 
 class SQLiAttack(BaseAttack.BaseAttack):
-    MAC_SOURCE = 'mac.src'
-    IP_SOURCE = 'ip.src'
-    MAC_DESTINATION = 'mac.dst'
-    IP_DESTINATION = 'ip.dst'
     PORT_DESTINATION = 'port.dst'
     TARGET_HOST = 'target.host'
-    INJECT_AT_TIMESTAMP = 'inject.at-timestamp'
-    INJECT_AFTER_PACKET = 'inject.after-pkt'
-    PACKETS_PER_SECOND = 'packets.per-second'
 
     template_attack_pcap_path = Util.RESOURCE_DIR + "ATutorSQLi.pcap"
     # HTTP port

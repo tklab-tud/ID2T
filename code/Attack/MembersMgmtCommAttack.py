@@ -23,8 +23,6 @@ from ID2TLib.Ports import PortSelectors
 
 
 class MembersMgmtCommAttack(BaseAttack.BaseAttack):
-    INJECT_AT_TIMESTAMP = 'inject.at-timestamp'
-    INJECT_AFTER_PACKET = 'inject.after-pkt'
     PACKETS_LIMIT = 'packets.limit'
     ATTACK_DURATION = 'attack.duration'
     NUMBER_INITIATOR_BOTS = 'bots.count'

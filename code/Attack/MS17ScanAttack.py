@@ -18,15 +18,8 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 
 class MS17ScanAttack(BaseAttack.BaseAttack):
-    MAC_SOURCE = 'mac.src'
-    IP_SOURCE = 'ip.src'
     PORT_SOURCE = 'port.src'
-    MAC_DESTINATION = 'mac.dst'
-    IP_DESTINATION = 'ip.dst'
     PORT_DESTINATION = 'port.dst'
-    INJECT_AT_TIMESTAMP = 'inject.at-timestamp'
-    INJECT_AFTER_PACKET = 'inject.after-pkt'
-    PACKETS_PER_SECOND = 'packets.per-second'
 
     template_scan_pcap_path = Util.RESOURCE_DIR + "Win7_eternalblue_scan.pcap"
     # Empirical values from Metasploit experiments

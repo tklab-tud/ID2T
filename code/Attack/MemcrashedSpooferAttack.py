@@ -15,14 +15,7 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 
 class MemcrashedSpooferAttack(BaseAttack.BaseAttack):
-    IP_SOURCE = 'ip.src'
-    MAC_SOURCE = 'mac.src'
-    IP_DESTINATION = 'ip.dst'
-    MAC_DESTINATION = 'mac.dst'
     IP_VICTIM = 'ip.victim'
-    INJECT_AT_TIMESTAMP = 'inject.at-timestamp'
-    INJECT_AFTER_PACKET = 'inject.after-pkt'
-    PACKETS_PER_SECOND = 'packets.per-second'
     ATTACK_DURATION = 'attack.duration'
 
     def __init__(self):
@@ -31,8 +24,8 @@ class MemcrashedSpooferAttack(BaseAttack.BaseAttack):
         """
         # Initialize attack
         super(MemcrashedSpooferAttack, self).__init__("Memcrashed Attack (Spoofer side)",
-                                               "Injects the spoofer-side of a Memcached amplification attack",
-                                               "Resource Exhaustion")
+                                                      "Injects the spoofer-side of a Memcached amplification attack",
+                                                      "Resource Exhaustion")
 
         # Define allowed parameters and their type
         self.update_params([

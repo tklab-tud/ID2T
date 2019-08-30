@@ -16,13 +16,8 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 
 class DDoSAttack(BaseAttack.BaseAttack):
-    IP_SOURCE = 'ip.src'
-    MAC_SOURCE = 'mac.src'
     PORT_SOURCE = 'port.src'
-    IP_DESTINATION = 'ip.dst'
-    MAC_DESTINATION = 'mac.dst'
     PORT_DESTINATION = 'port.dst'
-    PACKETS_PER_SECOND = 'packets.per-second'
     NUMBER_ATTACKERS = 'attackers.count'
     ATTACK_DURATION = 'attack.duration'
     VICTIM_BUFFER = 'victim.buffer'

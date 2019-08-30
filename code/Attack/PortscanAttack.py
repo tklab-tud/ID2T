@@ -16,19 +16,12 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 
 class PortscanAttack(BaseAttack.BaseAttack):
-    IP_SOURCE = 'ip.src'
-    IP_DESTINATION = 'ip.dst'
     PORT_SOURCE = 'port.src'
     PORT_DESTINATION = 'port.dst'
     PORT_OPEN = 'port.open'
-    MAC_SOURCE = 'mac.src'
-    MAC_DESTINATION = 'mac.dst'
-    INJECT_AT_TIMESTAMP = 'inject.at-timestamp'
-    INJECT_AFTER_PACKET = 'inject.after-pkt'
     PORT_DEST_SHUFFLE = 'port.dst.shuffle'
     PORT_DEST_ORDER_DESC = 'port.dst.order-desc'
     IP_SOURCE_RANDOMIZE = 'ip.src.shuffle'
-    PACKETS_PER_SECOND = 'packets.per-second'
     PORT_SOURCE_RANDOMIZE = 'port.src.shuffle'
 
     def __init__(self):

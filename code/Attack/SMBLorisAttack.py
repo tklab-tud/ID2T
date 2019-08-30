@@ -17,13 +17,6 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 
 class SMBLorisAttack(BaseAttack.BaseAttack):
-    IP_SOURCE = 'ip.src'
-    IP_DESTINATION = 'ip.dst'
-    MAC_SOURCE = 'mac.src'
-    MAC_DESTINATION = 'mac.dst'
-    INJECT_AT_TIMESTAMP = 'inject.at-timestamp'
-    INJECT_AFTER_PACKET = 'inject.after-pkt'
-    PACKETS_PER_SECOND = 'packets.per-second'
     ATTACK_DURATION = 'attack.duration'
     NUMBER_ATTACKERS = 'attackers.count'
 

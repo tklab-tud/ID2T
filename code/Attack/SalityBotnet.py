@@ -16,11 +16,6 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 
 class SalityBotnet(BaseAttack.BaseAttack):
-    MAC_SOURCE = 'mac.src'
-    IP_SOURCE = 'ip.src'
-    INJECT_AT_TIMESTAMP = 'inject.at-timestamp'
-    INJECT_AFTER_PACKET = 'inject.after-pkt'
-    PACKETS_PER_SECOND = 'packets.per-second'
 
     template_attack_pcap_path = Util.RESOURCE_DIR + "/../resources/sality_botnet.pcap"
 

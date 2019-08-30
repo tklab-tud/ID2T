@@ -19,17 +19,10 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 
 class SMBScanAttack(BaseAttack.BaseAttack):
-    IP_SOURCE = 'ip.src'
-    IP_DESTINATION = 'ip.dst'
-    MAC_DESTINATION = 'mac.dst'
     TARGET_COUNT = 'target.count'
     HOSTING_PERCENTAGE = 'hosting.percentage'
     PORT_SOURCE = 'port.src'
-    MAC_SOURCE = 'mac.src'
-    INJECT_AT_TIMESTAMP = 'inject.at-timestamp'
-    INJECT_AFTER_PACKET = 'inject.after-pkt'
     IP_SOURCE_RANDOMIZE = 'ip.src.shuffle'
-    PACKETS_PER_SECOND = 'packets.per-second'
     PORT_SOURCE_RANDOMIZE = 'port.src.shuffle'
     HOSTING_IP = 'hosting.ip'
     HOSTING_VERSION = 'hosting.version'

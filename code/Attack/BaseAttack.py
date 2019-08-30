@@ -33,15 +33,22 @@ class BaseAttack(metaclass=abc.ABCMeta):
     Abstract base class for all attack classes. Provides basic functionalities, like parameter validation.
     """
 
-    IP_SOURCE = 'ip.src'
-    IP_DESTINATION = 'ip.dst'
-    INTERVAL_SELECT_STRATEGY = 'interval.selection.strategy'
+    #For AttackController
+    # TODO: get rid of this
     ATTACK_DURATION = 'attack.duration'
 
+    # General SRC and DST parameters
+    IP_SOURCE = 'ip.src'
+    IP_DESTINATION = 'ip.dst'
+    MAC_SOURCE = 'mac.src'
+    MAC_DESTINATION = 'mac.dst'
+
+    # For TimestampController
     PACKETS_PER_SECOND = 'packets.per-second'
     INJECT_AT_TIMESTAMP = 'inject.at-timestamp'
     INJECT_AFTER_PACKET = 'inject.after-pkt'
 
+    # For BandwidthController
     BANDWIDTH_MAX = 'bandwidth.max'
     BANDWIDTH_MIN_LOCAL = 'bandwidth.min.local'
     BANDWIDTH_MIN_PUBLIC = 'bandwidth.min.public'
