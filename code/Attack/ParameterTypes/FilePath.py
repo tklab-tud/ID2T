@@ -10,4 +10,6 @@ class FilePath(ParameterType):
         self.name = "FilePath"
 
     def validate(self, value) -> (bool, str):
+        if isinstance(value, str) and value == "":
+            return True, value
         return os.path.isfile(value), value
