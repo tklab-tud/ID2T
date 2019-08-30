@@ -9,4 +9,5 @@ from Attack.ParameterTypes.MACAddress import MACAddress
 from Attack.ParameterTypes.Percentage import Percentage
 from Attack.ParameterTypes.Port import Port
 from Attack.ParameterTypes.String import String
+from Attack.ParameterTypes.SpecificString import SpecificString
 from Attack.ParameterTypes.Timestamp import Timestamp
