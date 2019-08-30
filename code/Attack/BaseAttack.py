@@ -94,13 +94,6 @@ class BaseAttack(metaclass=abc.ABCMeta):
         self.buffer_size = 1000
         #self.packets = collections.deque(maxlen=self.buffer_size)
 
-        # get_reply_delay
-        self.all_min_latencies = None
-        self.all_max_latencies = None
-        self.most_used_mss_value = None
-        self.most_used_ttl_value = None
-        self.most_used_win_size = None
-
     def update_params(self, params):
         for new_param in params:
             index = None
@@ -120,8 +113,8 @@ class BaseAttack(metaclass=abc.ABCMeta):
 
     def init_objects(self):
         timestamp = self.get_param_value(self.INJECT_AT_TIMESTAMP)
-        packet = self.get_param_value(self.INJECT_AFTER_PACKET)
         if timestamp is None:
+            packet = self.get_param_value(self.INJECT_AFTER_PACKET)
             ts = pr.pcap_processor(self.statistics.pcap_filepath, "False", Util.RESOURCE_DIR, "").get_timestamp_mu_sec(int(packet))
             timestamp = (ts / 1000000)
             self.add_param_value(self.INJECT_AT_TIMESTAMP, timestamp)
@@ -339,7 +332,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
             # timestamp derived from it is set to Parameter.INJECT_AT_TIMESTAMP
             if param.value is None and param.name not in non_obligatory_params:
                 print("\033[91mERROR: Attack '" + self.attack_name + "' does not define the parameter '" +
-                      str(param) + "'.\n The attack must define default values for all parameters."
+                      str(param.name) + "'.\n The attack must define default values for all parameters."
                       + "\n Cannot continue attack generation.\033[0m")
                 sys.exit(-1)
 
