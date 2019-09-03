@@ -6,5 +6,6 @@ __all__ = []
 modules = glob.glob(osp.dirname(__file__) + "/*.py")
 for m in modules:
     c = str(osp.basename(m)[:-3])
-    if (not c.startswith('__') and not c.startswith('Base') and c.endswith('Attack')) or c == "ParameterTypes":
+    if not c.startswith('__') and not c.startswith('Base') and c.endswith('Attack'):
         __all__.append(c)
+__all__.append(osp.dirname(__file__) + "/ParameterTypes")
