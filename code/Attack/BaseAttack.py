@@ -121,10 +121,12 @@ class BaseAttack(metaclass=abc.ABCMeta):
     def init_objects(self):
         timestamp = self.get_param_value(self.INJECT_AT_TIMESTAMP)
         packet = self.get_param_value(self.INJECT_AFTER_PACKET)
+
         if timestamp is None:
             ts = pr.pcap_processor(self.statistics.pcap_filepath, "False", Util.RESOURCE_DIR, "").get_timestamp_mu_sec(int(packet))
             timestamp = (ts / 1000000)
             self.add_param_value(self.INJECT_AT_TIMESTAMP, timestamp)
+
         self.timestamp_controller = tc.TimestampController(self.get_param_value(self.INJECT_AT_TIMESTAMP),
                                                            self.get_param_value(self.PACKETS_PER_SECOND))
         self.bandwidth_controller = bc.BandwidthController(self.get_param_value(self.BANDWIDTH_MAX),
@@ -258,6 +260,15 @@ class BaseAttack(metaclass=abc.ABCMeta):
                 value = value.replace("'", "")
             value = value.replace(" ", "")
             value = value.split(",")
+
+        # catch source IP = destination IP
+        if (param_name == self.IP_SOURCE
+            and self.param_equals(self.IP_DESTINATION, value)) \
+                or (param_name == self.IP_DESTINATION
+                    and self.param_equals(self.IP_SOURCE, value)):
+            print("ERROR: Value " + str(value) + " of Parameter " + str(param_name) +
+                  " can not be used for both source and destination. Generating random IP.")
+            value = self.statistics.get_random_ip_address()
 
         # add value if validation was successful
         self.params[index].user_specified = user_specified

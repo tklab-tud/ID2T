@@ -13,15 +13,6 @@ class IPAddress(String):
         self.name = "IPAddress"
 
     def validate(self, value: str) -> (bool, str):
-        # TODO: find better solution for ip duplication avoidance | make it Global
-        #if (self.name == 'ip.src'
-        #    and self.param_equals('ip.dst', value)) \
-        #        or (self.name == 'ip.dst'
-        #            and self.param_equals('ip.src', value)):
-        #    print("ERROR: Parameter " + str(self.name) + " or parameter value " + str(value) +
-        #          " already used by another IP parameter. Generating random IP.")
-        #    value = self.statistics.get_random_ip_address()
-
         is_valid, value = IPAddress._is_ip_address(value)
         return is_valid, value
 
