@@ -31,7 +31,7 @@ LIBTINS_VERSION=$(./resources/libtins_version.sh)
 # Fullbuild or nonexistent venv
 if [ ${FULLBUILD} = true -o ! -d .venv ]; then
     rm -Rf .venv
-    python3 -m venv .venv
+    python3.7 -m venv .venv
     if [ $? != 0 ]; then
         echo "Error: Could not create the venv. Please make sure the 'venv' Python-module is installed."
         exit
@@ -42,10 +42,10 @@ fi
 source .venv/bin/activate
 
 # Upgrade pip if necessary
-pip3 install --upgrade pip
+python3.7 -m pip3 install --upgrade pip
 
 # Install python packages
-pip3 install -r resources/requirements.txt
+python3.7 -m pip3 install -r resources/requirements.txt
 
 # Deactivate the venv
 deactivate
@@ -115,7 +115,7 @@ fi
 SCRIPT_PATH=\${ID2T_DIR%/*}
 # Execute ID2T
 source "\$SCRIPT_PATH"/.venv/bin/activate
-exec "\$SCRIPT_PATH"/code/CLI.py "\$@"
+python3.7 "\$SCRIPT_PATH"/code/CLI.py "\$@"
 deactivate
 EOF
 
@@ -142,10 +142,10 @@ if [ -e "Test/test_\$1.py" ]; then
     testpath="Test/test_\$1.py"
     PRINT_COV=false
 fi
-PYTHONWARNINGS="ignore" python3 -m coverage run --source=. -m unittest \$testpath >/dev/null
+PYTHONWARNINGS="ignore" python3.7 -m coverage run --source=. -m unittest \$testpath >/dev/null
 if \$PRINT_COV ; then
-    python3 -m coverage html
-    python3 -m coverage report -m
+    python3.7 -m coverage html
+    python3.7 -m coverage report -m
 fi
 deactivate
 EOF
@@ -167,7 +167,7 @@ cd \${SCRIPT_PATH}/code
 error=0
 # Execute tests
 set +e
-python3 -m unittest Test/efficiency_testing.py
+python3.7 -m unittest Test/efficiency_testing.py
 error=\$?
 cd \$SCRIPT_PATH
 source .venv/bin/activate
