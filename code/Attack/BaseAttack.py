@@ -334,8 +334,8 @@ class BaseAttack(metaclass=abc.ABCMeta):
         :param value: The value to compare to.
         :return: True if the parameter is equal to the value, False if not.
         """
-        index = self.get_param_index(param_name)
-        return index is not None and self.params[index].value == value
+        param_value = self.get_param_value(param_name)
+        return param_value is not None and param_value == value
 
     def check_parameters(self):
         """
