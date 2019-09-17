@@ -268,7 +268,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
                     and self.param_equals(self.IP_SOURCE, value)):
             print("ERROR: Value " + str(value) + " of Parameter " + str(param_name) +
                   " can not be used for both source and destination. Generating random IP.")
-            value = self.statistics.get_random_ip_address()
+            value = self.statistics.get_random_ip_address(ips=[value])
 
         # add value if validation was successful
         self.params[index].user_specified = user_specified
