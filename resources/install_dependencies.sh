@@ -114,7 +114,7 @@ install_pkg_suse()
 
 install_pkg_ubuntu()
 {
-    APT_PKGS='build-essential cmake python3.7-dev python3.7-pip python3.7-venv sqlite tcpdump libpcap-dev libcairo2-dev'
+    APT_PKGS='build-essential cmake python3.7-dev python3.7-venv sqlite tcpdump libpcap-dev libcairo2-dev'
 
     if [ "$OS" = 'ubuntu' ] && [ "$VERSION" = '16.04' ]; then
         DEB_LIBTINS='libtins-dev'
