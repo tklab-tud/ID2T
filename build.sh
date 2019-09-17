@@ -106,7 +106,10 @@ cd ../../../
 exec="python3"
 py_sec_ver=$(python3 --version | cut -d ' ' -f 2 | cut -d '.' -f 2)
 if [ $py_sec_ver != 7 ]; then
-    exec="python3.7"
+    python3.7 --version
+    if [ $? == 0 ]; then
+        exec="python3.7"
+    fi
 fi
 
 # Create the ID2T script
