@@ -42,10 +42,10 @@ fi
 source .venv/bin/activate
 
 # Upgrade pip if necessary
-python3.7 -m pip3 install --upgrade pip
+python3.7 -m pip install --upgrade pip
 
 # Install python packages
-python3.7 -m pip3 install -r resources/requirements.txt
+python3.7 -m pip install -r resources/requirements.txt
 
 # Deactivate the venv
 deactivate
