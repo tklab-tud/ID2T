@@ -28,10 +28,19 @@ fi
 
 LIBTINS_VERSION=$(./resources/libtins_version.sh)
 
+exec="python3"
+py_sec_ver=$(python3 --version | cut -d ' ' -f 2 | cut -d '.' -f 2)
+if [ $py_sec_ver != 7 ]; then
+    python3.7 --version
+    if [ $? == 0 ]; then
+        exec="python3.7"
+    fi
+fi
+
 # Fullbuild or nonexistent venv
 if [ ${FULLBUILD} = true -o ! -d .venv ]; then
     rm -Rf .venv
-    python3.7 -m venv .venv
+    $exec -m venv .venv
     if [ $? != 0 ]; then
         echo "Error: Could not create the venv. Please make sure the 'venv' Python-module is installed."
         exit
@@ -42,10 +51,10 @@ fi
 source .venv/bin/activate
 
 # Upgrade pip if necessary
-python3.7 -m pip install --upgrade pip
+$exec -m pip install --upgrade pip
 
 # Install python packages
-python3.7 -m pip install -r resources/requirements.txt
+$exec -m pip install -r resources/requirements.txt
 
 # Deactivate the venv
 deactivate
@@ -102,15 +111,6 @@ else
 fi
 
 cd ../../../
-
-exec="python3"
-py_sec_ver=$(python3 --version | cut -d ' ' -f 2 | cut -d '.' -f 2)
-if [ $py_sec_ver != 7 ]; then
-    python3.7 --version
-    if [ $? == 0 ]; then
-        exec="python3.7"
-    fi
-fi
 
 # Create the ID2T script
 cat >./id2t  <<EOF
