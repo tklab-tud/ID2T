@@ -24,10 +24,7 @@ import Core.Statistics as Statistics
 import Core.TimestampController as tc
 import Core.BandwidthController as bc
 
-from Attack.Parameter import Parameter
-
-from Attack.ParameterTypes.Float import Float
-from Attack.ParameterTypes.IntegerLimited import IntegerLimited
+from Attack.Parameter import Parameter, Float, IntegerLimited
 
 
 class BaseAttack(metaclass=abc.ABCMeta):

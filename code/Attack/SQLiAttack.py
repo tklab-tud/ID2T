@@ -8,12 +8,7 @@ import scapy.utils
 import Attack.BaseAttack as BaseAttack
 import ID2TLib.Utility as Util
 
-from Attack.Parameter import Parameter
-from Attack.ParameterTypes.Domain import Domain
-from Attack.ParameterTypes.Float import Float
-from Attack.ParameterTypes.IPAddress import IPAddress
-from Attack.ParameterTypes.MACAddress import MACAddress
-from Attack.ParameterTypes.Port import Port
+from Attack.Parameter import Parameter, Domain, Float, IPAddress, MACAddress, Port
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 

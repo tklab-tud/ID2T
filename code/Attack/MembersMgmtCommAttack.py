@@ -13,14 +13,8 @@ import ID2TLib.Botnet.Message as Bmsg
 import ID2TLib.Generator as Generator
 import ID2TLib.Utility as Util
 
-from Attack.Parameter import Parameter
-from Attack.ParameterTypes.Boolean import Boolean
-from Attack.ParameterTypes.FilePath import FilePath
-from Attack.ParameterTypes.IntegerPositive import IntegerPositive
-from Attack.ParameterTypes.IntegerLimited import IntegerLimited
-from Attack.ParameterTypes.IPAddress import IPAddress
-from Attack.ParameterTypes.Percentage import Percentage
-from Attack.ParameterTypes.SpecificString import SpecificString
+from Attack.Parameter import Parameter, Boolean, FilePath, IntegerPositive, IntegerLimited, IPAddress, Percentage,\
+    SpecificString
 
 from ID2TLib.Botnet.CommunicationProcessor import CommunicationProcessor
 from ID2TLib.Botnet.MessageMapping import MessageMapping

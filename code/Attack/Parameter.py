@@ -3,6 +3,20 @@ import random
 
 import Attack.ParameterTypes.BaseType as BaseType
 
+from Attack.ParameterTypes.Boolean import Boolean
+from Attack.ParameterTypes.Domain import Domain
+from Attack.ParameterTypes.FilePath import FilePath
+from Attack.ParameterTypes.Float import Float
+from Attack.ParameterTypes.IntegerPositive import IntegerPositive
+from Attack.ParameterTypes.IntegerLimited import IntegerLimited
+from Attack.ParameterTypes.IPAddress import IPAddress
+from Attack.ParameterTypes.MACAddress import MACAddress
+from Attack.ParameterTypes.Percentage import Percentage
+from Attack.ParameterTypes.Port import Port
+from Attack.ParameterTypes.String import String
+from Attack.ParameterTypes.SpecificString import SpecificString
+from Attack.ParameterTypes.Timestamp import Timestamp
+
 
 class Parameter(object):
 

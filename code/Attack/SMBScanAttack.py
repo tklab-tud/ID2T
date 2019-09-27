@@ -10,15 +10,7 @@ import ID2TLib.SMB2 as SMB2
 import ID2TLib.SMBLib as SMBLib
 import ID2TLib.Utility as Util
 
-from Attack.Parameter import Parameter
-from Attack.ParameterTypes.Boolean import Boolean
-from Attack.ParameterTypes.Float import Float
-from Attack.ParameterTypes.IntegerPositive import IntegerPositive
-from Attack.ParameterTypes.IPAddress import IPAddress
-from Attack.ParameterTypes.MACAddress import MACAddress
-from Attack.ParameterTypes.Percentage import Percentage
-from Attack.ParameterTypes.Port import Port
-from Attack.ParameterTypes.String import String
+from Attack.Parameter import Parameter, Boolean, Float, IntegerPositive, IPAddress, MACAddress, Percentage, Port, String
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
