@@ -5,10 +5,12 @@ import scapy.layers.inet as inet
 import scapy.utils
 
 import Attack.BaseAttack as BaseAttack
-import Attack.ParameterTypes as Types
 import ID2TLib.Utility as Util
 
 from Attack.Parameter import Parameter
+from Attack.ParameterTypes.Float import Float
+from Attack.ParameterTypes.IPAddress import IPAddress
+from Attack.ParameterTypes.MACAddress import MACAddress
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
@@ -32,9 +34,9 @@ class SalityBotnet(BaseAttack.BaseAttack):
 
         # Define allowed parameters and their type
         self.update_params([
-            Parameter(self.MAC_SOURCE, Types.MACAddress()),
-            Parameter(self.IP_SOURCE, Types.IPAddress()),
-            Parameter(self.PACKETS_PER_SECOND, Types.Float())
+            Parameter(self.MAC_SOURCE, MACAddress()),
+            Parameter(self.IP_SOURCE, IPAddress()),
+            Parameter(self.PACKETS_PER_SECOND, Float())
         ])
 
     def init_param(self, param: str) -> bool:

@@ -5,10 +5,14 @@ import lea
 import scapy.layers.inet as inet
 
 import Attack.BaseAttack as BaseAttack
-import Attack.ParameterTypes as Types
 import ID2TLib.Utility as Util
 
 from Attack.Parameter import Parameter
+from Attack.ParameterTypes.Boolean import Boolean
+from Attack.ParameterTypes.Float import Float
+from Attack.ParameterTypes.IPAddress import IPAddress
+from Attack.ParameterTypes.MACAddress import MACAddress
+from Attack.ParameterTypes.Port import Port
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
@@ -35,18 +39,18 @@ class PortscanAttack(BaseAttack.BaseAttack):
 
         # Define allowed parameters and their type
         self.update_params([
-            Parameter(self.IP_SOURCE, Types.IPAddress()),
-            Parameter(self.IP_DESTINATION, Types.IPAddress()),
-            Parameter(self.PORT_SOURCE, Types.Port()),
-            Parameter(self.PORT_DESTINATION, Types.Port()),
-            Parameter(self.PORT_OPEN, Types.Port()),
-            Parameter(self.MAC_SOURCE, Types.MACAddress()),
-            Parameter(self.MAC_DESTINATION, Types.MACAddress()),
-            Parameter(self.PORT_DEST_SHUFFLE, Types.Boolean()),
-            Parameter(self.PORT_DEST_ORDER_DESC, Types.Boolean()),
-            Parameter(self.IP_SOURCE_RANDOMIZE, Types.Boolean()),
-            Parameter(self.PACKETS_PER_SECOND, Types.Float()),
-            Parameter(self.PORT_SOURCE_RANDOMIZE, Types.Boolean())
+            Parameter(self.IP_SOURCE, IPAddress()),
+            Parameter(self.IP_DESTINATION, IPAddress()),
+            Parameter(self.PORT_SOURCE, Port()),
+            Parameter(self.PORT_DESTINATION, Port()),
+            Parameter(self.PORT_OPEN, Port()),
+            Parameter(self.MAC_SOURCE, MACAddress()),
+            Parameter(self.MAC_DESTINATION, MACAddress()),
+            Parameter(self.PORT_DEST_SHUFFLE, Boolean()),
+            Parameter(self.PORT_DEST_ORDER_DESC, Boolean()),
+            Parameter(self.IP_SOURCE_RANDOMIZE, Boolean()),
+            Parameter(self.PACKETS_PER_SECOND, Float()),
+            Parameter(self.PORT_SOURCE_RANDOMIZE, Boolean())
         ])
 
     def init_param(self, param: str) -> bool:

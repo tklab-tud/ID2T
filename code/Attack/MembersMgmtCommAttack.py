@@ -8,13 +8,19 @@ import lea
 import scapy.layers.inet as inet
 
 import Attack.BaseAttack as BaseAttack
-import Attack.ParameterTypes as Types
 import ID2TLib.Botnet.libbotnetcomm as lb
 import ID2TLib.Botnet.Message as Bmsg
 import ID2TLib.Generator as Generator
 import ID2TLib.Utility as Util
 
 from Attack.Parameter import Parameter
+from Attack.ParameterTypes.Boolean import Boolean
+from Attack.ParameterTypes.FilePath import FilePath
+from Attack.ParameterTypes.IntegerPositive import IntegerPositive
+from Attack.ParameterTypes.IntegerLimited import IntegerLimited
+from Attack.ParameterTypes.IPAddress import IPAddress
+from Attack.ParameterTypes.Percentage import Percentage
+from Attack.ParameterTypes.SpecificString import SpecificString
 
 from ID2TLib.Botnet.CommunicationProcessor import CommunicationProcessor
 from ID2TLib.Botnet.MessageMapping import MessageMapping
@@ -54,44 +60,44 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
         # Define allowed parameters and their type
         self.update_params([
             # parameters regarding attack
-            Parameter(self.PACKETS_LIMIT, Types.IntegerPositive()),
-            Parameter(self.ATTACK_DURATION, Types.IntegerPositive()),
+            Parameter(self.PACKETS_LIMIT, IntegerPositive()),
+            Parameter(self.ATTACK_DURATION, IntegerPositive()),
 
             # use num_attackers to specify number of communicating devices?
-            Parameter(self.NUMBER_INITIATOR_BOTS, Types.IntegerPositive()),
+            Parameter(self.NUMBER_INITIATOR_BOTS, IntegerPositive()),
 
             # input file containing botnet communication
-            Parameter(self.FILE_CSV, Types.FilePath()),
-            Parameter(self.FILE_XML, Types.FilePath()),
+            Parameter(self.FILE_CSV, FilePath()),
+            Parameter(self.FILE_XML, FilePath()),
 
             # the percentage of IP reuse (if total and other is specified, percentages are multiplied)
-            Parameter(self.IP_REUSE_TOTAL, Types.Percentage()),
-            Parameter(self.IP_REUSE_LOCAL, Types.Percentage()),
-            Parameter(self.IP_REUSE_EXTERNAL, Types.Percentage()),
-            Parameter(self.INJECT_INTO_IPS, Types.IPAddress()),
+            Parameter(self.IP_REUSE_TOTAL, Percentage()),
+            Parameter(self.IP_REUSE_LOCAL, Percentage()),
+            Parameter(self.IP_REUSE_EXTERNAL, Percentage()),
+            Parameter(self.INJECT_INTO_IPS, IPAddress()),
 
             # the user-selected padding to add to every packet
-            Parameter(self.PACKET_PADDING, Types.IntegerLimited([0, 100])),
+            Parameter(self.PACKET_PADDING, IntegerLimited([0, 100])),
 
             # presence of NAT at the gateway of the network
-            Parameter(self.NAT_PRESENT, Types.Boolean()),
+            Parameter(self.NAT_PRESENT, Boolean()),
 
             # whether the TTL distribution should be based on the input PCAP
             # or the CAIDA dataset
-            Parameter(self.TTL_FROM_CAIDA, Types.Boolean()),
+            Parameter(self.TTL_FROM_CAIDA, Boolean()),
 
             # whether the destination port of a response should be the ephemeral port
             # its request came from or a static (server)port based on a hostname
-            Parameter(self.MULTIPORT, Types.Boolean()),
+            Parameter(self.MULTIPORT, Boolean()),
 
             # information about the interval selection strategy
-            Parameter(self.INTERVAL_SELECT_STRATEGY, Types.SpecificString(["random", "optimal", "custom"])),
-            Parameter(self.INTERVAL_SELECT_START, Types.IntegerPositive()),
-            Parameter(self.INTERVAL_SELECT_END, Types.IntegerPositive()),
+            Parameter(self.INTERVAL_SELECT_STRATEGY, SpecificString(["random", "optimal", "custom"])),
+            Parameter(self.INTERVAL_SELECT_START, IntegerPositive()),
+            Parameter(self.INTERVAL_SELECT_END, IntegerPositive()),
 
             # determines whether injected packets are marked with an unused IP option
             # to easily filter them in e.g. wireshark
-            Parameter(self.HIDDEN_MARK, Types.Boolean())
+            Parameter(self.HIDDEN_MARK, Boolean())
         ])
 
         # create dict with MessageType values for fast name lookup

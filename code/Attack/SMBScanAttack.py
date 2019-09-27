@@ -6,12 +6,19 @@ import scapy.layers.inet as inet
 from scapy.layers.smb import *
 
 import Attack.BaseAttack as BaseAttack
-import Attack.ParameterTypes as Types
 import ID2TLib.SMB2 as SMB2
 import ID2TLib.SMBLib as SMBLib
 import ID2TLib.Utility as Util
 
 from Attack.Parameter import Parameter
+from Attack.ParameterTypes.Boolean import Boolean
+from Attack.ParameterTypes.Float import Float
+from Attack.ParameterTypes.IntegerPositive import IntegerPositive
+from Attack.ParameterTypes.IPAddress import IPAddress
+from Attack.ParameterTypes.MACAddress import MACAddress
+from Attack.ParameterTypes.Percentage import Percentage
+from Attack.ParameterTypes.Port import Port
+from Attack.ParameterTypes.String import String
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
@@ -44,20 +51,20 @@ class SMBScanAttack(BaseAttack.BaseAttack):
 
         # Define allowed parameters and their type
         self.update_params([
-            Parameter(self.IP_SOURCE, Types.IPAddress()),
-            Parameter(self.IP_DESTINATION, Types.IPAddress()),
-            Parameter(self.MAC_DESTINATION, Types.MACAddress()),
-            Parameter(self.TARGET_COUNT, Types.IntegerPositive()),
-            Parameter(self.HOSTING_PERCENTAGE, Types.Percentage()),
-            Parameter(self.PORT_SOURCE, Types.Port()),
-            Parameter(self.MAC_SOURCE, Types.MACAddress()),
-            Parameter(self.IP_SOURCE_RANDOMIZE, Types.Boolean()),
-            Parameter(self.PACKETS_PER_SECOND, Types.Float()),
-            Parameter(self.PORT_SOURCE_RANDOMIZE, Types.Boolean()),
-            Parameter(self.HOSTING_IP, Types.IPAddress()),
-            Parameter(self.HOSTING_VERSION, Types.String()),
-            Parameter(self.SOURCE_PLATFORM, Types.String()),
-            Parameter(self.PROTOCOL_VERSION, Types.String())
+            Parameter(self.IP_SOURCE, IPAddress()),
+            Parameter(self.IP_DESTINATION, IPAddress()),
+            Parameter(self.MAC_DESTINATION, MACAddress()),
+            Parameter(self.TARGET_COUNT, IntegerPositive()),
+            Parameter(self.HOSTING_PERCENTAGE, Percentage()),
+            Parameter(self.PORT_SOURCE, Port()),
+            Parameter(self.MAC_SOURCE, MACAddress()),
+            Parameter(self.IP_SOURCE_RANDOMIZE, Boolean()),
+            Parameter(self.PACKETS_PER_SECOND, Float()),
+            Parameter(self.PORT_SOURCE_RANDOMIZE, Boolean()),
+            Parameter(self.HOSTING_IP, IPAddress()),
+            Parameter(self.HOSTING_VERSION, String()),
+            Parameter(self.SOURCE_PLATFORM, String()),
+            Parameter(self.PROTOCOL_VERSION, String())
         ])
 
     def init_param(self, param: str) -> bool:

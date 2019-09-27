@@ -19,13 +19,15 @@ import numpy as np
 import scapy.layers.inet as inet
 import scapy.utils
 
-import Attack.ParameterTypes as Types
 import ID2TLib.Utility as Util
 import Core.Statistics as Statistics
 import Core.TimestampController as tc
 import Core.BandwidthController as bc
 
 from Attack.Parameter import Parameter
+
+from Attack.ParameterTypes.Float import Float
+from Attack.ParameterTypes.IntegerLimited import IntegerLimited
 
 
 class BaseAttack(metaclass=abc.ABCMeta):
@@ -77,12 +79,12 @@ class BaseAttack(metaclass=abc.ABCMeta):
         self.attack_name = name
         self.attack_description = description
         self.attack_type = attack_type
-        self.params = [Parameter(self.INJECT_AT_TIMESTAMP, Types.Float()),
-                       Parameter(self.INJECT_AFTER_PACKET, Types.IntegerLimited([0,
-                                                                                 self.statistics.get_packet_count()])),
-                       Parameter(self.BANDWIDTH_MAX, Types.Float()),
-                       Parameter(self.BANDWIDTH_MIN_LOCAL, Types.Float()),
-                       Parameter(self.BANDWIDTH_MIN_PUBLIC, Types.Float())]
+        self.params = [Parameter(self.INJECT_AT_TIMESTAMP, Float()),
+                       Parameter(self.INJECT_AFTER_PACKET, IntegerLimited([0,
+                                                                           self.statistics.get_packet_count()])),
+                       Parameter(self.BANDWIDTH_MAX, Float()),
+                       Parameter(self.BANDWIDTH_MIN_LOCAL, Float()),
+                       Parameter(self.BANDWIDTH_MIN_PUBLIC, Float())]
         self.attack_start_utime = 0
         self.attack_end_utime = 0
         self.start_time = 0
