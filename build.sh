@@ -103,12 +103,6 @@ fi
 
 cd ../../../
 
-exec="python3"
-py_sec_ver=$(python3 --version | cut -d ' ' -f 2 | cut -d '.' -f 2)
-if [ $py_sec_ver != 7 ]; then
-    exec="python3.7"
-fi
-
 # Create the ID2T script
 cat >./id2t  <<EOF
 #!/bin/bash
@@ -121,7 +115,7 @@ fi
 SCRIPT_PATH=\${ID2T_DIR%/*}
 # Execute ID2T
 source "\$SCRIPT_PATH"/.venv/bin/activate
-$exec "\$SCRIPT_PATH"/code/CLI.py "\$@"
+python3.7 "\$SCRIPT_PATH"/code/CLI.py "\$@"
 deactivate
 EOF
 
@@ -148,10 +142,10 @@ if [ -e "Test/test_\$1.py" ]; then
     testpath="Test/test_\$1.py"
     PRINT_COV=false
 fi
-PYTHONWARNINGS="ignore" $exec -m coverage run --source=. -m unittest \$testpath >/dev/null
+PYTHONWARNINGS="ignore" python3.7 -m coverage run --source=. -m unittest \$testpath >/dev/null
 if \$PRINT_COV ; then
-    $exec -m coverage html
-    $exec -m coverage report -m
+    python3.7 -m coverage html
+    python3.7 -m coverage report -m
 fi
 deactivate
 EOF
@@ -173,7 +167,7 @@ cd \${SCRIPT_PATH}/code
 error=0
 # Execute tests
 set +e
-$exec -m unittest Test/efficiency_testing.py
+python3.7 -m unittest Test/efficiency_testing.py
 error=\$?
 cd \$SCRIPT_PATH
 source .venv/bin/activate
