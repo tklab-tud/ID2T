@@ -2,7 +2,7 @@ import unittest
 
 import Attack.BaseAttack as BAtk
 
-from Attack.ParameterTypes import IPAddress, MACAddress
+from Attack.Parameter import MACAddress, IPAddress
 
 # TODO: improve coverage
 

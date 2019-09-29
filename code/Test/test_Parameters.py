@@ -1,6 +1,6 @@
 import unittest
 
-from Attack.ParameterTypes import *
+from Attack.Parameter import MACAddress, IPAddress, Port, Timestamp, Float, Boolean, Domain
 
 
 class TestBaseAttack(unittest.TestCase):
