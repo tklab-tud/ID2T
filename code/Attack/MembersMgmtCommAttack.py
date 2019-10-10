@@ -149,6 +149,9 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
             return False
         return self.add_param_value(param, value)
 
+    def generate_attack_packets(self):
+        pass
+
     def generate_attack_pcap(self):
         """
         Injects the packets of this attack into a PCAP and stores it as a temporary file.
@@ -263,9 +266,6 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
 
         # Return packets sorted by packet by timestamp and total number of packets (sent)
         return total_pkts, path_attack_pcap, [mapping_filename]
-
-    def generate_attack_packets(self):
-        pass
 
     def _create_messages(self):
         """
