@@ -228,33 +228,26 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
             if total_pkts <= 1:
                 self.attack_start_utime = packets[0].time
             elif total_pkts % buffer_size == 0:  # every 1000 packets write them to the PCAP file (append)
+                packets = list(packets)
                 if over_thousand:  # if over 1000 packets written, packet-length for the last few packets may differ
-                    packets = list(packets)
                     Generator.equal_length(packets, length=max_len, padding=padding, force_len=True)
-                    last_packet = packets[-1]
-                    path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
-                    packets = collections.deque(maxlen=buffer_size)
                 else:
-                    packets = list(packets)
                     Generator.equal_length(packets, padding=padding)
-                    last_packet = packets[-1]
-                    max_len = len(last_packet)
+                    max_len = len(packets[-1])
                     over_thousand = True
-                    path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
-                    packets = collections.deque(maxlen=buffer_size)
+                last_packet = packets[-1]
+                path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
+                packets = collections.deque(maxlen=buffer_size)
 
         # if there are unwritten packets remaining, write them to the PCAP file
         if len(packets) > 0:
+            packets = list(packets)
             if over_thousand:
-                packets = list(packets)
                 Generator.equal_length(packets, length=max_len, padding=padding, force_len=True)
-                path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
-                last_packet = packets[-1]
             else:
-                packets = list(packets)
                 Generator.equal_length(packets, padding=padding)
-                path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
-                last_packet = packets[-1]
+            path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
+            last_packet = packets[-1]
 
         # write the mapping to a file
         current_ts = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
