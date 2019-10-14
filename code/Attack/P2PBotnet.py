@@ -22,7 +22,7 @@ from ID2TLib.PcapAddressOperations import PcapAddressOperations
 from ID2TLib.Ports import PortSelectors
 
 
-class MembersMgmtCommAttack(BaseAttack.BaseAttack):
+class P2PBotnet(BaseAttack.BaseAttack):
     PACKETS_LIMIT = 'packets.limit'
     ATTACK_DURATION = 'attack.duration'
     NUMBER_INITIATOR_BOTS = 'bots.count'
@@ -47,7 +47,7 @@ class MembersMgmtCommAttack(BaseAttack.BaseAttack):
 
         """
         # Initialize communication
-        super(MembersMgmtCommAttack, self).__init__(
+        super(P2PBotnet, self).__init__(
             "Membership Management Communication Attack (MembersMgmtCommAttack)",
             "Injects Membership Management Communication", "Botnet communication")
 
