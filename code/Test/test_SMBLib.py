@@ -1,7 +1,7 @@
 import unittest
 
-import ID2TLib.SMBLib as SMBLib
-import ID2TLib.Utility as Utility
+import Lib.SMBLib as SMBLib
+import Lib.Utility as Utility
 
 
 class TestSMBLib(unittest.TestCase):

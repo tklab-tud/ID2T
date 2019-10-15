@@ -2,7 +2,7 @@ import hashlib
 import os
 import random as rnd
 
-import ID2TLib.Utility as Util
+import Lib.Utility as Util
 # Directory of test resource files
 test_resource_dir = Util.TEST_DIR
 # Path to reference pcap

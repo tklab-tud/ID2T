@@ -13,13 +13,13 @@ import time
 import collections
 import typing as t
 
-import ID2TLib.libpcapreader as pr
+import Lib.libpcapreader as pr
 import lea
 import numpy as np
 import scapy.layers.inet as inet
 import scapy.utils
 
-import ID2TLib.Utility as Util
+import Lib.Utility as Util
 import Core.Statistics as Statistics
 import Core.TimestampController as tc
 import Core.BandwidthController as bc

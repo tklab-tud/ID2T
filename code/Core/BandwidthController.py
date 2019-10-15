@@ -1,4 +1,4 @@
-import ID2TLib.Utility as Util
+import Lib.Utility as Util
 
 class BandwidthController:
 

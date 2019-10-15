@@ -4,8 +4,8 @@ import os.path
 import xml.dom.minidom as minidom
 import pytz as pytz
 
-import ID2TLib.Label as Label
-import ID2TLib.TestLibrary as Lib
+import Lib.Label as Label
+import Lib.TestLibrary as Lib
 
 
 class LabelManager:

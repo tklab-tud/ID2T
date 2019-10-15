@@ -1,7 +1,7 @@
 import unittest as ut
 import unittest.mock as mock
 
-import ID2TLib.TestLibrary as Lib
+import Lib.TestLibrary as Lib
 import Test.ID2TAttackTest as Test
 
 

@@ -4,7 +4,7 @@ import unittest
 import scapy.utils as pcr
 
 import Core.Controller as Ctrl
-import ID2TLib.TestLibrary as Lib
+import Lib.TestLibrary as Lib
 
 
 class ID2TAttackTest(unittest.TestCase):

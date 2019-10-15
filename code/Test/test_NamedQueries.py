@@ -1,7 +1,7 @@
 import unittest
 import pyparsing
 
-import ID2TLib.TestLibrary as Lib
+import Lib.TestLibrary as Lib
 import Core.Controller as Ctrl
 
 controller = Ctrl.Controller(pcap_file_path=Lib.test_pcap, do_extra_tests=False, non_verbose=True)

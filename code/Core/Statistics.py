@@ -5,11 +5,11 @@ import numpy
 from math import sqrt, ceil, log
 from operator import itemgetter
 
-import ID2TLib.libpcapreader as pr
+import Lib.libpcapreader as pr
 import Core.StatsDatabase as statsDB
-import ID2TLib.PcapFile as PcapFile
-import ID2TLib.Utility as Util
-from ID2TLib.IPv4 import IPAddress
+import Lib.PcapFile as PcapFile
+import Lib.Utility as Util
+from Lib.IPv4 import IPAddress
 import matplotlib.pyplot as plt
 
 

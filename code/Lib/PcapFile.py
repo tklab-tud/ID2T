@@ -1,8 +1,8 @@
 import hashlib
 import os.path
 
-import ID2TLib.libpcapreader as pr
-import ID2TLib.Utility as Util
+import Lib.libpcapreader as pr
+import Lib.Utility as Util
 
 
 class PcapFile(object):

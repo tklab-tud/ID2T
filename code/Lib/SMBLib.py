@@ -2,7 +2,7 @@ import binascii
 import os
 import random as rnd
 
-import ID2TLib.Utility as Util
+import Lib.Utility as Util
 
 # SMB port
 smb_port = 445

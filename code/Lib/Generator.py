@@ -8,7 +8,7 @@ from numpy.random import bytes
 from random import getrandbits
 from scapy.layers.inet import IP, Ether, UDP, TCP
 from scapy.packet import Raw
-from ID2TLib.Botnet.Message import MessageType
+from Lib.Botnet.Message import MessageType
 from . import IPv4 as ip
 
 

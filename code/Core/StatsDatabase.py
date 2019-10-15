@@ -4,7 +4,7 @@ import typing
 import sqlite3
 import sys
 
-import ID2TLib.libpcapreader as pr
+import Lib.libpcapreader as pr
 import Core.QueryParser as qp
 import pyparsing as pp
 

@@ -6,9 +6,9 @@ import scapy.layers.inet as inet
 from scapy.layers.smb import *
 
 import Attack.BaseAttack as BaseAttack
-import ID2TLib.SMB2 as SMB2
-import ID2TLib.SMBLib as SMBLib
-import ID2TLib.Utility as Util
+import Lib.SMB2 as SMB2
+import Lib.SMBLib as SMBLib
+import Lib.Utility as Util
 
 from Attack.Parameter import Parameter, Boolean, Float, IntegerPositive, IPAddress, MACAddress, Percentage, Port,\
     SpecificString, String

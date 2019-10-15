@@ -1,7 +1,7 @@
 import ipaddress
 import typing as t
 
-import ID2TLib.Utility as Util
+import Lib.Utility as Util
 
 from Attack.ParameterTypes.String import String
 

@@ -93,9 +93,9 @@ else
 fi
 
 if [ $? -eq 0 ]; then
-    cp libpcapreader.so ../../../code/ID2TLib/
-    cp libcpputils.so ../../../code/ID2TLib/
-    cp libbotnetcomm.so ../../../code/ID2TLib/Botnet
+    cp libpcapreader.so ../../../code/Lib/
+    cp libcpputils.so ../../../code/Lib/
+    cp libbotnetcomm.so ../../../code/Lib/Botnet
 else
     echo "Error: 'make' did not finish successfully."
     exit

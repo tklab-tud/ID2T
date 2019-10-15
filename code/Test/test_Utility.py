@@ -1,7 +1,7 @@
 import unittest
 
-import ID2TLib.TestLibrary as Lib
-import ID2TLib.Utility as Utility
+import Lib.TestLibrary as Lib
+import Lib.Utility as Utility
 
 # TODO: improve coverage
 

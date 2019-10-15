@@ -1,7 +1,7 @@
 import calendar as cal
 import datetime as dt
 import ipaddress
-import ID2TLib.libcpputils as cpputils
+import Lib.libcpputils as cpputils
 import os
 import random as rnd
 import lea
@@ -391,7 +391,7 @@ def get_botnet_pcap_db():
     :return: the database path for the botnet resource pcap statistics DB
     """
     import Core.Statistics
-    import ID2TLib.PcapFile as PcapFile
+    import Lib.PcapFile as PcapFile
 
     bot_pcap = PcapFile.PcapFile(BOTNET_PCAP)
     bot_stats = Core.Statistics.Statistics(None)

@@ -9,8 +9,8 @@ import pyparsing as pp
 import Core.AttackController as atkCtrl
 import Core.LabelManager as LabelManager
 import Core.Statistics as Statistics
-import ID2TLib.PcapFile as PcapFile
-import ID2TLib.Utility as Util
+import Lib.PcapFile as PcapFile
+import Lib.Utility as Util
 import Core.StatsDatabase as StatsDB
 
 

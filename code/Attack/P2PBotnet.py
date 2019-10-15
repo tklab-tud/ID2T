@@ -8,18 +8,18 @@ import lea
 import scapy.layers.inet as inet
 
 import Attack.BaseAttack as BaseAttack
-import ID2TLib.Botnet.libbotnetcomm as lb
-import ID2TLib.Botnet.Message as Bmsg
-import ID2TLib.Generator as Generator
-import ID2TLib.Utility as Util
+import Lib.Botnet.libbotnetcomm as lb
+import Lib.Botnet.Message as Bmsg
+import Lib.Generator as Generator
+import Lib.Utility as Util
 
 from Attack.Parameter import Parameter, Boolean, FilePath, IntegerPositive, IntegerLimited, IPAddress, Percentage,\
     SpecificString
 
-from ID2TLib.Botnet.CommunicationProcessor import CommunicationProcessor
-from ID2TLib.Botnet.MessageMapping import MessageMapping
-from ID2TLib.PcapAddressOperations import PcapAddressOperations
-from ID2TLib.Ports import PortSelectors
+from Lib.Botnet.CommunicationProcessor import CommunicationProcessor
+from Lib.Botnet.MessageMapping import MessageMapping
+from Lib.PcapAddressOperations import PcapAddressOperations
+from Lib.Ports import PortSelectors
 
 
 class P2PBotnet(BaseAttack.BaseAttack):

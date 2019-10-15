@@ -5,7 +5,7 @@ import lea
 import scapy.layers.inet as inet
 
 import Attack.BaseAttack as BaseAttack
-import ID2TLib.Utility as Util
+import Lib.Utility as Util
 
 from Attack.Parameter import Parameter, Boolean, Float, IPAddress, MACAddress, Port
 

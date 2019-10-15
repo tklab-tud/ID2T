@@ -5,8 +5,8 @@ import scapy.layers.inet as inet
 from scapy.layers.netbios import NBTSession
 
 import Attack.BaseAttack as BaseAttack
-import ID2TLib.SMBLib as SMBLib
-import ID2TLib.Utility as Util
+import Lib.SMBLib as SMBLib
+import Lib.Utility as Util
 
 from Attack.Parameter import Parameter, Float, IntegerPositive, IPAddress, MACAddress
 

@@ -5,8 +5,8 @@ import typing
 import scapy.layers.inet as inet
 
 import Attack.BaseAttack as BaseAttack
-import ID2TLib.Utility as Util
-import ID2TLib.Memcached as Memcd
+import Lib.Utility as Util
+import Lib.Memcached as Memcd
 
 from Attack.Parameter import Parameter, Float, IntegerPositive, IPAddress, MACAddress
 

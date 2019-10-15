@@ -6,9 +6,9 @@ import typing
 
 import Core.LabelManager as LabelManager
 import Core.Statistics as Statistics
-import ID2TLib.Label as Label
-import ID2TLib.PcapFile as PcapFile
-import ID2TLib.Utility as Util
+import Lib.Label as Label
+import Lib.PcapFile as PcapFile
+import Lib.Utility as Util
 
 
 class AttackController:
