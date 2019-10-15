@@ -10,7 +10,8 @@ import ID2TLib.SMB2 as SMB2
 import ID2TLib.SMBLib as SMBLib
 import ID2TLib.Utility as Util
 
-from Attack.Parameter import Parameter, Boolean, Float, IntegerPositive, IPAddress, MACAddress, Percentage, Port, String
+from Attack.Parameter import Parameter, Boolean, Float, IntegerPositive, IPAddress, MACAddress, Percentage, Port,\
+    SpecificString, String
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
@@ -55,7 +56,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
             Parameter(self.PORT_SOURCE_RANDOMIZE, Boolean()),
             Parameter(self.HOSTING_IP, IPAddress()),
             Parameter(self.HOSTING_VERSION, String()),
-            Parameter(self.SOURCE_PLATFORM, String()),
+            Parameter(self.SOURCE_PLATFORM, SpecificString(Util.platforms)),
             Parameter(self.PROTOCOL_VERSION, String())
         ])
 
