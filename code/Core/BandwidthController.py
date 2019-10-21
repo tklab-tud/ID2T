@@ -2,8 +2,8 @@ import Lib.Utility as Util
 
 class BandwidthController:
 
-    def __init__(self, custom_max_bandwidth: float=0, custom_bandwidth_local: float=0,
-                 custom_bandwidth_public: float=0, statistics = None):
+    def __init__(self, custom_max_bandwidth: float = 0, custom_bandwidth_local: float = 0,
+                 custom_bandwidth_public: float = 0, statistics=None):
         """
 
         :param custom_max_bandwidth: maximum bandwidth to be set as a hard limit, discarding the pcaps bandwidth
