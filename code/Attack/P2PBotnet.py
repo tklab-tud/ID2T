@@ -99,6 +99,10 @@ class P2PBotnet(BaseAttack.BaseAttack):
         for msg_type in Bmsg.MessageType:
             self.msg_types[msg_type.value] = msg_type
 
+        self.mapping_filename = ""
+        self.max_len = 0
+        self.padding = 0
+
         self.DEFAULT_XML_PATH = None
 
     def init_param(self, param: str) -> bool:
@@ -145,14 +149,13 @@ class P2PBotnet(BaseAttack.BaseAttack):
             value = "optimal"
         elif param == self.HIDDEN_MARK:
             value = False
+        elif param == self.BANDWIDTH_IGNORE:
+            value = True
         if value is None:
             return False
         return self.add_param_value(param, value)
 
     def generate_attack_packets(self):
-        pass
-
-    def generate_attack_pcap(self):
         """
         Injects the packets of this attack into a PCAP and stores it as a temporary file.
         :return: a tuple of the number packets injected, the path to the temporary attack PCAP
@@ -166,15 +169,13 @@ class P2PBotnet(BaseAttack.BaseAttack):
             return 0, None
 
         # Setup (initial) parameters for packet creation loop
-        buffer_size = 1000
+        self.buffer_size = 1000
         pkt_gen = Generator.PacketGenerator()
-        padding = self.get_param_value(self.PACKET_PADDING)
-        packets = collections.deque(maxlen=buffer_size)
-        total_pkts = 0
+        self.padding = self.get_param_value(self.PACKET_PADDING)
+        self.packets = collections.deque(maxlen=self.buffer_size)
         limit_packetcount = self.get_param_value(self.PACKETS_LIMIT)
         limit_duration = self.get_param_value(self.ATTACK_DURATION)
-        path_attack_pcap = None
-        over_thousand = False
+        self.path_attack_pcap = None
 
         msg_packet_mapping = MessageMapping(messages, self.statistics.get_pcap_timestamp_start())
         mark_packets = self.get_param_value(self.HIDDEN_MARK)
@@ -194,7 +195,7 @@ class P2PBotnet(BaseAttack.BaseAttack):
             duration = msg.time - messages[0].time
 
             # if total number of packets has been sent or the attack duration has been exceeded, stop
-            if ((limit_packetcount is not None and total_pkts >= limit_packetcount) or
+            if ((limit_packetcount is not None and self.total_pkt_num >= limit_packetcount) or
                     (limit_duration is not None and duration >= limit_duration)):
                 break
 
@@ -208,7 +209,7 @@ class P2PBotnet(BaseAttack.BaseAttack):
                                                    mac_dst=mac_dst,
                                                    port_src=port_src, port_dst=port_dst, message_type=msg.type,
                                                    neighborlist_entries=nl_size)
-            Generator.add_padding(packet, padding, True, True)
+            Generator.add_padding(packet, self.padding, True, True)
 
             packet.time = msg.time
 
@@ -220,45 +221,49 @@ class P2PBotnet(BaseAttack.BaseAttack):
 
                 ip_data.options = hidden_opt
 
-            packets.append(packet)
+            self.add_packet(packet, ip_src, ip_dst)
             msg_packet_mapping.map_message(msg, packet)
-            total_pkts += 1
 
             # Store timestamp of first packet (for attack label)
-            if total_pkts <= 1:
-                self.attack_start_utime = packets[0].time
-            elif total_pkts % buffer_size == 0:  # every 1000 packets write them to the PCAP file (append)
-                packets = list(packets)
-                if over_thousand:  # if over 1000 packets written, packet-length for the last few packets may differ
-                    Generator.equal_length(packets, length=max_len, padding=padding, force_len=True)
-                else:
-                    Generator.equal_length(packets, padding=padding)
-                    max_len = len(packets[-1])
-                    over_thousand = True
-                last_packet = packets[-1]
-                path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
-                packets = collections.deque(maxlen=buffer_size)
-
-        # if there are unwritten packets remaining, write them to the PCAP file
-        if len(packets) > 0:
-            packets = list(packets)
-            if over_thousand:
-                Generator.equal_length(packets, length=max_len, padding=padding, force_len=True)
-            else:
-                Generator.equal_length(packets, padding=padding)
-            path_attack_pcap = self.write_attack_pcap(packets, True, path_attack_pcap)
-            last_packet = packets[-1]
+            if self.total_pkt_num <= 1:
+                self.attack_start_utime = self.packets[0].time
+            elif self.total_pkt_num % self.buffer_size == 0:  # every 1000 packets write them to the PCAP file (append)
+                self.write_buffer()
 
         # write the mapping to a file
         current_ts = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
-        mapping_filename = "mapping_" + current_ts + ".xml"
-        msg_packet_mapping.write_to_file(mapping_filename)
+        self.mapping_filename = "mapping_" + current_ts + ".xml"
+        msg_packet_mapping.write_to_file(self.mapping_filename)
+
+    def write_buffer(self):
+        """
+        Writes buffer of generated packets to pcap.
+        """
+        self.packets = list(self.packets)
+        if len(self.packets) > self.buffer_size:
+            Generator.equal_length(self.packets, length=self.max_len, padding=self.padding, force_len=True)
+        else:
+            Generator.equal_length(self.packets, padding=self.padding)
+            self.max_len = len(self.packets[-1])
+        self.path_attack_pcap = self.write_attack_pcap(self.packets, True, self.path_attack_pcap)
+        if self.total_pkt_num % self.buffer_size == 0:
+            self.packets = collections.deque(maxlen=self.buffer_size)
+
+    def generate_attack_pcap(self):
+        """
+        Creates a pcap containing the attack packets.
+
+        :return: The location of the generated pcap file.
+        """
+        # if there are unwritten packets remaining, write them to the PCAP file
+        if len(self.packets) > 0:
+            self.write_buffer()
 
         # Store timestamp of last packet
-        self.attack_end_utime = last_packet.time
+        self.attack_end_utime = self.packets[-1].time
 
         # Return packets sorted by packet by timestamp and total number of packets (sent)
-        return total_pkts, path_attack_pcap, [mapping_filename]
+        return self.total_pkt_num, self.path_attack_pcap, [self.mapping_filename]
 
     def _create_messages(self):
         """
