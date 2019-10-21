@@ -24,7 +24,7 @@ import Core.Statistics as Statistics
 import Core.TimestampController as tc
 import Core.BandwidthController as bc
 
-from Attack.Parameter import Parameter, Float, IntegerLimited
+from Attack.Parameter import Parameter, Boolean, Float, IntegerLimited
 
 
 class BaseAttack(metaclass=abc.ABCMeta):
@@ -48,6 +48,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
     INJECT_AFTER_PACKET = 'inject.after-pkt'
 
     # For BandwidthController
+    BANDWIDTH_IGNORE = 'bandwidth.ignore'
     BANDWIDTH_MAX = 'bandwidth.max'
     BANDWIDTH_MIN_LOCAL = 'bandwidth.min.local'
     BANDWIDTH_MIN_PUBLIC = 'bandwidth.min.public'
@@ -89,7 +90,8 @@ class BaseAttack(metaclass=abc.ABCMeta):
                        Parameter(self.INJECT_AFTER_PACKET, IntegerLimited([0, pkt_count])),
                        Parameter(self.BANDWIDTH_MAX, Float()),
                        Parameter(self.BANDWIDTH_MIN_LOCAL, Float()),
-                       Parameter(self.BANDWIDTH_MIN_PUBLIC, Float())]
+                       Parameter(self.BANDWIDTH_MIN_PUBLIC, Float()),
+                       Parameter(self.BANDWIDTH_IGNORE, Boolean())]
         self.attack_start_utime = 0
         self.attack_end_utime = 0
         self.start_time = 0
@@ -124,6 +126,7 @@ class BaseAttack(metaclass=abc.ABCMeta):
         self.add_param_value(self.BANDWIDTH_MAX, 0)
         self.add_param_value(self.BANDWIDTH_MIN_LOCAL, 0)
         self.add_param_value(self.BANDWIDTH_MIN_PUBLIC, 0)
+        self.add_param_value(self.BANDWIDTH_IGNORE, False)
 
     def init_objects(self):
         timestamp = self.get_param_value(self.INJECT_AT_TIMESTAMP)
@@ -455,30 +458,31 @@ class BaseAttack(metaclass=abc.ABCMeta):
         """
         bytes = len(pkt)
 
-        remaining_bytes, current_interval = \
-            self.bandwidth_controller.get_remaining_bandwidth(pkt.time, ip_source, ip_destination)
-        if self.previous_interval != current_interval:
-            self.sent_bytes = 0
-            self.interval_count += 1
+        if not self.get_param_value(self.BANDWIDTH_IGNORE):
+            remaining_bytes, current_interval = \
+                self.bandwidth_controller.get_remaining_bandwidth(pkt.time, ip_source, ip_destination)
+            if self.previous_interval != current_interval:
+                self.sent_bytes = 0
+                self.interval_count += 1
 
-        self.previous_interval = current_interval
+            self.previous_interval = current_interval
 
-        if current_interval != self.full_interval:
-            remaining_bytes *= 1000
-            remaining_bytes -= self.sent_bytes
+            if current_interval != self.full_interval:
+                remaining_bytes *= 1000
+                remaining_bytes -= self.sent_bytes
 
-            if remaining_bytes >= bytes:
-                self.sent_bytes += bytes
-                self.packets.append(pkt)
-                self.total_pkt_num += 1
-                if pkt['IP'].dst == ip_source:
-                    return 1
-                return 0
-            else:
-                print("Warning: generated attack packets exceeded bandwidth. Packets in interval {} "
-                      "were omitted.".format(self.interval_count))
-                self.full_interval = current_interval
-                return 2
+                if remaining_bytes < bytes:
+                    print("Warning: generated attack packets exceeded bandwidth. Packets in interval {} "
+                          "were omitted.".format(self.interval_count))
+                    self.full_interval = current_interval
+                    return 2
+
+        self.sent_bytes += bytes
+        self.packets.append(pkt)
+        self.total_pkt_num += 1
+        if pkt['IP'].dst == ip_source:
+            return 1
+        return 0
 
     def buffer_full(self):
         return (self.total_pkt_num > 0) and (self.total_pkt_num % self.buffer_size == 0) and (len(self.packets) > 0)
