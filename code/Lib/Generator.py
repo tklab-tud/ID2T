@@ -38,10 +38,10 @@ def add_padding(packet, bytes_padding:int = 0, user_padding:bool=True, rnd:bool 
     return packet
 
 
-def equal_length(list_of_packets:list, length:int = 0, padding:int = 0, force_len:bool = False):
+def equal_length(list_of_packets: list, length:int = 0, padding: int = 0, force_len: bool = False):
     """
-    Equals the length of all packets of a given list of packets to the given length. If the given length is smaller than the largest
-    packet, all the other packets are extended to the largest packet's length. Adds additional padding
+    Equals the length of all packets of a given list of packets to the given length. If the given length is smaller than
+    the largest packet, all the other packets are extended to the largest packet's length. Adds additional padding
     afterwards to create realism.
     :param list_of_packets: The given list of packet.
     :param length: The length each packet should have. Can be redundant, if the largest packet has more bytes
@@ -56,16 +56,16 @@ def equal_length(list_of_packets:list, length:int = 0, padding:int = 0, force_le
         largest_packet = length
         for packet in list_of_packets:
             packet_length = len(packet)
-            if(packet_length > largest_packet):
+            if packet_length > largest_packet:
                 largest_packet = packet_length
     else:
         largest_packet = length
 
     for packet in list_of_packets:
         bytes_padding = largest_packet - len(packet)
-        if(bytes_padding > 0):
-            add_padding(packet, bytes_padding, False, False) #Add padding to extend to param:length
-            add_padding(packet, padding, False, True) #Add random additional padding to create realism
+        if bytes_padding > 0:
+            add_padding(packet, bytes_padding, False, False)  # Add padding to extend to param:length
+            add_padding(packet, padding, False, True)  # Add random additional padding to create realism
 
     return list_of_packets
 
@@ -86,7 +86,7 @@ def generate_payload(size: int = 0):
 ########    Generation of random port    ########
 #################################################
 
-def gen_random_server_port(offset: int=2199):
+def gen_random_server_port(offset: int = 2199):
     """
     Generates a valid random first and last character for a bots hostname
     and computes a port from these two characters.
