@@ -360,70 +360,6 @@ class P2PBotnet(BaseAttack.BaseAttack):
                         else:
                             bot_configs[bot]["TTL"] = self.statistics.process_db_query("most_used(ttlValue)")
 
-        def assign_realistic_timestamps(messages: list, external_ids: set, local_ids: set, avg_delay_local: list,
-                                        avg_delay_external: list, zero_reference: float):
-            """
-            Assigns realistic timestamps to a set of messages
-
-            :param messages: the set of messages to be updated
-            :param external_ids: the set of bot ids, that are outside the network, i.e. external
-            :param local_ids: the set of bot ids, that are inside the network, i.e. local
-            :param avg_delay_local: the avg_delay distribution between the dispatch and the reception of a packet
-                                    between local computers
-            :param avg_delay_external: the avg_delay distribution between the dispatch and the reception of a packet
-                                       between a local and an external computer
-            :param zero_reference: the timestamp which is regarded as the beginning of the pcap_file and therefore
-                                   handled like a timestamp that resembles 0
-            """
-            updated_msgs = []
-
-            # Dict, takes a tuple of 2 Bot_IDs as a key (requester, responder), returns the time of the last response,
-            # the requester received necessary in order to make sure, that additional requests are sent only after the
-            # response to the last one was received
-            last_response = {}
-
-            for m in messages:    # init
-                last_response[(m.src, m.dst)] = -1
-
-            # update all timestamps
-            for req_msg in messages:
-
-                if req_msg in updated_msgs:
-                    # message already updated
-                    continue
-
-                # if req_msg.timestamp would be before the timestamp of the response to the last request, req_msg needs
-                # to be sent later (else branch)
-                if last_response[(req_msg.src, req_msg.dst)] == -1 or last_response[(req_msg.src, req_msg.dst)] < (
-                        zero_reference + req_msg.time - 0.05):
-                    # update req_msg timestamp with a variation of up to 50ms
-                    req_msg.time = zero_reference + req_msg.time + rnd.uniform(-0.05, 0.05)
-                    updated_msgs.append(req_msg)
-
-                else:
-                    req_msg.time = last_response[(req_msg.src, req_msg.dst)] + 0.06 + rnd.uniform(-0.05, 0.05)
-
-                # update response if necessary
-                if req_msg.refer_msg_id != -1:
-                    respns_msg = messages[req_msg.refer_msg_id]
-
-                    # check for local or external communication and update response timestamp with the respective
-                    # avg delay
-                    if req_msg.src in external_ids or req_msg.dst in external_ids and avg_delay_external:
-                        # external communication
-                        dist = lea.Lea.fromSeq(avg_delay_external)
-                    else:
-                        # local communication
-                        dist = lea.Lea.fromSeq(avg_delay_local)
-                    delay = 0
-
-                    while delay < 50 or (float(delay)*0.000001 > 5):
-                        delay = dist.random()
-                    respns_msg.time = req_msg.time + float(delay) * 0.000001
-
-                    updated_msgs.append(respns_msg)
-                    last_response[(req_msg.src, req_msg.dst)] = respns_msg.time
-
         def assign_ttls_from_caida(bot_configs):
             """
             Assign realistic TTL values to bots with respect to their IP, based on the CAIDA dataset.
@@ -641,10 +577,6 @@ class P2PBotnet(BaseAttack.BaseAttack):
 
         # calculate the average delay values for local and external responses
         avg_delay_local, avg_delay_external = self.statistics.get_avg_delay_distributions(False)
-
-        # set timestamps
-        assign_realistic_timestamps(messages, external_ids, local_ids, avg_delay_local, avg_delay_external,
-                                    zero_reference)
 
         reserved_ports = set(int(line.strip()) for line in open(Util.RESOURCE_DIR + "reserved_ports.txt").readlines())
 
