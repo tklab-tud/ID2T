@@ -47,7 +47,7 @@ class TimestampController:
         """
         self.current_timestamp = timestamp
 
-    def next_timestamp(self, latency: float=0) -> float:
+    def next_timestamp(self, latency: float = 0) -> float:
         """
         Calculates the next timestamp to be used based on the packet per second rate (pps) and the maximum delay.
         Parameter consideration order: latency > pps > default delay
@@ -61,7 +61,7 @@ class TimestampController:
         if latency != 0:
             # Calculate reply timestamp
             delay = latency
-        #else Calculate request timestamp
+        # Else calculate request timestamp
 
         random_delay = lea.Lea.fromValFreqsDict({delay * 1.3: 12, delay * 1.2: 13, delay * 1.1: 15, delay: 20,
                                                  delay / 1.1: 15, delay / 1.2: 13, delay / 1.3: 12})
