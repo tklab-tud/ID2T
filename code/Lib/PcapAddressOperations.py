@@ -72,8 +72,8 @@ class PcapAddressOperations():
             return []
 
         if count > len(self.remaining_local_ips):
-            print("Warning: There are no more {} local IPs in the .pcap file. Returning all remaining local IPs.".format(count))
-
+            print("Warning: There are no more {} local IPs in the .pcap file. Returning all remaining local IPs."
+                  .format(count))
 
         total = min(len(self.remaining_local_ips), count)
 
