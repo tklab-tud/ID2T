@@ -293,6 +293,9 @@ class P2PBotnet(BaseAttack.BaseAttack):
             for ip in existing_ips:
                 random_id = rnd.choice(ids)
                 mac = self.statistics.process_db_query("macAddress(IPAddress=%s)" % ip)
+                if mac is "FF:FF:FF:FF:FF:FF".casefold():
+                    new_ips.append(ipgen.random_ip())
+                    continue
                 bot_configs[random_id] = {"Type": idtype, "IP": ip, "MAC": mac}
                 ids.remove(random_id)
 
