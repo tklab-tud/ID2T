@@ -31,19 +31,23 @@ class Statistics(object):
         if self._initialized:
             return
         # Fields
-        self.pcap_filepath = pcap_file.pcap_file_path
+        self.pcap_filepath = None
+        self.path_db = None
         self.do_extra_tests = False
         self.file_info = None
         self.kbyte_rate = {"local": None, "public": None}
         self.interval_stat = {}
         self.interval_len = None
 
-        # Create folder for statistics database if required
-        self.path_db = pcap_file.get_db_path()
+        if pcap_file:
+            self.pcap_filepath = pcap_file.pcap_file_path
 
-        # Class instances
-        self.stats_db = self.create_stats_db(self.path_db)
-        self._initialized = True
+            # Create folder for statistics database if required
+            self.path_db = pcap_file.get_db_path()
+
+            # Class instances
+            self.stats_db = self.create_stats_db(self.path_db)
+            self._initialized = True
 
     @staticmethod
     def create_stats_db(path_db):

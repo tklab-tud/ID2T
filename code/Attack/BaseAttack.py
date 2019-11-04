@@ -65,20 +65,28 @@ class BaseAttack(metaclass=abc.ABCMeta):
         # Reference to statistics class
         self.statistics = Statistics.Statistics(None)
 
-        # get_reply_delay
-        self.all_min_latencies = self.statistics.process_db_query("SELECT minDelay FROM conv_statistics LIMIT 500;")
-        self.all_max_latencies = self.statistics.process_db_query("SELECT maxDelay FROM conv_statistics LIMIT 500;")
-        self.most_used_mss_value = self.statistics.get_most_used_mss_value()
-        self.most_used_ttl_value = self.statistics.get_most_used_ttl_value()
-        self.most_used_win_size = self.statistics.get_most_used_win_size()
+        try:
+            # get_reply_delay
+            self.all_min_latencies = self.statistics.process_db_query("SELECT minDelay FROM conv_statistics LIMIT 500;")
+            self.all_max_latencies = self.statistics.process_db_query("SELECT maxDelay FROM conv_statistics LIMIT 500;")
+            self.most_used_mss_value = self.statistics.get_most_used_mss_value()
+            self.most_used_ttl_value = self.statistics.get_most_used_ttl_value()
+            self.most_used_win_size = self.statistics.get_most_used_win_size()
+            pkt_count = self.statistics.get_packet_count()
+        except AttributeError:
+            self.all_min_latencies = 0
+            self.all_max_latencies = 0
+            self.most_used_mss_value = 0
+            self.most_used_ttl_value = 0
+            self.most_used_win_size = 0
+            pkt_count = 0
 
-        # Class fields
+            # Class fields
         self.attack_name = name
         self.attack_description = description
         self.attack_type = attack_type
         self.params = [Parameter(self.INJECT_AT_TIMESTAMP, Float()),
-                       Parameter(self.INJECT_AFTER_PACKET, IntegerLimited([0,
-                                                                           self.statistics.get_packet_count()])),
+                       Parameter(self.INJECT_AFTER_PACKET, IntegerLimited([0, pkt_count])),
                        Parameter(self.BANDWIDTH_MAX, Float()),
                        Parameter(self.BANDWIDTH_MIN_LOCAL, Float()),
                        Parameter(self.BANDWIDTH_MIN_PUBLIC, Float())]

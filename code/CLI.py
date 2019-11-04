@@ -127,7 +127,7 @@ class CLI(object):
         package = Attack
         attack_names = []
         for _, name, __ in pkgutil.iter_modules(package.__path__):
-            if name != 'BaseAttack' and name != 'AttackParameters':
+            if name != 'BaseAttack' and name != 'Parameter' and name != 'ParameterTypes':
                 attack_names.append(name)
 
         # List the attacks and their parameters
@@ -146,8 +146,8 @@ class CLI(object):
             print('\t- {}Supported Parameters:{}'.format(emph_start, emph_end), end=' ')
             # Get all the parameter names in a list and sort them
             param_list = []
-            for key in attack_obj.supported_params:
-                param_list.append(key.value)
+            for param in attack_obj.params:
+                param_list.append(param.name)
             param_list.sort()
             # Print each parameter type per line
             last_prefix = None
