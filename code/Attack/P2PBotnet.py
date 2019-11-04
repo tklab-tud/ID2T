@@ -48,8 +48,8 @@ class P2PBotnet(BaseAttack.BaseAttack):
         """
         # Initialize communication
         super(P2PBotnet, self).__init__(
-            "Membership Management Communication Attack (MembersMgmtCommAttack)",
-            "Injects Membership Management Communication", "Botnet communication")
+            "P2P Botnet Communication (P2PBotnet)",
+            "Injects P2P Botnet Communication", "Botnet communication")
 
         # Define allowed parameters and their type
         self.update_params([
