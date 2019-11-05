@@ -47,11 +47,10 @@ class Parameter(object):
         return self._value
 
     @value.setter
-    def value(self, value, user_specified: bool = False):
+    def value(self, value):
         try:
             is_valid, value = self._validate(value)
             self._value = value
-            self._user_specified = user_specified
         except BaseType.InvalidTypeException:
             print(value, " is not a valid value of type ", self.type.name, ".")
             return
