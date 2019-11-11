@@ -149,19 +149,18 @@ class BaseAttack(metaclass=abc.ABCMeta):
         """
         params_to_init = []
         for param in self.params:
-            if not self.param_exists(param.name):
-                params_to_init.append(param.name)
+            params_to_init.append(param.name)
         skipped = {}
         while len(params_to_init) != 0:
             param = params_to_init.pop(0)
             result = self.init_param(param)
             if result is False:
-                params_to_init.append(param)
                 val = 0
                 if param in skipped.keys():
                     val = skipped[param]
                     if val > 1:
-                        break
+                        continue
+                params_to_init.append(param)
                 skipped.update({param: val+1})
 
     @abc.abstractmethod
