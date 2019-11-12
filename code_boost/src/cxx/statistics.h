@@ -613,6 +613,10 @@ public:
 
     void assignMacAddress(const std::string &ipAddress, const std::string &macAddress);
 
+    void assignBroadcastMacAddress(const std::string &ipAddress, const std::string &macAddress);
+
+    bool isBroadcastAddress(const std::string &ipAddress);
+
     void addIpStat_packetSent(const std::string &ipAddressSender, const std::string &ipAddressReceiver, long bytesSent, std::chrono::microseconds timestamp);
 
     int getPacketCount();
@@ -752,6 +756,9 @@ private:
 
     // {IP Address, MAC Address}
     std::unordered_map<std::string, std::string> ip_mac_mapping;
+
+    // {IP Address, MAC Address}
+    std::unordered_map<std::string, std::string> broadcast_ip_mac_mapping;
 
     // {Source MAC, Destination MAC, typeNumber, #count, #timestamp of last occurrence}
     std::unordered_map<unrecognized_PDU, unrecognized_PDU_stat> unrecognized_PDUs;

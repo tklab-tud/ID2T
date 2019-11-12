@@ -650,6 +650,29 @@ void statistics::assignMacAddress(const std::string &ipAddress, const std::strin
 }
 
 /**
+ * Stores the assignment Broadcast IP address -> MAC address.
+ * @param ipAddress The IP address belonging to the given MAC address.
+ * @param macAddress The MAC address belonging to the given IP address.
+ */
+void statistics::assignBroadcastMacAddress(const std::string &ipAddress, const std::string &macAddress) {
+    broadcast_ip_mac_mapping[ipAddress] = macAddress;
+}
+
+/**
+ * Checks if given IP address is a broadcast address
+ * @brief statistics::isBroadcastAddress
+ * @param ipAddress
+ * @return
+ */
+bool statistics::isBroadcastAddress(const std::string &ipAddress) {
+    for (auto iter = broadcast_ip_mac_mapping.begin(); iter != broadcast_ip_mac_mapping.end(); iter++) {
+        if (ipAddress == iter->first)
+            return true;
+    }
+    return false;
+}
+
+/**
  * Registers statistical data for a sent packet. Increments the counter packets_sent for the sender and
  * packets_received for the receiver. Adds the bytes as kbytes_sent (sender) and kybtes_received (receiver).
  * @param ipAddressSender The IP address of the packet sender.

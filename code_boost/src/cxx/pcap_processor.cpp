@@ -278,14 +278,6 @@ void pcap_processor::process_packets(const Packet &pkt) {
     std::string macAddressReceiver;
     const PDU *pdu_l2 = pkt.pdu();
     uint32_t sizeCurrentPacket = pdu_l2->size();
-    if (pdu_l2->pdu_type() == PDU::ETHERNET_II) {
-        const EthernetII &eth = (const EthernetII &) *pdu_l2;
-        macAddressSender = eth.src_addr().to_string();
-        macAddressReceiver = eth.dst_addr().to_string();
-        sizeCurrentPacket = eth.size();
-    }
-
-    stats.addPacketSize(sizeCurrentPacket);
 
     // Layer 3 - Network -------------------------------
     const PDU *pdu_l3 = pkt.pdu()->inner_pdu();
@@ -293,11 +285,29 @@ void pcap_processor::process_packets(const Packet &pkt) {
     std::string ipAddressSender;
     std::string ipAddressReceiver;
 
+    if (pdu_l2->pdu_type() == PDU::ETHERNET_II) {
+        const EthernetII &eth = (const EthernetII &) *pdu_l2;
+        macAddressSender = eth.src_addr().to_string();
+        macAddressReceiver = eth.dst_addr().to_string();
+        sizeCurrentPacket = eth.size();
+    }
+
+    /*if (pdu_l2->pdu_type() == PDU::ARP || pdu_l3->pdu_type() == PDU::ARP) {
+        const ARP &arp = pdu_l2->rfind_pdu<ARP>();
+        std::string ipAddressTarget = arp.target_ip_addr().to_string();
+        std::string macAddressTarget = arp.target_hw_addr().to_string();
+    }*/
+
+    stats.addPacketSize(sizeCurrentPacket);
+
     // PDU is IPv4
     if (pdu_l3_type == PDU::PDUType::IP) {
         const IP &ipLayer = (const IP &) *pdu_l3;
         ipAddressSender = ipLayer.src_addr().to_string();
         ipAddressReceiver = ipLayer.dst_addr().to_string();
+
+        if (macAddressReceiver=="ff:ff:ff:ff:ff:ff")
+            stats.assignBroadcastMacAddress(ipAddressReceiver, macAddressReceiver);
 
         // IP distribution
         stats.addIpStat_packetSent(ipAddressSender, ipAddressReceiver, sizeCurrentPacket, pkt.timestamp());
@@ -314,11 +324,12 @@ void pcap_processor::process_packets(const Packet &pkt) {
 
         // Assign IP Address to MAC Address
         stats.assignMacAddress(ipAddressSender, macAddressSender);
-        stats.assignMacAddress(ipAddressReceiver, macAddressReceiver);
+        if (!stats.isBroadcastAddress(ipAddressReceiver))
+            stats.assignMacAddress(ipAddressReceiver, macAddressReceiver);
 
-    } // PDU is IPv6
+    /*} // PDU is IPv6
     // FIXME: IPv6 Workaround
-    /*else if (pdu_l3_type == PDU::PDUType::IPv6) {
+    else if (pdu_l3_type == PDU::PDUType::IPv6) {
         return;
         const IPv6 &ipLayer = (const IPv6 &) *pdu_l3;
         ipAddressSender = ipLayer.src_addr().to_string();
@@ -337,8 +348,9 @@ void pcap_processor::process_packets(const Packet &pkt) {
         // Assign IP Address to MAC Address
         stats.assignMacAddress(ipAddressSender, macAddressSender);
         stats.assignMacAddress(ipAddressReceiver, macAddressReceiver);
-    }*/ //PDU is unrecognized
-    else {
+    */
+    //PDU is unrecognized
+    } else {
         hasUnrecognized = true;
 
         const EthernetII &eth = (const EthernetII &) *pdu_l2;
