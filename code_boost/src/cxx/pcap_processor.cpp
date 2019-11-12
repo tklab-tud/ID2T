@@ -299,6 +299,9 @@ void pcap_processor::process_packets(const Packet &pkt) {
         ipAddressSender = ipLayer.src_addr().to_string();
         ipAddressReceiver = ipLayer.dst_addr().to_string();
 
+        if (stats.isBroadcastAddress(ipAddressReceiver))
+            return;
+
         // IP distribution
         stats.addIpStat_packetSent(ipAddressSender, ipAddressReceiver, sizeCurrentPacket, pkt.timestamp());
 
@@ -316,9 +319,9 @@ void pcap_processor::process_packets(const Packet &pkt) {
         stats.assignMacAddress(ipAddressSender, macAddressSender);
         stats.assignMacAddress(ipAddressReceiver, macAddressReceiver);
 
-    } // PDU is IPv6
+    /*} // PDU is IPv6
     // FIXME: IPv6 Workaround
-    /*else if (pdu_l3_type == PDU::PDUType::IPv6) {
+    else if (pdu_l3_type == PDU::PDUType::IPv6) {
         return;
         const IPv6 &ipLayer = (const IPv6 &) *pdu_l3;
         ipAddressSender = ipLayer.src_addr().to_string();
@@ -337,15 +340,24 @@ void pcap_processor::process_packets(const Packet &pkt) {
         // Assign IP Address to MAC Address
         stats.assignMacAddress(ipAddressSender, macAddressSender);
         stats.assignMacAddress(ipAddressReceiver, macAddressReceiver);
-    }*/ //PDU is unrecognized
-    else {
-        hasUnrecognized = true;
+    */
+    //PDU is unrecognized
+    } else {
+        try {
+            const ARP &arp = pdu_l2->rfind_pdu<ARP>();
+            std::string ipAddressSender = arp.sender_ip_addr().to_string();
+            macAddressSender = arp.sender_hw_addr().to_string();
+            stats.assignBroadcastMacAddress(ipAddressSender, macAddressSender);
+        }  catch (Tins::pdu_not_found) {
+            hasUnrecognized = true;
 
-        const EthernetII &eth = (const EthernetII &) *pdu_l2;
-        Tins::Timestamp ts = pkt.timestamp();
-        std::string timestamp_pkt = stats.getFormattedTimestamp(ts.seconds(), ts.microseconds());
+            const EthernetII &eth = (const EthernetII &) *pdu_l2;
+            Tins::Timestamp ts = pkt.timestamp();
+            std::string timestamp_pkt = stats.getFormattedTimestamp(ts.seconds(), ts.microseconds());
 
-        stats.incrementUnrecognizedPDUCount(macAddressSender, macAddressReceiver, eth.payload_type(), timestamp_pkt);
+            stats.incrementUnrecognizedPDUCount(macAddressSender, macAddressReceiver, eth.payload_type(), timestamp_pkt);
+
+        }
     }
 
     // Layer 4 - Transport -------------------------------
