@@ -278,6 +278,13 @@ void pcap_processor::process_packets(const Packet &pkt) {
     std::string macAddressReceiver;
     const PDU *pdu_l2 = pkt.pdu();
     uint32_t sizeCurrentPacket = pdu_l2->size();
+
+    // Layer 3 - Network -------------------------------
+    const PDU *pdu_l3 = pkt.pdu()->inner_pdu();
+    const PDU::PDUType pdu_l3_type = pdu_l3->pdu_type();
+    std::string ipAddressSender;
+    std::string ipAddressReceiver;
+
     if (pdu_l2->pdu_type() == PDU::ETHERNET_II) {
         const EthernetII &eth = (const EthernetII &) *pdu_l2;
         macAddressSender = eth.src_addr().to_string();
@@ -285,13 +292,16 @@ void pcap_processor::process_packets(const Packet &pkt) {
         sizeCurrentPacket = eth.size();
     }
 
-    stats.addPacketSize(sizeCurrentPacket);
+    if (pdu_l2->pdu_type() == PDU::ARP || pdu_l3->pdu_type() == PDU::ARP) {
+        const ARP &arp = pdu_l2->rfind_pdu<ARP>();
+        ipAddressSender = arp.target_ip_addr().to_string();
+        macAddressSender = arp.target_hw_addr().to_string();
+        stats.assignBroadcastMacAddress(ipAddressSender, macAddressSender);
 
-    // Layer 3 - Network -------------------------------
-    const PDU *pdu_l3 = pkt.pdu()->inner_pdu();
-    const PDU::PDUType pdu_l3_type = pdu_l3->pdu_type();
-    std::string ipAddressSender;
-    std::string ipAddressReceiver;
+        std::cout << "broadcast: " << ipAddressSender << ", " << macAddressSender << std::endl;
+    }
+
+    stats.addPacketSize(sizeCurrentPacket);
 
     // PDU is IPv4
     if (pdu_l3_type == PDU::PDUType::IP) {
@@ -343,21 +353,13 @@ void pcap_processor::process_packets(const Packet &pkt) {
     */
     //PDU is unrecognized
     } else {
-        try {
-            const ARP &arp = pdu_l2->rfind_pdu<ARP>();
-            std::string ipAddressSender = arp.sender_ip_addr().to_string();
-            macAddressSender = arp.sender_hw_addr().to_string();
-            stats.assignBroadcastMacAddress(ipAddressSender, macAddressSender);
-        }  catch (Tins::pdu_not_found) {
-            hasUnrecognized = true;
+        hasUnrecognized = true;
 
-            const EthernetII &eth = (const EthernetII &) *pdu_l2;
-            Tins::Timestamp ts = pkt.timestamp();
-            std::string timestamp_pkt = stats.getFormattedTimestamp(ts.seconds(), ts.microseconds());
+        const EthernetII &eth = (const EthernetII &) *pdu_l2;
+        Tins::Timestamp ts = pkt.timestamp();
+        std::string timestamp_pkt = stats.getFormattedTimestamp(ts.seconds(), ts.microseconds());
 
-            stats.incrementUnrecognizedPDUCount(macAddressSender, macAddressReceiver, eth.payload_type(), timestamp_pkt);
-
-        }
+        stats.incrementUnrecognizedPDUCount(macAddressSender, macAddressReceiver, eth.payload_type(), timestamp_pkt);
     }
 
     // Layer 4 - Transport -------------------------------
