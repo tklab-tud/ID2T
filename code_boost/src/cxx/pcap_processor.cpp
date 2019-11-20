@@ -296,9 +296,8 @@ void pcap_processor::process_packets(const Packet &pkt) {
         const ARP &arp = pdu_l2->rfind_pdu<ARP>();
         ipAddressSender = arp.target_ip_addr().to_string();
         macAddressSender = arp.target_hw_addr().to_string();
-        stats.assignBroadcastMacAddress(ipAddressSender, macAddressSender);
 
-        std::cout << "broadcast: " << ipAddressSender << ", " << macAddressSender << std::endl;
+        //std::cout << "ARP: " << ipAddressSender << ", " << macAddressSender << std::endl;
     }
 
     stats.addPacketSize(sizeCurrentPacket);
@@ -308,6 +307,9 @@ void pcap_processor::process_packets(const Packet &pkt) {
         const IP &ipLayer = (const IP &) *pdu_l3;
         ipAddressSender = ipLayer.src_addr().to_string();
         ipAddressReceiver = ipLayer.dst_addr().to_string();
+
+        if (macAddressReceiver=="ff:ff:ff:ff:ff:ff")
+            stats.assignBroadcastMacAddress(ipAddressReceiver, macAddressReceiver);
 
         if (stats.isBroadcastAddress(ipAddressReceiver))
             return;
