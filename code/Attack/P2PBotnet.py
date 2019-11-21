@@ -209,7 +209,7 @@ class P2PBotnet(BaseAttack.BaseAttack):
                                                    mac_dst=mac_dst,
                                                    port_src=port_src, port_dst=port_dst, message_type=msg.type,
                                                    neighborlist_entries=nl_size)
-            Generator.add_padding(packet, self.padding, True, True)
+            Generator.add_padding(packet, self.padding, False)
 
             packet.time = msg.time
 

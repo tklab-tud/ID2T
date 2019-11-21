@@ -16,19 +16,15 @@ from . import IPv4 as ip
 ######## Functions operating on payloads ########
 #################################################
 
-def add_padding(packet, bytes_padding:int = 0, user_padding:bool=True, rnd:bool = False):
+def add_padding(packet, bytes_padding: int = 0, rnd: bool = False):
     """
     Adds padding to a packet with the given amount of bytes, but a maximum of 100 bytes, if called by the user.
     :param packet: the packet that will be extended with the additional payload
     :param bytes_padding: the amount of bytes that will be appended to the packet. Capped to 100,
     if called by the user.
-    :param user_padding: true, if the function add_padding by the user and not within the code
     :param rnd: adds a random padding between 0 and bytes_padding, if true
     :return: the initial packet, extended with the wanted amount of bytes of padding
     """
-
-    if user_padding == True and bytes_padding > 100:
-        bytes_padding = 100
 
     if rnd is True:
         r = int(round(bytes_padding / 4))                  # sets bytes_padding to any number between 0 and
@@ -38,7 +34,7 @@ def add_padding(packet, bytes_padding:int = 0, user_padding:bool=True, rnd:bool 
     return packet
 
 
-def equal_length(list_of_packets: list, length:int = 0, padding: int = 0, force_len: bool = False):
+def equal_length(list_of_packets: list, length: int = 0, padding: int = 0, force_len: bool = False):
     """
     Equals the length of all packets of a given list of packets to the given length. If the given length is smaller than
     the largest packet, all the other packets are extended to the largest packet's length. Adds additional padding
@@ -64,8 +60,8 @@ def equal_length(list_of_packets: list, length:int = 0, padding: int = 0, force_
     for packet in list_of_packets:
         bytes_padding = largest_packet - len(packet)
         if bytes_padding > 0:
-            add_padding(packet, bytes_padding, False, False)  # Add padding to extend to param:length
-            add_padding(packet, padding, False, True)  # Add random additional padding to create realism
+            add_padding(packet, bytes_padding, False)  # Add padding to extend to param:length
+            # add_padding(packet, padding, True)  # Add random additional padding to create realism
 
     return list_of_packets
 
