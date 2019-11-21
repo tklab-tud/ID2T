@@ -33,6 +33,7 @@ class P2PBotnet(BaseAttack.BaseAttack):
     IP_REUSE_EXTERNAL = 'ip.reuse.external'
     INJECT_INTO_IPS = 'inject.ip'
     PACKET_PADDING = 'packet.padding'
+    RANDOM_PADDING = 'random.padding'
     NAT_PRESENT = 'nat.present'
     TTL_GLOBAL = 'ttl.global'
     PORTS_EPHEMERAL = 'ports.ephemeral'
@@ -72,6 +73,7 @@ class P2PBotnet(BaseAttack.BaseAttack):
 
             # the user-selected padding to add to every packet
             Parameter(self.PACKET_PADDING, IntegerLimited([0, 100])),
+            Parameter(self.RANDOM_PADDING, Boolean()),
 
             # presence of NAT at the gateway of the network
             Parameter(self.NAT_PRESENT, Boolean()),
@@ -138,6 +140,8 @@ class P2PBotnet(BaseAttack.BaseAttack):
         # add default additional padding
         elif param == self.PACKET_PADDING:
             value = 20
+        elif param == self.RANDOM_PADDING:
+            value = False
         # choose the input PCAP as default base for the TTL distribution
         elif param == self.TTL_GLOBAL:
             value = False
@@ -172,6 +176,7 @@ class P2PBotnet(BaseAttack.BaseAttack):
         self.buffer_size = 1000
         pkt_gen = Generator.PacketGenerator()
         self.padding = self.get_param_value(self.PACKET_PADDING)
+        self.random_padding = self.get_param_value(self.RANDOM_PADDING)
         self.packets = collections.deque(maxlen=self.buffer_size)
         limit_packetcount = self.get_param_value(self.PACKETS_LIMIT)
         limit_duration = self.get_param_value(self.ATTACK_DURATION)
@@ -209,7 +214,7 @@ class P2PBotnet(BaseAttack.BaseAttack):
                                                    mac_dst=mac_dst,
                                                    port_src=port_src, port_dst=port_dst, message_type=msg.type,
                                                    neighborlist_entries=nl_size)
-            Generator.add_padding(packet, self.padding, False)
+            Generator.add_padding(packet, self.padding, self.random_padding)
 
             packet.time = msg.time
 
