@@ -245,11 +245,11 @@ class P2PBotnet(BaseAttack.BaseAttack):
         Writes buffer of generated packets to pcap.
         """
         self.packets = list(self.packets)
-        if len(self.packets) > self.buffer_size:
-            Generator.equal_length(self.packets, length=self.max_len, padding=self.padding, force_len=True)
-        else:
-            Generator.equal_length(self.packets, padding=self.padding)
+        if len(self.packets) <= self.buffer_size:
+            # Generator.equal_length(self.packets, padding=self.padding)
             self.max_len = len(self.packets[-1])
+        # else:
+            # Generator.equal_length(self.packets, length=self.max_len, padding=self.padding, force_len=True)
         self.path_attack_pcap = self.write_attack_pcap(self.packets, True, self.path_attack_pcap)
         if self.total_pkt_num % self.buffer_size == 0:
             self.packets = collections.deque(maxlen=self.buffer_size)
