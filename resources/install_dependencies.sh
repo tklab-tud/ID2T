@@ -15,25 +15,6 @@ do
     shift
 done
 
-libtins_patches()
-{
-    cd code_boost/src/libtins
-    echo -e "git user: Checking..."
-    git config user.name
-    if [ $? != 0 ]; then
-        echo -e "git user: there is no user specified globally!"
-        echo -e "git user: Setting user for libtins..."
-        git config user.name dependency_installer
-        git config user.email dependency@installer.de
-    fi
-    echo -e "Patches: Applying libtins patches..."
-    git apply --check ${PATCH_DIR}/0001-add-advertised_size-method.patch
-    git am --signoff --committer-date-is-author-date < ${PATCH_DIR}/0001-add-advertised_size-method.patch
-    git apply --check ${PATCH_DIR}/0002-use-advertised_size-to-determine-frame-length.patch
-    git am --signoff --committer-date-is-author-date < ${PATCH_DIR}/0002-use-advertised_size-to-determine-frame-length.patch
-    echo -e "Patches: done."
-}
-
 install_pkg_arch()
 {
     PACMAN_PKGS="gcc make cmake python python-pip sqlite tcpdump cairo"
@@ -161,8 +142,6 @@ install_pkg_darwin()
 # Make sure the submodules are there
 echo -e "Updating submodules"
 git submodule update --init --recursive
-
-libtins_patches
 
 KERNEL=$(uname)
 
