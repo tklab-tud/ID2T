@@ -5,6 +5,7 @@ import Attack.ParameterTypes.BaseType as BaseType
 
 from Attack.ParameterTypes.Boolean import Boolean
 from Attack.ParameterTypes.Domain import Domain
+from Attack.ParameterTypes.Dictionary import Dictionary
 from Attack.ParameterTypes.FilePath import FilePath
 from Attack.ParameterTypes.Float import Float
 from Attack.ParameterTypes.IntegerPositive import IntegerPositive

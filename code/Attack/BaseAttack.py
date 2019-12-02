@@ -265,10 +265,22 @@ class BaseAttack(metaclass=abc.ABCMeta):
 
         # a comma-separated lists must be split first
         if isinstance(value, str) and "," in value:
+
             if "'" in value:
                 value = value.replace("'", "")
             value = value.replace(" ", "")
             value = value.split(",")
+
+            # dictionary
+            if ":" in value[0]:
+                final = {}
+                for elem in value:
+                    if ":" in elem:
+                        key, val = elem.split(":")
+                        if ";" in val:
+                            val = val.split(";")
+                        final[str(key)] = val
+                value = final
 
         # catch source IP = destination IP
         if (param_name == self.IP_SOURCE
