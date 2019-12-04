@@ -126,7 +126,7 @@ class Statistics(object):
         :param stats_db:
         """
         # Load pcap and get loading time
-        time_start = time.clock()
+        time_start = time.perf_counter()
 
         if extra_tests is None:
             extra_tests = self.do_extra_tests
@@ -220,7 +220,7 @@ class Statistics(object):
         if stats_db is self.stats_db:
             self.file_info = stats_db.get_file_info()
 
-        time_end = time.clock()
+        time_end = time.perf_counter()
         print("Loaded file statistics in " + str(time_end - time_start)[:4] + " sec " + outstring_datasource)
 
         # Write statistics if param -e/--export provided
