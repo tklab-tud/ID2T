@@ -13,8 +13,8 @@ import Lib.Botnet.Message as Bmsg
 import Lib.Generator as Generator
 import Lib.Utility as Util
 
-from Attack.Parameter import Parameter, Boolean, FilePath, IntegerPositive, IntegerLimited, IPAddress, Percentage,\
-    SpecificString
+from Attack.Parameter import Parameter, Boolean, Dictionary, FilePath, IntegerPositive, IntegerLimited, IPAddress,\
+    Percentage, SpecificString
 
 from Lib.Botnet.CommunicationProcessor import CommunicationProcessor
 from Lib.Botnet.MessageMapping import MessageMapping
@@ -34,6 +34,8 @@ class P2PBotnet(BaseAttack.BaseAttack):
     INJECT_INTO_IPS = 'inject.ip'
     PACKET_PADDING = 'packet.padding'
     RANDOM_PADDING = 'random.padding'
+    MSG_MAP = 'msg.map'
+    NL_ENTRY_SIZE = 'nl.entry.size'
     NAT_PRESENT = 'nat.present'
     TTL_GLOBAL = 'ttl.global'
     PORTS_EPHEMERAL = 'ports.ephemeral'
@@ -75,6 +77,9 @@ class P2PBotnet(BaseAttack.BaseAttack):
             Parameter(self.PACKET_PADDING, IntegerLimited([0, 100])),
             Parameter(self.RANDOM_PADDING, Boolean()),
 
+            Parameter(self.MSG_MAP, Dictionary()),
+            Parameter(self.NL_ENTRY_SIZE, IntegerPositive()),
+
             # presence of NAT at the gateway of the network
             Parameter(self.NAT_PRESENT, Boolean()),
 
@@ -104,6 +109,8 @@ class P2PBotnet(BaseAttack.BaseAttack):
         self.mapping_filename = ""
         self.max_len = 0
         self.padding = 0
+        self.random_padding = False
+        self.msg_map = {}
 
         self.DEFAULT_XML_PATH = None
 
@@ -142,6 +149,13 @@ class P2PBotnet(BaseAttack.BaseAttack):
             value = 20
         elif param == self.RANDOM_PADDING:
             value = False
+        elif param == self.MSG_MAP:
+            value = {str(Bmsg.MessageType.SALITY_HELLO.value): 4,
+                     str(Bmsg.MessageType.SALITY_HELLO_REPLY.value): 22,
+                     str(Bmsg.MessageType.SALITY_NL_REQUEST.value): 28,
+                     str(Bmsg.MessageType.SALITY_NL_REPLY.value): [24, 174]}  # 24+(1, 25)*6
+        elif param == self.NL_ENTRY_SIZE:
+            value = 6
         # choose the input PCAP as default base for the TTL distribution
         elif param == self.TTL_GLOBAL:
             value = False
@@ -174,7 +188,9 @@ class P2PBotnet(BaseAttack.BaseAttack):
 
         # Setup (initial) parameters for packet creation loop
         self.buffer_size = 1000
-        pkt_gen = Generator.PacketGenerator()
+        msg_map = self.get_param_value(self.MSG_MAP)
+        nl_entry_size = self.get_param_value(self.NL_ENTRY_SIZE)
+        pkt_gen = Generator.PacketGenerator(msg_map=msg_map, nl_entry_size=nl_entry_size)
         self.padding = self.get_param_value(self.PACKET_PADDING)
         self.random_padding = self.get_param_value(self.RANDOM_PADDING)
         self.packets = collections.deque(maxlen=self.buffer_size)
@@ -204,16 +220,10 @@ class P2PBotnet(BaseAttack.BaseAttack):
                     (limit_duration is not None and duration >= limit_duration)):
                 break
 
-            # if the type of the message is a NL reply, determine the number of entries
-            nl_size = 0
-            if msg.type == Bmsg.MessageType.SALITY_NL_REPLY:
-                nl_size = rnd.randint(1, 25)    # what is max NL entries?
-
             # create suitable IP/UDP packet and add to packets list
             packet = pkt_gen.generate_mmcom_packet(ip_src=ip_src, ip_dst=ip_dst, ttl=ttl, mac_src=mac_src,
                                                    mac_dst=mac_dst,
-                                                   port_src=port_src, port_dst=port_dst, message_type=msg.type,
-                                                   neighborlist_entries=nl_size)
+                                                   port_src=port_src, port_dst=port_dst, message_type=msg.type)
             Generator.add_padding(packet, self.padding, self.random_padding)
 
             packet.time = msg.time

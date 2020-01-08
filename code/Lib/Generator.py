@@ -147,7 +147,7 @@ class PacketGenerator:
     Creates packets, based on the set protocol
     """
 
-    def __init__(self, protocol="udp"):
+    def __init__(self, protocol="udp", msg_map: dict = None, nl_entry_size: int = 6):
         """
         Creates a new Packet_Generator Object
 
@@ -155,6 +155,8 @@ class PacketGenerator:
         """
         super(PacketGenerator, self).__init__()
         self.protocol = protocol
+        self.msg_map = msg_map
+        self.nl_entry_size = nl_entry_size
 
     def generate_packet(self, ip_src: str = "192.168.64.32", ip_dst: str = "192.168.64.48",
                         mac_src: str = "56:6D:D9:BC:70:1C",
@@ -187,7 +189,7 @@ class PacketGenerator:
                               mac_src: str = "56:6D:D9:BC:70:1C",
                               mac_dst: str = "F4:2B:95:B3:0E:1A", port_src: int = 1337, port_dst: int = 6442,
                               tcpflags: str = "S", ttl: int = 64,
-                              message_type: MessageType = MessageType.SALITY_HELLO, neighborlist_entries: int = 1):
+                              message_type: MessageType = MessageType.SALITY_HELLO):
         """
         Creates a Packet for Members-Management-Communication with the specified Values and the current protocol
 
@@ -205,18 +207,24 @@ class PacketGenerator:
         """
 
         # Determine length of the payload that has to be generated
-        if message_type == MessageType.SALITY_HELLO:
-            payload_len = 0
-        elif message_type == MessageType.SALITY_HELLO_REPLY:
-            payload_len = 22
-        elif message_type == MessageType.SALITY_NL_REQUEST:
-            payload_len = 28
-        elif message_type == MessageType.SALITY_NL_REPLY:
-            payload_len = 24 + 6 * neighborlist_entries
-        else:
-            payload_len = 0
+        payload_len = self.msg_map[str(message_type.value)]
 
-        payload = generate_payload(payload_len)
+        # if message type is defined as a range generate random payload size
+        if isinstance(payload_len, list):
+            pay_min = int(payload_len[0])
+            pay_max = int(payload_len[-1])
+            dif = pay_max - pay_min
+            # FIXME: NL entries: exponential function to upper bound
+            rng = random2.exponential()
+            if rng > 1:
+                rng = 1
+            print("expo: ", rng)
+            payload_len = int(dif * rng)
+            if payload_len % self.nl_entry_size:
+                payload_len = payload_len - payload_len % self.nl_entry_size + self.nl_entry_size
+            payload_len = pay_min + payload_len
+            print("payload: ", payload_len)
+        payload = generate_payload(int(payload_len))
 
         if self.protocol == "udp":
             packet = generate_udp_packet(ip_src=ip_src, ip_dst=ip_dst, mac_src=mac_src, mac_dst=mac_dst, ttl=ttl,
