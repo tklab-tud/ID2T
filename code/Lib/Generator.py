@@ -1,5 +1,6 @@
 from scapy.packet import Raw
 
+import lea
 import numpy.random as random2
 import random
 import string
@@ -214,12 +215,19 @@ class PacketGenerator:
             pay_min = int(payload_len[0])
             pay_max = int(payload_len[-1])
             dif = pay_max - pay_min
+            distribution = {}
+            steps = int(dif / self.nl_entry_size)
+            for i in range(0, steps):
+                distribution.update({i * self.nl_entry_size: 1})
+            distribution.update({dif: 90})
+            prob_dist = lea.Lea.fromValFreqsDict(distribution)
+            payload_len = prob_dist.random()
             # FIXME: NL entries: exponential function to upper bound
-            rng = random2.exponential()
-            if rng > 1:
-                rng = 1
-            print("expo: ", rng)
-            payload_len = int(dif * rng)
+            #rng = random2.exponential()
+            #if rng > 1:
+            #    rng = 1
+            #print("expo: ", rng)
+            #payload_len = int(dif * rng)
             if payload_len % self.nl_entry_size:
                 payload_len = payload_len - payload_len % self.nl_entry_size + self.nl_entry_size
             payload_len = pay_min + payload_len
