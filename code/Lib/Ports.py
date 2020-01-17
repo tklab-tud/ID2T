@@ -251,7 +251,7 @@ class PortSelectors:
     to use .clone() to get your personal copy, otherwise two parts of your code might select ports on the same
     port-selector which is something you might want to avoid.
     """
-    LINUX = ProtocolPortSelector(PortRanges.LINUX, PortSelectionStrategy.random())
+    LINUX = ProtocolPortSelector(PortRanges.LINUX, PortSelectionStrategy.linux_kernel())
     APPLE = ProtocolPortSelector(PortRanges.DYNAMIC_PORTS,
                                  PortSelectionStrategy.sequential(),
                                  PortSelectionStrategy.random())
