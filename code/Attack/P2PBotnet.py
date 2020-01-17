@@ -11,6 +11,7 @@ import Attack.BaseAttack as BaseAttack
 import Lib.Botnet.libbotnetcomm as lb
 import Lib.Botnet.Message as Bmsg
 import Lib.Generator as Generator
+import Lib.Ports as Ports
 import Lib.Utility as Util
 
 from Attack.Parameter import Parameter, Boolean, Dictionary, FilePath, IntegerPositive, IntegerLimited, IPAddress,\
@@ -19,7 +20,6 @@ from Attack.Parameter import Parameter, Boolean, Dictionary, FilePath, IntegerPo
 from Lib.Botnet.CommunicationProcessor import CommunicationProcessor
 from Lib.Botnet.MessageMapping import MessageMapping
 from Lib.PcapAddressOperations import PcapAddressOperations
-from Lib.Ports import PortSelectors
 
 
 class P2PBotnet(BaseAttack.BaseAttack):
@@ -634,7 +634,7 @@ class P2PBotnet(BaseAttack.BaseAttack):
         assign_realistic_timestamps(messages, external_ids, local_ids, avg_delay_local, avg_delay_external,
                                     zero_reference)
 
-        port_selector = PortSelectors.LINUX
+        port_selector = Ports.PortSelectors.LINUX
         reserved_ports = set(int(line.strip()) for line in open(Util.RESOURCE_DIR + "reserved_ports.txt").readlines())
 
         def filter_reserved(get_port):
