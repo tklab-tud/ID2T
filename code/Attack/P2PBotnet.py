@@ -38,7 +38,10 @@ class P2PBotnet(BaseAttack.BaseAttack):
     NL_ENTRY_SIZE = 'nl.entry.size'
     NAT_PRESENT = 'nat.present'
     TTL_GLOBAL = 'ttl.global'
+    PORT_DESTINATION = 'port.dst'
     PORTS_EPHEMERAL = 'ports.ephemeral'
+    PORTS_RANDOM = 'ports.random'
+    PORTS_HOST = 'ports.host'
     INTERVAL_SELECT_STRATEGY = 'interval.selection.strategy'
     INTERVAL_SELECT_START = 'interval.selection.start'
     INTERVAL_SELECT_END = 'interval.selection.end'
@@ -87,9 +90,12 @@ class P2PBotnet(BaseAttack.BaseAttack):
             # or the CAIDA dataset
             Parameter(self.TTL_GLOBAL, Boolean()),
 
+            Parameter(self.PORT_DESTINATION, IntegerPositive()),
             # whether the destination port of a response should be the ephemeral port
             # its request came from or a static (server)port based on a hostname
             Parameter(self.PORTS_EPHEMERAL, Boolean()),
+            Parameter(self.PORTS_RANDOM, Boolean()),
+            Parameter(self.PORTS_HOST, SpecificString(["windows", "linux", "macos", "bsd"])),
 
             # information about the interval selection strategy
             Parameter(self.INTERVAL_SELECT_STRATEGY, SpecificString(["random", "optimal", "custom"])),
@@ -159,9 +165,15 @@ class P2PBotnet(BaseAttack.BaseAttack):
         # choose the input PCAP as default base for the TTL distribution
         elif param == self.TTL_GLOBAL:
             value = False
+        elif param == self.PORT_DESTINATION:
+            value = None
         # do not use multiple ports for requests and responses
         elif param == self.PORTS_EPHEMERAL:
             value = False
+        elif param == self.PORTS_RANDOM:
+            value = False
+        elif param == self.PORTS_HOST:
+            value = "linux"
         # interval selection strategy
         elif param == self.INTERVAL_SELECT_STRATEGY:
             value = "optimal"
