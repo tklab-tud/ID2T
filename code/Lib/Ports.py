@@ -29,7 +29,7 @@ class PortSelectionStrategy:
         # restarting from the start once it reached the highest value
         def __call__(self, port_range, *args):
             if self.counter == -1:
-                self.counter = port_range.start
+                self.counter = random.choice(port_range)
 
             port = self.counter
 
