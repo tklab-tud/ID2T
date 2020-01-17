@@ -646,7 +646,6 @@ class P2PBotnet(BaseAttack.BaseAttack):
         assign_realistic_timestamps(messages, external_ids, local_ids, avg_delay_local, avg_delay_external,
                                     zero_reference)
 
-        port_selector = Ports.PortSelectors.LINUX
         reserved_ports = set(int(line.strip()) for line in open(Util.RESOURCE_DIR + "reserved_ports.txt").readlines())
 
         def filter_reserved(get_port):
@@ -655,14 +654,28 @@ class P2PBotnet(BaseAttack.BaseAttack):
                 port = get_port()
             return port
 
-        # create port configurations for the bots
         use_multiple_ports = self.get_param_value(self.PORTS_EPHEMERAL)
+        ports_os = self.get_param_value(self.PORTS_HOST)
+
+        if ports_os == "linux":
+            port_selector = Ports.PortSelectors.LINUX
+        elif ports_os == "windows":
+            port_selector = Ports.PortSelectors.WINDOWS
+        elif ports_os == "macos":
+            port_selector = Ports.PortSelectors.APPLE
+        elif ports_os == "bsd":
+            port_selector = Ports.PortSelectors.FREEBSD
+        else:
+            port_selector = Ports.PortSelectors.LINUX
+
+        # create port selectors for the bots
         for bot in sorted(bot_configs):
-            bot_configs[bot]["SrcPort"] = filter_reserved(port_selector.select_port_udp)
-            if not use_multiple_ports:
-                bot_configs[bot]["DstPort"] = filter_reserved(Generator.gen_random_server_port)
-            else:
-                bot_configs[bot]["DstPort"] = filter_reserved(port_selector.select_port_udp)
+            bot_configs[bot]["PortSelector"] = port_selector.clone()
+
+        port_dst = self.get_param_value(self.PORT_DESTINATION)
+        if port_dst is not None and not isinstance(port_dst, list):
+            port_dst = [port_dst]
+            port_selector_dst = Ports.ProtocolPortSelector(port_dst, Ports.PortSelectionStrategy.random())
 
         # assign realistic TTL for every bot
         if self.get_param_value(self.TTL_GLOBAL):
@@ -686,6 +699,17 @@ class P2PBotnet(BaseAttack.BaseAttack):
 
             msg.src, msg.dst = bot_configs[id_src], bot_configs[id_dst]
             msg.src["ID"], msg.dst["ID"] = id_src, id_dst
+
+            if port_dst is not None:
+                msg.src["DstPort"] = filter_reserved(port_selector_dst.select_port_udp)
+                msg.dst["DstPort"] = filter_reserved(port_selector_dst.select_port_udp)
+            else:
+                msg.src["DstPort"] = filter_reserved(Generator.gen_random_server_port)
+                msg.dst["DstPort"] = filter_reserved(Generator.gen_random_server_port)
+
+            msg.src["SrcPort"] = filter_reserved(msg.src["PortSelector"].select_port_udp)
+            msg.dst["SrcPort"] = filter_reserved(msg.dst["PortSelector"].select_port_udp)
+
             msg.msg_id = new_id
             new_id += 1
             # Important here to update refers, if needed later?
