@@ -1525,10 +1525,10 @@ class Statistics(object):
             :param file_ending:
             :return:
             """
-            if ip_type is "src":
+            if ip_type == "src":
                 sod = "Src"
                 full = "Source"
-            elif ip_type is "dst":
+            elif ip_type == "dst":
                 sod = "Dst"
                 full = "Destination"
             else:

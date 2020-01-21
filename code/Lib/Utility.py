@@ -197,10 +197,10 @@ def get_rnd_boot_time(timestamp, platform="winxp"):
     :return: timestamp of random boot time in seconds since EPOCH
     """
     check_platform(platform)
-    if platform is "linux":
+    if platform == "linux":
         uptime_in_days = lea.Lea.fromValFreqsDict({3: 50, 7: 25, 14: 12.5, 31: 6.25, 92: 3.125, 183: 1.5625,
                                                    365: 0.78125, 1461: 0.390625, 2922: 0.390625})
-    elif platform is "macos":
+    elif platform == "macos":
         uptime_in_days = lea.Lea.fromValFreqsDict({7: 50, 14: 25, 31: 12.5, 92: 6.25, 183: 3.125, 365: 3.076171875,
                                                    1461: 0.048828125})
     else:

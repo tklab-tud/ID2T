@@ -117,7 +117,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         if not isinstance(mac_source_list, list):
             mac_source_list = [mac_source_list]
 
-        if (num_attackers is not None) and (num_attackers is not 0):
+        if (num_attackers != None) and (num_attackers != 0):
             # user supplied self.NUMBER_ATTACKERS
             num_rnd_ips = num_attackers - len(ip_source_list)
             num_rnd_macs = num_attackers - len(mac_source_list)
@@ -130,7 +130,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 mac_source_list.extend(self.generate_random_mac_address(num_rnd_macs))
 
         # Generate MACs for each IP that has no corresponding MAC yet
-        if (num_attackers is None) or (num_attackers is 0):
+        if (num_attackers == None) or (num_attackers == 0):
             if len(ip_source_list) > len(mac_source_list):
                 mac_source_list.extend(self.generate_random_mac_address(len(ip_source_list)-len(mac_source_list)))
             num_attackers = min(len(ip_source_list), len(mac_source_list))
