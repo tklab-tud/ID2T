@@ -13,10 +13,6 @@ matrix:
         - os: osx
           osx_image: xcode10.1
           env: DOCKER=0
-        # macOS 10.12 Sierra
-        - os: osx
-          osx_image: xcode9.2
-          env: DOCKER=0
         # Kali Linux
         - env: >-
                 DOCKER=1
