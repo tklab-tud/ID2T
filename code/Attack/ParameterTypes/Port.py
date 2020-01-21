@@ -34,14 +34,14 @@ class Port(BaseType.ParameterType):
             """
             return num < 1 or num > 65535
 
-        if ports_input is None or ports_input is "":
+        if ports_input == None or ports_input == "":
             return False
 
         if isinstance(ports_input, str):
             ports_input = ports_input.replace(' ', '').split(',')
         elif isinstance(ports_input, int):
             ports_input = [ports_input]
-        elif len(ports_input) is 0:
+        elif len(ports_input) == 0:
             return False
 
         ports_output = []

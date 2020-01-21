@@ -97,7 +97,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
         # Determine source IP and MAC address
         num_attackers = self.get_param_value(self.NUMBER_ATTACKERS)
         # user supplied self.NUMBER_ATTACKERS
-        if (num_attackers is not None) and (num_attackers is not 0):
+        if (num_attackers != None) and (num_attackers != 0):
             # The most used IP class in background traffic
             most_used_ip_class = Util.handle_most_used_outputs(self.statistics.get_most_used_ip_class())
             # Create random attackers based on user input self.NUMBER_ATTACKERS
@@ -122,7 +122,7 @@ class SMBLorisAttack(BaseAttack.BaseAttack):
         else:
             mac_source_list.append(mac_source)
 
-        if (num_attackers is None) or (num_attackers is 0):
+        if (num_attackers == None) or (num_attackers == 0):
             num_attackers = min(len(ip_source_list), len(mac_source_list))
 
         # Check ip.src == ip.dst

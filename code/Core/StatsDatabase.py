@@ -217,14 +217,14 @@ class StatsDatabase:
                     value = value[1:]
 
                     # Lists can only be used with "in"
-                    if op is not "in":
+                    if op != "in":
                         raise QueryExecutionException("List values require the usage of the 'in' operator!")
                 else:
                     # If we have another query instead of a direct value, execute and replace it
                     rvalue = self._execute_query_list(value)
 
                     # Do we have a comparison operator with a multiple-result query?
-                    if op is not "in" and value[0] in ['most_used', 'least_used', 'all', 'ipaddress_param',
+                    if op != "in" and value[0] in ['most_used', 'least_used', 'all', 'ipaddress_param',
                                                        'macaddress_param']:
                         raise QueryExecutionException("The extractor '" + value[0] +
                                                       "' may return more than one result!")

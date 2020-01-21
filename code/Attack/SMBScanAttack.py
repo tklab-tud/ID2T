@@ -133,7 +133,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
         ip_destinations = self.get_param_value(self.IP_DESTINATION)
         if isinstance(ip_destinations, list):
             dest_ip_count = dest_ip_count - len(ip_destinations)
-        elif ip_destinations is not "1.1.1.1":
+        elif ip_destinations != "1.1.1.1":
             dest_ip_count = dest_ip_count - 1
             ip_destinations = [ip_destinations]
         else:
@@ -158,7 +158,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
         hosting_ip = self.get_param_value(self.HOSTING_IP)
         if isinstance(hosting_ip, list):
             rnd_ip_count = rnd_ip_count - len(hosting_ip)
-        elif hosting_ip is not "1.1.1.1":
+        elif hosting_ip != "1.1.1.1":
             rnd_ip_count = rnd_ip_count - 1
             hosting_ip = [hosting_ip]
         else:
@@ -301,7 +301,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     smb_req_tail_size = 0
 
                     # select dialects based on smb version
-                    if smb_version is "1":
+                    if smb_version == "1":
                         smb_req_dialects = SMBLib.smb_dialects[0:6]
                     else:
                         smb_req_dialects = SMBLib.smb_dialects
@@ -356,7 +356,7 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     system_time = rnd.randint(begin, end)
 
                     # Creation of SMB Negotiate Protocol Response packets
-                    if smb_version is not "1" and hosting_version is not "1":
+                    if smb_version != "1" and hosting_version != "1":
                         smb_rsp_packet = SMB2.SMB2_SYNC_Header(Flags=1)
                         smb_rsp_negotiate_body =\
                             SMB2.SMB2_Negotiate_Protocol_Response(DialectRevision=0x02ff, SecurityBufferOffset=124,
@@ -378,11 +378,11 @@ class SMBScanAttack(BaseAttack.BaseAttack):
                     smb_rsp_ip = inet.IP(src=ip, dst=ip_source, ttl=destination_ttl_value)
                     smb_rsp_ether = inet.Ether(src=mac_destination, dst=mac_source)
                     victim_seq += len(smb_rsp_net_bio) + len(smb_rsp_packet)
-                    if smb_version is not "1" and hosting_version is not "1":
+                    if smb_version != "1" and hosting_version != "1":
                         victim_seq += len(smb_rsp_negotiate_body)
 
                     smb_rsp_combined = (smb_rsp_ether / smb_rsp_ip / smb_rsp_tcp / smb_rsp_net_bio / smb_rsp_packet)
-                    if smb_version is not "1" and hosting_version is not "1":
+                    if smb_version != "1" and hosting_version != "1":
                         smb_rsp_combined = (smb_rsp_combined / smb_rsp_negotiate_body)
 
                     smb_rsp_combined.time = timestamp_smb_rsp

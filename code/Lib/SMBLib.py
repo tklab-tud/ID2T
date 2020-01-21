@@ -59,9 +59,9 @@ def get_smb_version(platform: str):
     :return: SMB version as string
     """
     Util.check_platform(platform)
-    if platform is "linux":
+    if platform == "linux":
         return rnd.choice(list(smb_versions_per_samba.values()))
-    elif platform is "macos":
+    elif platform == "macos":
         return "2.1"
     else:
         return smb_versions_per_win[platform]

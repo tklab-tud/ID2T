@@ -182,7 +182,7 @@ class Controller:
             print("--> No packets were injected. Therefore no output files were created.")
 
         # print summary statistics
-        if not self.non_verbose and len(attacks_config) is not 1:
+        if not self.non_verbose and len(attacks_config) != 1:
             self.statistics.stats_summary_post_attack(self.added_packets)
 
     def process_db_queries(self, query, print_results=False):
