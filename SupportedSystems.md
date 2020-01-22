@@ -12,6 +12,8 @@ The following operating systems are currently supported by the dependency instal
         - 16.04
         - 18.04
         - 18.10
+        - 19.04
+        - 19.10
 * macOS
     - Mojave
     - High Sierra

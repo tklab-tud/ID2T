@@ -71,13 +71,13 @@ matrix:
         - env: >-
                 DOCKER=1
                 distribution=ubuntu
-                version=devel
+                version=rolling
                 prerequisite="apt-get update -qq && apt-get install -y git sudo"
         # Ubuntu 19.04
         - env: >-
                 DOCKER=1
                 distribution=ubuntu
-                version=rolling
+                version=disco
                 prerequisite="apt-get update -qq && apt-get install -y git sudo"
         # Ubuntu 18.10
         - env: >-
