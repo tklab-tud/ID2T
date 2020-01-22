@@ -45,7 +45,7 @@ source .venv/bin/activate
 pip3 install --upgrade pip
 
 # Install python packages
-pip3 install -r resources/requirements.txt
+pip3 install --no-cache-dir -r resources/requirements.txt
 
 # Deactivate the venv
 deactivate
