@@ -47,14 +47,14 @@ matrix:
         - env: >-
                 DOCKER=1
                 distribution=fedora
-                version=latest
+                version=30
                 prerequisite="dnf install -y git sudo"
         # Fedora 31
         - env: >-
-            DOCKER=1
-            distribution=fedora
-            version=31
-            prerequisite="dnf install -y git sudo"
+                DOCKER=1
+                distribution=fedora
+                version=31
+                prerequisite="dnf install -y git sudo"
         # OpenSUSE Leap (stable)
         - env: >-
                 DOCKER=1
