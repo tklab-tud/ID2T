@@ -154,8 +154,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
                     "SELECT MAX(maxPktRate) FROM ip_statistics WHERE ipAddress='" + most_used_ip_address + "';")
                 pps = num_attackers * result
 
-        print([(x.name, x.value) for x in self.params])
-
         # Calculate complement packet rates of the background traffic for each interval
         attacker_pps = pps / num_attackers
         #complement_interval_attacker_pps = self.statistics.calculate_complement_packet_rates(attacker_pps)
