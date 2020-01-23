@@ -67,12 +67,6 @@ matrix:
                 distribution=opensuse/tumbleweed
                 version=latest
                 prerequisite="zypper install -y git sudo"
-        # Ubuntu 19.10
-        - env: >-
-                DOCKER=1
-                distribution=ubuntu
-                version=devel
-                prerequisite="apt-get update -qq && apt-get install -y git sudo"
         # Ubuntu 19.04
         - env: >-
                 DOCKER=1
