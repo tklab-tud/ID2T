@@ -2,11 +2,11 @@
 The following operating systems are currently supported by the dependency installation script and are continuously tested with TravisCI.
 * Linux Distributions
     - ArchLinux
-    - Debian 9
-    - Fedora 29
-    - Kali Linux 2018.4
+    - Debian 9, 10
+    - Fedora 29, 30, 31
+    - Kali Linux (latest)
     - OpenSUSE
-        - Leap 15
+        - Leap (stable)
         - Tumbleweed
     - Ubuntu
         - 16.04
