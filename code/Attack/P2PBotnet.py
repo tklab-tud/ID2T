@@ -215,17 +215,11 @@ class P2PBotnet(BaseAttack.BaseAttack):
         msg_packet_mapping = MessageMapping(messages, self.statistics.get_pcap_timestamp_start())
         mark_packets = self.get_param_value(self.HIDDEN_MARK)
 
-        def filter_reserved(get_port):
-            port = get_port()
-            while port in self.reserved_ports:
-                port = get_port()
-            return port
-
         port_dst_param = self.get_param_value(self.PORT_DESTINATION)
         if port_dst_param is not None:
             if not isinstance(port_dst_param, list):
                 port_dst_param = [port_dst_param]
-            port_selector_dst = Ports.ProtocolPortSelector(port_dst_param, Ports.PortSelectionStrategy.random())
+            port_selector_dst = Ports.ProtocolPortSelector(port_dst_param, Ports.PortSelectionStrategy.random(), excluded_ports=self.reserved_ports)
 
         # create packets to write to PCAP file
         for msg in messages:
@@ -234,14 +228,14 @@ class P2PBotnet(BaseAttack.BaseAttack):
             mac_src, mac_dst = msg.src["MAC"], msg.dst["MAC"]
 
             if port_dst_param is not None:
-                msg.src["DstPort"] = filter_reserved(port_selector_dst.select_port_udp)
-                msg.dst["DstPort"] = filter_reserved(port_selector_dst.select_port_udp)
+                msg.src["DstPort"] = port_selector_dst.select_port_udp()
+                msg.dst["DstPort"] = port_selector_dst.select_port_udp()
             else:
-                msg.src["DstPort"] = filter_reserved(Generator.gen_random_server_port)
-                msg.dst["DstPort"] = filter_reserved(Generator.gen_random_server_port)
+                msg.src["DstPort"] = Generator.gen_random_server_port(excluded_ports=self.reserved_ports)
+                msg.dst["DstPort"] = Generator.gen_random_server_port(excluded_ports=self.reserved_ports)
 
-            msg.src["SrcPort"] = filter_reserved(msg.src["PortSelector"].select_port_udp)
-            msg.dst["SrcPort"] = filter_reserved(msg.dst["PortSelector"].select_port_udp)
+            msg.src["SrcPort"] = msg.src["PortSelector"].select_port_udp()
+            msg.dst["SrcPort"] = msg.dst["PortSelector"].select_port_udp()
 
             if msg.type.is_request():
                 port_src, port_dst = int(msg.src["SrcPort"]), int(msg.dst["DstPort"])
@@ -620,6 +614,7 @@ class P2PBotnet(BaseAttack.BaseAttack):
         # create port selectors for the bots
         for bot in sorted(bot_configs):
             bot_configs[bot]["PortSelector"] = port_selector.clone()
+            bot_configs[bot]["PortSelector"].set_excluded_ports(self.reserved_ports)
 
         # assign realistic TTL for every bot
         if self.get_param_value(self.TTL_GLOBAL):
