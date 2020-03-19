@@ -120,6 +120,8 @@ class P2PBotnet(BaseAttack.BaseAttack):
 
         self.DEFAULT_XML_PATH = None
 
+        self.reserved_ports = set(int(line.strip()) for line in open(Util.RESOURCE_DIR + "reserved_ports.txt").readlines())
+
     def init_param(self, param: str) -> bool:
         """
         Initialize a parameter with its default values specified in this attack.
@@ -213,11 +215,34 @@ class P2PBotnet(BaseAttack.BaseAttack):
         msg_packet_mapping = MessageMapping(messages, self.statistics.get_pcap_timestamp_start())
         mark_packets = self.get_param_value(self.HIDDEN_MARK)
 
+        def filter_reserved(get_port):
+            port = get_port()
+            while port in self.reserved_ports:
+                port = get_port()
+            return port
+
+        port_dst_param = self.get_param_value(self.PORT_DESTINATION)
+        if port_dst_param is not None:
+            if not isinstance(port_dst_param, list):
+                port_dst_param = [port_dst_param]
+            port_selector_dst = Ports.ProtocolPortSelector(port_dst_param, Ports.PortSelectionStrategy.random())
+
         # create packets to write to PCAP file
         for msg in messages:
             # retrieve the source and destination configurations
             ip_src, ip_dst = msg.src["IP"], msg.dst["IP"]
             mac_src, mac_dst = msg.src["MAC"], msg.dst["MAC"]
+
+            if port_dst_param is not None:
+                msg.src["DstPort"] = filter_reserved(port_selector_dst.select_port_udp)
+                msg.dst["DstPort"] = filter_reserved(port_selector_dst.select_port_udp)
+            else:
+                msg.src["DstPort"] = filter_reserved(Generator.gen_random_server_port)
+                msg.dst["DstPort"] = filter_reserved(Generator.gen_random_server_port)
+
+            msg.src["SrcPort"] = filter_reserved(msg.src["PortSelector"].select_port_udp)
+            msg.dst["SrcPort"] = filter_reserved(msg.dst["PortSelector"].select_port_udp)
+
             if msg.type.is_request():
                 port_src, port_dst = int(msg.src["SrcPort"]), int(msg.dst["DstPort"])
             else:
@@ -578,14 +603,6 @@ class P2PBotnet(BaseAttack.BaseAttack):
         # calculate the average delay values for local and external responses
         avg_delay_local, avg_delay_external = self.statistics.get_avg_delay_distributions(False)
 
-        reserved_ports = set(int(line.strip()) for line in open(Util.RESOURCE_DIR + "reserved_ports.txt").readlines())
-
-        def filter_reserved(get_port):
-            port = get_port()
-            while port in reserved_ports:
-                port = get_port()
-            return port
-
         use_multiple_ports = self.get_param_value(self.PORTS_EPHEMERAL)
         ports_os = self.get_param_value(self.PORTS_HOST)
 
@@ -603,11 +620,6 @@ class P2PBotnet(BaseAttack.BaseAttack):
         # create port selectors for the bots
         for bot in sorted(bot_configs):
             bot_configs[bot]["PortSelector"] = port_selector.clone()
-
-        port_dst = self.get_param_value(self.PORT_DESTINATION)
-        if port_dst is not None and not isinstance(port_dst, list):
-            port_dst = [port_dst]
-            port_selector_dst = Ports.ProtocolPortSelector(port_dst, Ports.PortSelectionStrategy.random())
 
         # assign realistic TTL for every bot
         if self.get_param_value(self.TTL_GLOBAL):
@@ -631,16 +643,6 @@ class P2PBotnet(BaseAttack.BaseAttack):
 
             msg.src, msg.dst = bot_configs[id_src], bot_configs[id_dst]
             msg.src["ID"], msg.dst["ID"] = id_src, id_dst
-
-            if port_dst is not None:
-                msg.src["DstPort"] = filter_reserved(port_selector_dst.select_port_udp)
-                msg.dst["DstPort"] = filter_reserved(port_selector_dst.select_port_udp)
-            else:
-                msg.src["DstPort"] = filter_reserved(Generator.gen_random_server_port)
-                msg.dst["DstPort"] = filter_reserved(Generator.gen_random_server_port)
-
-            msg.src["SrcPort"] = filter_reserved(msg.src["PortSelector"].select_port_udp)
-            msg.dst["SrcPort"] = filter_reserved(msg.dst["PortSelector"].select_port_udp)
 
             msg.msg_id = new_id
             new_id += 1
