@@ -83,7 +83,7 @@ def generate_payload(size: int = 0):
 ########    Generation of random port    ########
 #################################################
 
-def gen_random_server_port(offset: int = 2199):
+def gen_random_server_port(offset: int = 2199, excluded_ports = []):
     """
     Generates a valid random first and last character for a bots hostname
     and computes a port from these two characters.
@@ -93,7 +93,10 @@ def gen_random_server_port(offset: int = 2199):
     """
     first_letter = random.choice(string.ascii_letters)
     last_letter = random.choice(string.ascii_letters + string.digits)
-    return offset + ord(first_letter) * ord(last_letter)
+    result = offset + ord(first_letter) * ord(last_letter)
+    if result in excluded_ports:
+        result = gen_random_server_port(offset = offset, excluded_ports = excluded_ports)
+    return result
 
 
 #################################################
