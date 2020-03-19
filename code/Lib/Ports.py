@@ -196,9 +196,20 @@ class ProtocolPortSelector:
     protocolPortSelector.clear() will call clear for both port-selectors.
     """
 
-    def __init__(self, port_range, select_tcp, select_udp=None):
+    def __init__(self, port_range, select_tcp, select_udp=None, excluded_ports=[]):
+        self.port_range = port_range
+        self.excluded_ports = []
+        for port in excluded_ports:
+            if port in port_range:
+                self.excluded_ports.append(port)
         self.tcp = PortSelector(port_range, select_tcp)
         self.udp = PortSelector(port_range, select_udp or select_tcp)
+
+    def set_excluded_ports(self, excluded_ports):
+        self.excluded_ports = []
+        for port in excluded_ports:
+            if port in self.port_range:
+                self.excluded_ports.append(port)
 
     def get_tcp_generator(self):
         return self.tcp
@@ -207,10 +218,16 @@ class ProtocolPortSelector:
         return self.udp
 
     def select_port_tcp(self):
-        return self.tcp.select_port()
+        port = self.tcp.select_port()
+        while port in self.excluded_ports:
+            port = self.tcp.select_port()
+        return port
 
     def select_port_udp(self):
-        return self.udp.select_port()
+        port = self.udp.select_port()
+        while port in self.excluded_ports:
+            port = self.udp.select_port()
+        return port
 
     def is_port_in_use_tcp(self, port):
         return self.tcp.is_port_in_use(port)
