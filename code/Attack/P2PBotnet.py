@@ -230,9 +230,12 @@ class P2PBotnet(BaseAttack.BaseAttack):
             if msg.type.is_request():
                 if port_dst_param is not None:
                     msg.dst["DstPort"] = port_selector_dst.select_port_udp()
+                    msg.src["DstPort"] = port_selector_dst.select_port_udp()
                 else:
                     msg.dst["DstPort"] = Generator.gen_random_server_port(excluded_ports=self.reserved_ports)
+                    msg.src["DstPort"] = Generator.gen_random_server_port(excluded_ports=self.reserved_ports)
                 msg.src["SrcPort"] = msg.src["PortSelector"].select_port_udp()
+                msg.dst["SrcPort"] = msg.dst["PortSelector"].select_port_udp()
                 port_src, port_dst = int(msg.src["SrcPort"]), int(msg.dst["DstPort"])
             else:
                 if "DstPort" not in msg.src.keys() or msg.src["DstPort"] is None:
