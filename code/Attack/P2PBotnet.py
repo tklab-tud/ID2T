@@ -229,18 +229,21 @@ class P2PBotnet(BaseAttack.BaseAttack):
 
             if msg.type.is_request():
                 if port_dst_param is not None:
-                    msg.src["DstPort"] = port_selector_dst.select_port_udp()
                     msg.dst["DstPort"] = port_selector_dst.select_port_udp()
                 else:
-                    msg.src["DstPort"] = Generator.gen_random_server_port(excluded_ports=self.reserved_ports)
                     msg.dst["DstPort"] = Generator.gen_random_server_port(excluded_ports=self.reserved_ports)
-
                 msg.src["SrcPort"] = msg.src["PortSelector"].select_port_udp()
-                msg.dst["SrcPort"] = msg.dst["PortSelector"].select_port_udp()
-
                 port_src, port_dst = int(msg.src["SrcPort"]), int(msg.dst["DstPort"])
             else:
+                if "DstPort" not in msg.src.keys() or msg.src["DstPort"] is None:
+                    if port_dst_param is not None:
+                        msg.src["DstPort"] = port_selector_dst.select_port_udp()
+                    else:
+                        msg.src["DstPort"] = Generator.gen_random_server_port(excluded_ports=self.reserved_ports)
+                if "SrcPort" not in msg.dst or msg.dst["SrcPort"] is None:
+                    msg.dst["SrcPort"] = msg.dst["PortSelector"].select_port_udp()
                 port_src, port_dst = int(msg.src["DstPort"]), int(msg.dst["SrcPort"])
+
             ttl = int(msg.src["TTL"])
 
             # update duration
