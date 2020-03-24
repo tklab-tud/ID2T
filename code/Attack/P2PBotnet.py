@@ -227,17 +227,17 @@ class P2PBotnet(BaseAttack.BaseAttack):
             ip_src, ip_dst = msg.src["IP"], msg.dst["IP"]
             mac_src, mac_dst = msg.src["MAC"], msg.dst["MAC"]
 
-            if port_dst_param is not None:
-                msg.src["DstPort"] = port_selector_dst.select_port_udp()
-                msg.dst["DstPort"] = port_selector_dst.select_port_udp()
-            else:
-                msg.src["DstPort"] = Generator.gen_random_server_port(excluded_ports=self.reserved_ports)
-                msg.dst["DstPort"] = Generator.gen_random_server_port(excluded_ports=self.reserved_ports)
-
-            msg.src["SrcPort"] = msg.src["PortSelector"].select_port_udp()
-            msg.dst["SrcPort"] = msg.dst["PortSelector"].select_port_udp()
-
             if msg.type.is_request():
+                if port_dst_param is not None:
+                    msg.src["DstPort"] = port_selector_dst.select_port_udp()
+                    msg.dst["DstPort"] = port_selector_dst.select_port_udp()
+                else:
+                    msg.src["DstPort"] = Generator.gen_random_server_port(excluded_ports=self.reserved_ports)
+                    msg.dst["DstPort"] = Generator.gen_random_server_port(excluded_ports=self.reserved_ports)
+
+                msg.src["SrcPort"] = msg.src["PortSelector"].select_port_udp()
+                msg.dst["SrcPort"] = msg.dst["PortSelector"].select_port_udp()
+
                 port_src, port_dst = int(msg.src["SrcPort"]), int(msg.dst["DstPort"])
             else:
                 port_src, port_dst = int(msg.src["DstPort"]), int(msg.dst["SrcPort"])
