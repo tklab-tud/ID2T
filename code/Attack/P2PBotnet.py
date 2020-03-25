@@ -219,9 +219,15 @@ class P2PBotnet(BaseAttack.BaseAttack):
             ip_src, ip_dst = msg.src["IP"], msg.dst["IP"]
             mac_src, mac_dst = msg.src["MAC"], msg.dst["MAC"]
             if msg.type.is_request():
-                port_src, port_dst = int(msg.src["SrcPort"]), int(msg.dst["DstPort"])
+                port_dst = int(msg.dst["DstPort"])
+                if port_dst not in msg.src["SrcPort"].keys():
+                    msg.src["SrcPort"].update({port_dst: msg.src["PortSelector"].select_port_udp()})
+                port_src = int(msg.src["SrcPort"][port_dst])
             else:
-                port_src, port_dst = int(msg.src["DstPort"]), int(msg.dst["SrcPort"])
+                port_src = int(msg.src["DstPort"])
+                if port_src not in msg.dst["SrcPort"].keys():
+                    msg.dst["SrcPort"].update({port_src: msg.dst["PortSelector"].select_port_udp()})
+                port_dst = int(msg.dst["SrcPort"][port_src])
             ttl = int(msg.src["TTL"])
 
             # update duration
@@ -639,8 +645,13 @@ class P2PBotnet(BaseAttack.BaseAttack):
                 msg.src["DstPort"] = filter_reserved(Generator.gen_random_server_port)
                 msg.dst["DstPort"] = filter_reserved(Generator.gen_random_server_port)
 
-            msg.src["SrcPort"] = filter_reserved(msg.src["PortSelector"].select_port_udp)
-            msg.dst["SrcPort"] = filter_reserved(msg.dst["PortSelector"].select_port_udp)
+            if "srcPort" not in msg.src.keys():
+                msg.src["SrcPort"] = {}
+            if "srcPort" not in msg.dst.keys():
+                msg.dst["SrcPort"] = {}
+
+            msg.src["SrcPort"].update({int(msg.dst["DstPort"]): msg.src["PortSelector"].select_port_udp()})
+            msg.dst["SrcPort"].update({int(msg.src["DstPort"]): msg.dst["PortSelector"].select_port_udp()})
 
             msg.msg_id = new_id
             new_id += 1
