@@ -67,11 +67,17 @@ matrix:
                 distribution=opensuse/tumbleweed
                 version=latest
                 prerequisite="zypper install -y git sudo"
-        # Ubuntu 19.10
+        # Ubuntu 20.04
         - env: >-
                 DOCKER=1
                 distribution=ubuntu
                 version=rolling
+                prerequisite="apt-get update -qq && apt-get install -y git sudo"
+        # Ubuntu 19.10
+        - env: >-
+                DOCKER=1
+                distribution=ubuntu
+                version=eoan
                 prerequisite="apt-get update -qq && apt-get install -y git sudo"
         # Ubuntu 19.04
         - env: >-
@@ -89,7 +95,7 @@ matrix:
         - env: >-
                 DOCKER=1
                 distribution=ubuntu
-                version=latest
+                version=bionic
                 prerequisite="apt-get update -qq && apt-get install -y git sudo"
         # Ubuntu 18.04
         - os: linux
