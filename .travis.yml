@@ -78,7 +78,7 @@ matrix:
                 DOCKER=1
                 distribution=ubuntu
                 version=rolling
-                prerequisite="apt-get update -qq && apt-get install -y git sudo"
+                prerequisite="DEBIAN_FRONTEND=noninteractive TZ=Europe/Berlin apt-get update -qq && apt-get install -y git sudo"
         # Ubuntu 19.10
         - env: >-
                 DOCKER=1
