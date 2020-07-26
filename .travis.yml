@@ -5,6 +5,10 @@ branches:
 matrix:
     include:
         # Run macOS and Kali first to decrease travis CI runtime
+        # macOS 10.15.5 Catalina
+        - os: osx
+          osx_image: xcode12u
+          env: DOCKER=0
         # macOS 10.14 Mojave
         - os: osx
           osx_image: xcode11.3
