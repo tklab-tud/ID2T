@@ -89,18 +89,6 @@ matrix:
                 distribution=ubuntu
                 version=eoan
                 prerequisite="apt-get update -qq && apt-get install -y git sudo"
-        # Ubuntu 19.04
-        - env: >-
-                DOCKER=1
-                distribution=ubuntu
-                version=disco
-                prerequisite="apt-get update -qq && apt-get install -y git sudo"
-        # Ubuntu 18.10
-        - env: >-
-                DOCKER=1
-                distribution=ubuntu
-                version=cosmic
-                prerequisite="apt-get update -qq && apt-get install -y git sudo"
         # Ubuntu 18.04 docker
         - env: >-
                 DOCKER=1
