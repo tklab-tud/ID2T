@@ -13,10 +13,16 @@ matrix:
         - os: osx
           osx_image: xcode10.1
           env: DOCKER=0
-        # Kali Linux
+        # Kali Linux stable
         - env: >-
                 DOCKER=1
-                distribution=kalilinux/kali-linux-docker
+                distribution=kalilinux/kali
+                version=latest
+                prerequisite="apt-get update -qq && apt-get install -y git sudo"
+        # Kali Linux rolling
+        - env: >-
+                DOCKER=1
+                distribution=kalilinux/kali-rolling
                 version=latest
                 prerequisite="apt-get update -qq && apt-get install -y git sudo"
         # ArchLinux
