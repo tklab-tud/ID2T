@@ -125,7 +125,7 @@ install_pkg_darwin()
 {
     BREW_PKGS="cmake python coreutils libdnet libtins sqlite cairo"
 
-    brew unlink python@2
+    brew unlink python@2 || true
 
     # Check first to avoid unnecessary update
     echo -e "Packages: Checking..."
