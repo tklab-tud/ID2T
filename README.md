@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/tklab-tud/ID2T.svg?branch=master)](https://travis-ci.org/tklab-tud/ID2T)
 
 <p align="center">
-<img src="https://git.tk.informatik.tu-darmstadt.de/SPIN/ID2T-toolkit/raw/master/logo/id2t.png"></p>
+<img src="https://github.com/tklab-tud/ID2T/blob/master/logo/id2t.png"></p>
 
 # ID2T - Intrusion Detection Dataset Toolkit
 A toolkit for injecting synthetic attacks into PCAP files.
@@ -19,6 +19,8 @@ ID2T was also presented in Blackhat Europe 2017 as part of the Arsenal session (
 [1] [Garcia Cordero et al. (2015) ID2T: a DIY Dataset Creation Toolkit for Intrusion Detection System](https://www.tk.informatik.tu-darmstadt.de/fileadmin/user_upload/Group_TK/filesDownload/Published_Papers/id2t.pdf)
 
 [2] [Vasilomanolakis et al. (2016) Towards the creation of synthetic, yet realistic, intrusion detection datasets](https://www.tk.informatik.tu-darmstadt.de/fileadmin/user_upload/Group_TK/filesDownload/Published_Papers/id2t-f.pdf)
+
+[3] Garcia Corder et al. (2021): On generating network traffic datasets with synthetic attacks for intrusion detection
 
 ## Getting Started
 
@@ -158,4 +160,3 @@ The [SemVer](http://semver.org/spec/v2.0.0.html) is used for versioning. For cur
 ## License
 
 Distributed under the MIT license. See [LICENSE](LICENSE.md) for more information.
-
