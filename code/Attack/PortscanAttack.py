@@ -229,7 +229,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
                     timestamp_reply = self.timestamp_controller.next_timestamp(latency=min_delay)
 
                     reply.time = timestamp_reply
-                    self.add_packet(reply, ip_source, ip)
+                    self.add_packet(reply, ip, ip_source)
 
                     # requester confirms
                     confirm_ether = request_ether
@@ -241,7 +241,16 @@ class PortscanAttack(BaseAttack.BaseAttack):
                     confirm.time = timestamp_confirm
                     self.add_packet(confirm, ip_source, ip)
 
-                    # else: destination port is NOT OPEN -> no reply is sent by target
+                else:
+                    reject_ether = inet.Ether(src=mac_destination, dst=mac_source)
+                    reject_ip = inet.IP(src=ip, dst=ip_source, ttl=destination_ttl_value, flags='DF')
+                    reject_tcp = inet.TCP(sport=dport, dport=sport, seq=1, ack=1, flags='RA', window=0)
+                    reject = (reject_ether / reject_ip / reject_tcp)
+
+                    timestamp_reject = self.timestamp_controller.next_timestamp(latency=min_delay)
+
+                    reject.time = timestamp_reject
+                    self.add_packet(reject, ip, ip_source)
 
                 self.timestamp_controller.set_timestamp(timestamp_next_pkt)
                 timestamp_next_pkt = self.timestamp_controller.next_timestamp()
