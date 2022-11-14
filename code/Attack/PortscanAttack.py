@@ -201,6 +201,9 @@ class PortscanAttack(BaseAttack.BaseAttack):
                 # Parameters changing each iteration
                 if self.get_param_value(self.IP_SOURCE_RANDOMIZE) and isinstance(ip_source, list):
                     ip_source = rnd.choice(ip_source)
+                
+                src_starting_seq = rnd.getrandbits(32)
+                dst_starting_seq = rnd.getrandbits(32)
 
                 # 1) Build request package
                 request_ether = inet.Ether(src=mac_source, dst=mac_destination)
@@ -209,7 +212,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
                 # Random src port for each packet
                 sport = rnd.randint(1, 65535)
 
-                request_tcp = inet.TCP(sport=sport, dport=dport, window=source_win_value, flags='S',
+                request_tcp = inet.TCP(sport=sport, dport=dport, seq=src_starting_seq, ack=0, window=source_win_value, flags='S',
                                        options=[('MSS', source_mss_value)])
 
                 request = (request_ether / request_ip / request_tcp)
@@ -222,7 +225,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
                 if dport in ports_open:  # destination port is OPEN
                     reply_ether = inet.Ether(src=mac_destination, dst=mac_source)
                     reply_ip = inet.IP(src=ip, dst=ip_source, ttl=destination_ttl_value, flags='DF')
-                    reply_tcp = inet.TCP(sport=dport, dport=sport, seq=0, ack=1, flags='SA', window=destination_win_value,
+                    reply_tcp = inet.TCP(sport=dport, dport=sport, seq=dst_starting_seq, ack=src_starting_seq+1, flags='SA', window=destination_win_value,
                                          options=[('MSS', destination_mss_value)])
                     reply = (reply_ether / reply_ip / reply_tcp)
 
@@ -234,7 +237,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
                     # requester confirms
                     confirm_ether = request_ether
                     confirm_ip = request_ip
-                    confirm_tcp = inet.TCP(sport=sport, dport=dport, seq=1, window=0, flags='R')
+                    confirm_tcp = inet.TCP(sport=sport, dport=dport, seq=src_starting_seq+1, ack=0, window=0, flags='R')
                     confirm = (confirm_ether / confirm_ip / confirm_tcp)
                     self.timestamp_controller.set_timestamp(timestamp_reply)
                     timestamp_confirm = self.timestamp_controller.next_timestamp(latency=min_delay)
@@ -244,7 +247,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
                 else:
                     reject_ether = inet.Ether(src=mac_destination, dst=mac_source)
                     reject_ip = inet.IP(src=ip, dst=ip_source, ttl=destination_ttl_value, flags='DF')
-                    reject_tcp = inet.TCP(sport=dport, dport=sport, seq=1, ack=1, flags='RA', window=0)
+                    reject_tcp = inet.TCP(sport=dport, dport=sport, seq=0, ack=src_starting_seq+1, flags='RA', window=0)
                     reject = (reject_ether / reject_ip / reject_tcp)
 
                     timestamp_reject = self.timestamp_controller.next_timestamp(latency=min_delay)
