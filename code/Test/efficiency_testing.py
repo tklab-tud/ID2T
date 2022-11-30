@@ -33,6 +33,38 @@ class EfficiencyTests(Test.ID2TAttackTest):
         self.temporal_efficiency_test([['PortscanAttack', 'ip.src=192.168.178.1', 'port.open=20']], time_limit=1.5,
                                       factor=1000)
 
+    def test_TCPConnectProbing_open(self):
+        self.temporal_efficiency_test([['TCPConnectProbing', 'ip.src=192.168.178.1', 'port.open=80']], time_limit=1.5,
+                                      factor=1000)
+
+    def test_TCPConnectProbing_close(self):
+        self.temporal_efficiency_test([['TCPConnectProbing', 'ip.src=192.168.178.1', 'port.open=20']], time_limit=1.5,
+                                      factor=1000)
+
+    def test_TCPFINProbing_open(self):
+        self.temporal_efficiency_test([['TCPFINProbing', 'ip.src=192.168.178.1', 'port.open=80']], time_limit=1.5,
+                                      factor=1000)
+
+    def test_TCPFINProbing_close(self):
+        self.temporal_efficiency_test([['TCPFINProbing', 'ip.src=192.168.178.1', 'port.open=20']], time_limit=1.5,
+                                      factor=1000)
+
+    def test_TCPNULLProbing_open(self):
+        self.temporal_efficiency_test([['TCPNULLProbing', 'ip.src=192.168.178.1', 'port.open=80']], time_limit=1.5,
+                                      factor=1000)
+
+    def test_TCPNULLProbing_close(self):
+        self.temporal_efficiency_test([['TCPNULLProbing', 'ip.src=192.168.178.1', 'port.open=20']], time_limit=1.5,
+                                      factor=1000)
+
+    def test_TCPXMASProbing_open(self):
+        self.temporal_efficiency_test([['TCPXMASProbing', 'ip.src=192.168.178.1', 'port.open=80']], time_limit=1.5,
+                                      factor=1000)
+
+    def test_TCPXMASProbing_close(self):
+        self.temporal_efficiency_test([['TCPXMASProbing', 'ip.src=192.168.178.1', 'port.open=20']], time_limit=1.5,
+                                      factor=1000)
+
     def test_SQLi(self):
         self.temporal_efficiency_test([['SQLiAttack', 'ip.dst=192.168.0.1']], time_limit=1.5, factor=1000)
 
