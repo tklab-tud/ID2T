@@ -14,11 +14,17 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 # noinspection PyPep8
 
 WSCALE = 7
-TELNET_PAYLOAD_1 = bytes.fromhex('fffd18fffd20fffd23fffd27')
-TELNET_PAYLOAD_2 = bytes.fromhex('fffc18')
-TELNET_PAYLOAD_3_WILL_ECHO = bytes.fromhex('fffb01')
-TELNET_PAYLOAD_4_DONT_ECHO = bytes.fromhex('fffe01')
-TELNET_PAYLOAD_5_BANNER = bytes.fromhex('5562756e74752032322e30342e31204c54530d0a')
+
+SRV_PAYLOAD_1 = bytes.fromhex('fffd18fffd20fffd23fffd27')
+SRV_PAYLOAD_2 = bytes.fromhex('fffb03fffd01fffd1ffffb05fffd21')
+SRV_PAYLOAD_3 = bytes.fromhex('fffb01')
+SRV_PAYLOAD_4 = bytes.fromhex('5562756e74752032322e30342e31204c54530d0a76626f78206c6f67696e3a20')
+
+CLI_PAYLOAD_1 = bytes.fromhex('fffc18')
+CLI_PAYLOAD_2 = bytes.fromhex('fffc20fffc23fffc27')
+CLI_PAYLOAD_3 = bytes.fromhex('fffd03')
+CLI_PAYLOAD_4 = bytes.fromhex('fffc01fffc1ffffe05fffc21')
+CLI_PAYLOAD_5 = bytes.fromhex('fffe01')
 
 class TelnetVersionProbing_LIN(BaseAttack.BaseAttack):
     PORT_SOURCE = 'port.src'
@@ -232,7 +238,7 @@ class TelnetVersionProbing_LIN(BaseAttack.BaseAttack):
             # Append request
             self.add_packet(request, ip_source, ip)
 
-            dst_ack = src_seq+1
+            dst_ack = src_seq +1
 
             # 2) Build reply (for closed ports) package
             if dport not in ports_open:  # destination port is CLOSED
@@ -258,10 +264,10 @@ class TelnetVersionProbing_LIN(BaseAttack.BaseAttack):
 
                 src_tsval += rnd.randint(int(min_delay), int(max_delay))
 
-                src_seq += 1
-                src_ack = dst_seq + 1
-
                 #ACK
+                src_seq += 1
+                src_ack = dst_seq +1
+
                 confirm_ether = inet.Ether(src=mac_source, dst=mac_destination)
                 confirm_ip = inet.IP(src=ip_source, dst=ip, ttl=source_ttl_value, flags='DF')
                 confirm_tcp = inet.TCP(sport=sport, dport=dport, seq=src_seq, ack=src_ack, flags='A', window=source_win_value, 
@@ -273,16 +279,18 @@ class TelnetVersionProbing_LIN(BaseAttack.BaseAttack):
                 self.add_packet(confirm, ip_source, ip)
 
                 dst_tsval += rnd.randint(int(min_delay), int(max_delay))
-                dst_seq += 1
 
                 # TELNET #1 server -> client
+                dst_seq += 1
+                dst_ack = src_seq
                 telnet1_ether = inet.Ether(src=mac_destination, dst=mac_source)
                 telnet1_ip = inet.IP(src=ip, dst=ip_source, ttl=destination_ttl_value, flags='DF')
                 telnet1_tcp = inet.TCP(sport=dport, dport=sport, seq=dst_seq, ack=dst_ack, flags='PA', window=destination_win_value,
                             options=[('NOP', ''), ('NOP', ''), ('Timestamp', (dst_tsval, src_tsval))])
                 telnet1 = (telnet1_ether / telnet1_ip / telnet1_tcp)
                 
-                telnet1.add_payload(TELNET_PAYLOAD_1)
+                telnet1.add_payload(SRV_PAYLOAD_1)
+                dst_seq += len(SRV_PAYLOAD_1)
 
                 telnet1.time = self.timestamp_controller.next_timestamp(latency=min_delay)
 
@@ -290,9 +298,8 @@ class TelnetVersionProbing_LIN(BaseAttack.BaseAttack):
                 
                 src_tsval += rnd.randint(int(min_delay), int(max_delay))
 
-                src_ack += len(TELNET_PAYLOAD_1)
-
                 #ACK
+                src_ack = dst_seq
                 telnet1_ack_ether = inet.Ether(src=mac_source, dst=mac_destination)
                 telnet1_ack_ip = inet.IP(src=ip_source, dst=ip, ttl=source_ttl_value, flags='DF')
                 telnet1_ack_tcp = inet.TCP(sport=sport, dport=dport, seq=src_seq, ack=src_ack, flags='A', window=source_win_value, 
@@ -304,6 +311,8 @@ class TelnetVersionProbing_LIN(BaseAttack.BaseAttack):
 
                 src_tsval += rnd.randint(int(min_delay), int(max_delay))
 
+                src_ack = dst_seq
+
                 # TELNET #2 client -> server
                 telnet2_ether = inet.Ether(src=mac_source, dst=mac_destination)
                 telnet2_ip = inet.IP(src=ip_source, dst=ip, ttl=source_ttl_value, flags='DF')
@@ -311,69 +320,177 @@ class TelnetVersionProbing_LIN(BaseAttack.BaseAttack):
                             options=[('NOP', ''), ('NOP', ''), ('Timestamp', (src_tsval, dst_tsval))])
                 telnet2 = (telnet2_ether / telnet2_ip / telnet2_tcp)
                 
-                telnet2.add_payload(TELNET_PAYLOAD_2)
+                telnet2.add_payload(CLI_PAYLOAD_1)
+                src_seq += len(CLI_PAYLOAD_1)
 
                 telnet2.time = self.timestamp_controller.next_timestamp(latency=min_delay)
 
                 self.add_packet(telnet2, ip_source, ip)
 
                 # update seq/ack
-                dst_seq += len(TELNET_PAYLOAD_1)
-                dst_ack += len(TELNET_PAYLOAD_2)
+
                 dst_tsval += rnd.randint(int(min_delay), int(max_delay))
 
-                # TELNET #3 server -> client
-                telnet3_ether = inet.Ether(src=mac_destination, dst=mac_source)
-                telnet3_ip = inet.IP(src=ip, dst=ip_source, ttl=destination_ttl_value, flags='DF')
-                telnet3_tcp = inet.TCP(sport=dport, dport=sport, seq=dst_seq, ack=dst_ack, flags='PA', window=destination_win_value,
-                            options=[('NOP', ''), ('NOP', ''), ('Timestamp', (dst_tsval, src_tsval))])
+                #ACK
+                dst_ack = src_seq
+                telnet2_ack_ether = inet.Ether(src=mac_destination, dst=mac_source)
+                telnet2_ack_ip = inet.IP(src=ip, dst=ip_source, ttl=destination_ttl_value, flags='DF')
+                telnet2_ack_tcp = inet.TCP(sport=dport, dport=sport, seq=dst_seq, ack=dst_ack, flags='A', window=source_win_value, 
+                                 options=[('NOP', ''), ('NOP', ''), ('Timestamp', (src_tsval, dst_tsval))])
+                telnet2_ack = (telnet2_ack_ether / telnet2_ack_ip / telnet2_ack_tcp)
+
+                telnet2_ack.time = self.timestamp_controller.next_timestamp(latency=min_delay)
+                self.add_packet(telnet2_ack, ip_source, ip)
+
+
+                # TELNET #3 client -> server
+                src_ack = dst_seq
+                telnet3_ether = inet.Ether(src=mac_source, dst=mac_destination)
+                telnet3_ip = inet.IP(src=ip_source, dst=ip, ttl=source_ttl_value, flags='DF')
+                telnet3_tcp = inet.TCP(sport=sport, dport=dport, seq=src_seq, ack=src_ack, flags='PA', window=destination_win_value,
+                            options=[('NOP', ''), ('NOP', ''), ('Timestamp', (src_tsval, dst_tsval))])
                 telnet3 = (telnet3_ether / telnet3_ip / telnet3_tcp)
                 
-                telnet3.add_payload(TELNET_PAYLOAD_3_WILL_ECHO)
+                telnet3.add_payload(CLI_PAYLOAD_2)
+                src_seq += len(CLI_PAYLOAD_2)
 
                 telnet3.time = self.timestamp_controller.next_timestamp(latency=min_delay)
 
-                self.add_packet(telnet3, ip, ip_source)
+                self.add_packet(telnet3, ip_source, ip)
 
-                src_seq += len(TELNET_PAYLOAD_2)
-                src_ack += len(TELNET_PAYLOAD_3_WILL_ECHO)
-                src_tsval += rnd.randint(int(min_delay), int(max_delay))
+                # update seq/ack
+                dst_tsval += rnd.randint(int(min_delay), int(max_delay))
 
-                # TELNET #4 client -> server
-                telnet4_ether = inet.Ether(src=mac_source, dst=mac_destination)
-                telnet4_ip = inet.IP(src=ip_source, dst=ip, ttl=source_ttl_value, flags='DF')
-                telnet4_tcp = inet.TCP(sport=sport, dport=dport, seq=src_seq, ack=src_ack, flags='PA', window=destination_win_value,
-                            options=[('NOP', ''), ('NOP', ''), ('Timestamp', (src_tsval, dst_tsval))])
+                #ACK server -> client
+                dst_ack = src_seq
+                telnet3_ack_ether = inet.Ether(src=mac_destination, dst=mac_source)
+                telnet3_ack_ip = inet.IP(src=ip, dst=ip_source, ttl=destination_ttl_value, flags='DF')
+                telnet3_ack_tcp = inet.TCP(sport=dport, dport=sport, seq=dst_seq, ack=dst_ack, flags='A', window=destination_win_value, 
+                                 options=[('NOP', ''), ('NOP', ''), ('Timestamp', (dst_tsval, src_tsval))])
+                telnet3_ack = (telnet3_ack_ether / telnet3_ack_ip / telnet3_ack_tcp)
+
+                telnet3_ack.time = self.timestamp_controller.next_timestamp(latency=min_delay)
+                self.add_packet(telnet3_ack, ip, ip_source)
+
+                # TELNET #4 server -> client
+                dst_ack = src_seq
+                telnet4_ether = inet.Ether(src=mac_destination, dst=mac_source)
+                telnet4_ip = inet.IP(src=ip, dst=ip_source, ttl=destination_ttl_value, flags='DF')
+                telnet4_tcp = inet.TCP(sport=dport, dport=sport, seq=dst_seq, ack=dst_ack, flags='PA', window=destination_win_value,
+                            options=[('NOP', ''), ('NOP', ''), ('Timestamp', (dst_tsval, src_tsval))])
                 telnet4 = (telnet4_ether / telnet4_ip / telnet4_tcp)
                 
-                telnet4.add_payload(TELNET_PAYLOAD_4_DONT_ECHO)
+                telnet4.add_payload(SRV_PAYLOAD_2)
+                dst_seq += len(SRV_PAYLOAD_2)
 
                 telnet4.time = self.timestamp_controller.next_timestamp(latency=min_delay)
 
-                self.add_packet(telnet4, ip_source, ip)
+                self.add_packet(telnet4, ip, ip_source)
+                
+                src_tsval += rnd.randint(int(min_delay), int(max_delay))
 
-                dst_seq += len(TELNET_PAYLOAD_3_WILL_ECHO)
-                dst_ack += len(TELNET_PAYLOAD_4_DONT_ECHO)
-                dst_tsval += rnd.randint(int(min_delay), int(max_delay))
-
-                # TELNET #5 server -> client
-                telnet5_ether = inet.Ether(src=mac_destination, dst=mac_source)
-                telnet5_ip = inet.IP(src=ip, dst=ip_source, ttl=destination_ttl_value, flags='DF')
-                telnet5_tcp = inet.TCP(sport=dport, dport=sport, seq=dst_seq, ack=dst_ack, flags='PA', window=destination_win_value,
-                            options=[('NOP', ''), ('NOP', ''), ('Timestamp', (dst_tsval, src_tsval))])
+                # TELNET #5 client -> server
+                src_ack = dst_seq
+                telnet5_ether = inet.Ether(src=mac_source, dst=mac_destination)
+                telnet5_ip = inet.IP(src=ip_source, dst=ip, ttl=source_ttl_value, flags='DF')
+                telnet5_tcp = inet.TCP(sport=sport, dport=dport, seq=src_seq, ack=src_ack, flags='PA', window=destination_win_value,
+                            options=[('NOP', ''), ('NOP', ''), ('Timestamp', (src_tsval, dst_tsval))])
                 telnet5 = (telnet5_ether / telnet5_ip / telnet5_tcp)
                 
-                telnet5.add_payload(TELNET_PAYLOAD_5_BANNER)
+                telnet5.add_payload(CLI_PAYLOAD_3)
+                src_seq += len(CLI_PAYLOAD_3)
 
                 telnet5.time = self.timestamp_controller.next_timestamp(latency=min_delay)
 
-                self.add_packet(telnet5, ip, ip_source)
+                self.add_packet(telnet5, ip_source, ip)
 
-                src_seq += len(TELNET_PAYLOAD_4_DONT_ECHO)
-                src_ack += len(TELNET_PAYLOAD_5_BANNER)
+                #ACK server -> client
+                dst_ack = src_seq
+                telnet5_ack_ether = inet.Ether(src=mac_destination, dst=mac_source)
+                telnet5_ack_ip = inet.IP(src=ip, dst=ip_source, ttl=destination_ttl_value, flags='DF')
+                telnet5_ack_tcp = inet.TCP(sport=dport, dport=sport, seq=dst_seq, ack=dst_ack, flags='A', window=destination_win_value, 
+                                 options=[('NOP', ''), ('NOP', ''), ('Timestamp', (dst_tsval, src_tsval))])
+                telnet5_ack = (telnet5_ack_ether / telnet5_ack_ip / telnet5_ack_tcp)
+
+                telnet5_ack.time = self.timestamp_controller.next_timestamp(latency=min_delay)
+                self.add_packet(telnet5_ack, ip_source, ip)
+
+                # TELNET #6 client -> server
+                src_ack = dst_seq
+                telnet6_ether = inet.Ether(src=mac_source, dst=mac_destination)
+                telnet6_ip = inet.IP(src=ip_source, dst=ip, ttl=source_ttl_value, flags='DF')
+                telnet6_tcp = inet.TCP(sport=sport, dport=dport, seq=src_seq, ack=src_ack, flags='PA', window=destination_win_value,
+                            options=[('NOP', ''), ('NOP', ''), ('Timestamp', (src_tsval, dst_tsval))])
+                telnet6 = (telnet6_ether / telnet6_ip / telnet6_tcp)
+                
+                telnet6.add_payload(CLI_PAYLOAD_4)
+                src_seq += len(CLI_PAYLOAD_4)
+
+                telnet6.time = self.timestamp_controller.next_timestamp(latency=min_delay)
+
+                self.add_packet(telnet6, ip_source, ip)
+
+                #ACK server -> client
+                dst_ack = src_seq
+                telnet6_ack_ether = inet.Ether(src=mac_destination, dst=mac_source)
+                telnet6_ack_ip = inet.IP(src=ip, dst=ip_source, ttl=destination_ttl_value, flags='DF')
+                telnet6_ack_tcp = inet.TCP(sport=dport, dport=sport, seq=dst_seq, ack=dst_ack, flags='A', window=destination_win_value, 
+                                 options=[('NOP', ''), ('NOP', ''), ('Timestamp', (dst_tsval, src_tsval))])
+                telnet6_ack = (telnet6_ack_ether / telnet6_ack_ip / telnet6_ack_tcp)
+
+                telnet6_ack.time = self.timestamp_controller.next_timestamp(latency=min_delay)
+                self.add_packet(telnet6_ack, ip_source, ip)
+
+                # TELNET #7 server -> client
+                dst_ack = src_seq
+                telnet7_ether = inet.Ether(src=mac_destination, dst=mac_source)
+                telnet7_ip = inet.IP(src=ip, dst=ip_source, ttl=destination_ttl_value, flags='DF')
+                telnet7_tcp = inet.TCP(sport=dport, dport=sport, seq=dst_seq, ack=dst_ack, flags='PA', window=destination_win_value,
+                            options=[('NOP', ''), ('NOP', ''), ('Timestamp', (dst_tsval, src_tsval))])
+                telnet7 = (telnet7_ether / telnet7_ip / telnet7_tcp)
+                
+                telnet7.add_payload(SRV_PAYLOAD_3)
+                dst_seq += len(SRV_PAYLOAD_3)
+
+                telnet7.time = self.timestamp_controller.next_timestamp(latency=min_delay)
+
+                self.add_packet(telnet7, ip, ip_source)
+                
+                src_tsval += rnd.randint(int(min_delay), int(max_delay))
+                src_ack = dst_seq
+                # TELNET #8 client -> server
+                telnet8_ether = inet.Ether(src=mac_source, dst=mac_destination)
+                telnet8_ip = inet.IP(src=ip_source, dst=ip, ttl=source_ttl_value, flags='DF')
+                telnet8_tcp = inet.TCP(sport=sport, dport=dport, seq=src_seq, ack=src_ack, flags='PA', window=destination_win_value,
+                            options=[('NOP', ''), ('NOP', ''), ('Timestamp', (src_tsval, dst_tsval))])
+                telnet8 = (telnet8_ether / telnet8_ip / telnet8_tcp)
+                
+                telnet8.add_payload(CLI_PAYLOAD_5)
+                src_seq += len(CLI_PAYLOAD_5)
+
+                telnet8.time = self.timestamp_controller.next_timestamp(latency=min_delay)
+
+                self.add_packet(telnet8, ip_source, ip)
+
+                # TELNET #9 server -> client
+                dst_ack = src_seq
+                telnet9_ether = inet.Ether(src=mac_destination, dst=mac_source)
+                telnet9_ip = inet.IP(src=ip, dst=ip_source, ttl=destination_ttl_value, flags='DF')
+                telnet9_tcp = inet.TCP(sport=dport, dport=sport, seq=dst_seq, ack=dst_ack, flags='PA', window=destination_win_value,
+                            options=[('NOP', ''), ('NOP', ''), ('Timestamp', (dst_tsval, src_tsval))])
+                telnet9 = (telnet9_ether / telnet9_ip / telnet9_tcp)
+                
+                telnet9.add_payload(SRV_PAYLOAD_4)
+                dst_seq += len(SRV_PAYLOAD_4)
+
+                telnet9.time = self.timestamp_controller.next_timestamp(latency=min_delay)
+
+                self.add_packet(telnet9, ip, ip_source)
+                
                 src_tsval += rnd.randint(int(min_delay), int(max_delay))
                 
                 # FIN/ACK client -> server
+                src_ack = dst_seq
                 finack1_ether = inet.Ether(src=mac_source, dst=mac_destination)
                 finack1_ip = inet.IP(src=ip_source, dst=ip, ttl=source_ttl_value, flags='DF')
                 finack1_tcp = inet.TCP(sport=sport, dport=dport, seq=src_seq, ack=src_ack, flags='FA', window=destination_win_value,
@@ -382,26 +499,10 @@ class TelnetVersionProbing_LIN(BaseAttack.BaseAttack):
                 
                 finack1.time = self.timestamp_controller.next_timestamp(latency=min_delay)
 
-                self.add_packet(finack1, ip_source, ip)
-
-                #update seq/ack
-                dst_tsval += rnd.randint(int(min_delay), int(max_delay))
-                dst_seq += len(TELNET_PAYLOAD_5_BANNER)
-                dst_ack += 1
-
-                # ACK server -> client
-                finack1_ack_ether = inet.Ether(src=mac_destination, dst=mac_source)
-                finack1_ack_ip = inet.IP(src=ip, dst=ip_source, ttl=destination_ttl_value, flags='DF')
-                finack1_ack_tcp = inet.TCP(sport=dport, dport=sport, seq=dst_seq, ack=dst_ack, flags='A', window=destination_win_value,
-                            options=[('NOP', ''), ('NOP', ''), ('Timestamp', (dst_tsval, src_tsval))])
-                finack1_ack = (finack1_ack_ether / finack1_ack_ip / finack1_ack_tcp)
-                
-                finack1_ack.time = self.timestamp_controller.next_timestamp(latency=min_delay)
-
-                self.add_packet(finack1_ack, ip, ip_source)
-                
+                self.add_packet(finack1, ip_source, ip)                
 
                 # FIN/ACK server -> client
+                dst_ack = src_seq +1
                 finack2_ether = inet.Ether(src=mac_destination, dst=mac_source)
                 finack2_ip = inet.IP(src=ip, dst=ip_source, ttl=destination_ttl_value, flags='DF')
                 finack2_tcp = inet.TCP(sport=dport, dport=sport, seq=dst_seq, ack=dst_ack, flags='FA', window=destination_win_value,
@@ -412,9 +513,9 @@ class TelnetVersionProbing_LIN(BaseAttack.BaseAttack):
 
                 self.add_packet(finack2, ip, ip_source)
                 
-                src_seq += 1
-                src_ack += 1
                 #ACK client -> server
+                src_seq += 1
+                src_ack = dst_seq +1
                 finack2_ack_ether = inet.Ether(src=mac_source, dst=mac_destination)
                 finack2_ack_ip = inet.IP(src=ip_source, dst=ip, ttl=source_ttl_value, flags='DF')
                 finack2_ack_tcp = inet.TCP(sport=sport, dport=dport, seq=src_seq, ack=src_ack, flags='A', window=destination_win_value,
