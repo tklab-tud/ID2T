@@ -204,6 +204,10 @@ class TCPNULLProbing(BaseAttack.BaseAttack):
                 
                 src_starting_seq = rnd.getrandbits(32)
                 dst_starting_seq = rnd.getrandbits(32)
+                src_seq = src_starting_seq
+                dst_seq = dst_starting_seq
+                src_ack = 0
+                dst_ack = 0
 
                 # 1) Build request package
                 request_ether = inet.Ether(src=mac_source, dst=mac_destination)
@@ -212,7 +216,7 @@ class TCPNULLProbing(BaseAttack.BaseAttack):
                 # Random src port for each packet
                 sport = rnd.randint(1, 65535)
 
-                request_tcp = inet.TCP(sport=sport, dport=dport, seq=src_starting_seq, window=source_win_value, flags='')
+                request_tcp = inet.TCP(sport=sport, dport=dport, seq=src_seq, window=source_win_value, flags='')
 
                 request = (request_ether / request_ip / request_tcp)
 
@@ -220,11 +224,13 @@ class TCPNULLProbing(BaseAttack.BaseAttack):
                 # Append request
                 self.add_packet(request, ip_source, ip)
 
+                dst_ack = src_seq
+
                 # 2) Build reply (for closed ports) package
                 if dport not in ports_open:  # destination port is CLOSED
                     reject_ether = inet.Ether(src=mac_destination, dst=mac_source)
                     reject_ip = inet.IP(src=ip, dst=ip_source, ttl=destination_ttl_value, flags='DF')
-                    reject_tcp = inet.TCP(sport=dport, dport=sport, seq=0, ack=src_starting_seq, flags='RA', window=0)
+                    reject_tcp = inet.TCP(sport=dport, dport=sport, seq=0, ack=dst_ack, flags='RA', window=0)
                     reject = (reject_ether / reject_ip / reject_tcp)
 
                     timestamp_reject = self.timestamp_controller.next_timestamp(latency=min_delay)

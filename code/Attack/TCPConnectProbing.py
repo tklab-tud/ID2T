@@ -253,13 +253,13 @@ class TCPConnectProbing(BaseAttack.BaseAttack):
                     reply.time = timestamp_reply
                     self.add_packet(reply, ip, ip_source)
 
-                    tsval_incr = src_tsval+rnd.randint(0, 256)
+                    src_tsval += rnd.randint(int(min_delay), int(max_delay))
                     
                     #ACK
                     confirm_ether = inet.Ether(src=mac_source, dst=mac_destination)
                     confirm_ip = inet.IP(src=ip_source, dst=ip, ttl=source_ttl_value, flags='DF')
                     confirm_tcp = inet.TCP(sport=sport, dport=dport, seq=src_starting_seq+1, ack=dst_starting_seq+1, flags='A', window=source_win_value, 
-                                    options=[('NOP', ''), ('NOP', ''), ('Timestamp', (tsval_incr, dst_tsval))])
+                                    options=[('NOP', ''), ('NOP', ''), ('Timestamp', (src_tsval, dst_tsval))])
                     confirm = (confirm_ether / confirm_ip / confirm_tcp)
 
                     timestamp_confirm = self.timestamp_controller.next_timestamp(latency=min_delay)
@@ -271,7 +271,7 @@ class TCPConnectProbing(BaseAttack.BaseAttack):
                     reset_ether = inet.Ether(src=mac_source, dst=mac_destination)
                     reset_ip = inet.IP(src=ip_source, dst=ip, ttl=source_ttl_value, flags='DF')
                     reset_tcp = inet.TCP(sport=sport, dport=dport, seq=src_starting_seq+1, ack=dst_starting_seq+1, flags='RA', window=source_win_value, 
-                                    options=[('NOP', ''), ('NOP', ''), ('Timestamp', (tsval_incr, dst_tsval))])
+                                    options=[('NOP', ''), ('NOP', ''), ('Timestamp', (src_tsval, dst_tsval))])
                     reset = (reset_ether / reset_ip / reset_tcp)
 
                     timestamp_reset = self.timestamp_controller.next_timestamp(latency=min_delay)

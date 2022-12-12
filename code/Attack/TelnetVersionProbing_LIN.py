@@ -14,13 +14,13 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 # noinspection PyPep8
 
 WSCALE = 7
-TELNET_PAYLOAD_1 = bytes.fromhex('fffd25fffb01fffb03fffd27fffd1ffffd00fffb00')
-TELNET_PAYLOAD_2 = bytes.fromhex('fffc25')
-TELNET_PAYLOAD_3_BANNER = bytes.fromhex('57656c636f6d6520746f204d6963726f736f66742054656c6e65742053657276696365200d0a')
-TELNET_PAYLOAD_4 = bytes.fromhex('fffe01fffd03fffc27fffc1ffffb00fffd00')
-TELNET_PAYLOAD_5_LOGIN = bytes.fromhex('0a0d6c6f67696e3a20')
+TELNET_PAYLOAD_1 = bytes.fromhex('fffd18fffd20fffd23fffd27')
+TELNET_PAYLOAD_2 = bytes.fromhex('fffc18')
+TELNET_PAYLOAD_3_WILL_ECHO = bytes.fromhex('fffb01')
+TELNET_PAYLOAD_4_DONT_ECHO = bytes.fromhex('fffe01')
+TELNET_PAYLOAD_5_BANNER = bytes.fromhex('5562756e74752032322e30342e31204c54530d0a')
 
-class TelnetVersionProbing(BaseAttack.BaseAttack):
+class TelnetVersionProbing_LIN(BaseAttack.BaseAttack):
     PORT_SOURCE = 'port.src'
     PORT_DESTINATION = 'port.dst'
     PORT_OPEN = 'port.open'
@@ -35,7 +35,7 @@ class TelnetVersionProbing(BaseAttack.BaseAttack):
         This attack injects Metasploit telnet_scanner packets and respective responses into the output pcap file.
         """
         # Initialize attack
-        super(TelnetVersionProbing, self).__init__("TCPXMASProbing", "Injects a metasploit 'telnet_scanner' probing",
+        super(TelnetVersionProbing_LIN, self).__init__("TelnetVersionProbing_LIN", "Injects a metasploit 'telnet_scanner' probing",
                                              "Scanning/Probing")
 
         # Define allowed parameters and their type
@@ -329,14 +329,14 @@ class TelnetVersionProbing(BaseAttack.BaseAttack):
                             options=[('NOP', ''), ('NOP', ''), ('Timestamp', (dst_tsval, src_tsval))])
                 telnet3 = (telnet3_ether / telnet3_ip / telnet3_tcp)
                 
-                telnet3.add_payload(TELNET_PAYLOAD_3_BANNER)
+                telnet3.add_payload(TELNET_PAYLOAD_3_WILL_ECHO)
 
                 telnet3.time = self.timestamp_controller.next_timestamp(latency=min_delay)
 
                 self.add_packet(telnet3, ip, ip_source)
 
                 src_seq += len(TELNET_PAYLOAD_2)
-                src_ack += len(TELNET_PAYLOAD_3_BANNER)
+                src_ack += len(TELNET_PAYLOAD_3_WILL_ECHO)
                 src_tsval += rnd.randint(int(min_delay), int(max_delay))
 
                 # TELNET #4 client -> server
@@ -346,14 +346,14 @@ class TelnetVersionProbing(BaseAttack.BaseAttack):
                             options=[('NOP', ''), ('NOP', ''), ('Timestamp', (src_tsval, dst_tsval))])
                 telnet4 = (telnet4_ether / telnet4_ip / telnet4_tcp)
                 
-                telnet4.add_payload(TELNET_PAYLOAD_4)
+                telnet4.add_payload(TELNET_PAYLOAD_4_DONT_ECHO)
 
                 telnet4.time = self.timestamp_controller.next_timestamp(latency=min_delay)
 
                 self.add_packet(telnet4, ip_source, ip)
 
-                dst_seq += len(TELNET_PAYLOAD_3_BANNER)
-                dst_ack += len(TELNET_PAYLOAD_4)
+                dst_seq += len(TELNET_PAYLOAD_3_WILL_ECHO)
+                dst_ack += len(TELNET_PAYLOAD_4_DONT_ECHO)
                 dst_tsval += rnd.randint(int(min_delay), int(max_delay))
 
                 # TELNET #5 server -> client
@@ -363,14 +363,14 @@ class TelnetVersionProbing(BaseAttack.BaseAttack):
                             options=[('NOP', ''), ('NOP', ''), ('Timestamp', (dst_tsval, src_tsval))])
                 telnet5 = (telnet5_ether / telnet5_ip / telnet5_tcp)
                 
-                telnet5.add_payload(TELNET_PAYLOAD_5_LOGIN)
+                telnet5.add_payload(TELNET_PAYLOAD_5_BANNER)
 
                 telnet5.time = self.timestamp_controller.next_timestamp(latency=min_delay)
 
                 self.add_packet(telnet5, ip, ip_source)
 
-                src_seq += len(TELNET_PAYLOAD_4)
-                src_ack += len(TELNET_PAYLOAD_5_LOGIN)
+                src_seq += len(TELNET_PAYLOAD_4_DONT_ECHO)
+                src_ack += len(TELNET_PAYLOAD_5_BANNER)
                 src_tsval += rnd.randint(int(min_delay), int(max_delay))
                 
                 # FIN/ACK client -> server
@@ -386,7 +386,7 @@ class TelnetVersionProbing(BaseAttack.BaseAttack):
 
                 #update seq/ack
                 dst_tsval += rnd.randint(int(min_delay), int(max_delay))
-                dst_seq += len(TELNET_PAYLOAD_5_LOGIN)
+                dst_seq += len(TELNET_PAYLOAD_5_BANNER)
                 dst_ack += 1
 
                 # ACK server -> client
