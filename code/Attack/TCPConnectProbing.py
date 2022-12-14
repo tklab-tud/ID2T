@@ -253,7 +253,7 @@ class TCPConnectProbing(BaseAttack.BaseAttack):
                     reply.time = timestamp_reply
                     self.add_packet(reply, ip, ip_source)
 
-                    src_tsval += rnd.randint(int(min_delay), int(max_delay))
+                    src_tsval = int(src_tsval + rnd.uniform(min_delay, max_delay))
                     
                     #ACK
                     confirm_ether = inet.Ether(src=mac_source, dst=mac_destination)
