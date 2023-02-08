@@ -22,6 +22,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
     PORT_DEST_ORDER_DESC = 'port.dst.order-desc'
     IP_SOURCE_RANDOMIZE = 'ip.src.shuffle'
     PORT_SOURCE_RANDOMIZE = 'port.src.shuffle'
+    SCAN_DURATION = "scan.duration"
 
     def __init__(self):
         """
@@ -45,7 +46,8 @@ class PortscanAttack(BaseAttack.BaseAttack):
             Parameter(self.PORT_DEST_ORDER_DESC, Boolean()),
             Parameter(self.IP_SOURCE_RANDOMIZE, Boolean()),
             Parameter(self.PACKETS_PER_SECOND, Float()),
-            Parameter(self.PORT_SOURCE_RANDOMIZE, Boolean())
+            Parameter(self.PORT_SOURCE_RANDOMIZE, Boolean()),
+            Parameter(self.SCAN_DURATION, Float()),
         ])
 
     def init_param(self, param: str) -> bool:
@@ -95,6 +97,8 @@ class PortscanAttack(BaseAttack.BaseAttack):
             value = rnd.randint(0, self.statistics.get_packet_count())
         if value is None:
             return False
+        if value == self.SCAN_DURATION:
+            value = 60.0
         return self.add_param_value(param, value)
 
     def generate_attack_packets(self):
@@ -245,6 +249,9 @@ class PortscanAttack(BaseAttack.BaseAttack):
 
                 self.timestamp_controller.set_timestamp(timestamp_next_pkt)
                 timestamp_next_pkt = self.timestamp_controller.next_timestamp()
+
+                if timestamp_next_pkt > (self.timestamp_controller.first_timestamp + self.get_param_value(self.SCAN_DURATION)):
+                    break
 
     def generate_attack_pcap(self):
         """
