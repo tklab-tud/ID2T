@@ -251,8 +251,8 @@ class PortscanAttack(BaseAttack.BaseAttack):
                 timestamp_next_pkt = self.timestamp_controller.next_timestamp()
 
                 duration = self.get_param_value(self.SCAN_DURATION)
-                last_timestamp = self.timestamp_controller.first_timestamp + self.get_param_value(self.SCAN_DURATION)
-                
+                last_timestamp = self.timestamp_controller.first_timestamp + duration
+
                 if duration > 0 and timestamp_next_pkt > last_timestamp:
                     break
 
