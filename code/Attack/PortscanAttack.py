@@ -98,7 +98,7 @@ class PortscanAttack(BaseAttack.BaseAttack):
         if value is None:
             return False
         if value == self.SCAN_DURATION:
-            value = 60.0
+            value = 0.0
         return self.add_param_value(param, value)
 
     def generate_attack_packets(self):
@@ -250,7 +250,10 @@ class PortscanAttack(BaseAttack.BaseAttack):
                 self.timestamp_controller.set_timestamp(timestamp_next_pkt)
                 timestamp_next_pkt = self.timestamp_controller.next_timestamp()
 
-                if timestamp_next_pkt > (self.timestamp_controller.first_timestamp + self.get_param_value(self.SCAN_DURATION)):
+                duration = self.get_param_value(self.SCAN_DURATION)
+                last_timestamp = self.timestamp_controller.first_timestamp + self.get_param_value(self.SCAN_DURATION)
+                
+                if duration > 0 and timestamp_next_pkt > last_timestamp:
                     break
 
     def generate_attack_pcap(self):
