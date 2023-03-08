@@ -779,6 +779,55 @@ class BaseAttack(metaclass=abc.ABCMeta):
         else:
             return ip_addresses
 
+    def update_seq_ack(self,tcp_pkt, payload_diff: int, source_dir: bool):
+        '''
+        This function updates the TCP packet's sequence (seq) or acknowledgment (ack) number based
+        on the payload length difference and the direction of the packet.
+        Args:
+            tcp_pkt (scapy.layers.inet.TCP): the TCP packet.
+            payload_diff (int): The difference in payload length after the update.
+            source_dir (bool): If True, the function updates the sequence number (source direction).
+                               If False, it updates the acknowledgment number (destination direction).
+        '''
+        seq = tcp_pkt.getfieldval("seq")
+        ack = tcp_pkt.getfieldval("ack")
+        
+        if source_dir:
+            tcp_pkt.setfieldval("seq", seq + payload_diff)
+        else:  
+            tcp_pkt.setfieldval("ack", ack + payload_diff)
+        
+    def update_ip_packet_len_and_checksums(self,ip_pkt):
+        """
+        This function updates the IP packet length and resets the IP and TCP checksums.
+        Args:
+            ip_pkt (scapy.layers.inet.IP): The IP packet whose length and checksums need to be updated.
+        """
+        ip_pkt.len = len(ip_pkt)
+        ip_pkt.chksum = None
+        ip_pkt.payload.chksum = None
+
+    """
+    Generates a unique random ephemeral port.
+    NOTE: Default values are based on Linux ephemeral port range. 
+     Args:
+        min_value (int): The lower bound (inclusive) of the ephemeral port range.
+        max_value (int): The upper bound (inclusive) of the ephemeral port range.
+        chosen_ports (set): A set of ports that have already been chosen, to ensure uniqueness.
+
+    Returns:
+        int: A unique random ephemeral port within the specified range.
+    """
+    @staticmethod    
+    def get_unique_random_ephemeral_port(min_value=32768, max_value=61000, chosen_ports=set()):
+        if(isinstance(chosen_ports,dict)):
+            chosen_ports = chosen_ports.values() # check for unique values.    
+        while True:
+            random_int = rnd.randint(min_value, max_value) 
+            if random_int not in chosen_ports:
+                return random_int
+
+
     def get_mac_address(self, ip_address):
         """
         Get mac address to ip address, otherwise generate a random one.
