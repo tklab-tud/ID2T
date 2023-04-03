@@ -18,7 +18,6 @@ captures/*
 #labels
 tures/*
 
-*.pcap
 *.xml
 code/*.pcap
 code/*.xml
