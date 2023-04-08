@@ -778,6 +778,108 @@ class BaseAttack(metaclass=abc.ABCMeta):
             return ip_addresses[0]
         else:
             return ip_addresses
+        
+
+    @staticmethod
+    def get_unique_random_ipv4_from_ip_network(ip_address, subnet_mask, arg_chosen_ips=set()):
+        """
+        Generate a unique random IPv4 address within the specified IP network.
+
+        Args:
+            ip_network (str): The IP network in CIDR notation from which to generate the random IPv4 address.
+            chosen_ips (set): A set of IPv4 addresses (as strings) that have already been chosen, to ensure uniqueness.
+
+        Returns:
+            str: A unique random IPv4 address within the specified IP network.
+        """
+
+        def get_ip_network(ip_address, subnet_mask):
+            """
+            Get the IP network in CIDR notation from an IPv4 address and a subnet mask.
+
+            Args:
+                ip_address (str): The IPv4 address in string format (e.g., "192.168.1.1").
+                subnet_mask (str): The subnet mask in string format (e.g., "255.255.255.0").
+
+            Returns:
+                str: The IP network in CIDR notation (e.g., "192.168.1.0/24").
+            """
+            ipv4_address = ipaddress.IPv4Address(ip_address)
+            ipv4_netmask = ipaddress.IPv4Address(subnet_mask)
+            network_prefix = ipaddress.IPv4Network(f"{ipv4_address}/{ipv4_netmask}", strict=False)
+            return str(network_prefix.network_address) + '/' + str(network_prefix.prefixlen)
+
+
+        def is_invalid(ip_address_param: ipaddress.IPv4Address):
+            """
+            Check if generated IPv4Address is valid 
+            NOTE: Private values are allowed  
+            Args:
+                ip_address_param (str): The IPv4Address to check for validity.
+            Returns:
+                bool: True when value is invalid .
+            """
+            return ip_address_param.is_multicast or ip_address_param.is_unspecified or ip_address_param.is_loopback or \
+                ip_address_param.is_link_local or ip_address_param.is_reserved
+        chosen_ips = arg_chosen_ips
+        if isinstance(chosen_ips,list):
+            chosen_ips = set(chosen_ips)
+        ip_network = get_ip_network(ip_address,subnet_mask)
+        network = ipaddress.IPv4Network(ip_network, strict=False)
+        available_ips = network.num_addresses - 2  # Excluding network and broadcast addresses
+        if len(chosen_ips) >= available_ips:
+            raise ValueError("No more unique IPs available in the specified range: {}".format(ip_network))
+        while True:
+            random_ip = network.network_address + random.randint(1, available_ips)
+            random_ip_str = str(random_ip)
+
+            if random_ip_str not in chosen_ips and not is_invalid(random_ip):
+                chosen_ips.add(random_ip_str)
+                return random_ip_str
+
+    """
+    Generates a unique random ephemeral port for a conversation with respect to direction & reserved_ports. 
+    If ephemeral port for original port then the belonging (previously generataed ) ephemeral port is returned.   
+     Args:
+        tcp_pkt (Packet): Given TCP packet .
+        ephemeral_ports (dict): A dictionary of ephemeral ports in use, keyed by the original port.
+        reserved_ports (set): A set of reserved ports that should not be used for ephemeral ports.
+
+
+    Returns:
+        tuple: A tuple containing the new unique random ephemeral port and the updated ephemeral_ports dictionary.
+    """
+    def generate_ephemeral_ports(self,tcp_pkt, ephemeral_ports, reserved_ports):
+        ep = tcp_pkt.getfieldval("sport")
+        if ep in reserved_ports:   
+            ep = tcp_pkt.getfieldval("dport")
+            
+        if ep not in ephemeral_ports: 
+            ephemeral_ports[ep] = self.get_unique_random_ephemeral_port(chosen_ports=ephemeral_ports) 
+        
+        return ephemeral_ports[ep], ephemeral_ports
+
+
+    """
+    Generates a unique random ephemeral port.
+    NOTE: Default values are based on Linux ephemeral port range. 
+     Args:
+        min_value (int): The lower bound (inclusive) of the ephemeral port range.
+        max_value (int): The upper bound (inclusive) of the ephemeral port range.
+        chosen_ints (set): A set of integers that have already been chosen, to ensure uniqueness.
+
+    Returns:
+        int: A unique random ephemeral port within the specified range.
+    """
+    @staticmethod    
+    def get_unique_random_ephemeral_port(min_value=32768, max_value=61000, chosen_ports=set()):
+        if(isinstance(chosen_ports,dict)):
+            chosen_ports = chosen_ports.values() # check for unique values.    
+        while True:
+            random_int = rnd.randint(min_value, max_value) 
+            if random_int not in chosen_ports:
+                return random_int
+
 
     def get_mac_address(self, ip_address):
         """
