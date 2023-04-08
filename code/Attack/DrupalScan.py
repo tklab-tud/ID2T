@@ -13,7 +13,7 @@ class DrupalScan(BaseAttack.BaseAttack):
     PORT_SOURCE = 'port.src'
     minDefaultPort = 30000
     maxDefaultPort = 50000
-    template_scan_pcap_path = Util.RESOURCE_DIR + "drupal_scan.pcap"
+    template_scan_pcap_path = Util.RESOURCE_DIR + "drupal_version_enumeration_scan.pcap"
 
     """
     Creates a new instance of the Drupal Scan
