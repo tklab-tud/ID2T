@@ -2,6 +2,7 @@ import logging
 import random as rnd
 import lea
 import scapy.layers.inet as inet
+from scapy.layers.inet import TCP
 import scapy.utils
 import Attack.BaseAttack as BaseAttack
 import Lib.Utility as Util
@@ -10,9 +11,13 @@ from Attack.Parameter import Parameter, Float, IPAddress, MACAddress, Port
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 class DrupalScan(BaseAttack.BaseAttack):
-    PORT_SOURCE = 'port.src'
+    MY_SQL_PORT = 3306
+    HTTP_PORT = 80
     minDefaultPort = 30000
     maxDefaultPort = 50000
+    ATTACKER_IP = '172.19.0.1' 
+    VICTIM_IP = '172.19.0.3'
+    MYSQL_DB_IP = '172.19.0.2'
     template_scan_pcap_path = Util.RESOURCE_DIR + "drupal_version_enumeration_scan.pcap"
 
     """
@@ -29,7 +34,6 @@ class DrupalScan(BaseAttack.BaseAttack):
         self.update_params([
             Parameter(self.MAC_SOURCE, MACAddress()),
             Parameter(self.IP_SOURCE, IPAddress()),
-            Parameter(self.PORT_SOURCE, Port()),
             Parameter(self.MAC_DESTINATION, MACAddress()),
             Parameter(self.IP_DESTINATION, IPAddress()),
             Parameter(self.PACKETS_PER_SECOND, Float())
@@ -61,8 +65,6 @@ class DrupalScan(BaseAttack.BaseAttack):
             if ip_src is None:
                 return False
             value = self.get_mac_address(ip_src)
-        elif param == self.PORT_SOURCE:
-            value = rnd.randint(self.minDefaultPort, self.maxDefaultPort)
         # Attack configuration
         elif param == self.PACKETS_PER_SECOND:
             value = self.statistics.get_most_used_pps()
@@ -71,6 +73,19 @@ class DrupalScan(BaseAttack.BaseAttack):
         if value is None:
             return False
         return self.add_param_value(param, value)
+    
+    """
+    Generate SQL convo parameters 
+    """
+
+    def generate_sql_param(self): 
+        ip_addresses_in_use = self.statistics.get_ip_addresses()
+        
+        ip_attakcer = self.get_param_value(self.IP_DESTINATION) # attacker ip 
+        subnet_mask = "255.255.255.0"
+        ip_sql = self.get_unique_random_ipv4_from_ip_network(ip_attakcer, subnet_mask,ip_addresses_in_use)
+        mac_sql = self.generate_random_mac_address() ## TODO: Maybe leave it as locally administered MAC address? 
+        return mac_sql, ip_sql
 
     """
     Creates the attack packets
@@ -83,7 +98,6 @@ class DrupalScan(BaseAttack.BaseAttack):
         # Initialize parameters
         mac_source = self.get_param_value(self.MAC_SOURCE)
         ip_source = self.get_param_value(self.IP_SOURCE)
-        port_source = self.get_param_value(self.PORT_SOURCE)
         mac_destination = self.get_param_value(self.MAC_DESTINATION)
         ip_destination = self.get_param_value(self.IP_DESTINATION)
 
@@ -126,102 +140,132 @@ class DrupalScan(BaseAttack.BaseAttack):
         if not mss_value:
             mss_value = 1465
 
-        exploit_raw_packets = scapy.utils.RawPcapReader(self.template_scan_pcap_path)
-        inter_arrival_times = self.get_inter_arrival_time(exploit_raw_packets)
-        exploit_raw_packets.close()
+        # Communication is between server & its db 
+        mac_sql, ip_sql = self.generate_sql_param()
+
+       # exploit_raw_packets = scapy.utils.RawPcapReader(self.template_scan_pcap_path)
+       ## inter_arrival_times = self.get_inter_arrival_time(exploit_raw_packets)
+       # exploit_raw_packets.close()
         exploit_raw_packets = scapy.utils.RawPcapReader(self.template_scan_pcap_path)
 
         source_origin_wins, destination_origin_wins = {}, {}
-        use_original_source_ports = False
+        ephemeral_ports = {}
+        reserved_ports = {self.MY_SQL_PORT,self.HTTP_PORT}
 
         for self.pkt_num, pkt in enumerate(exploit_raw_packets):
             eth_frame = inet.Ether(pkt[0])
             ip_pkt = eth_frame.payload
             tcp_pkt = ip_pkt.payload
-            victim_ip = '172.19.0.3'
-            intermediary_ip = '172.19.0.2'
 
-            # Request (Attacker, Intermediary -> Victim)
-            if ip_pkt.getfieldval("dst") == victim_ip:
-                # Ether
-                eth_frame.setfieldval("src", mac_source)
-                eth_frame.setfieldval("dst", mac_destination)
-                # IP: ip.src can be either Attacker or Intermediary
-                if ip_pkt.getfieldval("src") != intermediary_ip:
-                   ip_pkt.setfieldval("src", ip_source)
-                ip_pkt.setfieldval("dst", ip_destination)
+
+            ep, ephemeral_ports = self.generate_ephemeral_ports(tcp_pkt,ephemeral_ports,reserved_ports)
+
+            # Request (Attacker, -> Victim)
+            if ip_pkt.getfieldval("src") == self.ATTACKER_IP:
+                # set src values 
+                eth_frame.setfieldval("src", mac_source)         
+                ip_pkt.setfieldval("src", ip_source)
+                tcp_pkt.setfieldval("sport", ep)
                 ip_pkt.setfieldval("ttl", source_ttl_value)
-                # when first tcp stream ends: use source_ports from pcap
-                if (tcp_pkt.getfieldval("ack") == 0 and self.pkt_num > 0):
-                    use_original_source_ports = True
-                # TCP
-                if ip_pkt.getfieldval("src") != intermediary_ip and (use_original_source_ports == False or self.pkt_num == 97 or 
-                                                                     self.pkt_num == 98 or self.pkt_num == 545 or 
-                                                                     self.pkt_num == 549 or self.pkt_num == 558 or 
-                                                                     self.pkt_num == 687 or self.pkt_num == 694):
-                    tcp_pkt.setfieldval("sport", port_source)
-                # Window Size (mapping)
-                source_origin_win = tcp_pkt.getfieldval("window")
-                if source_origin_win not in source_origin_wins:
-                    while True: 
-                        source_win_rand_pick = source_win_prob_dict.random()
-                        if source_win_rand_pick != 0: 
-                            break
-                    source_origin_wins[source_origin_win] = source_win_rand_pick
-                new_win = source_origin_wins[source_origin_win]
-                tcp_pkt.setfieldval("window", new_win)
-                # MSS
-                tcp_options = tcp_pkt.getfieldval("options")
-                if tcp_options:
-                    if tcp_options[0][0] == "MSS":
-                        tcp_options[0] = ("MSS", mss_value)
-                        tcp_pkt.setfieldval("options", tcp_options)
+                
+                if ip_pkt.getfieldval("dst") == self.MYSQL_DB_IP:
+                    raise RuntimeError("no way this is possible in hell or on eaarh since -> ip.dst can only be victim")
+                    None 
+                else: 
+                    eth_frame.setfieldval("dst", mac_destination)      
+                    ip_pkt.setfieldval("dst", ip_destination)
+                    tcp_pkt.setfieldval("dport", self.HTTP_PORT)
+                # TCP use costum src port for first convo
+                    
+                    # Window Size (mapping)
+                    source_origin_win = tcp_pkt.getfieldval("window")
+                    if source_origin_win not in source_origin_wins:
+                        while True: 
+                            source_win_rand_pick = source_win_prob_dict.random()
+                            if source_win_rand_pick != 0: 
+                                break
+                        source_origin_wins[source_origin_win] = source_win_rand_pick
+                    new_win = source_origin_wins[source_origin_win]
+                    tcp_pkt.setfieldval("window", new_win)
+                    # MSS
+                    tcp_options = tcp_pkt.getfieldval("options")
+                    if tcp_options:
+                        if tcp_options[0][0] == "MSS":
+                            tcp_options[0] = ("MSS", mss_value)
+                            tcp_pkt.setfieldval("options", tcp_options)
 
                 new_pkt = (eth_frame / ip_pkt / tcp_pkt)
                 new_pkt.time = timestamp_next_pkt
+                
+                timestamp_next_pkt = self.timestamp_controller.next_timestamp() #+ inter_arrival_times[self.pkt_num]
 
-                timestamp_next_pkt = self.timestamp_controller.next_timestamp() + inter_arrival_times[self.pkt_num]
+            # Request (DB ->  Victim/WebApp)
+            elif ip_pkt.getfieldval("src") == self.MYSQL_DB_IP:
+                
+                # set src values 
+                eth_frame.setfieldval("src", mac_sql)         
+                ip_pkt.setfieldval("src", ip_sql)
+                tcp_pkt.setfieldval("sport", self.MY_SQL_PORT)  # this line has no effect - only for clarification
+                
+                # set dst values
+                eth_frame.setfieldval("dst", mac_destination)      
+                ip_pkt.setfieldval("dst", ip_destination)
+                tcp_pkt.setfieldval("dport", ep )  # generated source port value for convo 
+                
+                # Generate the packet
+                new_pkt = (eth_frame / ip_pkt / tcp_pkt)
+                new_pkt.time = timestamp_next_pkt
+                timestamp_next_pkt = self.timestamp_controller.next_timestamp() #+ inter_arrival_times[self.pkt_num]
 
-            # Reply (Victim -> Attacker, Intermediary)
+
+            # Reply (Victim -> Attacker or DB)
             else:
-                # Ether
-                eth_frame.setfieldval("src", mac_destination)
-                eth_frame.setfieldval("dst", mac_source)
-                # IP: Only one kind of ip.source
+                # set victim src values 
+                eth_frame.setfieldval("src", mac_destination)         
                 ip_pkt.setfieldval("src", ip_destination)
-                # IP: ip.dst can be either Intermediary or Attacker
-                if ip_pkt.getfieldval("dst") != intermediary_ip:
+
+                # We do not affect the window size & MSS values for internal traffic to DB
+                if ip_pkt.getfieldval("dst") == self.MYSQL_DB_IP:
+                    # set dst values (victim -> db)
+                    eth_frame.setfieldval("dst", mac_sql)         
+                    ip_pkt.setfieldval("dst", ip_sql)
+                    tcp_pkt.setfieldval("sport", ep)  # this line has no effect - only for clarification
+                    tcp_pkt.setfieldval("dport", self.MY_SQL_PORT)  # generated source port value for convo 
+                    
+
+                else:# (victim -> attack)
+                    # set dst values (victim -> attack)
+                    eth_frame.setfieldval("dst", mac_source)
                     ip_pkt.setfieldval("dst", ip_source)
-                ip_pkt.setfieldval("ttl", destination_ttl_value)
-                # TCP
-                if ip_pkt.getfieldval("dst") != intermediary_ip and (use_original_source_ports == False or self.pkt_num == 96 or
-                                                                     self.pkt_num == 99 or self.pkt_num == 541 or 
-                                                                     self.pkt_num == 551 or self.pkt_num == 557 or 
-                                                                     self.pkt_num == 693):
-                    tcp_pkt.setfieldval("dport", port_source)
-                # Window Size
-                destination_origin_win = tcp_pkt.getfieldval("window")
-                if destination_origin_win not in destination_origin_wins:
-                    while True:
-                        destination_win_rand_pick = destination_win_prob_dict.random()
-                        if destination_win_rand_pick != 0:
-                            break
-                    destination_origin_wins[destination_origin_win] = destination_win_rand_pick
-                new_win = destination_origin_wins[destination_origin_win]
-                tcp_pkt.setfieldval("window", new_win)
-                # MSS
-                tcp_options = tcp_pkt.getfieldval("options")
-                if tcp_options:
-                    if tcp_options[0][0] == "MSS":
-                        tcp_options[0] = ("MSS", mss_value)
-                        tcp_pkt.setfieldval("options", tcp_options)
-
+                    ip_pkt.setfieldval("ttl", destination_ttl_value)
+                    tcp_pkt.setfieldval("sport",  self.HTTP_PORT) #  this line has no effect only for clarification
+                    tcp_pkt.setfieldval("dport", ep)
+                    
+                    # Window Size (mapping)
+                    destination_origin_win = tcp_pkt.getfieldval("window")
+                    if destination_origin_win not in destination_origin_wins:
+                        while True:
+                            destination_win_rand_pick = destination_win_prob_dict.random()
+                            if destination_win_rand_pick != 0:
+                                break
+                        destination_origin_wins[destination_origin_win] = destination_win_rand_pick
+                    new_win = destination_origin_wins[destination_origin_win]
+                    tcp_pkt.setfieldval("window", new_win)
+                    # MSS
+                    tcp_options = tcp_pkt.getfieldval("options")
+                    if tcp_options:
+                        if tcp_options[0][0] == "MSS":
+                            tcp_options[0] = ("MSS", mss_value)
+                            tcp_pkt.setfieldval("options", tcp_options)
+                
+                # Generate the packet
                 new_pkt = (eth_frame / ip_pkt / tcp_pkt)
-                timestamp_next_pkt = self.timestamp_controller.next_timestamp() + inter_arrival_times[self.pkt_num]
+                timestamp_next_pkt = self.timestamp_controller.next_timestamp() #+# inter_arrival_times[self.pkt_num]
                 new_pkt.time = timestamp_next_pkt
-
+        
+        
             self.add_packet(new_pkt, ip_source, ip_destination)
-
+    
         exploit_raw_packets.close()
 
     """
