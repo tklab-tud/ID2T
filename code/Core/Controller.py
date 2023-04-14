@@ -9,6 +9,7 @@ import pyparsing as pp
 import Core.AttackController as atkCtrl
 import Core.LabelManager as LabelManager
 import Core.Statistics as Statistics
+import Core.BackgroundTraffic as BackgroundTraffic
 import Lib.PcapFile as PcapFile
 import Lib.Utility as Util
 import Core.StatsDatabase as StatsDB
@@ -137,7 +138,10 @@ class Controller:
                 print("Merging base pcap with single attack pcap...", end=" ")
                 sys.stdout.flush()  # force python to print text immediately
                 self.pcap_dest_path = self.pcap_file.merge_attack(attacks_pcap_path)
-
+                if attack[0] == 'WinHTTPSysExploit' and self.added_packets == 13:
+                    self.background_traffic = BackgroundTraffic.BackgroundTraffic(self.pcap_dest_path)
+                    self.background_traffic.WinHTTPSysExploit = BackgroundTraffic.BackgroundTraffic.WinHTTPSysExploit(self.pcap_dest_path)
+                    updated_pkt_count = self.background_traffic.WinHTTPSysExploit.locate_final_attack_packet()
             if self.pcap_out_path:
                 if not self.pcap_out_path.endswith(".pcap"):
                     self.pcap_out_path += ".pcap"
@@ -158,6 +162,10 @@ class Controller:
                 self.created_files.append(outpath)
 
             print("done.")
+            if attack[0] == 'WinHTTPSysExploit' and self.added_packets == 13: 
+                print("-----------------------")
+                print('Background traffic was impacted by the exploit')
+                print('Total added packet count: ' + str(updated_pkt_count))
 
             # delete intermediate PCAP files
             if self.debug:
