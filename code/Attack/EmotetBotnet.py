@@ -11,10 +11,10 @@ from Attack.Parameter import Parameter, Float, IPAddress, MACAddress, Boolean
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
 class EmotetBotnet(BaseAttack.BaseAttack):
-    SPAM_BOT_ACTIVITY = 'spam_bot_activity'
+    SPAM_BOT_ACTIVITY = 'spam.bot.activity'
 
-    template_attack_pcap_path_default = Util.RESOURCE_DIR + "emotet_botnet/emotet_traffic_with_spambot.pcap"
-    template_attack_pcap_path_no_spambot = Util.RESOURCE_DIR + "emotet_botnet/emotet_traffic.pcap"
+    template_attack_pcap_path_default = Util.RESOURCE_DIR + "emotet_botnet/emotet_traffic_with_spam_bot.pcap"
+    template_attack_pcap_path_no_spam_bot = Util.RESOURCE_DIR + "emotet_botnet/emotet_traffic.pcap"
     template_attack_pcap_path = ""
 
 
