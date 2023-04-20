@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DEB_PKGS=''
+DEB_PKGS='build-essential clang lld gdb bison flex perl python3 python3-pip qtbase5-dev qtchooser qt5-qmake qtbase5-dev-tools libqt5opengl5-dev libxml2-dev zlib1g-dev doxygen graphviz libwebkit2gtk-4.0-37 mpi-default-dev'
 RPM_PKGS="cmake make tcpdump coreutils gcc gcc-c++ libpcap-devel python3 python3-devel"
 YES=''
 PATCH_DIR=../../../resources/patches

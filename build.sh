@@ -41,6 +41,21 @@ fi
 # Activate the venv
 source .venv/bin/activate
 
+# Configure and make omnetpp
+source ./omnetpp/setenv
+cd omnetpp/
+cp configure.user.dist configure.user
+./configure
+make
+cd ../
+
+# Configure and make INET
+source ./inet/setenv
+cd inet/
+make makefiles
+make
+cd ../
+
 # Upgrade pip if necessary
 pip3 install --upgrade pip
 
@@ -115,6 +130,8 @@ fi
 SCRIPT_PATH=\${ID2T_DIR%/*}
 # Execute ID2T
 source "\$SCRIPT_PATH"/.venv/bin/activate
+source ./omnetpp/setenv
+source ./inet/setenv
 exec "\$SCRIPT_PATH"/code/CLI.py "\$@"
 deactivate
 EOF
@@ -131,6 +148,8 @@ fi
 SCRIPT_PATH=\${ID2T_DIR%/*}
 cd \$SCRIPT_PATH
 source .venv/bin/activate
+source ./omnetpp/setenv
+source ./inet/setenv
 # Regenerate the statistics DB
 ./id2t -i resources/test/reference_1998.pcap -rd >/dev/null
 cd code
