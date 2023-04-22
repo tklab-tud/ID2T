@@ -195,16 +195,20 @@ class DDoSAttack(BaseAttack.BaseAttack):
             f.write(tr)
 
     def generate_omnetpp_ini(self):
+        # self.pps_victims contains pps for every victim
+        # self.victims/self.attackers contains victim's/attacker's (ip, mac, open port, mss)
+
+        # TODO: generate omnetpp.ini from template and based on the attack configuration
         pass
 
     def run_simulation(self):
+        # TODO: omnetpp simulation run based on omnetpp.ini
         pass
 
     def generate_attack_packets(self):
         """
         Creates the attack packets.
         """
-
         timestamp_next_pkt = self.get_param_value(self.INJECT_AT_TIMESTAMP)
 
         num_attackers = self.get_param_value(self.NUMBER_ATTACKERS)
@@ -300,22 +304,23 @@ class DDoSAttack(BaseAttack.BaseAttack):
         self.victims = [(ip, mac, port, mss) for ip, mac, port, mss in zip(ip_victims_list, mac_victims_list, port_victims_list, mss_list)]
 
         # Initialize parameters
-        # most_used_ip_address = self.statistics.get_most_used_ip_address()
-        # pps = self.get_param_value(self.PACKETS_PER_SECOND)
-        #if pps == 0:
-        #    result = self.statistics.process_db_query(
-        #        "SELECT MAX(maxPktRate) FROM ip_statistics WHERE ipAddress='" + ip_destination + "';")
-        #    if result is not None and result != 0:
-        #        pps = num_attackers * result
-        #    else:
-        #        result = self.statistics.process_db_query(
-        #            "SELECT MAX(maxPktRate) FROM ip_statistics WHERE ipAddress='" + most_used_ip_address + "';")
-        #        pps = num_attackers * result
+        most_used_ip_address = self.statistics.get_most_used_ip_address()
 
-        # Calculate complement packet rates of the background traffic for each interval
-        # attacker_pps = pps / num_attackers
-        #complement_interval_attacker_pps = self.statistics.calculate_complement_packet_rates(attacker_pps)
-
+        self.pps_victims = []
+        for v in self.victims:
+            ip_destination = v[0]
+            pps = self.get_param_value(self.PACKETS_PER_SECOND)
+            if pps == 0:
+                result = self.statistics.process_db_query(
+                    "SELECT MAX(maxPktRate) FROM ip_statistics WHERE ipAddress='" + ip_destination + "';")
+                if result is not None and result != 0:
+                    pps = num_attackers * result
+                else:
+                    result = self.statistics.process_db_query(
+                        "SELECT MAX(maxPktRate) FROM ip_statistics WHERE ipAddress='" + most_used_ip_address + "';")
+                    pps = num_attackers * result
+            self.pps_victims.append(result)
+        
         self.path_attack_pcap = None
 
         self.generate_config_xml()
@@ -339,9 +344,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
             ip_pkt = eth_frame.payload
 
             src_ip = ip_pkt.src
-            src_mac = eth_frame.src
             dst_ip = ip_pkt.dst
-            dst_mac = eth_frame.dst
 
             if src_ip in assoc:
                 eth_frame.src = assoc[src_ip]
@@ -356,143 +359,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
             self.add_packet(new_pkt, src_ip, dst_ip)
 
-        return
-        # omnetpp.ini, ipconfig.xml configuration creation
-        # omnetpp run
-        # template pcap retrieve
-
-
-
-
-        # Stores triples of (timestamp, source_id, destination_id) for each timestamp.
-        # Victim has id=0. Attacker tuple does not need to specify the destination because it's always the victim.
-        timestamps_tuples = []
-        # For each attacker(id), stores the current source-ports of SYN-packets
-        # which still have to be acknowledged by the victim, as a "FIFO" for each attacker
-        previous_attacker_port = []
-        replies_count = 0
-        already_used_pkts = 0
-        sum_diff = 0
-
-        self.attack_start_utime = self.get_param_value(self.INJECT_AT_TIMESTAMP)
-        self.timestamp_controller.set_pps(attacker_pps)
-        attack_ends_time = self.timestamp_controller.get_timestamp() + attack_duration
-
-        # For each attacker, generate his own packets, then merge all packets
-        for attacker in range(num_attackers):
-            # set latency limit to either the minimal latency occurring in the pcap, the default or the user specified limit
-            # get minimal and maximal latency found in the pcap
-            if not latency_limit:
-                min_latency, max_latency = self.get_reply_latency(ip_attackers_list[attacker], ip_destination)
-                latency_limit = min_latency
-
-            # Initialize empty port "FIFO" for current attacker
-            previous_attacker_port.append([])
-            # Calculate timestamp of first SYN-packet of attacker
-            timestamp_next_pkt = self.timestamp_controller.reset_timestamp()
-            if attacker != 0:
-                timestamp_next_pkt = rnd.uniform(timestamp_next_pkt,
-                                                 self.timestamp_controller.next_timestamp(latency=latency_limit))
-            # calculate each attackers packet count without exceeding the total number of attackers
-            attacker_pkts_num = 0
-            if already_used_pkts < pkts_num:
-                random_offset = rnd.randint(0, int(pkts_num / num_attackers / 2))
-                if attacker == num_attackers-1:
-                    random_offset = 0
-                attacker_pkts_num = int((pkts_num - already_used_pkts) / (num_attackers - attacker)) + random_offset
-                already_used_pkts += attacker_pkts_num
-                # each attacker gets a different pps according to his pkt count offset
-                ratio = float(attacker_pkts_num) / float(pkts_num)
-                attacker_pps = pps * ratio
-                self.timestamp_controller.set_pps(attacker_pps)
-
-            for pkt_num in range(attacker_pkts_num):
-                # Count attack packets that exceed the attack duration
-                if timestamp_next_pkt > attack_ends_time:
-                    diff = timestamp_next_pkt-attack_ends_time
-                    sum_diff += diff
-                    self.exceeding_packets += 1
-
-                # Add timestamp of attacker SYN-packet. Attacker tuples do not need to specify destination
-                timestamps_tuples.append((timestamp_next_pkt, attacker+1))
-
-                # Calculate timestamp of victim ACK-packet
-                timestamp_reply = self.timestamp_controller.next_timestamp(latency=latency_limit)
-
-                # Add timestamp of victim ACK-packet(victim always has id=0)
-                timestamps_tuples.append((timestamp_reply, 0, attacker+1))
-
-                # Calculate timestamp for next attacker SYN-packet
-                self.timestamp_controller.set_timestamp(timestamp_next_pkt)
-                timestamp_next_pkt = self.timestamp_controller.next_timestamp()
-
-        # Sort timestamp-triples according to their timestamps in ascending order
-        timestamps_tuples.sort(key=lambda tmstmp: tmstmp[0])
-        self.attack_start_utime = timestamps_tuples[0][0]
-
-        # For each triple, generate packet
-        for timestamp in timestamps_tuples:
-            # tuple layout: [timestamp, attacker_id]
-
-            # If current current triple is an attacker
-            if timestamp[1] != 0:
-
-                attacker_id = timestamp[1]-1
-                # Build request package
-                # Select one IP address and its corresponding MAC address
-                ip_source = ip_attackers_list[attacker_id]
-                mac_source = mac_attackers_list[attacker_id]
-
-                # Determine source port
-                (port_source, ttl_value) = Util.get_attacker_config(ip_attackers_list, ip_source)
-
-                # If source ports were specified by the user, get random port from specified ports
-                if port_source_list[0] != self.default_port:
-                    port_source = rnd.choice(port_source_list)
-
-                # Push port of current attacker SYN-packet into port "FIFO" of the current attacker
-                # only if victim can still respond, otherwise, memory is wasted
-                if replies_count <= victim_buffer:
-                    previous_attacker_port[attacker_id].insert(0, port_source)
-
-                request_ether = inet.Ether(dst=mac_destination, src=mac_source)
-                request_ip = inet.IP(src=ip_source, dst=ip_destination, ttl=ttl_value)
-                # Random win size for each packet
-                source_win_size = rnd.choice(source_win_sizes)
-                request_tcp = inet.TCP(sport=port_source, dport=port_destination, flags='S', ack=0,
-                                       window=source_win_size)
-
-                request = (request_ether / request_ip / request_tcp)
-                request.time = timestamp[0]
-
-                pkt = request
-
-            # If current triple is the victim
-            elif replies_count <= victim_buffer:
-                # Build reply package
-                attacker_id = timestamp[2]-1
-                ip_source = ip_attackers_list[attacker_id]
-
-                reply_ether = inet.Ether(src=mac_destination, dst=mac_attackers_list[attacker_id])
-                reply_ip = inet.IP(src=ip_destination, dst=ip_source, flags='DF')
-                # Pop port from attacker's port "FIFO" into destination port
-                reply_tcp = inet.TCP(sport=port_destination, dport=previous_attacker_port[attacker_id].pop(), seq=0,
-                                     ack=1, flags='SA', window=destination_win_value, options=[('MSS', mss_dst)])
-                reply = (reply_ether / reply_ip / reply_tcp)
-
-                reply.time = timestamp[0]
-
-                pkt = reply
-            else:
-                continue
-
-            result = self.add_packet(pkt, ip_source, ip_destination)
-
-            if result == 1:
-                replies_count += 1
-
-            if self.buffer_full():
-                self.flush_packets()
+        if self.buffer_full():
+            self.flush_packets()
 
     def generate_attack_pcap(self):
         """
@@ -500,6 +368,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         :return: The location of the generated pcap file.
         """
+
+        
         # Store timestamp of first packet (for attack label)
         self.attack_start_utime = self.packets[0].time
         self.attack_end_utime = self.packets[-1].time
