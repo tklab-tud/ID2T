@@ -324,70 +324,42 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         self.run_simulation()
 
-        raw_packets = scapy.utils.RawPcapReader(self.template_pcap_path)
+        raw_packets = scapy.utils.PcapReader(self.template_pcap_path)
         
         assoc = {a[0]: a[1] for a in self.attackers}
         assoc.update({v[0]: v[1] for v in self.victims})
 
+        rel_time = 0
+
         for self.pkt_num, pkt in enumerate(raw_packets):
-            eth_frame = inet.Ether(pkt[0])
+            if self.pkt_num == 0:
+                rel_time = pkt.time
+
+            eth_frame = pkt
             ip_pkt = eth_frame.payload
-            tcporudp_pkt = ip_pkt.payload
-                              
-            src_ip = ip_pkt.getfieldval('src')
-            src_mac = eth_frame.getfieldval('src')
-            dst_ip = ip_pkt.getfieldval('dst')
-            dst_mac = eth_frame.getfieldval('dst')
+
+            src_ip = ip_pkt.src
+            src_mac = eth_frame.src
+            dst_ip = ip_pkt.dst
+            dst_mac = eth_frame.dst
 
             if src_ip in assoc:
-                eth_frame.setfieldval('src', assoc[src_ip])
+                eth_frame.src = assoc[src_ip]
             if dst_ip in assoc:
-                eth_frame.setfieldval('dst', assoc[dst_ip]) 
+                eth_frame.dst = assoc[dst_ip]
             
-            print("¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤¤")
-            print(pkt)
+            new_pkt = (eth_frame / ip_pkt)
+            new_time = pkt.time-rel_time
 
-            #new_pkt = (eth_frame / ip_pkt / tcporudp_pkt / str_tcp_seg)
-            #timestamp_next_pkt = self.timestamp_controller.next_timestamp() + float(time_steps.random())
-            #new_pkt.time = timestamp_next_pkt
+            timestamp_next_pkt += new_time
+            new_pkt.time = timestamp_next_pkt
 
-            #self.add_packet(new_pkt, src_ip, dst_ip)
+            self.add_packet(new_pkt, src_ip, dst_ip)
 
-
-
-
-
-
-
-
-        raise Exception("this") 
+        return
         # omnetpp.ini, ipconfig.xml configuration creation
         # omnetpp run
         # template pcap retrieve
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
