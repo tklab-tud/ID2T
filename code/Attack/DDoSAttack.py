@@ -1,5 +1,6 @@
 import logging
 import random as rnd
+import subprocess, shlex
 
 import lea
 import scapy.layers.inet as inet
@@ -12,6 +13,7 @@ import Attack.BaseAttack as BaseAttack
 import Lib.Utility as Util
 
 from Attack.Parameter import Parameter, Float, IntegerPositive, IPAddress, MACAddress, Port, String
+import ipaddress as ip_addr
 
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 
@@ -32,7 +34,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
     CHANNEL_PER = 'channel.per'
     SUBTYPE = 'attack.subtype'
     TCP = 'tcp.version'
-    
+    QTENV = 'qtenv'
 
 
     def __init__(self):
@@ -77,7 +79,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
             Parameter(self.CHANNEL_DELAY, Float()),
             Parameter(self.CHANNEL_BER, Float()),
             Parameter(self.CHANNEL_PER, Float()),
-            Parameter(self.TCP, String())
+            Parameter(self.TCP, String()),
+            Parameter(self.QTENV, String())
         ])
 
     def init_param(self, param: str) -> bool:
@@ -94,6 +97,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         if param == self.SUBTYPE:
             value = 'syn_flood'
+        elif param == self.QTENV:
+            value = "false"
         elif param == self.TCP:
             value = 'NEW_RENO'
         elif param == self.NUMBER_ATTACKERS:
@@ -172,29 +177,47 @@ class DDoSAttack(BaseAttack.BaseAttack):
         
         return self.add_param_value(param, value)
 
+    def get_router_address(self, ip):
+        return str(list(ip_addr.ip_network(ip+'/24', False).hosts())[0])
+
     def generate_config_xml(self):
         root = ET.Element('config')
         
         for idx, attacker in enumerate(self.attackers):
             interface = ET.SubElement(root, 'interface')
-            interface.set('among', 'attacker['+str(idx)+'] router')
-            # interface.set('names', 'eth0')
+            interface.set('hosts', 'attacker['+str(idx)+']')
+            interface.set('names', 'eth0')
+            interface.set('netmask', '255.255.255.0')
             interface.set('address', attacker[0])
+
+            interface_router = ET.SubElement(root, 'interface')
+            interface_router.set('hosts', 'router')
+            interface_router.set('names', 'eth'+str(idx))
+            interface_router.set('netmask', '255.255.255.0')
+            interface_router.set('address', self.get_router_address(attacker[0]))
 
         for idx, victim in enumerate(self.victims):
             interface = ET.SubElement(root, 'interface')
-            interface.set('among', 'victim['+str(idx)+'] router')
-            # interface.set('names', 'eth0')
+            interface.set('hosts', 'victim['+str(idx)+']')
+            interface.set('names', 'eth0')
+            interface.set('netmask', '255.255.255.0')
             interface.set('address', victim[0])
+
+            interface_router = ET.SubElement(root, 'interface')
+            interface_router.set('hosts', 'router')
+            interface_router.set('names', 'eth'+str(idx+len(self.attackers)))
+            interface_router.set('netmask', '255.255.255.0')
+            interface_router.set('address', self.get_router_address(victim[0]))
 
         tree = ET.tostring(root, encoding='unicode')
 
         tr = parseString(tree).toprettyxml()[23:]
 
-        with open(self.OMNETPP_RES+self.current_ddos+"/simulations/ip-config-id2t.xml", "w") as f:
+        with open(self.OMNETPP_RES+self.current_ddos+"/simulations/ip-config.xml", "w") as f:
             f.write(tr)
 
     def generate_omnetpp_ini(self):
+        # every attacker has n = len(self.victims) applications
         # self.pps_victims contains pps for every victim
         # self.victims/self.attackers contains victim's/attacker's (ip, mac, open port, mss)
 
@@ -202,8 +225,37 @@ class DDoSAttack(BaseAttack.BaseAttack):
         pass
 
     def run_simulation(self):
-        # TODO: omnetpp simulation run based on omnetpp.ini
-        pass
+        proj_dir = Util.RESOURCE_DIR+"/inet-ddos/"+self.current_ddos
+        src_dir = proj_dir+"/src/"
+        simulations_dir = proj_dir+"/simulations/"
+
+        omnetpp_ini = simulations_dir + "omnetpp.ini"
+        inet_dir = "inet/"
+
+        cmd = '''opp_run \
+        -u {gui} \
+        -n {src_dir} \
+        -n {simulations_dir} \
+        -n {inet_dir}/src/ \
+        -x inet.common.selfdoc \
+        -x inet.linklayer.configurator.gatescheduling.z3 \
+        -x inet.emulation \
+        -x inet.showcases.visualizer.osg \
+        -x inet.examples.emulation \
+        -x inet.showcases.emulation \
+        -x inet.transportlayer.tcp_lwip \
+        -x inet.applications.voipstream \
+        -x inet.visualizer.osg \
+        -x inet.examples.voipstream \
+        -f {omnetpp_ini} \
+        --image-path={inet_dir}/images \
+        -l {inet_dir}/src/libINET.so \
+        '''.format(simulations_dir=simulations_dir, src_dir=src_dir, omnetpp_ini=omnetpp_ini, inet_dir=inet_dir, gui="Qtenv" if "true" == self.get_param_value(self.QTENV) else "Cmdenv")
+        
+        args = shlex.split(cmd)
+
+        subprocess.run(args)
+
 
     def generate_attack_packets(self):
         """
@@ -228,7 +280,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         if (self.current_ddos != "syn_flood") and (self.current_ddos != "udp_flood") and (self.current_ddos != "dns_amplification"):
             raise Exception('Unrecognized DDoS subtype.')
 
-        self.template_pcap_path = self.OMNETPP_RES + self.current_ddos + "/simulations/results/template.pcap"
+        self.template_pcap_path = "results/template.pcap"
 
         ip_attackers_list = self.get_param_value(self.IP_SOURCE)
         mac_attackers_list = self.get_param_value(self.MAC_SOURCE)
@@ -337,12 +389,15 @@ class DDoSAttack(BaseAttack.BaseAttack):
         rel_time = 0
 
         for self.pkt_num, pkt in enumerate(raw_packets):
+            if not pkt.haslayer(inet.IP):
+                continue
+
             if self.pkt_num == 0:
                 rel_time = pkt.time
 
             eth_frame = pkt
             ip_pkt = eth_frame.payload
-
+            
             src_ip = ip_pkt.src
             dst_ip = ip_pkt.dst
 
