@@ -144,6 +144,7 @@ class MS17ScanAttack(BaseAttack.BaseAttack):
 
         # Scan (MS17)
         # Read Win7_eternalblue_scan pcap file
+        arrival_time = 0
         orig_ip_dst = None
         exploit_raw_packets = scapy.utils.RawPcapReader(self.template_scan_pcap_path)
         inter_arrival_times = self.get_inter_arrival_time(exploit_raw_packets)
@@ -156,6 +157,7 @@ class MS17ScanAttack(BaseAttack.BaseAttack):
             eth_frame = inet.Ether(pkt[0])
             ip_pkt = eth_frame.payload
             tcp_pkt = ip_pkt.payload
+            arrival_time = arrival_time + inter_arrival_times[self.pkt_num]
 
             if self.pkt_num == 0:
                 if tcp_pkt.getfieldval("dport") == SMBLib.smb_port:
@@ -186,12 +188,6 @@ class MS17ScanAttack(BaseAttack.BaseAttack):
                         tcp_options[0] = ("MSS", mss_value)
                         tcp_pkt.setfieldval("options", tcp_options)
 
-                new_pkt = (eth_frame / ip_pkt / tcp_pkt)
-                new_pkt.time = timestamp_next_pkt
-
-                # FIXME: double check inter_arrival_times calculation
-                timestamp_next_pkt = self.timestamp_controller.next_timestamp() + inter_arrival_times[
-                    self.pkt_num]  # float(timeSteps.random())
             # Reply
             else:
                 # Ether
@@ -217,12 +213,10 @@ class MS17ScanAttack(BaseAttack.BaseAttack):
                         tcp_options[0] = ("MSS", mss_value)
                         tcp_pkt.setfieldval("options", tcp_options)
 
-                new_pkt = (eth_frame / ip_pkt / tcp_pkt)
-                # FIXME: double check inter_arrival_times calculation
-                timestamp_next_pkt = self.timestamp_controller.next_timestamp() + inter_arrival_times[
-                    self.pkt_num]  # + float(timeSteps.random())
-                new_pkt.time = timestamp_next_pkt
-
+            # Generate packet 
+            new_pkt = (eth_frame / ip_pkt / tcp_pkt)
+            new_pkt.time = timestamp_next_pkt + arrival_time
+            timestamp_next_pkt = self.timestamp_controller.next_timestamp()
             self.add_packet(new_pkt, ip_source, ip_destination)
 
         exploit_raw_packets.close()

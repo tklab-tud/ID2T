@@ -131,6 +131,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
 
         # Inject SQLi Attack
         # Read SQLi Attack pcap file
+        arrival_time = 0
         orig_ip_dst = None
         exploit_raw_packets = scapy.utils.RawPcapReader(self.template_attack_pcap_path)
         inter_arrival_times, inter_arrival_time_dist = self.get_inter_arrival_time(exploit_raw_packets, True)
@@ -151,6 +152,7 @@ class SQLiAttack(BaseAttack.BaseAttack):
             ip_pkt = eth_frame.payload
             tcp_pkt = ip_pkt.payload
             str_tcp_seg = str(tcp_pkt.payload)
+            arrival_time = arrival_time + inter_arrival_times[self.pkt_num]
 
             # Clean payloads
             eth_frame.payload = inet.NoPayload()
@@ -208,11 +210,6 @@ class SQLiAttack(BaseAttack.BaseAttack):
                 if not (tcp_pkt.getfieldval("flags") == 16 and len(str_tcp_seg) == 0):  # flags=A:
                     attacker_seq += max(len(str_tcp_seg), 1)
 
-                new_pkt = (eth_frame / ip_pkt / tcp_pkt / str_tcp_seg)
-                new_pkt.time = timestamp_next_pkt
-
-                timestamp_next_pkt = self.timestamp_controller.next_timestamp() + float(time_steps.random())
-
             # Victim --> attacker
             else:
                 # Ether
@@ -239,10 +236,10 @@ class SQLiAttack(BaseAttack.BaseAttack):
                 if not (tcp_pkt.getfieldval("flags") == 16 and strLen == 0):  # flags=A:
                     victim_seq += max(strLen, 1)
 
-                new_pkt = (eth_frame / ip_pkt / tcp_pkt / str_tcp_seg)
-                timestamp_next_pkt = self.timestamp_controller.next_timestamp() + float(time_steps.random())
-                new_pkt.time = timestamp_next_pkt
-
+            # Generate packet 
+            new_pkt = (eth_frame / ip_pkt / tcp_pkt / str_tcp_seg)
+            new_pkt.time = timestamp_next_pkt + arrival_time
+            timestamp_next_pkt = self.timestamp_controller.next_timestamp()
             self.add_packet(new_pkt, ip_source, ip_destination)
 
         exploit_raw_packets.close()

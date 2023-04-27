@@ -95,11 +95,17 @@ class SalityBotnet(BaseAttack.BaseAttack):
 
         # Inject Sality botnet
         # Read sality_botnet pcap file
+        arrival_time = 0
         exploit_raw_packets = scapy.utils.RawPcapReader(self.template_attack_pcap_path)
-
+        inter_arrival_times = self.get_inter_arrival_time(exploit_raw_packets)
+        exploit_raw_packets.close()
+        exploit_raw_packets = scapy.utils.RawPcapReader(self.template_attack_pcap_path)
+        
         for self.pkt_num, pkt in enumerate(exploit_raw_packets):
             eth_frame = inet.Ether(pkt[0])
             ip_pkt = eth_frame.payload
+            ip_payload = ip_pkt.payload
+            arrival_time = arrival_time + inter_arrival_times[self.pkt_num]
 
             # Ether
             if eth_frame.getfieldval("src") in mac_map:
@@ -123,11 +129,10 @@ class SalityBotnet(BaseAttack.BaseAttack):
                 ttl_map[ip_pkt.getfieldval("ttl")] = source_ttl
             ip_pkt.setfieldval("ttl", ttl_map[ip_pkt.getfieldval("ttl")])
 
-            new_pkt = (eth_frame / ip_pkt)
-            new_pkt.time = timestamp_next_pkt
-
+            # Generate packet 
+            new_pkt = (eth_frame / ip_pkt / ip_payload)
+            new_pkt.time = timestamp_next_pkt + arrival_time
             timestamp_next_pkt = self.timestamp_controller.next_timestamp()
-
             self.add_packet(new_pkt, ip_source, ip_dns_server)
 
         exploit_raw_packets.close()
