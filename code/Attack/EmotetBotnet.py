@@ -69,13 +69,7 @@ class EmotetBotnet(BaseAttack.BaseAttack):
         mac_source = self.get_param_value(self.MAC_SOURCE)
         ip_source = self.get_param_value(self.IP_SOURCE)
         spam_bot_activity = self.get_param_value(self.SPAM_BOT_ACTIVITY)
-        # Select IP for DNS server from background traffic
-        ip_dns_server = self.statistics.process_db_query(
-            "SELECT ipAddress FROM ip_protocols WHERE protocolName='DNS' AND protocolCount=(SELECT MAX(protocolCount) "
-            "FROM ip_protocols WHERE protocolName='DNS');")
-        ip_dns_server = Util.handle_most_used_outputs(ip_dns_server)
-        if not ip_dns_server or ip_source == ip_dns_server:
-            ip_dns_server = self.statistics.get_random_ip_address()
+        ip_dns_server = self.statistics.get_random_ip_address()
         mac_dns_server = self.statistics.get_mac_address(ip_dns_server)
         # Set Window Size based on Window Size distribution of IP address
         win_dist = self.statistics.get_win_distribution(ip_source)
