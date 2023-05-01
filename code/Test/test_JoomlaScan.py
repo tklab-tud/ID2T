@@ -10,5 +10,5 @@ class UnitTestJoomlaScan(Test.ID2TAttackTest):
      def test_joomla_mac(self): 
          self.order_test([['JoomlaScan','mac.src=00:0C:21:1C:60:61','mac.dst=04:0C:32:2C:63:62',]])
 
-     def test_joomla_port_source(self):
-         self.order_test([['JoomlaScan','port.src=3300']])
+     def test_joomla_port_destination(self):
+         self.order_test([['JoomlaScan','port.dst=3300']])
