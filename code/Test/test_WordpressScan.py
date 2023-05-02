@@ -10,5 +10,5 @@ class UnitTestWordpressScan(Test.ID2TAttackTest):
     def test_wordpress_mac(self): 
         self.order_test([['WordpressScan','mac.src=00:0C:21:1C:60:61','mac.dst=04:0C:32:2C:63:62',]])
 
-    def test_wordpress_port_source(self):
-        self.order_test([['WordpressScan','port.src=3300']])
+    def test_wordpress_port_destination(self):
+        self.order_test([['WordpressScan','port.dst=3300']])
