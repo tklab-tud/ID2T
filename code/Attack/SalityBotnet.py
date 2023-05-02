@@ -1,6 +1,7 @@
 import logging
 import random as rnd
-
+import lea
+from scapy.layers.inet import TCP
 import scapy.layers.inet as inet
 import scapy.utils
 
@@ -75,14 +76,22 @@ class SalityBotnet(BaseAttack.BaseAttack):
         ip_dns_server = self.statistics.get_random_ip_address()
         mac_dns_server = self.statistics.get_mac_address(ip_dns_server)
 
+        # Set Window Size based on Window Size distribution of IP address
+        win_dist = self.statistics.get_win_distribution(ip_source)
+        if len(win_dist) > 0:
+            win_prob_dict = lea.Lea.fromValFreqsDict(win_dist)
+        else:
+            win_dist = self.statistics.get_win_distribution(self.statistics.get_most_used_ip_address())
+            win_prob_dict = lea.Lea.fromValFreqsDict(win_dist)
+        origin_wins = {}
+        ttl_map = {}
+
         # Bot original config in the template PCAP
         origin_mac_src = "08:00:27:e5:d7:b0"
         origin_ip_src = "10.0.2.15"
 
         origin_mac_dns_server = "52:54:00:12:35:02"
         origin_ip_dns_server = "10.0.2.2"
-
-        ttl_map = {}
 
         ip_map = {origin_ip_src: ip_source, origin_ip_dns_server: ip_dns_server}
         mac_map = {origin_mac_src: mac_source, origin_mac_dns_server: mac_dns_server}
@@ -122,6 +131,18 @@ class SalityBotnet(BaseAttack.BaseAttack):
                         source_ttl = rnd.choice(source_ttl)
                 ttl_map[ip_pkt.getfieldval("ttl")] = source_ttl
             ip_pkt.setfieldval("ttl", ttl_map[ip_pkt.getfieldval("ttl")])
+
+            # Window mapping on TCP layer
+            if ip_pkt.haslayer(TCP):
+                origin_win = ip_payload.getfieldval("window")
+                if origin_win not in origin_wins:
+                    while True:
+                        win_rand_pick = win_prob_dict.random()
+                        if win_rand_pick != 0:
+                                break
+                    origin_wins[origin_win] = win_rand_pick
+                new_win = origin_wins[origin_win]
+                ip_payload.setfieldval("window", new_win)
 
             # Generate packet 
             new_pkt = (eth_frame / ip_pkt / ip_payload)

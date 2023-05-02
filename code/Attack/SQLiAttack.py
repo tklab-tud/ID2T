@@ -113,6 +113,21 @@ class SQLiAttack(BaseAttack.BaseAttack):
         # Check ip.src == ip.dst
         self.ip_src_dst_catch_equal(ip_source, ip_destination)
 
+        # Set Window Size based on Window Size distribution of IP address
+        source_win_dist = self.statistics.get_win_distribution(ip_source)
+        if len(source_win_dist) > 0:
+            source_win_prob_dict = lea.Lea.fromValFreqsDict(source_win_dist)
+        else:
+            source_win_dist = self.statistics.get_win_distribution(self.statistics.get_most_used_ip_address())
+            source_win_prob_dict = lea.Lea.fromValFreqsDict(source_win_dist)
+
+        destination_win_dist = self.statistics.get_win_distribution(ip_destination)
+        if len(destination_win_dist) > 0:
+            destination_win_prob_dict = lea.Lea.fromValFreqsDict(destination_win_dist)
+        else:
+            destination_win_dist = self.statistics.get_win_distribution(self.statistics.get_most_used_ip_address())
+            destination_win_prob_dict = lea.Lea.fromValFreqsDict(destination_win_dist)
+
         # Set TTL based on TTL distribution of IP address
         source_ttl_dist = self.statistics.get_ttl_distribution(ip_source)
         if len(source_ttl_dist) > 0:
@@ -129,13 +144,14 @@ class SQLiAttack(BaseAttack.BaseAttack):
             destination_ttl_value = Util.handle_most_used_outputs(
                 self.statistics.get_most_used_ttl_value())
 
+        source_origin_wins, destination_origin_wins = {}, {}
+
         # Inject SQLi Attack
         # Read SQLi Attack pcap file
         arrival_time = 0
         orig_ip_dst = None
         exploit_raw_packets = scapy.utils.RawPcapReader(self.template_attack_pcap_path)
         inter_arrival_times, inter_arrival_time_dist = self.get_inter_arrival_time(exploit_raw_packets, True)
-        time_steps = lea.Lea.fromValFreqsDict(inter_arrival_time_dist)
         exploit_raw_packets.close()
         exploit_raw_packets = scapy.utils.RawPcapReader(self.template_attack_pcap_path)
 
@@ -171,6 +187,17 @@ class SQLiAttack(BaseAttack.BaseAttack):
                 victim_seq = rnd.randint(1000, 50000)
                 # First packet in a connection has ACK = 0
                 tcp_pkt.setfieldval("ack", 0)
+
+            # Window Size (mapping)
+            source_origin_win = tcp_pkt.getfieldval("window")
+            if source_origin_win not in source_origin_wins:
+                while True:
+                    source_win_rand_pick = source_win_prob_dict.random()
+                    if source_win_rand_pick != 0:
+                            break
+                source_origin_wins[source_origin_win] = source_win_rand_pick
+            new_win = source_origin_wins[source_origin_win]
+            tcp_pkt.setfieldval("window", new_win)
 
             # Attacker --> vicitm
             if ip_pkt.getfieldval("dst") == orig_ip_dst:  # victim IP
@@ -219,6 +246,18 @@ class SQLiAttack(BaseAttack.BaseAttack):
                 ip_pkt.setfieldval("src", ip_destination)
                 ip_pkt.setfieldval("dst", ip_source)
                 ip_pkt.setfieldval("ttl", destination_ttl_value)
+
+
+                # Window Size
+                destination_origin_win = tcp_pkt.getfieldval("window")
+                if destination_origin_win not in destination_origin_wins:
+                    while True:
+                        destination_win_rand_pick = destination_win_prob_dict.random()
+                        if destination_win_rand_pick != 0:
+                            break
+                    destination_origin_wins[destination_origin_win] = destination_win_rand_pick
+                new_win = destination_origin_wins[destination_origin_win]
+                tcp_pkt.setfieldval("window", new_win)
 
                 # TCP
 
