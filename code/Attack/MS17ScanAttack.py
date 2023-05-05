@@ -178,7 +178,11 @@ class MS17ScanAttack(BaseAttack.BaseAttack):
                 # Window Size (mapping)
                 source_origin_win = tcp_pkt.getfieldval("window")
                 if source_origin_win not in source_origin_wins:
-                    source_origin_wins[source_origin_win] = source_win_prob_dict.random()
+                    while True:
+                        source_win_rand_pick = source_win_prob_dict.random()
+                        if source_win_rand_pick != 0:
+                                break
+                    source_origin_wins[source_origin_win] = source_win_rand_pick
                 new_win = source_origin_wins[source_origin_win]
                 tcp_pkt.setfieldval("window", new_win)
                 # MSS
@@ -203,7 +207,11 @@ class MS17ScanAttack(BaseAttack.BaseAttack):
                 # Window Size
                 destination_origin_win = tcp_pkt.getfieldval("window")
                 if destination_origin_win not in destination_origin_wins:
-                    destination_origin_wins[destination_origin_win] = destination_win_prob_dict.random()
+                    while True:
+                        destination_win_rand_pick = destination_win_prob_dict.random()
+                        if destination_win_rand_pick != 0:
+                            break
+                    destination_origin_wins[destination_origin_win] = destination_win_rand_pick
                 new_win = destination_origin_wins[destination_origin_win]
                 tcp_pkt.setfieldval("window", new_win)
                 # MSS
