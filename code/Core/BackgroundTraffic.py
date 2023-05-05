@@ -5,7 +5,7 @@ import scapy.layers.inet as inet
 import scapy.utils
 import os
 import tempfile
-from scapy.layers.inet import TCP
+from scapy.layers.inet import IP
 logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 load_layer("http")
 class BackgroundTraffic: 
@@ -20,58 +20,50 @@ class BackgroundTraffic:
             self.pcap_dest_path = pcap_dest_path
             self.packets = []
 
-        def locate_final_attack_packet(self):
+        def get_temp_attack_details(self, attacks_pcap_path): 
             """
-            Locates malicious attack packet and the IP address of its receiver after 
-            injection of attack packets for the attack: WinHttpSysExploit.
-            :return the IP address of the victim, the packet number for the malicious packet.
+            Retreieves relevant details from attack
+
+            :return IP address of the victim, timestamp for malicious packet, boolean (indicating whether background traffic should be modified)
             """
-            input_pcap_raw_packets = scapy.utils.RawPcapReader(self.pcap_dest_path)
+            input_pcap_raw_packets = scapy.utils.RawPcapReader(attacks_pcap_path)
             victim_ip = ''
-            final_attack_packet = 0
-            accept_encoding_for_malicious_attack_packet = "Accept-Encoding: AAAAAAAAAAAAAAAAAAAAAAAA,AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA&AA&**AAAAAAAAAAAAAAAAAAAA**A,AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA,AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA,AAAAAAAAAAAAAAAAAAAAAAAAAAA,****************************AAAAAA, *, ,"
-            http_port = 80
-            payload_size = 476
-            for pkt_num, pkt in enumerate(input_pcap_raw_packets): 
+            timestamp_for_malicious_packet = 0
+            background_manipulation = True
+            for pkt_num, pkt in enumerate(input_pcap_raw_packets):
                 eth_frame = inet.Ether(pkt[0])
-                ip_pkt = eth_frame.payload       
-                ip_payload = ip_pkt.payload
-                http_pkt = ip_payload.payload
-                str_tcp_seg = str(ip_payload.payload)
+                pkt_metadata = pkt[1]
+                ip_pkt = eth_frame.payload
+                if pkt_num == 12: 
+                    victim_ip = ip_pkt.getfieldval("dst")
+                    timestamp_for_malicious_packet = pkt_metadata.sec + pkt_metadata.usec / 1e6
+                if pkt_num == 13: 
+                    background_manipulation = False
+            return victim_ip, timestamp_for_malicious_packet, background_manipulation
 
-                if http_pkt and ip_payload.haslayer(TCP) and ip_payload.getfieldval("dport") == http_port and len(str_tcp_seg) == payload_size:
-                    payload = http_pkt[Raw].load.decode()
-                    http_pkt[Raw].load = payload
-                    if accept_encoding_for_malicious_attack_packet in payload:
-                        final_attack_packet = pkt_num + 1
-                        victim_ip = ip_pkt.getfieldval("dst")
-                        return self.modify_background_traffic(victim_ip, final_attack_packet)
-
-        def modify_background_traffic(self, victim_ip, final_attack_packet):
+        def modify_background_traffic(self, victim_ip, timestamp_for_malicious_packet):
             """
             Deletes all activity the IP address of the victim after having received 
             the malicious attack packet.
+
             :return updated pcap file.
             """
             input_pcap_raw_packets = scapy.utils.RawPcapReader(self.pcap_dest_path)
-            for pkt_num, pkt in enumerate(input_pcap_raw_packets):
+            for _, pkt in enumerate(input_pcap_raw_packets):
                 eth_frame = inet.Ether(pkt[0])
+                pkt_metadata = pkt[1]
                 ip_pkt = eth_frame.payload
                 ip_payload = ip_pkt.payload
-                http_pkt = ip_payload.payload
-                if http_pkt: 
+                timestamp = pkt_metadata.sec + pkt_metadata.usec / 1e6
+
+                is_victim_ip = True
+                if eth_frame.haslayer(IP): 
                     ip_src = ip_pkt.getfieldval("src")
                     ip_dst = ip_pkt.getfieldval("dst")
-                    if pkt_num < final_attack_packet:
-                        new_pkt = new_pkt = (eth_frame / ip_pkt / ip_payload)
-                        self.packets.append(new_pkt)
-                    if pkt_num > final_attack_packet and ip_src != victim_ip and ip_dst != victim_ip:
-                        new_pkt = new_pkt = (eth_frame / ip_pkt / ip_payload)
-                        self.packets.append(new_pkt)
-                else: 
-                    if pkt_num < final_attack_packet: 
-                        new_pkt = new_pkt = (eth_frame / ip_pkt / ip_payload)
-                        self.packets.append(new_pkt)
+                    is_victim_ip = ip_src == victim_ip or ip_dst == victim_ip
+                if timestamp <= timestamp_for_malicious_packet or (timestamp > timestamp_for_malicious_packet and not is_victim_ip):
+                    new_pkt = new_pkt = (eth_frame / ip_pkt / ip_payload)
+                    self.packets.append(new_pkt)
             input_pcap_raw_packets.close()
             if len(self.packets) > 0:
                 self.packets = sorted(self.packets, key=lambda pkt: pkt.time)

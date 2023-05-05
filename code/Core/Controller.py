@@ -138,10 +138,12 @@ class Controller:
                 print("Merging base pcap with single attack pcap...", end=" ")
                 sys.stdout.flush()  # force python to print text immediately
                 self.pcap_dest_path = self.pcap_file.merge_attack(attacks_pcap_path)
-                if attack[0] == 'WinHTTPSysExploit' and self.added_packets == 13:
+                if attack[0] == 'WinHTTPSysExploit':
                     self.background_traffic = BackgroundTraffic.BackgroundTraffic(self.pcap_dest_path)
                     self.background_traffic.WinHTTPSysExploit = BackgroundTraffic.BackgroundTraffic.WinHTTPSysExploit(self.pcap_dest_path)
-                    updated_pkt_count = self.background_traffic.WinHTTPSysExploit.locate_final_attack_packet()
+                    victim_ip, timestamp_for_malicious_packet, background_manipulation = self.background_traffic.WinHTTPSysExploit.get_temp_attack_details(attacks_pcap_path)
+                    if background_manipulation == True:
+                        updated_pkt_count = self.background_traffic.WinHTTPSysExploit.modify_background_traffic(victim_ip, timestamp_for_malicious_packet)
             if self.pcap_out_path:
                 if not self.pcap_out_path.endswith(".pcap"):
                     self.pcap_out_path += ".pcap"
@@ -162,10 +164,11 @@ class Controller:
                 self.created_files.append(outpath)
 
             print("done.")
-            if attack[0] == 'WinHTTPSysExploit' and self.added_packets == 13: 
-                print("-----------------------")
+            if attack[0] == 'WinHTTPSysExploit' and background_manipulation == True: 
+                print("------------------------------------------------------------")
                 print('Background traffic was impacted by the exploit')
-                print('Total added packet count: ' + str(updated_pkt_count))
+                print('Total packet count: ' + str(updated_pkt_count))
+                print("------------------------------------------------------------")
 
             # delete intermediate PCAP files
             if self.debug:
