@@ -269,7 +269,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 raise IOError()
 
         # Attack config
-        config['General']['sim-time-limit'] = str(attack_duration)+'s'
+        config['General']['sim-time-limit'] = str(attack_duration+1)+'s'
         config['General']['**.attackersCount'] = str(num_attackers)
         config['General']['**.victimsCount'] = str(num_victims)
         config['General']['**.attacker[*].numApps'] = str(num_victims)
@@ -282,7 +282,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
             payload_size = self.get_param_value(self.PAYLOAD_SIZE)
 
             config['General']['**.attacker[*].app[*].messageLength'] = str(payload_size)+'B'
-            config['General']['**.attacker[*].app[*].sendInterval'] = '0.01s'
+            config['General']['**.attacker[*].app[*].sendInterval'] = '0.001s'
             config['General']['**.attacker[*].app[*].burstDuration'] = '15s'
             config['General']['**.attacker[*].app[*].sleepDuration'] = '1s'
 
@@ -362,7 +362,10 @@ class DDoSAttack(BaseAttack.BaseAttack):
         """
         Creates the attack packets.
         """
-        timestamp_next_pkt = self.get_param_value(self.INJECT_AT_TIMESTAMP)
+
+        shutil.rmtree(pathlib.Path('results/'))
+        
+        offset_timestamp = self.get_param_value(self.INJECT_AT_TIMESTAMP)
 
         num_attackers = self.get_param_value(self.NUMBER_ATTACKERS)
         num_victims = self.get_param_value(self.NUMBER_VICTIMS)
@@ -500,13 +503,15 @@ class DDoSAttack(BaseAttack.BaseAttack):
         assoc.update({v[0]: v[1] for v in self.victims})
 
         rel_time = 0
+        first_valid = True
 
         for self.pkt_num, pkt in enumerate(raw_packets):
             if not pkt.haslayer(inet.IP):
                 continue
 
-            if self.pkt_num == 0:
+            if first_valid:
                 rel_time = pkt.time
+                first_valid = False
 
             eth_frame = pkt
             ip_pkt = eth_frame.payload
@@ -520,19 +525,15 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 eth_frame.dst = assoc[dst_ip]
             
             new_pkt = (eth_frame / ip_pkt)
-            new_time = pkt.time-rel_time
 
-            timestamp_next_pkt += new_time
-            new_pkt.time = timestamp_next_pkt
-
+            new_pkt.time = pkt.time + offset_timestamp - rel_time
+            
             self.add_packet(new_pkt, src_ip, dst_ip)
 
-        if self.buffer_full():
-            self.flush_packets()
+        #if self.buffer_full():
+        #    self.flush_packets()
+                        
         
-        print(self.packets)
-                
-        shutil.rmtree(pathlib.Path('results/'))
         
     def generate_attack_pcap(self):
         """
@@ -541,10 +542,12 @@ class DDoSAttack(BaseAttack.BaseAttack):
         :return: The location of the generated pcap file.
         """
 
-        
         # Store timestamp of first packet (for attack label)
-        self.attack_start_utime = self.packets[0].time
-        self.attack_end_utime = self.packets[-1].time
+        try:
+            self.attack_start_utime = self.packets[0].time
+            self.attack_end_utime = self.packets[-1].time
+        except:
+            raise Exception(self.packets)
 
         if len(self.packets) > 0:
             self.packets = sorted(self.packets, key=lambda pkt: pkt.time)
