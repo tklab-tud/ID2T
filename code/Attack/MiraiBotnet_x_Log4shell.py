@@ -148,19 +148,8 @@ class MiraiBotnet_x_Log4shell(BaseAttack.BaseAttack):
                 self.statistics.get_most_used_ttl_value())
 
         # Set Window Size based on Window Size distribution of IP address
-        source_win_dist = self.statistics.get_win_distribution(ip_source)
-        if len(source_win_dist) > 0:
-            source_win_prob_dict = lea.Lea.fromValFreqsDict(source_win_dist)
-        else:
-            source_win_dist = self.statistics.get_win_distribution(self.statistics.get_most_used_ip_address())
-            source_win_prob_dict = lea.Lea.fromValFreqsDict(source_win_dist)
-
-        destination_win_dist = self.statistics.get_win_distribution(ip_destination)
-        if len(destination_win_dist) > 0:
-            destination_win_prob_dict = lea.Lea.fromValFreqsDict(destination_win_dist)
-        else:
-            destination_win_dist = self.statistics.get_win_distribution(self.statistics.get_most_used_ip_address())
-            destination_win_prob_dict = lea.Lea.fromValFreqsDict(destination_win_dist)
+        source_win_prob_dict = self.get_window_distribution(ip_source)
+        destination_win_prob_dict = self.get_window_distribution( ip_destination)
 
         # Set MSS (Maximum Segment Size) based on MSS distribution of IP address
         mss_value = Util.handle_most_used_outputs(self.statistics.get_most_used_mss_value())

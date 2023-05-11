@@ -72,12 +72,7 @@ class EmotetBotnet(BaseAttack.BaseAttack):
         ip_dns_server = self.statistics.get_random_ip_address()
         mac_dns_server = self.statistics.get_mac_address(ip_dns_server)
         # Set Window Size based on Window Size distribution of IP address
-        win_dist = self.statistics.get_win_distribution(ip_source)
-        if len(win_dist) > 0:
-            win_prob_dict = lea.Lea.fromValFreqsDict(win_dist)
-        else:
-            win_dist = self.statistics.get_win_distribution(self.statistics.get_most_used_ip_address())
-            win_prob_dict = lea.Lea.fromValFreqsDict(win_dist)
+        win_prob_dict = self.get_window_distribution(ip_source)
         origin_wins = {}
         ttl_map = {}
 
