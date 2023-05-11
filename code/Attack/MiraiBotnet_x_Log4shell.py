@@ -305,7 +305,7 @@ class MiraiBotnet_x_Log4shell(BaseAttack.BaseAttack):
         """
         if time_after_first_stage < 0 or time_after_second_stage < 0:
             print("WARNING: IGNORED both stage times due to one or both values being negative.")
-            return time_after_first_stage, time_after_second_stage
+            return 0,0
 
         time_after_second_stage = time_after_second_stage + time_after_first_stage
         if time_after_first_stage > time_after_second_stage:
