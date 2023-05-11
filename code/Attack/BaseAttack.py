@@ -821,20 +821,20 @@ class BaseAttack(metaclass=abc.ABCMeta):
             """
             return ip_address_param.is_multicast or ip_address_param.is_unspecified or ip_address_param.is_loopback or \
                 ip_address_param.is_link_local or ip_address_param.is_reserved
-        chosen_ips = arg_chosen_ips
-        if isinstance(chosen_ips,list):
-            chosen_ips = set(chosen_ips)
+
         ip_network = get_ip_network(ip_address,subnet_mask)
         network = ipaddress.IPv4Network(ip_network, strict=False)
+        in_use_ips_in_network = [ip for ip in arg_chosen_ips if ip!= '' and ipaddress.ip_address(ip) in network]
+        in_use_ips_in_network = set(in_use_ips_in_network)
         available_ips = network.num_addresses - 2  # Excluding network and broadcast addresses
-        if len(chosen_ips) >= available_ips:
+        if len(in_use_ips_in_network) >= available_ips:
             raise ValueError("No more unique IPs available in the specified range: {}".format(ip_network))
         while True:
             random_ip = network.network_address + random.randint(1, available_ips)
             random_ip_str = str(random_ip)
 
-            if random_ip_str not in chosen_ips and not is_invalid(random_ip):
-                chosen_ips.add(random_ip_str)
+            if random_ip_str not in in_use_ips_in_network and not is_invalid(random_ip):
+                in_use_ips_in_network.add(random_ip_str)
                 return random_ip_str
 
     """
@@ -936,7 +936,16 @@ class BaseAttack(metaclass=abc.ABCMeta):
         else:
             print("ERROR: No window distribution found.")
             raise ValueError("No window distribution could be determined from input. ")
-            
+    
+
+    def generate_sql_victim_conv_param(self,ip_destination, subnet_mask="255.255.255.0"):
+        """
+        Generate mac & ip address for conv between sql and server  
+        """ 
+        ip_addresses_in_use = self.statistics.get_ip_addresses()
+        ip_sql = self.get_unique_random_ipv4_from_ip_network(ip_destination, subnet_mask,ip_addresses_in_use)
+        mac_sql = self.generate_random_mac_address() 
+        return mac_sql, ip_sql
 
     """
     Generates a unique random ephemeral port.
