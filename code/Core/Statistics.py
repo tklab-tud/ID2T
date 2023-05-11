@@ -891,6 +891,26 @@ class Statistics(object):
         result_dict = {key: value for (key, value) in result}
         return result_dict
 
+    def get_win_distribution_for_ip_with_win_sizes(self):
+        """
+        Retrieves the window size distribution for the IP address with the most unique window sizes in the 'tcp_win' table. 
+        If the IP with the most unique window sizes is not assigned (empty string), it falls back to the IP with the second most unique window sizes.
+        :return: The window distribution for a  IP address.
+        """
+        random_ip  = self.process_db_query(
+        "SELECT ipAddress FROM (SELECT ipAddress, COUNT(DISTINCT winSize) as uniqueWinSizes FROM tcp_win GROUP BY ipAddress) ORDER BY uniqueWinSizes DESC LIMIT 2"
+    )
+    
+        if random_ip[0] == '': # ignore TCP win sizes which are not assigned to an IP. 
+            ip_address = random_ip[1]
+        else: 
+             ip_address = random_ip[0]
+
+        # Now use this IP address to get the window distribution.
+        result = self.process_db_query('SELECT winSize, winCount FROM tcp_win WHERE ipAddress="' + ip_address + '" ORDER BY winCount DESC LIMIT 20 ')
+        result_dict = {key: value for (key, value) in result}
+        return result_dict
+
     def get_tos_distribution(self, ip_address: str):
         """
         TODO: FILL ME
