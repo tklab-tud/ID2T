@@ -75,16 +75,6 @@ class DrupalScan(BaseAttack.BaseAttack):
             return False
         return self.add_param_value(param, value)
     
-    """
-    Generate SQL convo parameters 
-    """
-    def generate_sql_param(self): 
-        ip_addresses_in_use = self.statistics.get_ip_addresses()
-        ip_attakcer = self.get_param_value(self.IP_DESTINATION) # attacker ip 
-        subnet_mask = "255.255.255.0"
-        ip_sql = self.get_unique_random_ipv4_from_ip_network(ip_attakcer, subnet_mask,ip_addresses_in_use)
-        mac_sql = self.generate_random_mac_address() 
-        return mac_sql, ip_sql
 
     """
     Creates the attack packets
@@ -130,7 +120,7 @@ class DrupalScan(BaseAttack.BaseAttack):
             mss_value = 1465
 
         # Communication is between server & its db 
-        mac_sql, ip_sql = self.generate_sql_param()
+        mac_sql, ip_sql = self.generate_sql_victim_conv_param(ip_destination)
 
         arrival_time = 0
         exploit_raw_packets = scapy.utils.RawPcapReader(self.template_scan_pcap_path)
