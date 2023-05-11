@@ -909,6 +909,35 @@ class BaseAttack(metaclass=abc.ABCMeta):
         ip_pkt.chksum = None
         ip_pkt.payload.chksum = None
 
+    
+    def get_window_distribution(self, ip_address):
+        """
+        This function retrieves the window size distribution for a given IP address. If no distribution is 
+        found, it retrieves the distribution for the most used IP address. If still no distribution is found, it 
+        retrieves the distribution for the IP with the most unique window sizes.
+
+        :param ip_address: the IP address for which the window size distribution is to be retrieved.
+        :return: A dictionary mapping window sizes to their counts for the selected IP.
+        """
+
+        ip_address_win_dist = self.statistics.get_win_distribution(ip_address)
+
+        if not ip_address_win_dist:
+            print("Warning: No window distribution found for the given IP. Retrieving for the most used IP...")
+            ip_address_win_dist = self.statistics.get_win_distribution(self.statistics.get_most_used_ip_address())
+            
+        if not ip_address_win_dist:
+            print("Warning: No window distribution found for the most used IP. Retrieving for the IP with most unique window sizes...")
+            ip_address_win_dist = self.statistics.get_win_distribution_for_ip_with_win_sizes()
+
+        if ip_address_win_dist:
+            ip_address_win_prob_dict = lea.Lea.fromValFreqsDict(ip_address_win_dist)
+            return ip_address_win_prob_dict
+        else:
+            print("ERROR: No window distribution found.")
+            raise ValueError("No window distribution could be determined from input. ")
+            
+
     """
     Generates a unique random ephemeral port.
     NOTE: Default values are based on Linux ephemeral port range. 
