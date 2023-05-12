@@ -297,10 +297,10 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
             payload_size += UDP_MIN_OVH
 
-        elif ("syn_flood" == self.current_ddos):
-            payload_size = AVG_TCP_HANDSHAKE_PAYLOAD
+        #elif ("syn_flood" == self.current_ddos):
+        #    payload_size = AVG_TCP_HANDSHAKE_PAYLOAD
 
-            pass
+        #    pass
 
         elif ("low_and_slow" == self.current_ddos):
             payload_size = UDP_MIN_OVH+UDP_MIN_PAYLOAD
@@ -483,8 +483,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
                     pps = result
             self.pps_victims.append(pps)
         
-        self.path_attack_pcap = None
-
         self.proj_dir = Util.RESOURCE_DIR+"inet-ddos/"+self.current_ddos
         self.src_dir = self.proj_dir+"/src/"
         self.simulations_dir = self.proj_dir+"/simulations/"
@@ -493,7 +491,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         self.generate_config_xml()
 
-        self.generate_omnetpp_ini()
+        # self.generate_omnetpp_ini()
 
         self.run_simulation()
 
