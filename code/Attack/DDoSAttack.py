@@ -544,8 +544,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         self.run_simulation()
         
-        raise Exception
-
         raw_packets = scapy.utils.PcapReader(self.template_pcap_path)
         
         assoc = {a[0]: a[1] for a in self.attackers}
