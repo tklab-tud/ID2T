@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DEB_PKGS=''
+DEB_PKGS='libqt5opengl5-dev'
 RPM_PKGS="cmake make tcpdump coreutils gcc gcc-c++ libpcap-devel python3 python3-devel"
 YES=''
 PATCH_DIR=../../../resources/patches

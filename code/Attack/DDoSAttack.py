@@ -1,4 +1,5 @@
 import logging
+import os
 import random as rnd
 from statistics import mean
 import subprocess, shlex
@@ -26,6 +27,7 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 DATARATES = ["10Mbps", "100Mbps", "1Gbps", "10Gbps", "40Gbps", "100Gbps", "200Gbps", "400Gbps"]
 UDP_MIN_PAYLOAD = 8
 UDP_MIN_OVH = 56
+DNS_AMPL_PAYLOAD = 369
 AVG_TCP_HANDSHAKE_PAYLOAD = 82
 
 class DDoSAttack(BaseAttack.BaseAttack):
@@ -44,7 +46,11 @@ class DDoSAttack(BaseAttack.BaseAttack):
     TCP = 'tcp.version'
     QTENV = 'qtenv'
     PAYLOAD_SIZE = 'payload.size'
-
+    BURST_INTERVAL = 'burst.interval'
+    BURST_DURATION = 'burst.duration'
+    BURST_SLEEP = 'burst.sleep'
+    NUM_REQUESTS = 'num.requests'
+    GAP_TIME = 'gap.time'
 
     def __init__(self):
         """
@@ -59,8 +65,9 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         self.total_pkt_num = 0
         self.default_port = 0
+        
+        self.id2t_omnetpp_path = Util.RESOURCE_DIR + 'id2t-omnetpp/'
 
-        self.OMNETPP_RES = Util.RESOURCE_DIR + 'inet-ddos/'
         self.current_ddos = ''
 
         self.attackers = []
@@ -91,6 +98,11 @@ class DDoSAttack(BaseAttack.BaseAttack):
             Parameter(self.PAYLOAD_SIZE, IntegerPositive()),
             Parameter(self.TCP, String()),
             Parameter(self.QTENV, String()),
+            Parameter(self.BURST_INTERVAL, Float()),
+            Parameter(self.BURST_DURATION, Float()),
+            Parameter(self.BURST_SLEEP, Float()),
+            Parameter(self.NUM_REQUESTS, IntegerPositive()),
+            Parameter(self.GAP_TIME, IntegerPositive())
         ])
 
     def init_param(self, param: str) -> bool:
@@ -106,7 +118,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         # Attack configuration
 
         if param == self.SUBTYPE:
-            value = 'syn_flood'
+            value = 'udp_flood'
         elif param == self.QTENV:
             value = "false"
         elif param == self.TCP:
@@ -118,7 +130,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         elif param == self.PACKETS_PER_SECOND:
             value = 0.0
         elif param == self.ATTACK_DURATION:
-            value = rnd.randint(15, 35)
+            value = rnd.randint(30, 60)
         elif param == self.NUMBER_VICTIMS:
             value = rnd.randint(1, 4)  #FIXME
         elif param == self.PAYLOAD_SIZE:
@@ -147,8 +159,22 @@ class DDoSAttack(BaseAttack.BaseAttack):
             
             self.ephemeral_ports = [int(inet.RandShort()) for i in range(num_attackers)]            
             value = self.ephemeral_ports
-
-
+            
+        elif param == self.BURST_INTERVAL:
+            value = 0.01
+            
+        elif param == self.BURST_DURATION:
+            value = 15
+        
+        elif param == self.BURST_SLEEP:
+            value = 1
+            
+        elif param == self.NUM_REQUESTS:
+            value = rnd.randint(50000, 1000000)
+        
+        elif param == self.GAP_TIME:
+            value = 3
+            
         # Victim(s) configuration
        
         elif param == self.IP_DESTINATION:
@@ -228,7 +254,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         tr = parseString(tree).toprettyxml()[23:]
 
-        with open(self.OMNETPP_RES+self.current_ddos+"/simulations/ip-config.xml", "w") as f:
+        with open(self.current_ip_config_xml, "w") as f:
             f.write(tr)
 
     def _validate_datarate(self, datarate):
@@ -245,7 +271,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         return standard_sizes[k]        
     
     def generate_omnetpp_ini(self):
-        template_ini = Util.RESOURCE_DIR + 'inet-ddos/' + self.current_ddos + '/template.ini'
+        template_ini = self.id2t_omnetpp_path + self.current_ddos + '/simulations/omnetpp.template'
         config = configparser.RawConfigParser()
         config.optionxform = str
 
@@ -262,53 +288,76 @@ class DDoSAttack(BaseAttack.BaseAttack):
         victim_data_capacity = self.get_param_value(self.VICTIM_DATA_CAPACITY)
         victim_max_sockets = self.get_param_value(self.VICTIM_MAX_SOCKETS)
         
+        burst_interval = self.get_param_value(self.BURST_INTERVAL)
+        burst_sleep = self.get_param_value(self.BURST_SLEEP)
+        burst_duration = self.get_param_value(self.BURST_DURATION)
+        
+        payload_size = 0
+        
         with open(template_ini, 'r') as f:
             try:  
                 config.read(template_ini)
             except:
                 raise IOError()
-
+            
         # Attack config
-        config['General']['sim-time-limit'] = str(attack_duration+1)+'s'
-        config['General']['**.attackersCount'] = str(num_attackers)
-        config['General']['**.victimsCount'] = str(num_victims)
-        config['General']['**.attacker[*].numApps'] = str(num_victims)
-        config['General']['**.victim[*].numApps'] = '1'
-
-        payload_size = 0
+        # Every attacker has n = num_victims applications
+        config.set('General', 'sim-time-limit', str(attack_duration+1)+'s')
+        config.set('General', '**.attackersCount', str(num_attackers))
+        config.set('General', '**.victimsCount', str(num_victims))
+        config.set('General', '**.attacker[*].numApps', str(num_victims))
+        config.set('General', '**.victim[*].numApps', '1')
 
         if ("udp_flood" == self.current_ddos):
-            n_apps = len(self.victims)
             payload_size = self.get_param_value(self.PAYLOAD_SIZE)
+            config.set('General', '**.victim[*].udp.buffer', victim_max_sockets)
 
-            config['General']['**.attacker[*].app[*].messageLength'] = str(payload_size)+'B'
-            config['General']['**.attacker[*].app[*].sendInterval'] = '0.001s'
-            config['General']['**.attacker[*].app[*].burstDuration'] = '15s'
-            config['General']['**.attacker[*].app[*].sleepDuration'] = '1s'
-
-            for idx, victim in enumerate(self.victims):
-                config['General']['**.attacker[*].app['+str(idx)+'].destPort'] = str(victim[2])
-                config['General']['**.victim['+str(idx)+'].udp.mss'] = str(victim[3])
-                config['General']['**.victim['+str(idx)+'].app[0].localPort'] = str(victim[2])
-                config['General']['**.victim[*].eth[*].queue.dataQueue.packetCapacity'] = str(victim_packet_capacity)
+            config.set('General', '**.attacker[*].app[*].messageLength', str(payload_size)+'B')
+            config.set('General', '**.attacker[*].app[*].sendInterval', str(burst_interval)+'s')
+            config.set('General', '**.attacker[*].app[*].burstDuration', str(burst_duration)+'s')
+            config.set('General', '**.attacker[*].app[*].sleepDuration', str(burst_sleep)+'s')
             
+            for idx, victim in enumerate(self.victims):
+                config.set('General', '**.attacker[*].app['+str(idx)+'].destPort', str(victim[2]))
+                config.set('General', '**.victim['+str(idx)+'].udp.mss', str(victim[3]))
+                config.set('General', '**.victim['+str(idx)+'].app[0].localPort', str(victim[2]))
+                config.set('General', '**.victim[*].eth[*].queue.dataQueue.packetCapacity', str(victim_packet_capacity))
+                
             for idx, attacker in enumerate(self.attackers):
-                config['General']['**.attacker['+str(idx)+'].app[0].localPort'] = str(attacker[2])
+                config.set('General', '**.attacker['+str(idx)+'].app[0].localPort', str(attacker[2]))
 
             payload_size += UDP_MIN_OVH
 
-        #elif ("syn_flood" == self.current_ddos):
-        #    payload_size = AVG_TCP_HANDSHAKE_PAYLOAD
+        elif ("dns_amplification" == self.current_ddos):
+            config.set('General', '**.victim[*].udp.buffer', victim_max_sockets)
 
-        #    pass
+            for idx, victim in enumerate(self.victims):
+                config.set('General', '**.attacker[*].app['+str(idx)+'].destPort', str(victim[2]))
+                config.set('General', '**.victim['+str(idx)+'].udp.mss', str(victim[3]))
+                config.set('General', '**.victim['+str(idx)+'].app[0].localPort', str(victim[2]))
+                config.set('General', '**.victim[*].eth[*].queue.dataQueue.packetCapacity', str(victim_packet_capacity))
+            
+            for idx, attacker in enumerate(self.attackers):
+                config.set('General', '**.attacker['+str(idx)+'].app[0].localPort', str(attacker[2]))
 
+            payload_size = DNS_AMPL_PAYLOAD
+        
         elif ("low_and_slow" == self.current_ddos):
             payload_size = UDP_MIN_OVH+UDP_MIN_PAYLOAD
-            pass
-
-        elif ("dns_amplification" == self.current_ddos):
-            payload_size = UDP_MIN_OVH+UDP_MIN_PAYLOAD
-            pass
+            num_requests = self.get_param_value(self.NUM_REQUESTS)
+            gap_time = self.get_param_value(self.GAP_TIME)
+            
+            config.set('General', '**.attacker[*].app[*].numRequestsPerSession', num_requests)
+            config.set('General', '**.attacker[*].app[*].thinkTime', str(gap_time)+'s')
+            config.set('General', '**.attacker[*].app[*].idleInterval', str(burst_sleep)+'s')
+            config.set('General', '**.victim[*].tcp.buffer', victim_max_sockets)
+            
+            for idx, victim in enumerate(self.victims):
+                config.set('General', '**.attacker[*].app['+str(idx)+'].connectAddress', '"victim['+str(idx)+']"')
+                config.set('General', '**.attacker[*].app['+str(idx)+'].connectPort', str(victim[2]))
+                config.set('General', '**.victim['+str(idx)+'].tcp.mss', str(victim[3]))
+                config.set('General', '**.victim['+str(idx)+'].app[0].localPort', str(victim[2]))
+                config.set('General', '**.victim[*].eth[*].queue.dataQueue.packetCapacity', str(victim_packet_capacity))
 
         else:
             raise Exception("You shouldn't be here")
@@ -316,42 +365,34 @@ class DDoSAttack(BaseAttack.BaseAttack):
         # Channel config
         if channel_datarate:
             self._validate_datarate(channel_datarate)
-            config['General']['**.channel.datarate'] = channel_datarate
+            config.set('General','**.channel.datarate', channel_datarate)
 
         else:
             c_datarate = mean(self.pps_victims)*payload_size
-            config['General']['**.channel.datarate'] = self._closest_to_datarate(c_datarate)
-
-        config['General']['**.channel.delay'] = str(channel_delay)+'s'
-        config['General']['**.channel.ber'] = str(channel_ber)
-        config['General']['**.channel.per'] = str(channel_per)
+            config.set('General','**.channel.datarate', self._closest_to_datarate(c_datarate))
+            
+        config.set('General','**.channel.delay', str(channel_delay)+'s')
+        config.set('General','**.channel.ber', str(channel_ber))
+        config.set('General','**.channel.per', str(channel_per))
         
-        with open(self.omnetpp_ini, 'w') as configfile:
+        
+
+        with open(self.current_omnetpp_ini, 'w') as configfile:
             config.write(configfile)
 
     def run_simulation(self):
+       
+        inet_neds = "inet/src/"
         
-        inet_dir = "inet/"
-
-        cmd = '''opp_run \
-        -u {gui} \
-        -n {src_dir} \
-        -n {simulations_dir} \
-        -n {inet_dir}/src/ \
-        -x inet.common.selfdoc \
-        -x inet.linklayer.configurator.gatescheduling.z3 \
-        -x inet.emulation \
-        -x inet.showcases.visualizer.osg \
-        -x inet.examples.emulation \
-        -x inet.showcases.emulation \
-        -x inet.transportlayer.tcp_lwip \
-        -x inet.applications.voipstream \
-        -x inet.visualizer.osg \
-        -x inet.examples.voipstream \
-        -f {omnetpp_ini} \
-        --image-path={inet_dir}/images \
-        -l {inet_dir}/src/libINET.so \
-        '''.format(simulations_dir=self.simulations_dir, src_dir=self.src_dir, omnetpp_ini=self.omnetpp_ini, inet_dir=inet_dir, gui="Qtenv" if "true" == self.get_param_value(self.QTENV) else "Cmdenv")
+        src = self.id2t_omnetpp_path + self.current_ddos + '/src/'
+        simulations = self.id2t_omnetpp_path + self.current_ddos + '/simulations/'
+        executable = src + self.current_ddos
+        
+        cmd = '''{model} \
+            -u Cmdenv \
+            -n {src}:{simulations}:{inet_neds} \
+            {omnetpp}
+        '''.format(model=executable, src=src, simulations=simulations, inet_neds=inet_neds, omnetpp=self.current_omnetpp_ini)      
         
         args = shlex.split(cmd)
 
@@ -362,9 +403,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         """
         Creates the attack packets.
         """
-
-        shutil.rmtree(pathlib.Path('results/'))
-        
+           
         offset_timestamp = self.get_param_value(self.INJECT_AT_TIMESTAMP)
 
         num_attackers = self.get_param_value(self.NUMBER_ATTACKERS)
@@ -384,11 +423,21 @@ class DDoSAttack(BaseAttack.BaseAttack):
         victim_max_sockets = self.get_param_value(self.VICTIM_MAX_SOCKETS)
         tcp_version = self.get_param_value(self.TCP)
 
-        if (self.current_ddos != "syn_flood") and (self.current_ddos != "udp_flood") and (self.current_ddos != "dns_amplification") and (self.current_ddos != "low_and_slow"):
+        if (self.current_ddos != "udp_flood") and (self.current_ddos != "dns_amplification") and (self.current_ddos != "low_and_slow"):
             raise Exception('Unrecognized DDoS subtype.')
         
         if (payload_size < UDP_MIN_PAYLOAD):
             raise Exception('Payload minimum is set to 8bytes')
+        
+        self.current_omnetpp_ini = self.id2t_omnetpp_path + self.current_ddos +'/simulations/omnetpp.ini'
+        self.current_ip_config_xml = self.id2t_omnetpp_path + self.current_ddos +'/simulations/ip-config.xml'
+        
+        if os.path.exists('results/'):
+            shutil.rmtree(pathlib.Path('results/'))
+        if os.path.exists(self.current_ip_config_xml):
+            os.remove(self.current_ip_config_xml)
+        if os.path.exists(self.current_omnetpp_ini):
+            os.remove(self.current_omnetpp_ini)
 
         self.template_pcap_path = "results/template.pcap"
 
@@ -491,9 +540,11 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         self.generate_config_xml()
 
-        # self.generate_omnetpp_ini()
+        self.generate_omnetpp_ini()
 
         self.run_simulation()
+        
+        raise Exception
 
         raw_packets = scapy.utils.PcapReader(self.template_pcap_path)
         
