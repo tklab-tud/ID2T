@@ -81,12 +81,14 @@ class MiraiBotnet(BaseAttack.BaseAttack):
             value = self.statistics.get_most_used_pps()
         elif param == self.LOADER_SERVER:
             value = self.LOADER_SERVER_IP
-        elif param == self.LOADER_SERVER:
-            value = self.LOADER_SERVER_IP
         elif param == self.CNC_SERVER:
             value = self.CNC_SERVER_IP
         elif param == self.HTTP_FLOOD_TARGET:
-            value = self.HTTP_FLOOD_TARGET_IP
+            ip_src = self.get_param_value(self.IP_SOURCE)
+            ip_dst = self.get_param_value(self.IP_DESTINATION)
+            if ip_src is None or ip_dst is None:
+                return False
+            value = self.statistics.get_random_ip_address(ips=[ip_src,ip_dst])
         if value is None:
             return False
         return self.add_param_value(param, value)
