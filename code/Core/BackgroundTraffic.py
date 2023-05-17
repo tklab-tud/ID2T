@@ -34,10 +34,10 @@ class BackgroundTraffic:
                 eth_frame = inet.Ether(pkt[0])
                 pkt_metadata = pkt[1]
                 ip_pkt = eth_frame.payload
-                if pkt_num == 12: 
+                if pkt_num == 14: 
                     victim_ip = ip_pkt.getfieldval("dst")
                     timestamp_for_malicious_packet = pkt_metadata.sec + pkt_metadata.usec / 1e6
-                if pkt_num == 13: 
+                if pkt_num == 15: 
                     background_manipulation = False
             return victim_ip, timestamp_for_malicious_packet, background_manipulation
 
