@@ -114,19 +114,8 @@ class SQLiAttack(BaseAttack.BaseAttack):
         self.ip_src_dst_catch_equal(ip_source, ip_destination)
 
         # Set Window Size based on Window Size distribution of IP address
-        source_win_dist = self.statistics.get_win_distribution(ip_source)
-        if len(source_win_dist) > 0:
-            source_win_prob_dict = lea.Lea.fromValFreqsDict(source_win_dist)
-        else:
-            source_win_dist = self.statistics.get_win_distribution(self.statistics.get_most_used_ip_address())
-            source_win_prob_dict = lea.Lea.fromValFreqsDict(source_win_dist)
-
-        destination_win_dist = self.statistics.get_win_distribution(ip_destination)
-        if len(destination_win_dist) > 0:
-            destination_win_prob_dict = lea.Lea.fromValFreqsDict(destination_win_dist)
-        else:
-            destination_win_dist = self.statistics.get_win_distribution(self.statistics.get_most_used_ip_address())
-            destination_win_prob_dict = lea.Lea.fromValFreqsDict(destination_win_dist)
+        source_win_prob_dict = self.get_window_distribution(ip_source)
+        destination_win_prob_dict = self.get_window_distribution(ip_destination)
 
         # Set TTL based on TTL distribution of IP address
         source_ttl_dist = self.statistics.get_ttl_distribution(ip_source)
