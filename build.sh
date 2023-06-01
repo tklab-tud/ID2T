@@ -102,6 +102,10 @@ else
 fi
 
 cd ../../../
+cd resources/id2t-omnetpp
+cp neds/Udp.ned ../../inet/src/inet/transportlayer/udp
+cp neds/Tcp.ned ../../inet/src/inet/transportlayer/tcp
+cd ../../../
 
 # Create the ID2T script
 cat >./id2t  <<EOF
@@ -114,6 +118,11 @@ else
 fi
 SCRIPT_PATH=\${ID2T_DIR%/*}
 # Execute ID2T
+
+cd resources/id2t-omnetpp
+source setenv
+cd ../../
+
 source "\$SCRIPT_PATH"/.venv/bin/activate
 exec "\$SCRIPT_PATH"/code/CLI.py "\$@"
 deactivate

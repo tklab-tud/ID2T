@@ -55,3 +55,7 @@ test_efficiency
 *.creator*
 *.files
 *.includes
+
+liblibc.a
+resources/id2t-omnetpp*
+*.pcap*
