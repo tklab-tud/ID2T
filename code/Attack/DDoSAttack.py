@@ -28,7 +28,7 @@ DATARATES = ["10Mbps", "100Mbps", "1Gbps", "10Gbps", "40Gbps", "100Gbps", "200Gb
 UDP_MIN_PAYLOAD = 8
 UDP_MIN_OVH = 56
 DNS_AMPL_PAYLOAD = 369
-AVG_TCP_HANDSHAKE_PAYLOAD = 82
+AVG_LOWSLOW_PAYLOAD = 69
 
 class DDoSAttack(BaseAttack.BaseAttack):
     PORT_SOURCE = 'port.src'
@@ -36,15 +36,12 @@ class DDoSAttack(BaseAttack.BaseAttack):
     NUMBER_ATTACKERS = 'attackers.count'
     NUMBER_VICTIMS = 'victims.count'
     VICTIM_PACKET_CAPACITY = 'victim.packet_capacity'
-    VICTIM_DATA_CAPACITY = 'victim.data_capacity'
-    VICTIM_MAX_SOCKETS = 'victim.max_sockets'
+    VICTIM_BUFFER = 'victim.buffer'
     CHANNEL_DATARATE = 'channel.datarate'
     CHANNEL_DELAY = 'channel.delay'
     CHANNEL_BER = 'channel.ber'
     CHANNEL_PER = 'channel.per'
     SUBTYPE = 'attack.subtype'
-    TCP = 'tcp.version'
-    QTENV = 'qtenv'
     PAYLOAD_SIZE = 'payload.size'
     BURST_INTERVAL = 'burst.interval'
     BURST_DURATION = 'burst.duration'
@@ -89,15 +86,12 @@ class DDoSAttack(BaseAttack.BaseAttack):
             Parameter(self.NUMBER_VICTIMS, IntegerPositive()),
             Parameter(self.ATTACK_DURATION, IntegerPositive()),
             Parameter(self.VICTIM_PACKET_CAPACITY, IntegerPositive()),
-            Parameter(self.VICTIM_DATA_CAPACITY, IntegerPositive()),
-            Parameter(self.VICTIM_MAX_SOCKETS, IntegerPositive()),
+            Parameter(self.VICTIM_BUFFER, IntegerPositive()),
             Parameter(self.CHANNEL_DATARATE, String()),
             Parameter(self.CHANNEL_DELAY, Float()),
             Parameter(self.CHANNEL_BER, Float()),
             Parameter(self.CHANNEL_PER, Float()),
             Parameter(self.PAYLOAD_SIZE, IntegerPositive()),
-            Parameter(self.TCP, String()),
-            Parameter(self.QTENV, String()),
             Parameter(self.BURST_INTERVAL, Float()),
             Parameter(self.BURST_DURATION, Float()),
             Parameter(self.BURST_SLEEP, Float()),
@@ -119,10 +113,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         if param == self.SUBTYPE:
             value = 'udp_flood'
-        elif param == self.QTENV:
-            value = "false"
-        elif param == self.TCP:
-            value = 'NEW_RENO'
+
         elif param == self.NUMBER_ATTACKERS:
             value = rnd.randint(1, 4)  #FIXME
         elif param == self.INJECT_AFTER_PACKET:
@@ -135,6 +126,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
             value = rnd.randint(1, 4)  #FIXME
         elif param == self.PAYLOAD_SIZE:
             value = 8
+        elif param == self.BANDWIDTH_MAX:
+            value = 1000000000
 
         # Attacker(s) configuration
         
@@ -161,7 +154,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
             value = self.ephemeral_ports
             
         elif param == self.BURST_INTERVAL:
-            value = 0.01
+            value = 0.001
             
         elif param == self.BURST_DURATION:
             value = 15
@@ -194,13 +187,11 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 value = []
                 for ip in ip_dst:
                     value.append(self.get_mac_address(ip))
-
-        elif param == self.VICTIM_PACKET_CAPACITY:
-            value = 100
-        elif param == self.VICTIM_DATA_CAPACITY:
-            value = 100000000
         
-        elif param == self.VICTIM_MAX_SOCKETS:
+        elif param == self.VICTIM_PACKET_CAPACITY:
+            value = 10000
+        
+        elif param == self.VICTIM_BUFFER:
             value = 0 # infinite
 
         # Channel configuration
@@ -285,8 +276,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         channel_per = self.get_param_value(self.CHANNEL_PER)
 
         victim_packet_capacity = self.get_param_value(self.VICTIM_PACKET_CAPACITY)
-        victim_data_capacity = self.get_param_value(self.VICTIM_DATA_CAPACITY)
-        victim_max_sockets = self.get_param_value(self.VICTIM_MAX_SOCKETS)
+        victim_buffer = self.get_param_value(self.VICTIM_BUFFER)
         
         burst_interval = self.get_param_value(self.BURST_INTERVAL)
         burst_sleep = self.get_param_value(self.BURST_SLEEP)
@@ -305,12 +295,13 @@ class DDoSAttack(BaseAttack.BaseAttack):
         config.set('General', 'sim-time-limit', str(attack_duration+1)+'s')
         config.set('General', '**.attackersCount', str(num_attackers))
         config.set('General', '**.victimsCount', str(num_victims))
-        config.set('General', '**.attacker[*].numApps', str(num_victims))
+        
         config.set('General', '**.victim[*].numApps', '1')
 
         if ("udp_flood" == self.current_ddos):
             payload_size = self.get_param_value(self.PAYLOAD_SIZE)
-            config.set('General', '**.victim[*].udp.buffer', victim_max_sockets)
+            config.set('General', '**.attacker[*].numApps', str(num_victims))
+            config.set('General', '**.victim[*].udp.buffer', victim_buffer)
 
             config.set('General', '**.attacker[*].app[*].messageLength', str(payload_size)+'B')
             config.set('General', '**.attacker[*].app[*].sendInterval', str(burst_interval)+'s')
@@ -319,7 +310,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
             
             for idx, victim in enumerate(self.victims):
                 config.set('General', '**.attacker[*].app['+str(idx)+'].destPort', str(victim[2]))
-                config.set('General', '**.victim['+str(idx)+'].udp.mss', str(victim[3]))
+                # config.set('General', '**.victim['+str(idx)+'].udp.mss', str(victim[3]))
                 config.set('General', '**.victim['+str(idx)+'].app[0].localPort', str(victim[2]))
                 config.set('General', '**.victim[*].eth[*].queue.dataQueue.packetCapacity', str(victim_packet_capacity))
                 
@@ -329,28 +320,35 @@ class DDoSAttack(BaseAttack.BaseAttack):
             payload_size += UDP_MIN_OVH
 
         elif ("dns_amplification" == self.current_ddos):
-            config.set('General', '**.victim[*].udp.buffer', victim_max_sockets)
+            config.set('General', '**.victim[*].udp.buffer', victim_buffer)
+            config.set('General', '**.attacker[*].numApps', 1)
+            
+            config.set('General', '**.attacker[*].app[*].sendInterval', str(burst_interval)+'s')
+            config.set('General', '**.attacker[*].app[*].burstDuration', str(burst_duration)+'s')
+            config.set('General', '**.attacker[*].app[*].sleepDuration', str(burst_sleep)+'s')
 
             for idx, victim in enumerate(self.victims):
-                config.set('General', '**.attacker[*].app['+str(idx)+'].destPort', str(victim[2]))
-                config.set('General', '**.victim['+str(idx)+'].udp.mss', str(victim[3]))
+                # config.set('General', '**.attacker['+str(idx)+'].app[0].destPort', str(victim[2]))
+                # config.set('General', '**.victim['+str(idx)+'].udp.mss', str(victim[3]))
                 config.set('General', '**.victim['+str(idx)+'].app[0].localPort', str(victim[2]))
                 config.set('General', '**.victim[*].eth[*].queue.dataQueue.packetCapacity', str(victim_packet_capacity))
             
             for idx, attacker in enumerate(self.attackers):
-                config.set('General', '**.attacker['+str(idx)+'].app[0].localPort', str(attacker[2]))
+                config.set('General', '**.attacker['+str(idx)+'].app[*].localPort', str(attacker[2]))
+                config.set('General', '**.attacker['+str(idx)+'].app[0].destPort', str(victim[2]))
 
             payload_size = DNS_AMPL_PAYLOAD
         
         elif ("low_and_slow" == self.current_ddos):
-            payload_size = UDP_MIN_OVH+UDP_MIN_PAYLOAD
+            payload_size = AVG_LOWSLOW_PAYLOAD
             num_requests = self.get_param_value(self.NUM_REQUESTS)
             gap_time = self.get_param_value(self.GAP_TIME)
             
+            config.set('General', '**.attacker[*].numApps', str(num_victims))
             config.set('General', '**.attacker[*].app[*].numRequestsPerSession', num_requests)
             config.set('General', '**.attacker[*].app[*].thinkTime', str(gap_time)+'s')
             config.set('General', '**.attacker[*].app[*].idleInterval', str(burst_sleep)+'s')
-            config.set('General', '**.victim[*].tcp.buffer', victim_max_sockets)
+            config.set('General', '**.victim[*].tcp.buffer', victim_buffer)
             
             for idx, victim in enumerate(self.victims):
                 config.set('General', '**.attacker[*].app['+str(idx)+'].connectAddress', '"victim['+str(idx)+']"')
@@ -374,8 +372,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
         config.set('General','**.channel.delay', str(channel_delay)+'s')
         config.set('General','**.channel.ber', str(channel_ber))
         config.set('General','**.channel.per', str(channel_per))
-        
-        
 
         with open(self.current_omnetpp_ini, 'w') as configfile:
             config.write(configfile)
@@ -398,7 +394,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         subprocess.run(args)
 
-
     def generate_attack_packets(self):
         """
         Creates the attack packets.
@@ -407,21 +402,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
         offset_timestamp = self.get_param_value(self.INJECT_AT_TIMESTAMP)
 
         num_attackers = self.get_param_value(self.NUMBER_ATTACKERS)
-        num_victims = self.get_param_value(self.NUMBER_VICTIMS)
-        attack_duration = self.get_param_value(self.ATTACK_DURATION)
         self.current_ddos = self.get_param_value(self.SUBTYPE)
         payload_size = self.get_param_value(self.PAYLOAD_SIZE)
-
-        channel_datarate = self.get_param_value(self.CHANNEL_DATARATE)
-        channel_delay = self.get_param_value(self.CHANNEL_DELAY)
-        channel_ber = self.get_param_value(self.CHANNEL_BER)
-        channel_per = self.get_param_value(self.CHANNEL_PER)
-
-
-        victim_packet_capacity = self.get_param_value(self.VICTIM_PACKET_CAPACITY)
-        victim_data_capacity = self.get_param_value(self.VICTIM_DATA_CAPACITY)
-        victim_max_sockets = self.get_param_value(self.VICTIM_MAX_SOCKETS)
-        tcp_version = self.get_param_value(self.TCP)
 
         if (self.current_ddos != "udp_flood") and (self.current_ddos != "dns_amplification") and (self.current_ddos != "low_and_slow"):
             raise Exception('Unrecognized DDoS subtype.')
@@ -478,28 +460,36 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 mac_attackers_list.extend(self.generate_random_mac_address(len(ip_attackers_list)-len(mac_attackers_list)))
             num_attackers = min(len(ip_attackers_list), len(mac_attackers_list)) 
 
+        if self.current_ddos == "dns_amplification":
+            self.ephemeral_ports = [rnd.choice([53, 5353]) for i in range(num_attackers)]
+        
         self.attackers = [(ip, mac, port) for ip, mac, port in zip(ip_attackers_list, mac_attackers_list, self.ephemeral_ports)]
 
         port_victims_list = []
-
-        for victim_ip in ip_victims_list:
-            port_destination = self.get_param_value(self.PORT_DESTINATION)
-            if not port_destination:  # user did not define port_dest
-                port_destination = self.statistics.process_db_query(
-                    "SELECT portNumber FROM ip_ports WHERE portDirection='in' AND ipAddress='" + victim_ip +
-                    "' AND portCount==(SELECT MAX(portCount) FROM ip_ports WHERE portDirection='in' AND ipAddress='" +
-                    victim_ip + "');")
-            if not port_destination:  # no port was retrieved
-                port_destination = self.statistics.process_db_query(
-                    "SELECT portNumber FROM (SELECT portNumber, SUM(portCount) as occ FROM ip_ports WHERE "
-                    "portDirection='in' GROUP BY portNumber ORDER BY occ DESC) WHERE occ=(SELECT SUM(portCount) "
-                    "FROM ip_ports WHERE portDirection='in' GROUP BY portNumber ORDER BY SUM(portCount) DESC LIMIT 1);")
-            if not port_destination:
-                port_destination = max(1, int(inet.RandShort()))
-
-            port_destination = Util.handle_most_used_outputs(port_destination)
-            port_victims_list.append(port_destination)
         
+        if self.current_ddos == "low_and_slow":
+            for victim_ip in ip_victims_list:
+                port_victims_list.append(rnd.choice([80, 8080]))
+        
+        else:
+            for victim_ip in ip_victims_list:
+                port_destination = self.get_param_value(self.PORT_DESTINATION)
+                if not port_destination:  # user did not define port_dest
+                    port_destination = self.statistics.process_db_query(
+                        "SELECT portNumber FROM ip_ports WHERE portDirection='in' AND ipAddress='" + victim_ip +
+                        "' AND portCount==(SELECT MAX(portCount) FROM ip_ports WHERE portDirection='in' AND ipAddress='" +
+                        victim_ip + "');")
+                if not port_destination:  # no port was retrieved
+                    port_destination = self.statistics.process_db_query(
+                        "SELECT portNumber FROM (SELECT portNumber, SUM(portCount) as occ FROM ip_ports WHERE "
+                        "portDirection='in' GROUP BY portNumber ORDER BY occ DESC) WHERE occ=(SELECT SUM(portCount) "
+                        "FROM ip_ports WHERE portDirection='in' GROUP BY portNumber ORDER BY SUM(portCount) DESC LIMIT 1);")
+                if not port_destination:
+                    port_destination = max(1, int(inet.RandShort()))
+
+                port_destination = Util.handle_most_used_outputs(port_destination)
+                port_victims_list.append(port_destination)
+                
         # Check ip.src == ip.dst
         self.ip_src_dst_catch_equal(ip_attackers_list, ip_victims_list)
        
