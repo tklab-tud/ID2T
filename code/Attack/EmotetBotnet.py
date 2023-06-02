@@ -13,8 +13,8 @@ logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
 class EmotetBotnet(BaseAttack.BaseAttack):
     SPAM_BOT_ACTIVITY = 'spam.bot.activity'
 
-    template_attack_pcap_path_default = Util.RESOURCE_DIR + "emotet_botnet/emotet_traffic_with_spam_bot.pcap"
-    template_attack_pcap_path_no_spam_bot = Util.RESOURCE_DIR + "emotet_botnet/emotet_traffic.pcap"
+    template_attack_pcap_path_default = Util.RESOURCE_DIR + "emotet_botnet/emotet_traffic.pcap"
+    template_attack_pcap_path_spam_bot = Util.RESOURCE_DIR + "emotet_botnet/emotet_spambot.pcap"
     template_attack_pcap_path = ""
 
 
@@ -53,7 +53,7 @@ class EmotetBotnet(BaseAttack.BaseAttack):
         elif param == self.PACKETS_PER_SECOND:
             value = self.statistics.get_most_used_pps()
         elif param == self.SPAM_BOT_ACTIVITY:
-            value = True
+            value = False
         if value is None:
             return False
         return self.add_param_value(param, value)
@@ -87,39 +87,42 @@ class EmotetBotnet(BaseAttack.BaseAttack):
         dll_retrieval_ip_2 = "144.217.79.200"
         icmp_ip_1 = "213.146.212.41"
         icmp_ip_2 = "213.146.212.2"
+        spam_bot = "172.217.195.108"
 
         # initial mapping of values for resulting pcap
         # a number of IP addresses are preserved for final pcap to preserve key characteristics
         ip_map = {origin_ip_src_1: ip_source, origin_ip_dns_server_1: ip_dns_server,
             dll_retrieval_ip_1: dll_retrieval_ip_1, dll_retrieval_ip_2: dll_retrieval_ip_2,
-            icmp_ip_1: icmp_ip_1, icmp_ip_2:icmp_ip_2}
+            icmp_ip_1: icmp_ip_1, icmp_ip_2:icmp_ip_2, spam_bot:spam_bot}
 
         dns_port, tls_port, browser_port, ssdp_port = 53, 442, 138, 1900
         c2_tcp_port_1, c2_tcp_port_2, c2_tcp_port_3 = 80, 8080, 7080
         spam_bot_port_1, spam_bot_port_2, spam_bot_port_3 = 25, 465, 587
 
-        c2_traffic_port_map = {dns_port: dns_port, tls_port:tls_port, browser_port: browser_port, 
+        port_map = {dns_port: dns_port, tls_port:tls_port, browser_port: browser_port, 
                                ssdp_port: ssdp_port, c2_tcp_port_1: c2_tcp_port_1, 
                                c2_tcp_port_2: c2_tcp_port_2, c2_tcp_port_3: c2_tcp_port_3, 
                                spam_bot_port_1: spam_bot_port_1, spam_bot_port_2: spam_bot_port_2, 
                                spam_bot_port_3: spam_bot_port_3}
-
+        
+        self.template_attack_pcap_path = self.template_attack_pcap_path_default
         if(spam_bot_activity):
-            self.template_attack_pcap_path = self.template_attack_pcap_path_default
-        else:
-            self.template_attack_pcap_path = self.template_attack_pcap_path_no_spam_bot
+            self.template_attack_pcap_path = self.template_attack_pcap_path_spam_bot
 
         exploit_raw_packets = scapy.utils.RawPcapReader(self.template_attack_pcap_path)
         inter_arrival_times = self.get_inter_arrival_time(exploit_raw_packets)
         exploit_raw_packets.close()
         exploit_raw_packets = scapy.utils.RawPcapReader(self.template_attack_pcap_path)
-
+        original_time_difference_between_stages = 71163731
+        #original_time_difference_between_stages = 1
         arrival_time = 0
         for self.pkt_num, pkt in enumerate(exploit_raw_packets):
             eth_frame = inet.Ether(pkt[0])
             ip_pkt = eth_frame.payload
             ip_payload = ip_pkt.payload
             arrival_time = arrival_time + inter_arrival_times[self.pkt_num]
+
+            print(self.pkt_num)
 
             # MAC mapping on Ether level
             if eth_frame.getfieldval("src") in mac_map:
@@ -148,7 +151,7 @@ class EmotetBotnet(BaseAttack.BaseAttack):
                 ip_payload.setfieldval("window", new_win)
 
             # Setting randomized mappings for source IP addresses
-            if ip_pkt.getfieldval("src") not in ip_map:
+            if ip_pkt.getfieldval("src") not in ip_map and self.pkt_num < 6002:
                 ip_map[ip_payload.getfieldval("src")] =  self.statistics.get_random_ip_address(1, list(ip_map.values()))
                 ip_pkt.setfieldval("src", ip_map[ip_pkt.getfieldval("src")])
             else:
@@ -162,21 +165,27 @@ class EmotetBotnet(BaseAttack.BaseAttack):
                 ip_pkt.setfieldval("dst", ip_map[ip_pkt.getfieldval("dst")])                  
 
             # Setting randomized mappings for source port values
-            if ip_payload.getfieldval("sport") not in c2_traffic_port_map:
-                c2_traffic_port_map[ip_payload.getfieldval("sport")] =  self.get_unique_random_ephemeral_port()
-                ip_payload.setfieldval("sport", c2_traffic_port_map[ip_payload.getfieldval("sport")])
+            if ip_payload.getfieldval("sport") not in port_map:
+                port_map[ip_payload.getfieldval("sport")] =  self.get_unique_random_ephemeral_port()
+                ip_payload.setfieldval("sport", port_map[ip_payload.getfieldval("sport")])
             else:
-                ip_payload.setfieldval("sport", c2_traffic_port_map[ip_payload.getfieldval("sport")])
+                ip_payload.setfieldval("sport", port_map[ip_payload.getfieldval("sport")])
 
             # Setting randomized mappings for destination port values
-            if ip_payload.getfieldval("dport") not in c2_traffic_port_map:
-                c2_traffic_port_map[ip_payload.getfieldval("dport")] =  self.get_unique_random_ephemeral_port()
-                ip_payload.setfieldval("dport", c2_traffic_port_map[ip_payload.getfieldval("dport")])
+            if ip_payload.getfieldval("dport") not in port_map:
+                port_map[ip_payload.getfieldval("dport")] =  self.get_unique_random_ephemeral_port()
+                ip_payload.setfieldval("dport", port_map[ip_payload.getfieldval("dport")])
             else: 
-                ip_payload.setfieldval("dport", c2_traffic_port_map[ip_payload.getfieldval("dport")])                       
+                ip_payload.setfieldval("dport", port_map[ip_payload.getfieldval("dport")]) 
 
+            # Generate packets based on stage in attack (spam bot or not)
+            #if self.pkt_num <= 6087:
+            #    new_pkt = (eth_frame / ip_pkt / ip_payload)
+            #    new_pkt.time = timestamp_next_pkt + arrival_time
+            #    timestamp_next_pkt = self.timestamp_controller.next_timestamp()
+            #else: 
             new_pkt = (eth_frame / ip_pkt / ip_payload)
-            new_pkt.time = timestamp_next_pkt + arrival_time
+            new_pkt.time = timestamp_next_pkt + arrival_time - original_time_difference_between_stages
             timestamp_next_pkt = self.timestamp_controller.next_timestamp()
 
             self.add_packet(new_pkt, ip_source, ip_dns_server)
