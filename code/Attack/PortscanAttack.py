@@ -182,18 +182,8 @@ class PortscanAttack(BaseAttack.BaseAttack):
                 destination_ttl_value = Util.handle_most_used_outputs(self.statistics.get_most_used_ttl_value())
 
             # Set Window Size based on Window Size distribution of IP address
-            source_win_dist = self.statistics.get_win_distribution(ip_source)
-            if len(source_win_dist) > 0:
-                source_win_prob_dict = lea.Lea.fromValFreqsDict(source_win_dist)
-                source_win_value = source_win_prob_dict.random()
-            else:
-                source_win_value = Util.handle_most_used_outputs(self.statistics.get_most_used_win_size())
-            destination_win_dist = self.statistics.get_win_distribution(ip)
-            if len(destination_win_dist) > 0:
-                destination_win_prob_dict = lea.Lea.fromValFreqsDict(destination_win_dist)
-                destination_win_value = destination_win_prob_dict.random()
-            else:
-                destination_win_value = Util.handle_most_used_outputs(self.statistics.get_most_used_win_size())
+            source_win_prob_dict = self.get_window_distribution(ip_source)
+            destination_win_prob_dict = self.get_window_distribution( ip_destination)
 
             min_delay, max_delay = self.get_reply_latency(ip_source, ip)
 
