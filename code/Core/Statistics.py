@@ -899,8 +899,9 @@ class Statistics(object):
         """
         random_ip  = self.process_db_query(
         "SELECT ipAddress FROM (SELECT ipAddress, COUNT(DISTINCT winSize) as uniqueWinSizes FROM tcp_win GROUP BY ipAddress) ORDER BY uniqueWinSizes DESC LIMIT 2"
-    )
-    
+    )   
+        if not random_ip:
+            return
         if random_ip[0] == '': # ignore TCP win sizes which are not assigned to an IP. 
             ip_address = random_ip[1]
         else: 

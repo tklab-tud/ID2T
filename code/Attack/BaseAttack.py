@@ -934,8 +934,8 @@ class BaseAttack(metaclass=abc.ABCMeta):
             ip_address_win_prob_dict = lea.Lea.fromValFreqsDict(ip_address_win_dist)
             return ip_address_win_prob_dict
         else:
-            print("ERROR: No window distribution found.")
-            raise ValueError("No window distribution could be determined from input. ")
+            print("Warning: No window distribution found. Using values from the attack script")
+            return
     
 
     def generate_sql_victim_conv_param(self,ip_destination, subnet_mask="255.255.255.0"):
