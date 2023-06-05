@@ -210,7 +210,13 @@ class DDoSAttack(BaseAttack.BaseAttack):
         return self.add_param_value(param, value)
 
     def get_router_address(self, ip):
-        return str(list(ip_addr.ip_network(ip+'/24', False).hosts())[0])
+        subnet = list(ip_addr.ip_network(ip+'/24', False).hosts())
+        f = str(subnet[0])
+        s = str(subnet[1])
+        
+        if ip != f:
+            return f 
+        return s
 
     def generate_config_xml(self):
         root = ET.Element('config')
@@ -569,8 +575,6 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         #if self.buffer_full():
         #    self.flush_packets()
-                        
-        
         
     def generate_attack_pcap(self):
         """
