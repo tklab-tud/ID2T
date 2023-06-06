@@ -303,7 +303,11 @@ class DDoSAttack(BaseAttack.BaseAttack):
         config.set('General', '**.victimsCount', str(num_victims))
         
         config.set('General', '**.victim[*].numApps', '1')
-
+        
+        config.set('General', '**.victim[*].app[*].timeToLive', str(self.most_used_ttl_value))
+        
+        config.set('General', '**.attacker[*].app[*].timeToLive', str(self.most_used_ttl_value))
+        
         if ("udp_flood" == self.current_ddos):
             payload_size = self.get_param_value(self.PAYLOAD_SIZE)
             config.set('General', '**.attacker[*].numApps', str(num_victims))
@@ -315,8 +319,9 @@ class DDoSAttack(BaseAttack.BaseAttack):
             config.set('General', '**.attacker[*].app[*].sleepDuration', str(burst_sleep)+'s')
             
             for idx, victim in enumerate(self.victims):
-                config.set('General', '**.attacker[*].app['+str(idx)+'].destPort', str(victim[2]))
+                #config.set('General', '**.attacker[*].app['+str(idx)+'].destPort', str(victim[2]))
                 # config.set('General', '**.victim['+str(idx)+'].udp.mss', str(victim[3]))
+                config.set('General', '**.attacker[*].app['+str(idx)+'].destPort', str(rnd.randint(1, 65535)))
                 config.set('General', '**.victim['+str(idx)+'].app[0].localPort', str(victim[2]))
                 config.set('General', '**.victim[*].eth[*].queue.dataQueue.packetCapacity', str(victim_packet_capacity))
                 
@@ -341,7 +346,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
             
             for idx, attacker in enumerate(self.attackers):
                 config.set('General', '**.attacker['+str(idx)+'].app[*].localPort', str(attacker[2]))
-                config.set('General', '**.attacker['+str(idx)+'].app[0].destPort', str(victim[2]))
+                #config.set('General', '**.attacker['+str(idx)+'].app[0].destPort', str(victim[2]))
+                config.set('General', '**.attacker['+str(idx)+'].app[0].destPort', str(rnd.randint(1, 65535)))
 
             payload_size = DNS_AMPL_PAYLOAD
         
