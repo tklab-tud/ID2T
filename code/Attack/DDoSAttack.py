@@ -547,34 +547,69 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         rel_time = 0
         first_valid = True
+                    
+        if "low_and_slow" == self.current_ddos:
+            for self.pkt_num, pkt in enumerate(raw_packets):
+                if not pkt.haslayer(inet.IP):
+                    continue
 
-        for self.pkt_num, pkt in enumerate(raw_packets):
-            if not pkt.haslayer(inet.IP):
-                continue
+                if first_valid:
+                    rel_time = pkt.time
+                    first_valid = False
 
-            if first_valid:
-                rel_time = pkt.time
-                first_valid = False
+                eth_frame = pkt
+                ip_pkt = eth_frame.payload
+                tcp_pkt = ip_pkt.payload
+                            
+                src_ip = ip_pkt.src
+                dst_ip = ip_pkt.dst
 
-            eth_frame = pkt
-            ip_pkt = eth_frame.payload
-            
-            src_ip = ip_pkt.src
-            dst_ip = ip_pkt.dst
+                if src_ip in assoc:
+                    eth_frame.src = assoc[src_ip]
+                if dst_ip in assoc:
+                    eth_frame.dst = assoc[dst_ip]
+                    
+                loc = tcp_pkt.options[-1]
 
-            if src_ip in assoc:
-                eth_frame.src = assoc[src_ip]
-            if dst_ip in assoc:
-                eth_frame.dst = assoc[dst_ip]
-            
-            new_pkt = (eth_frame / ip_pkt)
+                tcp_pkt.options[-1] = ('Timestamp', (loc[1][0]+int(offset_timestamp)-1000, 0 if loc[1][1] == 0 else loc[1][1]+int(offset_timestamp)-1000))
+                
+                del tcp_pkt.chksum
+                
+                tcp_pkt = tcp_pkt.__class__(bytes(tcp_pkt))
+                
+                ip_pkt.payload = tcp_pkt
+                
+                new_pkt = (eth_frame / ip_pkt / tcp_pkt)
+                                
+                new_pkt.time = pkt.time + offset_timestamp - rel_time
+                
+                self.add_packet(new_pkt, src_ip, dst_ip)
 
-            new_pkt.time = pkt.time + offset_timestamp - rel_time
-            
-            self.add_packet(new_pkt, src_ip, dst_ip)
+        else:
+            for self.pkt_num, pkt in enumerate(raw_packets):
+                if not pkt.haslayer(inet.IP):
+                    continue
 
-        #if self.buffer_full():
-        #    self.flush_packets()
+                if first_valid:
+                    rel_time = pkt.time
+                    first_valid = False
+
+                eth_frame = pkt
+                ip_pkt = eth_frame.payload
+                            
+                src_ip = ip_pkt.src
+                dst_ip = ip_pkt.dst
+
+                if src_ip in assoc:
+                    eth_frame.src = assoc[src_ip]
+                if dst_ip in assoc:
+                    eth_frame.dst = assoc[dst_ip]
+                            
+                new_pkt = (eth_frame / ip_pkt)
+
+                new_pkt.time = pkt.time + offset_timestamp - rel_time
+                
+                self.add_packet(new_pkt, src_ip, dst_ip)
         
     def generate_attack_pcap(self):
         """
