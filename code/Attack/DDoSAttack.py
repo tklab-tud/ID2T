@@ -115,15 +115,15 @@ class DDoSAttack(BaseAttack.BaseAttack):
             value = 'udp_flood'
 
         elif param == self.NUMBER_ATTACKERS:
-            value = rnd.randint(1, 4)  #FIXME
+            value = 1
         elif param == self.INJECT_AFTER_PACKET:
             value = rnd.randint(0, self.statistics.get_packet_count())
         elif param == self.PACKETS_PER_SECOND:
             value = 0.0
         elif param == self.ATTACK_DURATION:
-            value = rnd.randint(30, 60)
+            value = 60
         elif param == self.NUMBER_VICTIMS:
-            value = rnd.randint(1, 4)  #FIXME
+            value = 1
         elif param == self.PAYLOAD_SIZE:
             value = 8
         elif param == self.BANDWIDTH_MAX:
@@ -154,7 +154,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
             value = self.ephemeral_ports
             
         elif param == self.BURST_INTERVAL:
-            value = 0.001
+            value = 0.01
             
         elif param == self.BURST_DURATION:
             value = 15
@@ -163,10 +163,10 @@ class DDoSAttack(BaseAttack.BaseAttack):
             value = 1
             
         elif param == self.NUM_REQUESTS:
-            value = rnd.randint(50000, 1000000)
+            value = 2000
         
         elif param == self.GAP_TIME:
-            value = 3
+            value = 5
             
         # Victim(s) configuration
        
@@ -189,7 +189,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
                     value.append(self.get_mac_address(ip))
         
         elif param == self.VICTIM_PACKET_CAPACITY:
-            value = 10000
+            value = 1024
         
         elif param == self.VICTIM_BUFFER:
             value = 0 # infinite
