@@ -553,6 +553,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         rel_time = 0
         first_valid = True
+        
+        print("Cleaning and editing the intermediate PCAP.")
                     
         if "low_and_slow" == self.current_ddos:
             for self.pkt_num, pkt in enumerate(raw_packets):
@@ -616,6 +618,8 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 new_pkt.time = pkt.time + offset_timestamp - rel_time
                 
                 self.add_packet(new_pkt, src_ip, dst_ip)
+        
+        print("Attack packets generated.")
         
     def generate_attack_pcap(self):
         """
