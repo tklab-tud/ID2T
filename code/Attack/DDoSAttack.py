@@ -412,6 +412,7 @@ class DDoSAttack(BaseAttack.BaseAttack):
         """
            
         offset_timestamp = self.get_param_value(self.INJECT_AT_TIMESTAMP)
+        self.attack_start_utime = offset_timestamp
 
         num_attackers = self.get_param_value(self.NUMBER_ATTACKERS)
         self.current_ddos = self.get_param_value(self.SUBTYPE)
@@ -592,6 +593,9 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 new_pkt.time = pkt.time + offset_timestamp - rel_time
                 
                 self.add_packet(new_pkt, src_ip, dst_ip)
+                
+                if self.buffer_full():
+                    self.flush_packets()
 
         else:
             for self.pkt_num, pkt in enumerate(raw_packets):
@@ -618,6 +622,9 @@ class DDoSAttack(BaseAttack.BaseAttack):
                 new_pkt.time = pkt.time + offset_timestamp - rel_time
                 
                 self.add_packet(new_pkt, src_ip, dst_ip)
+                
+                if self.buffer_full():
+                    self.flush_packets()
         
         print("Attack packets generated.")
         
@@ -627,18 +634,14 @@ class DDoSAttack(BaseAttack.BaseAttack):
 
         :return: The location of the generated pcap file.
         """
-
-        # Store timestamp of first packet (for attack label)
-        try:
-            self.attack_start_utime = self.packets[0].time
-            self.attack_end_utime = self.packets[-1].time
-        except:
-            raise Exception(self.packets)
-
         if len(self.packets) > 0:
             self.packets = sorted(self.packets, key=lambda pkt: pkt.time)
             self.path_attack_pcap = self.write_attack_pcap(self.packets, True, self.path_attack_pcap)
+            self.last_packet = self.packets[-1]
 
-        # return packets sorted by packet time_sec_start
+        # Store timestamp of last packet
+        self.attack_end_utime = self.last_packet.time
+
+        # Return packets sorted by packet time_sec_start
         # pkt_num+1: because pkt_num starts at 0
-        return self.pkt_num + 1, self.path_attack_pcap
+        return self.total_pkt_num, self.path_attack_pcap
