@@ -318,35 +318,30 @@ class DDoSAttack(BaseAttack.BaseAttack):
             config.set('General', '**.attacker[*].app[*].burstDuration', str(burst_duration)+'s')
             config.set('General', '**.attacker[*].app[*].sleepDuration', str(burst_sleep)+'s')
             
+            for idx, attacker in enumerate(self.attackers):
+                config.set('General', '**.attacker['+str(idx)+'].app[0].localPort', str(attacker[2]))
+            
             for idx, victim in enumerate(self.victims):
-                #config.set('General', '**.attacker[*].app['+str(idx)+'].destPort', str(victim[2]))
-                # config.set('General', '**.victim['+str(idx)+'].udp.mss', str(victim[3]))
                 config.set('General', '**.attacker[*].app['+str(idx)+'].destPort', str(rnd.randint(1, 65535)))
                 config.set('General', '**.victim['+str(idx)+'].app[0].localPort', str(victim[2]))
                 config.set('General', '**.victim[*].eth[*].queue.dataQueue.packetCapacity', str(victim_packet_capacity))
-                
-            for idx, attacker in enumerate(self.attackers):
-                config.set('General', '**.attacker['+str(idx)+'].app[0].localPort', str(attacker[2]))
 
             payload_size += UDP_MIN_OVH
 
         elif ("dns_amplification" == self.current_ddos):
-            config.set('General', '**.victim[*].udp.buffer', victim_buffer)
             config.set('General', '**.attacker[*].numApps', 1)
+            config.set('General', '**.victim[*].udp.buffer', victim_buffer)
             
             config.set('General', '**.attacker[*].app[*].sendInterval', str(burst_interval)+'s')
             config.set('General', '**.attacker[*].app[*].burstDuration', str(burst_duration)+'s')
             config.set('General', '**.attacker[*].app[*].sleepDuration', str(burst_sleep)+'s')
 
             for idx, victim in enumerate(self.victims):
-                # config.set('General', '**.attacker['+str(idx)+'].app[0].destPort', str(victim[2]))
-                # config.set('General', '**.victim['+str(idx)+'].udp.mss', str(victim[3]))
                 config.set('General', '**.victim['+str(idx)+'].app[0].localPort', str(victim[2]))
                 config.set('General', '**.victim[*].eth[*].queue.dataQueue.packetCapacity', str(victim_packet_capacity))
             
             for idx, attacker in enumerate(self.attackers):
                 config.set('General', '**.attacker['+str(idx)+'].app[*].localPort', str(attacker[2]))
-                #config.set('General', '**.attacker['+str(idx)+'].app[0].destPort', str(victim[2]))
                 config.set('General', '**.attacker['+str(idx)+'].app[0].destPort', str(rnd.randint(1, 65535)))
 
             payload_size = DNS_AMPL_PAYLOAD
